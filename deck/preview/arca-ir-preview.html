@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ARCA × 현대 IR — 비주얼 슬라이드 맛보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#000000;
+    --paper:#ffedd7;          /* warm off-white */
+    --copper:#dc5000;
+    --ember:#ff7a1a;
+    --violet:#7c6cff;         /* small accent only */
+    --paper-dim:rgba(255,237,215,.62);
+    --paper-faint:rgba(255,237,215,.34);
+    --line:rgba(255,237,215,.14);
+    --r-scene:36px;
+    --r-card:18px;
+    --serif:"Fraunces",Georgia,serif;
+    --kr:"IBM Plex Sans KR",system-ui,sans-serif;
+    --ui:"Spline Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#161310;color:var(--paper);font-family:var(--kr);-webkit-font-smoothing:antialiased}
+  body{padding:48px 24px 96px;display:flex;flex-direction:column;align-items:center;gap:42px}
+  .meta{font-family:var(--ui);color:var(--paper-faint);font-size:13px;letter-spacing:.04em;text-align:center;max-width:960px;line-height:1.7}
+  .meta b{color:var(--ember);font-weight:600}
+
+  /* 16:9 scene frame */
+  .slide{
+    position:relative;width:min(960px,94vw);aspect-ratio:16/9;
+    background:var(--ink);border-radius:var(--r-scene);overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,237,215,.06);
+    isolation:isolate;
+  }
+  .slide .pad{position:absolute;inset:0;padding:6.2% 7%;display:flex;flex-direction:column}
+  .tag{font-family:var(--ui);font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--copper);font-weight:600}
+  .label{font-family:var(--ui);font-size:12px;letter-spacing:.06em;color:var(--paper-faint)}
+  .grow{flex:1}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--ui);font-size:12px;color:var(--paper-faint);letter-spacing:.04em}
+  .logo{font-family:var(--serif);font-weight:600;letter-spacing:.02em}
+  .frame-no{font-variant-numeric:tabular-nums}
+
+  /* soft cinematic glow object */
+  .glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;z-index:-1}
+
+  /* ---------- S1 ---------- */
+  .s1 .glow{width:60%;height:70%;right:-8%;bottom:-18%;
+    background:radial-gradient(circle,var(--copper),transparent 65%)}
+  .s1 h1{font-family:var(--serif);font-weight:600;font-size:clamp(28px,5.4vw,62px);line-height:1.04;letter-spacing:-.01em;max-width:15ch}
+  .s1 h1 em{font-style:normal;color:var(--ember)}
+  .s1 .sub{margin-top:22px;font-size:clamp(13px,1.7vw,18px);color:var(--paper-dim);max-width:34ch;line-height:1.6;font-weight:300}
+  .orbit{position:absolute;right:9%;top:50%;transform:translateY(-50%);width:30%;aspect-ratio:1}
+  .orbit .core{position:absolute;inset:38%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--ember),var(--copper) 70%);box-shadow:0 0 50px var(--copper)}
+  .orbit .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--line)}
+  .orbit .ring.r2{inset:16%}
+  .orbit .ring.r3{inset:30%;border-color:rgba(255,122,26,.3)}
+
+  /* ---------- S2 dilemma ---------- */
+  .s2 .split{flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0;margin-top:8px}
+  .s2 h2{font-family:var(--serif);font-weight:600;font-size:clamp(20px,3vw,34px);line-height:1.1}
+  .pile{display:flex;flex-direction:column;gap:9px;align-items:flex-start}
+  .chip{font-family:var(--ui);font-size:clamp(11px,1.35vw,15px);padding:9px 14px;border-radius:11px;background:rgba(255,237,215,.06);border:1px solid var(--line);color:var(--paper-dim);transform:rotate(var(--rot,0deg))}
+  .vs{width:1px;height:62%;background:linear-gradient(var(--copper),transparent);margin:0 clamp(14px,3vw,40px);position:relative}
+  .vs::after{content:"vs";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--ui);font-size:11px;letter-spacing:.2em;color:var(--copper);background:var(--ink);padding:4px}
+  .me{align-self:center;text-align:left}
+  .me .big{font-family:var(--serif);font-weight:600;font-size:clamp(22px,3.4vw,40px);color:var(--ember);line-height:1.05}
+  .me .small{margin-top:8px;font-size:clamp(11px,1.3vw,14px);color:var(--paper-dim);font-weight:300}
+
+  /* ---------- S6 demo decision card ---------- */
+  .s6{}
+  .s6 .stage{flex:1;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center;margin-top:6px}
+  .s6 .said{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(17px,2.5vw,30px);line-height:1.2;color:var(--paper)}
+  .s6 .said .q{color:var(--copper)}
+  .s6 .flow{margin-top:18px;display:flex;flex-direction:column;gap:10px;font-family:var(--ui);font-size:clamp(11px,1.3vw,14px);color:var(--paper-faint)}
+  .s6 .flow b{color:var(--ember);font-weight:600}
+  /* mock card */
+  .card{background:#0c0a08;border:1px solid var(--line);border-radius:var(--r-card);padding:18px 18px 16px;box-shadow:0 18px 50px -22px #000}
+  .card .ch{display:flex;align-items:center;gap:8px;font-family:var(--ui);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--paper-faint)}
+  .card .dot{width:7px;height:7px;border-radius:50%;background:var(--ember);box-shadow:0 0 10px var(--ember)}
+  .card .title{margin-top:10px;font-family:var(--kr);font-weight:600;font-size:clamp(14px,1.7vw,18px)}
+  .opt{margin-top:11px;display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,237,215,.03);font-size:clamp(11px,1.3vw,14px);color:var(--paper-dim)}
+  .opt .key{font-family:var(--ui);font-size:11px;color:var(--paper-faint);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .opt.pick{border-color:var(--ember);background:linear-gradient(90deg,rgba(255,122,26,.16),rgba(255,122,26,.02));color:var(--paper)}
+  .opt.pick .key{color:var(--ink);background:var(--ember);border-color:var(--ember);font-weight:600}
+  .opt .star{margin-left:auto;color:var(--ember);font-size:13px}
+
+  /* ---------- S8 moat ---------- */
+  .s8 .cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:10px}
+  .s8 h2{font-family:var(--serif);font-weight:600;font-size:clamp(22px,3.4vw,40px);line-height:1.05;max-width:13ch}
+  .s8 .now,.s8 .future{padding:0 8px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+  .s8 .future{border-left:1px solid var(--line);padding-left:30px}
+  .s8 .k{font-family:var(--ui);font-size:11px;letter-spacing:.22em;text-transform:uppercase}
+  .s8 .now .k{color:var(--paper-faint)} .s8 .future .k{color:var(--violet)}
+  .s8 .strike{color:var(--paper-faint);text-decoration:line-through;font-size:clamp(12px,1.4vw,15px)}
+  .s8 .win{font-family:var(--serif);font-weight:600;font-size:clamp(16px,2.1vw,24px);color:var(--ember);line-height:1.15}
+  .s8 .road{display:flex;flex-wrap:wrap;gap:8px}
+  .s8 .pill{font-family:var(--ui);font-size:clamp(10px,1.25vw,13px);padding:7px 12px;border-radius:999px;border:1px dashed rgba(124,108,255,.5);color:var(--paper-dim)}
+  .s8 .lock{margin-top:4px;font-size:clamp(11px,1.3vw,14px);color:var(--paper-dim);font-weight:300}
+  .roadmap-tag{align-self:flex-start;font-family:var(--ui);font-size:10px;letter-spacing:.18em;color:var(--violet);border:1px solid rgba(124,108,255,.4);border-radius:6px;padding:3px 8px;text-transform:uppercase}
+</style>
+</head>
+<body>
+  <p class="meta">ARCA × 현대 데모데이 IR — <b>비주얼 슬라이드 맛보기</b> · DESIGN.md 토큰 적용(ink/paper/copper, Fraunces+IBM Plex Sans KR) · 4장: 비전 · 딜레마 · 라이브 데모 · 해자 &nbsp;|&nbsp; 브라우저에서 열어보세요</p>
+
+  <!-- S1 -->
+  <section class="slide s1">
+    <div class="glow"></div>
+    <div class="orbit"><div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="core"></div></div>
+    <div class="pad">
+      <div class="tag">ARCA</div>
+      <div class="grow" style="display:flex;flex-direction:column;justify-content:center">
+        <h1>일상에서 쓸데없이 새는 시간을 <em>없앱니다.</em></h1>
+        <p class="sub">비전은 넓게. 증명은 이미 작동하는 제품으로.</p>
+      </div>
+      <div class="foot"><span class="logo">ARCA</span><span class="frame-no">01 / 11</span></div>
+    </div>
+  </section>
+
+  <!-- S2 -->
+  <section class="slide s2">
+    <div class="pad">
+      <div class="tag">문제</div>
+      <h2 style="margin-top:6px">우리는 매일, 딜레마에 빠집니다</h2>
+      <div class="split">
+        <div class="pile">
+          <span class="chip" style="--rot:-1.5deg">📨 누군가 내 답을 기다린다</span>
+          <span class="chip" style="--rot:1deg">⚙️ 내가 안 하면 일이 안 굴러간다</span>
+          <span class="chip" style="--rot:-.5deg">🔁 의사소통 비용이 쌓인다</span>
+        </div>
+        <div class="vs"></div>
+        <div class="me">
+          <div class="big">그런데 나는<br>내 일에 몰입하고 싶다.</div>
+          <div class="small">리더일수록 이 딜레마가 더 큽니다.</div>
+        </div>
+      </div>
+      <div class="foot"><span class="logo">ARCA</span><span class="frame-no">02 / 11</span></div>
+    </div>
+  </section>
+
+  <!-- S6 -->
+  <section class="slide s6">
+    <div class="pad">
+      <div class="tag">라이브 데모</div>
+      <div class="stage">
+        <div>
+          <div class="said"><span class="q">“</span>내일 오후 2시에<br>데모 준비 회의 잡아줘.<span class="q">”</span></div>
+          <div class="flow">
+            <span>① 한 번의 대화 →</span>
+            <span>② ARCA가 <b>결정 카드</b>로 정리 →</span>
+            <span>③ <b>⌥1 한 번</b> → 캘린더에 실제로 생성 →</span>
+            <span>④ <b>루프가 닫힘</b> · 메모리에 기록</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="dot"></span> PICK AN ACTION</div>
+          <div class="title">데모 준비 회의 · 내일 14:00</div>
+          <div class="opt pick"><span class="key">⌥1</span> 캘린더에 일정 생성 <span class="star">★ 추천</span></div>
+          <div class="opt"><span class="key">⌥2</span> 참석자에게 초대 메일 초안</div>
+          <div class="opt"><span class="key">⌥3</span> 슬랙에 공지 메시지</div>
+        </div>
+      </div>
+      <div class="foot"><span class="label">실제 macOS 앱 · 라이브 구동</span><span class="frame-no">06 / 11</span></div>
+    </div>
+  </section>
+
+  <!-- S8 -->
+  <section class="slide s8">
+    <div class="pad">
+      <div class="tag">해자</div>
+      <div class="cols">
+        <div class="now">
+          <div class="k">지금</div>
+          <div class="strike">전사·화자분리 기술 경쟁</div>
+          <div class="win">실제로 일을 끝낸다 =<br>생산성 임팩트</div>
+        </div>
+        <div class="future">
+          <div class="roadmap-tag">Roadmap</div>
+          <div class="k">앞으로</div>
+          <div class="road">
+            <span class="pill">에이전트 마켓플레이스</span>
+            <span class="pill">하드웨어</span>
+            <span class="pill">팬덤</span>
+          </div>
+          <div class="lock">업로더 생태계는 <b style="color:var(--violet)">AI가 복제할 수 없다.</b> → 락인</div>
+        </div>
+      </div>
+      <div class="foot"><span class="logo">ARCA</span><span class="frame-no">08 / 11</span></div>
+    </div>
+  </section>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+.root {
+  justify-content: center;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 3.5vh, 48px);
+  max-width: 82ch;
+}
+
+.hero {
+  position: relative;
+}
+
+.emphasis {
+  display: inline-block;
+  font-style: italic;
+}
+
+/* non-solutions row */
+.nonSolutions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(12px, 1.6vw, 22px);
+  align-items: center;
+}
+
+.strike {
+  position: relative;
+  padding: 10px 20px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.strikeText {
+  font-family: var(--mono);
+  font-size: clamp(13px, 1.3vw, 18px);
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+  position: relative;
+  /* strike-through via pseudo-element so it can be animated */
+}
+
+.strikeText::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  background: var(--copper);
+  opacity: 0.7;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: strikeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.4s forwards;
+}
+
+@keyframes strikeIn {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* each card dims after strike animates in */
+.strike {
+  animation: dimCard 0.4s ease 1.85s forwards;
+}
+
+@keyframes dimCard {
+  from { opacity: 1; }
+  to   { opacity: 0.42; }
+}
+
+.support {
+  border-left: 2px solid var(--copper);
+  padding-left: 18px;
+  max-width: 56ch;
+}
+
+.muted {
+  color: var(--ink-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strikeText::after { animation: none; transform: scaleX(1); }
+  .strike { animation: none; opacity: 0.42; }
+}

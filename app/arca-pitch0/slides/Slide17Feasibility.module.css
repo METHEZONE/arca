@@ -1,0 +1,180 @@
+.root {
+  gap: 32px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── body: 3 zones side by side ── */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: clamp(16px, 2vw, 28px);
+  flex: 1;
+  min-height: 0;
+  align-items: start;
+}
+
+/* each zone is a card */
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 30px);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  height: 100%;
+}
+
+.zoneLabel {
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.85vw, 12px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin: 0;
+}
+
+/* ── Zone 1: Pricing tiers ── */
+.tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.tier {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--card-raised);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--tier-color);
+  border-radius: 10px;
+}
+
+.tierLabel {
+  font-family: var(--mono);
+  font-size: clamp(11px, 0.9vw, 13px);
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  flex: 1;
+}
+
+.tierPrice {
+  font-family: var(--serif);
+  font-size: clamp(20px, 2.2vw, 30px);
+  line-height: 1;
+  color: var(--tier-color);
+  font-weight: 500;
+}
+
+.tierMargin {
+  font-family: var(--mono);
+  font-size: clamp(9px, 0.75vw, 11px);
+  letter-spacing: 0.06em;
+  color: var(--good);
+  white-space: nowrap;
+}
+
+.cogsNote {
+  font-family: var(--mono);
+  font-size: clamp(9px, 0.78vw, 11px);
+  letter-spacing: 0.05em;
+  color: var(--ink-4);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Zone 2: Market growth ── */
+.marketRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.marketNum {
+  font-family: var(--serif);
+  font-size: clamp(26px, 3vw, 46px);
+  line-height: 1;
+  color: var(--accent);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.marketArrowWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: clamp(14px, 1.5vw, 20px);
+}
+
+.marketArrowTrack {
+  position: absolute;
+  left: 0;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left;
+  height: 3px;
+  background: linear-gradient(90deg, var(--copper), var(--accent));
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 122, 26, 0.4);
+}
+
+.marketArrowFill {
+  width: 100%;
+  height: 100%;
+}
+
+.arrowHead {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(14px, 1.4vw, 20px);
+  height: clamp(14px, 1.4vw, 20px);
+  color: var(--accent);
+}
+
+.marketCaption {
+  font-size: clamp(11px, 0.95vw, 14px);
+  color: var(--ink-4);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ── Zone 3: Privacy badges ── */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  align-content: flex-start;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgba(31, 111, 92, 0.15);
+  border: 1px solid rgba(31, 111, 92, 0.35);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.82vw, 12px);
+  letter-spacing: 0.08em;
+  color: var(--good);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .body { grid-template-columns: 1fr; }
+}

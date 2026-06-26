@@ -1,0 +1,33 @@
+{
+  "name": "arca",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 4174",
+    "build": "next build",
+    "start": "next start --port 4174",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
+    "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "framer-motion": "^12.41.0",
+    "next": "16.2.9",
+    "openai": "^6.42.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "^4.4.3"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "puppeteer-core": "^25.2.1",
+    "typescript": "latest"
+  }
+}

@@ -1,0 +1,126 @@
+.root {
+  overflow: hidden;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: clamp(32px, 4vw, 60px);
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── left photo ── */
+.photoSide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(260px, 50vh, 500px);
+}
+
+.photoWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 56px rgba(0, 0, 0, 0.6),
+    0 3px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 237, 215, 0.08);
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.55) brightness(0.82);
+}
+
+.photoOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    140deg,
+    rgba(220, 80, 0, 0.32) 0%,
+    rgba(255, 122, 26, 0.10) 50%,
+    rgba(8, 4, 2, 0.38) 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── right column ── */
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.headline {
+  max-width: 20ch;
+}
+
+/* ── checklist ── */
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.checkIcon {
+  font-family: var(--mono);
+  font-size: clamp(15px, 1.5vw, 19px);
+  font-weight: 700;
+  color: var(--copper);
+  flex-shrink: 0;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.checkText {
+  font-size: clamp(13px, 1.25vw, 16px);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* ── callout card ── */
+.callout {
+  background: var(--card-raised);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--copper);
+  border-radius: 14px;
+  padding: clamp(16px, 2vw, 24px) clamp(18px, 2.2vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calloutLabel {
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.95vw, 12px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin: 0;
+}
+
+.calloutQuote {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(14px, 1.55vw, 20px);
+  line-height: 1.45;
+  color: var(--ink);
+  margin: 0;
+}

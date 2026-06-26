@@ -1,0 +1,113 @@
+.root { overflow: hidden; }
+
+/* ── cinematic background ── */
+.sceneBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sceneBgImg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/scenes/scene-coldopen.png');
+  background-size: cover;
+  background-position: right center;
+  opacity: 0.58;
+  animation: kenBurns 20s ease-in-out infinite alternate;
+}
+
+/* dark gradient: heavy left (text side), lighter right (lamp side) */
+.sceneOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.35) 100%),
+    linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 40%);
+}
+
+@keyframes kenBurns {
+  from { transform: scale(1);    background-position: right center; }
+  to   { transform: scale(1.06); background-position: 94% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sceneBgImg { animation: none; }
+}
+
+.light {
+  position: absolute;
+  top: 50%; left: 64%;
+  width: 46vw; height: 46vw;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 180, 120, 0.20), rgba(255, 122, 26, 0.05) 40%, transparent 66%);
+  filter: blur(10px);
+  animation: flicker 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.col {
+  position: relative;
+  z-index: 2;
+  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.lines { display: flex; flex-direction: column; gap: 6px; }
+.line {
+  font-family: var(--serif);
+  font-size: clamp(30px, 4.4vw, 62px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.phone {
+  margin-top: 14px;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 460px;
+  padding: 16px 20px;
+  background: rgba(22, 15, 10, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 122, 26, 0.08);
+  backdrop-filter: blur(6px);
+}
+.phoneApp {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.phoneMsg {
+  font-size: clamp(15px, 1.5vw, 19px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.caption {
+  font-family: var(--mono);
+  font-size: clamp(13px, 1.3vw, 17px);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin: 6px 0 0;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 0.9; transform: translateY(-50%) scale(1); }
+  50% { opacity: 1; transform: translateY(-50%) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .light { animation: none; }
+}

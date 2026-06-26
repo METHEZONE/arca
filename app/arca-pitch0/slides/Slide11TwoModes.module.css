@@ -1,0 +1,282 @@
+.root {
+  overflow: hidden;
+  padding-top: clamp(28px, 4vw, 64px);
+  padding-bottom: clamp(28px, 4vw, 64px);
+  gap: 0;
+  justify-content: flex-start;
+}
+
+.head {
+  flex-shrink: 0;
+  margin-bottom: clamp(14px, 2.2vh, 30px);
+}
+
+/* ── split layout ── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 0 clamp(20px, 3vw, 44px);
+  flex: 1;
+  min-height: 0;
+  align-items: start;
+}
+
+/* ── copper divider ── */
+.divider {
+  align-self: stretch;
+  background: linear-gradient(180deg, transparent 0%, var(--copper) 18%, var(--copper) 82%, transparent 100%);
+  transform-origin: top center;
+  opacity: 0.6;
+}
+
+/* ── panel ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vh, 22px);
+  min-height: 0;
+}
+
+.panelLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: clamp(11px, 1.05vw, 14px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.panelLabelRight { justify-content: flex-end; }
+
+.labelDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 8px var(--good);
+  flex-shrink: 0;
+}
+.labelDotRight {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 122, 26, 0.7);
+  order: 2;
+}
+
+/* ── shield arena ── */
+.shieldArena {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(160px, 26vh, 280px);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.shieldGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(31, 111, 92, 0.18), transparent 60%);
+  pointer-events: none;
+}
+
+.shield {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: clamp(14px, 2vh, 22px) clamp(20px, 3vw, 32px);
+  background: rgba(31, 111, 92, 0.14);
+  border: 1.5px solid rgba(31, 111, 92, 0.55);
+  border-radius: 50%;
+  box-shadow: 0 0 32px rgba(31, 111, 92, 0.22), inset 0 0 18px rgba(31, 111, 92, 0.10);
+}
+
+.shieldIcon {
+  font-size: clamp(28px, 3.5vw, 50px);
+  color: rgba(31, 111, 92, 0.9);
+  line-height: 1;
+}
+
+.shieldText {
+  font-family: var(--mono);
+  font-size: clamp(10px, 1vw, 13px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(31, 111, 92, 0.85);
+}
+
+/* incoming chips */
+.incomingChip {
+  position: absolute;
+  z-index: 2;
+  padding: 5px 12px;
+  background: var(--card-raised);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.95vw, 13px);
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  white-space: nowrap;
+  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ── triage queue ── */
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 1.1vh, 13px);
+}
+
+.queueCard {
+  padding: clamp(10px, 1.4vh, 16px) clamp(14px, 1.8vw, 20px);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+}
+
+.queueCardResolved {
+  opacity: 0.5;
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardLabel {
+  font-size: clamp(13px, 1.3vw, 17px);
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+
+.cardFrom {
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.95vw, 13px);
+  letter-spacing: 0.07em;
+  color: var(--ink-4);
+  margin: 0;
+}
+
+.cardTag {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: clamp(9px, 0.85vw, 11px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.cardTagArca {
+  background: rgba(255, 122, 26, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(255, 122, 26, 0.25);
+}
+
+.cardTagDecide {
+  background: var(--card-raised);
+  color: var(--ink-3);
+  border: 1px solid var(--hairline);
+}
+
+/* decision card */
+.decisionCard {
+  padding: clamp(12px, 1.6vh, 20px) clamp(14px, 1.8vw, 22px);
+  background: var(--card-raised);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(220, 80, 0, 0.1), 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.decisionTitle {
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.95vw, 13px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin: 0 0 10px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: clamp(8px, 1vh, 12px) clamp(10px, 1.2vw, 16px);
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: none;
+}
+
+.optionHighlighted {
+  background: rgba(255, 122, 26, 0.12);
+  border-color: rgba(255, 122, 26, 0.30);
+}
+
+.optionNum {
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.1vw, 15px);
+  font-weight: 600;
+  color: var(--ink-4);
+  flex-shrink: 0;
+  width: 18px;
+}
+.optionHighlighted .optionNum { color: var(--accent); }
+
+.optionText {
+  font-size: clamp(12px, 1.2vw, 16px);
+  color: var(--ink-3);
+  flex: 1;
+}
+.optionHighlighted .optionText { color: var(--ink); }
+
+.optionBadge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: #1a0d04;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: clamp(8px, 0.75vw, 10px);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.tapHint {
+  margin-top: 10px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: clamp(9px, 0.85vw, 11px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+}
+
+/* ── caption ── */
+.caption {
+  font-size: clamp(13px, 1.3vw, 17px);
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.calm { color: rgba(31, 111, 92, 0.9); }

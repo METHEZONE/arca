@@ -1,0 +1,117 @@
+.root { overflow: hidden; }
+
+.light {
+  position: absolute;
+  top: 50%; left: 62%;
+  width: 44vw; height: 44vw;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 80, 0, 0.14), rgba(255, 122, 26, 0.04) 40%, transparent 66%);
+  filter: blur(12px);
+  animation: flicker 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.col {
+  position: relative;
+  z-index: 2;
+  max-width: 62%;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.phone {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 460px;
+  padding: 16px 20px;
+  background: rgba(22, 15, 10, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 122, 26, 0.08);
+  backdrop-filter: blur(6px);
+}
+.phoneApp {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.phoneMsg {
+  font-size: clamp(15px, 1.5vw, 19px);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ── flow meter ── */
+.meterWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.meterLabel {
+  font-family: var(--mono);
+  font-size: clamp(10px, 1vw, 13px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  min-width: 42px;
+}
+.meterTrack {
+  flex: 1;
+  max-width: 280px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 237, 215, 0.08);
+  overflow: hidden;
+}
+.meterFill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--copper) 0%, var(--accent) 60%, rgba(220, 80, 0, 0.3) 100%);
+  transform-origin: left center;
+}
+.meterDraining {
+  font-family: var(--mono);
+  font-size: clamp(10px, 0.9vw, 12px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+  opacity: 0.7;
+}
+
+/* ── closing lines ── */
+.closing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.closingLine {
+  font-family: var(--serif);
+  font-size: clamp(26px, 3.6vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ink-3);
+  margin: 0;
+}
+.closingAccent {
+  font-family: var(--serif);
+  font-size: clamp(26px, 3.6vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 0.85; transform: translateY(-50%) scale(1); }
+  50% { opacity: 1; transform: translateY(-50%) scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .light { animation: none; }
+  .meterFill { transition: none; }
+}

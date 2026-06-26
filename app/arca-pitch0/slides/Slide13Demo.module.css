@@ -1,0 +1,221 @@
+.root {
+  justify-content: flex-start;
+  gap: 32px;
+}
+
+/* two-column body: frame left, stepper right */
+.body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── device frame ── */
+.frameWrap {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card-raised);
+  border: 1px solid var(--line-2);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 122, 26, 0.06);
+  /* 16:10 ratio driven by screen below */
+}
+
+/* window chrome bar */
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0e0907;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--hairline);
+}
+.dot[data-c="close"]  { background: #ff5f57; }
+.dot[data-c="min"]    { background: #febc2e; }
+.dot[data-c="max"]    { background: #28c840; }
+
+.chromeUrl {
+  flex: 1;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  margin-right: 54px; /* balance the dots */
+}
+
+/* screen area — 16:10 aspect */
+.screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: #0a0605;
+  overflow: hidden;
+}
+
+/* real video fills the screen */
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+}
+
+/* placeholder sits under the video (or replaces it when hidden) */
+.placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(220, 80, 0, 0.06), transparent 60%);
+}
+
+.playIcon {
+  font-size: clamp(28px, 3.5vw, 48px);
+  color: var(--ink-4);
+  line-height: 1;
+}
+
+.placeholderLabel {
+  font-family: var(--mono);
+  font-size: clamp(12px, 1.1vw, 15px);
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
+  text-transform: uppercase;
+}
+
+.placeholderFile {
+  font-family: var(--mono);
+  font-size: clamp(11px, 0.9vw, 13px);
+  color: var(--ink-4);
+  opacity: 0.5;
+}
+
+/* ── stepper ── */
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: clamp(240px, 26vw, 340px);
+  flex-shrink: 0;
+}
+
+.beat {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  background: var(--card);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.beat::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--line-2);
+  border-radius: 0 2px 2px 0;
+  transition: background 0.3s;
+}
+
+/* copper-highlighted beat */
+.beatCopper {
+  border-color: rgba(220, 80, 0, 0.32);
+  background: rgba(220, 80, 0, 0.07);
+}
+.beatCopper::before {
+  background: linear-gradient(180deg, var(--copper), var(--accent));
+}
+.beatCopper .beatLabel {
+  color: var(--accent);
+}
+
+.beatNum {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-4);
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.beatBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.beatLabel {
+  font-family: var(--mono);
+  font-size: clamp(13px, 1.2vw, 16px);
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.beatSub {
+  font-size: clamp(11px, 0.95vw, 13px);
+  line-height: 1.45;
+  color: var(--ink-4);
+}
+
+/* lit dot on the right */
+.beatDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+  box-shadow: 0 0 6px rgba(255, 122, 26, 0.6);
+}
+
+@media (max-width: 1000px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .stepper {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .beat { flex: 1 1 160px; }
+}

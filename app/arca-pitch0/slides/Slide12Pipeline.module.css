@@ -1,0 +1,144 @@
+.root {
+  gap: 40px;
+  justify-content: center;
+}
+
+/* horizontal pipeline */
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+}
+
+/* each step = node + (optional) connector */
+.step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+/* node card */
+.node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: clamp(18px, 2.2vw, 28px) clamp(16px, 2vw, 24px);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  min-height: clamp(160px, 22vh, 220px);
+  transition: border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.node::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(220, 80, 0, 0.10), transparent 60%);
+  pointer-events: none;
+}
+
+.glyph {
+  font-size: clamp(22px, 2.6vw, 36px);
+  line-height: 1;
+  color: var(--copper);
+  font-family: var(--mono);
+  letter-spacing: -0.02em;
+}
+
+.nodeTitle {
+  font-family: var(--serif);
+  font-size: clamp(18px, 1.9vw, 26px);
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.nodeDetail {
+  font-size: clamp(12px, 1.1vw, 15px);
+  line-height: 1.5;
+  color: var(--ink-3);
+  margin: 0;
+  font-family: var(--mono);
+}
+
+/* connector wrapper: fixed width, centered vertically on cards */
+.connWrap {
+  flex-shrink: 0;
+  width: clamp(20px, 3vw, 44px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 2px;
+  margin-top: calc(clamp(160px, 22vh, 220px) / 2 - 4px);
+}
+
+/* the copper fill line */
+.conn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--copper), var(--accent));
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(220, 80, 0, 0.5);
+  transform-origin: left center;
+}
+
+/* arrowhead */
+.connArrow {
+  position: absolute;
+  right: -4px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--accent);
+  font-family: var(--mono);
+  user-select: none;
+}
+
+/* closing line */
+.closing {
+  font-family: var(--mono);
+  font-size: clamp(14px, 1.4vw, 19px);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .flow {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .connWrap {
+    width: 2px;
+    height: clamp(14px, 2vh, 24px);
+    margin-top: 0;
+    margin-left: clamp(24px, 3vw, 38px);
+  }
+  .conn {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--copper), var(--accent));
+  }
+  .connArrow {
+    bottom: -10px;
+    right: auto;
+    top: auto;
+    transform: rotate(90deg);
+  }
+  .step {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

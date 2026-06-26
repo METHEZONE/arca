@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.omc/
+out/
+dist/
+.env
+.env.local
+external/
+uploads/
+data/
+*.log
+.vercel
