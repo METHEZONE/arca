@@ -1318,7 +1318,7 @@ function Slide_Roadmap(_: SlideProps) {
         className="hy-rm-anchor"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.7 }}
+        transition={{ delay: 0.45, duration: 0.5 }}
       >
         핵심은 하나 — 창업자 100명의 Slack·소통체계 안에 들어가,{" "}
         <b>10·50인 팀이 진짜 원하는 걸 밀접 PoC로 알아낸다.</b>
@@ -1329,7 +1329,7 @@ function Slide_Roadmap(_: SlideProps) {
         className="hy-rm-playbook"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.0, duration: 0.6 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
       >
         <p className="hy-rm-playbook-eyebrow">접근 방식 · OUR PLAYBOOK</p>
         <div className="hy-rm-playbook-cols">

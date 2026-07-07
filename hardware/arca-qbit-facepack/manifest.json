@@ -1,0 +1,115 @@
+{
+  "format": "qbit-qgif",
+  "target": "SSD1306 128x64 0.96 inch OLED",
+  "generatedAt": "2026-06-15T18:09:03.616Z",
+  "sourcePolicy": "Original ARCA pixel expressions inspired by desktop-pet interaction patterns; do not copy DASAI/Mochi commercial art.",
+  "packs": [
+    {
+      "file": "arca_idle_blink.qgif",
+      "frames": 5,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        260,
+        120,
+        90,
+        120,
+        360
+      ]
+    },
+    {
+      "file": "arca_listening_waves.qgif",
+      "frames": 8,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120
+      ]
+    },
+    {
+      "file": "arca_thinking_bubbles.qgif",
+      "frames": 6,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        180,
+        180,
+        180,
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "file": "arca_uploading_cloud.qgif",
+      "frames": 6,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ]
+    },
+    {
+      "file": "arca_sleepy_mochi.qgif",
+      "frames": 6,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        220,
+        220,
+        220,
+        220,
+        220,
+        220
+      ]
+    },
+    {
+      "file": "arca_excited_monster.qgif",
+      "frames": 4,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        130,
+        130,
+        130,
+        130
+      ]
+    },
+    {
+      "file": "arca_shy_blush.qgif",
+      "frames": 4,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        180,
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "file": "arca_recording_pulse.qgif",
+      "frames": 4,
+      "width": 128,
+      "height": 64,
+      "delaysMs": [
+        160,
+        160,
+        160,
+        160
+      ]
+    }
+  ]
+}

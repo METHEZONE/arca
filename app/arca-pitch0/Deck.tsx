@@ -6,7 +6,12 @@ import { slideVariants } from "./motion";
 import type { SlideDef } from "./slides/types";
 
 export default function Deck({ slides, tag = "ARCA · TAP4001" }: { slides: SlideDef[]; tag?: string }) {
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const p = new URLSearchParams(window.location.search).get("slide");
+    const k = p == null ? NaN : parseInt(p, 10);
+    return Number.isNaN(k) ? 0 : Math.max(0, Math.min(slides.length - 1, k));
+  });
   const [dir, setDir] = useState(1);
   const [auto, setAuto] = useState(false);
   const [present, setPresent] = useState(false);

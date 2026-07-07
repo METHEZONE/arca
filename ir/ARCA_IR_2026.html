@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ARCA · THE ZONE — Investment Memo 2026</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
+<style>
+:root{
+  --bg:#0A0604; --bg-2:#120B06; --surface:#1A1009; --surface-2:#22150C;
+  --line:#3A2817; --line-soft:#2A1B10;
+  --cream:#FFEDD7; --cream-dim:#D6C2A6; --muted:#A1876B; --faint:#7A6650;
+  --orange:#DC5000; --orange-br:#FF6A1A; --amber:#E8A04B; --amber-soft:#3A2410;
+  --danger:#C7401F;
+  --r:22px; --r-sm:14px;
+  --shadow:0 1px 0 rgba(255,237,215,.04), 0 24px 60px rgba(0,0,0,.5);
+  --sp1:#DC5000; --sp2:#E8A04B; --sp3:#C98A5A; --sp4:#B96A3A; --sp5:#8C6A4A;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--cream);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  font-feature-settings:"tnum","ss01";letter-spacing:-.01em;
+}
+h1,h2,h3,h4{margin:0 0 .5em;font-weight:800;line-height:1.12;letter-spacing:-.03em;color:var(--cream)}
+h2{font-size:clamp(26px,3.6vw,40px)}
+h3{font-size:19px;font-weight:700}
+p{margin:0 0 1em}
+a{color:var(--amber);text-decoration:none}
+b,strong{font-weight:700;color:#fff}
+.num{font-variant-numeric:tabular-nums;letter-spacing:0}
+.wrap{max-width:1080px;margin:0 auto;padding:0 30px}
+section{padding:80px 0;border-top:1px solid var(--line-soft)}
+.kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--orange);font-weight:700;margin:0 0 16px}
+.lead{font-size:20px;line-height:1.65;color:var(--cream-dim);font-weight:400}
+.muted{color:var(--muted)}
+.small{font-size:13.5px;line-height:1.6}
+.tiny{font-size:11.5px;line-height:1.55;color:var(--faint)}
+.center{text-align:center}
+.tag{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--cream-dim);font-weight:600}
+.tag.o{background:rgba(220,80,0,.14);border-color:rgba(220,80,0,.4);color:var(--orange-br)}
+.tag.a{background:var(--amber-soft);border-color:rgba(232,160,75,.3);color:var(--amber)}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none;background:var(--surface-2)}
+.stat{font-size:42px;font-weight:800;line-height:1;color:var(--orange-br);letter-spacing:-.03em}
+.stat.cream{color:var(--cream)}
+.statlabel{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+tr:last-child td{border-bottom:none}
+td b{color:var(--cream)}
+ul.clean{list-style:none;padding:0;margin:0}
+ul.clean li{padding-left:24px;position:relative;margin-bottom:11px}
+ul.clean li::before{content:"";position:absolute;left:2px;top:11px;width:7px;height:7px;border-radius:2px;background:var(--orange)}
+.divider{height:1px;background:var(--line-soft);margin:30px 0}
+.callout{border-left:3px solid var(--orange);background:rgba(220,80,0,.08);padding:20px 24px;border-radius:0 14px 14px 0}
+.callout.a{border-color:var(--amber);background:var(--amber-soft)}
+.figcap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:14px}
+.sectionhead{display:flex;align-items:baseline;gap:14px;margin-bottom:10px}
+.sectionhead .idx{font-size:13px;color:var(--orange);font-weight:800;font-variant-numeric:tabular-nums}
+.accent{color:var(--orange-br)}
+
+/* cover */
+.cover{background:radial-gradient(130% 110% at 78% 8%, #2A1305 0%, #14090400 42%), radial-gradient(90% 120% at 12% 100%, #1A0E05 0%, #0A060400 50%), var(--bg);min-height:98vh;display:flex;align-items:center;border-top:none;position:relative;overflow:hidden}
+.cover .wrap{position:relative;z-index:2;padding:70px 30px}
+.brandrow{display:flex;align-items:center;gap:14px;margin-bottom:46px}
+.logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(140deg,var(--orange-br),#7A2A00);display:flex;align-items:center;justify-content:center;font-weight:800;color:#1A0A02;font-size:24px;box-shadow:0 8px 30px rgba(220,80,0,.4)}
+.cover h1{font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-.045em;margin-bottom:.35em;max-width:620px}
+.cover h1 .o{color:var(--orange-br)}
+.cover .lead{max-width:740px;font-size:clamp(18px,2.3vw,24px)}
+.covermeta{display:flex;gap:34px;flex-wrap:wrap;margin-top:50px;font-size:12.5px;color:var(--muted);letter-spacing:.02em}
+.covermeta b{color:var(--cream);font-weight:700;display:block;font-size:14.5px;margin-top:4px}
+.arca-face{position:absolute;right:40px;top:54%;transform:translateY(-50%);width:clamp(260px,29vw,390px);height:auto;z-index:1}
+.arca-face .companion{animation:float 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.arca-face .eyes{animation:blink 5.4s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96.5%{transform:scaleY(.12)}}
+
+/* ladder */
+.ladder{display:flex;flex-direction:column;gap:11px}
+.rung{display:grid;grid-template-columns:52px 1fr;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:18px 20px;box-shadow:var(--shadow)}
+.rung .n{font-size:24px;font-weight:800;color:#1A0A02;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.rung:nth-child(1) .n{background:#8C6A4A}
+.rung:nth-child(2) .n{background:var(--amber)}
+.rung:nth-child(3) .n{background:#E07A20}
+.rung:nth-child(4) .n{background:var(--orange)}
+.rung:nth-child(5) .n{background:var(--orange-br)}
+.rung h4{font-size:17px;margin-bottom:3px}
+.rung .en{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.rung .asset{font-size:13px;color:var(--amber);margin-top:7px}
+
+/* layers */
+.layers{display:flex;flex-direction:column;gap:9px}
+.layer{display:grid;grid-template-columns:160px 1fr;gap:20px;padding:18px 22px;border-radius:var(--r-sm);align-items:center;border:1px solid var(--line)}
+.layer .lname{font-weight:800;font-size:17px;color:#1A0A02}
+.layer .len{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#5A3A1A;font-weight:700}
+.layer .lbody{color:var(--cream-dim)}
+.l4{background:linear-gradient(100deg,#FF6A1A,#DC5000)}
+.l3{background:linear-gradient(100deg,#E8A04B,#D98A2E)}
+.l2{background:linear-gradient(100deg,#C98A5A,#B5703A)}
+.l1{background:linear-gradient(100deg,#A1876B,#8C6A4A)}
+.layer.l4 .lbody,.layer.l3 .lbody,.layer.l2 .lbody,.layer.l1 .lbody{color:#1A0A02;font-weight:500}
+.layer.l4 .lbody b,.layer.l3 .lbody b,.layer.l2 .lbody b,.layer.l1 .lbody b{color:#000}
+
+/* timeline */
+.tl-row{display:grid;grid-template-columns:120px 1fr;gap:20px;padding:15px 0;border-bottom:1px dashed var(--line-soft)}
+.tl-row:last-child{border-bottom:none}
+.tl-date{font-size:12.5px;color:var(--orange-br);font-weight:700;font-variant-numeric:tabular-nums}
+.tl-row h4{font-size:15.5px;margin-bottom:3px}
+
+/* concepts */
+.concept{border:1px solid var(--line);border-radius:var(--r-sm);padding:18px;background:var(--surface-2)}
+.concept .blob{width:46px;height:46px;border-radius:14px;margin-bottom:12px}
+.concept h4{font-size:15px;margin-bottom:4px}
+
+/* rings */
+.rings{position:relative;width:330px;height:330px;margin:0 auto}
+.ring{position:absolute;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:flex-start;justify-content:center;text-align:center;font-weight:700}
+.ring span{margin-top:12px;font-size:11px}
+.r1{width:330px;height:330px;background:#22150C;border:1px solid var(--line);color:var(--cream-dim)}
+.r2{width:226px;height:226px;background:var(--amber-soft);border:1px solid rgba(232,160,75,.3);color:var(--amber)}
+.r3{width:124px;height:124px;background:var(--orange);color:#1A0A02}
+
+/* matrix */
+.matrix{position:relative;height:430px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.matrix .qline{position:absolute;background:var(--line-soft)}
+.matrix .ql{position:absolute;font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.dot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px}
+.dot .d{width:12px;height:12px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(161,135,107,.16)}
+.dot .lbl{font-size:11.5px;font-weight:600;white-space:nowrap;color:var(--cream-dim)}
+.dot.arca .d{width:18px;height:18px;background:var(--orange-br);box-shadow:0 0 0 7px rgba(220,80,0,.22)}
+.dot.arca .lbl{color:var(--orange-br);font-weight:800}
+.axislab{position:absolute;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+
+/* bars */
+.bars{display:flex;flex-direction:column;gap:13px}
+.bar{display:grid;grid-template-columns:170px 1fr 74px;gap:14px;align-items:center;font-size:13px}
+.bar .track{height:22px;background:var(--bg-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.bar .fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--orange-br))}
+.bar .fill.a{background:linear-gradient(90deg,#9C6A3A,var(--amber))}
+.bar .val{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;color:var(--cream)}
+
+/* flywheel */
+.fly{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:center;text-align:center}
+.fly .node{padding:18px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}
+.fly .node h4{font-size:15px;margin-bottom:3px}
+.fly .ar{font-size:22px;color:var(--orange);text-align:center}
+
+/* objection */
+.obj{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--surface)}
+.obj .q{padding:16px 20px;background:rgba(199,64,31,.12);border-bottom:1px solid var(--line)}
+.obj .q b{color:#FF8A5A}
+.obj .a{padding:16px 20px}
+.obj .a .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--orange);font-weight:700;margin-bottom:4px}
+.obj .a .derisk{margin-top:11px;font-size:13px;color:var(--cream-dim);border-top:1px dashed var(--line);padding-top:11px}
+
+/* funnel */
+.funnel{display:flex;flex-direction:column;align-items:center;gap:7px}
+.funnel .step{padding:13px 18px;border-radius:9px;color:#1A0A02;font-size:13.5px;font-weight:700;text-align:center}
+
+.toc{columns:2;column-gap:46px}
+.toc a{display:block;padding:9px 0;border-bottom:1px solid var(--line-soft);color:var(--cream-dim);font-size:14.5px;break-inside:avoid}
+.toc a:hover{color:var(--orange-br)}
+.toc .nx{color:var(--faint);margin-right:12px;font-size:12px;font-variant-numeric:tabular-nums}
+.foot{background:#070403;padding:54px 0;border-top:1px solid var(--line-soft)}
+.srclist{font-size:11.5px;line-height:1.8;columns:2;column-gap:40px}
+.srclist a{color:var(--amber)}
+
+@media(max-width:820px){
+  .g2,.g3,.g4,.fly{grid-template-columns:1fr}
+  .fly .ar{transform:rotate(90deg)}
+  .layer,.rung{grid-template-columns:1fr}
+  .toc,.srclist{columns:1}
+  .cover{display:block}
+  .arca-face{position:static;transform:none;width:60%;max-width:260px;margin:6px auto 20px;display:block}
+  html.js .cover .arca-face,body.ready .cover .arca-face{opacity:1!important;animation:none!important;transform:none!important}
+  .scrollcue{display:none}
+}
+/* ---- intro + motion ---- */
+#intro{display:none;position:fixed;inset:0;z-index:1000;background:radial-gradient(120% 120% at 50% 44%,#1C0F07,#0A0604 72%);align-items:center;justify-content:center;flex-direction:column;gap:22px}
+html.js #intro{display:flex}
+#intro.gone{display:none!important}
+#introFace{width:min(48vw,280px);height:auto;cursor:pointer}
+#introHello{opacity:0;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
+#iEyes,#iPupils,.eyes,.pupils{transform-box:fill-box;transform-origin:center}
+#flash{display:none;position:fixed;inset:0;z-index:999;pointer-events:none;background:radial-gradient(circle at 50% 46%,#FFE6C4,#FF6A1A 42%,#DC5000 72%);clip-path:circle(0% at 50% 46%)}
+html.js #flash{display:block}
+.pupils{transition:transform .14s ease-out}
+.scrollcue{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--muted);font-size:10px;letter-spacing:.24em;text-transform:uppercase}
+.scrollcue svg{width:22px;height:22px}
+html.js .scrollcue{opacity:0}
+body.ready .scrollcue{opacity:1;transition:opacity .8s .6s;animation:cue 2.2s ease-in-out infinite 1.4s}
+@keyframes cue{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,7px)}}
+.card{transition:transform .25s ease,box-shadow .25s ease}
+.card:hover{transform:translateY(-4px);box-shadow:0 1px 0 rgba(255,237,215,.05),0 30px 70px rgba(0,0,0,.6)}
+.rung,.concept,.obj,.layer{transition:transform .22s ease}
+.rung:hover,.concept:hover,.obj:hover{transform:translateY(-3px)}
+html.js .cover .wrap>*{opacity:0;transform:translateY(18px)}
+html.js .cover .arca-face{opacity:0}
+body.ready .cover .wrap>*{opacity:1;transform:none;transition:opacity .7s,transform .7s}
+body.ready .cover .wrap>*:nth-child(2){transition-delay:.07s}
+body.ready .cover .wrap>*:nth-child(3){transition-delay:.14s}
+body.ready .cover .wrap>*:nth-child(4){transition-delay:.21s}
+body.ready .cover .wrap>*:nth-child(5){transition-delay:.28s}
+body.ready .cover .arca-face{animation:faceIn 1.1s .15s both}
+@keyframes faceIn{from{opacity:0;transform:translateY(-50%) scale(.8)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+html.js section .sectionhead,html.js section .lead,html.js section .card,html.js section .rung,html.js section .layer,html.js section .obj,html.js section .concept,html.js section .callout,html.js section table,html.js section .bars,html.js section .fly .node,html.js section .funnel,html.js section .rings,html.js section .matrix,html.js section .tl-row,html.js section .toc,html.js section .figcap{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+html.js section .in{opacity:1!important;transform:none!important}
+@media(prefers-reduced-motion:reduce){
+  #intro,#flash{display:none!important}
+  html.js *{opacity:1!important;transform:none!important;animation:none!important}
+}
+@media print{
+  :root{--bg:#0A0604}
+  section{padding:30px 0;break-inside:avoid}
+  .cover{min-height:auto;padding:30px 0}
+  .card,.rung,.obj{box-shadow:none}
+  a{color:var(--amber)}
+}
+</style>
+</head>
+<body>
+
+<!-- ========= COVER ========= -->
+<script>document.documentElement.classList.add('js')</script>
+
+<!-- intro: face blinks, eyes widen, the world opens -->
+<div id="intro" aria-hidden="true" title="ARCA">
+  <svg id="introFace" viewBox="0 0 320 340" fill="none">
+    <defs><linearGradient id="icompG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8638"/><stop offset="1" stop-color="#DC5000"/></linearGradient></defs>
+    <rect x="40" y="56" width="240" height="248" rx="100" fill="url(#icompG)"/>
+    <ellipse cx="100" cy="114" rx="46" ry="32" fill="#fff" opacity=".16"/>
+    <line x1="160" y1="56" x2="160" y2="26" stroke="#DC5000" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="160" cy="20" r="11" fill="#FF8638"/>
+    <g fill="#B53212" opacity=".38"><ellipse cx="88" cy="226" rx="20" ry="12"/><ellipse cx="232" cy="226" rx="20" ry="12"/></g>
+    <g id="iEyes">
+      <ellipse cx="115" cy="182" rx="28" ry="33" fill="#FFF3E2"/><ellipse cx="205" cy="182" rx="28" ry="33" fill="#FFF3E2"/>
+      <g id="iPupils" fill="#2A1205"><circle cx="120" cy="188" r="14"/><circle cx="210" cy="188" r="14"/><circle cx="113" cy="181" r="5" fill="#fff"/><circle cx="203" cy="181" r="5" fill="#fff"/></g>
+    </g>
+    <path d="M130 242 Q160 270 190 242" stroke="#2A1205" stroke-width="10" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div id="introHello">waking up</div>
+</div>
+<div id="flash" aria-hidden="true"></div>
+
+<!-- ========= COVER ========= -->
+<header class="cover">
+  <svg class="arca-face" viewBox="0 0 360 400" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="compG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8638"/><stop offset="1" stop-color="#DC5000"/></linearGradient>
+      <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="18"/></filter>
+    </defs>
+    <ellipse cx="180" cy="250" rx="150" ry="120" fill="#DC5000" opacity=".22" filter="url(#soft)"/>
+    <g class="companion">
+      <rect x="60" y="70" width="240" height="248" rx="100" fill="url(#compG)"/>
+      <ellipse cx="120" cy="128" rx="48" ry="34" fill="#fff" opacity=".16"/>
+      <line x1="180" y1="70" x2="180" y2="40" stroke="#DC5000" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="180" cy="34" r="11" fill="#FF8638"/>
+      <g fill="#B53212" opacity=".38"><ellipse cx="108" cy="240" rx="20" ry="12"/><ellipse cx="252" cy="240" rx="20" ry="12"/></g>
+      <g class="eyes">
+        <ellipse cx="135" cy="196" rx="28" ry="33" fill="#FFF3E2"/><ellipse cx="225" cy="196" rx="28" ry="33" fill="#FFF3E2"/>
+        <g class="pupils" fill="#2A1205"><circle cx="140" cy="202" r="14"/><circle cx="230" cy="202" r="14"/><circle cx="133" cy="195" r="5" fill="#fff"/><circle cx="223" cy="195" r="5" fill="#fff"/></g>
+      </g>
+      <path d="M150 256 Q180 286 210 256" stroke="#2A1205" stroke-width="10" fill="none" stroke-linecap="round"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="logo">A</div>
+      <div>
+        <div style="font-size:13px;letter-spacing:.2em;color:var(--orange-br);font-weight:700">THE ZONE</div>
+        <div style="font-size:11px;letter-spacing:.14em;color:var(--muted)">INVESTMENT MEMO · 2026.06</div>
+      </div>
+    </div>
+    <p class="kicker">Personal Agent Economy · BYOA · Soulware</p>
+    <h1>One Core, <span class="o">Many Bodies.</span><br/>One Soul, <span class="o">Many Bodies.</span></h1>
+    <p class="lead" style="max-width:540px">사라질 대화를 붙잡아 나를 학습한 에이전트로. <b>마찰 없는 second brain</b>에서 시작하는 개인 에이전트 경제.</p>
+    <div class="covermeta">
+      <div>전략<b>B2C-first · viral-led</b></div>
+      <div>단계<b>Pre-seed → Seed</b></div>
+    </div>
+  </div>
+  <div class="scrollcue">scroll<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>
+</header>
+
+<!-- ========= TOC ========= -->
+<section>
+  <div class="wrap">
+    <p class="kicker">Contents</p>
+    <div class="toc">
+      <a href="#summary"><span class="nx">01</span>Executive Summary</a>
+      <a href="#why"><span class="nx">02</span>Why Now</a>
+      <a href="#problem"><span class="nx">03</span>문제 정의</a>
+      <a href="#vision"><span class="nx">04</span>큰 그림 — 5단 사다리</a>
+      <a href="#product"><span class="nx">05</span>제품 — Core · Shell · Studio · Memory</a>
+      <a href="#moat"><span class="nx">06</span>해자 (Moat)</a>
+      <a href="#soulware"><span class="nx">07</span>Soulware</a>
+      <a href="#strategy"><span class="nx">08</span>전략 — B2C 선점, 역진입</a>
+      <a href="#thezone"><span class="nx">09</span>THE ZONE — 마켓플레이스 & SNS</a>
+      <a href="#market"><span class="nx">10</span>시장</a>
+      <a href="#competition"><span class="nx">11</span>경쟁 포지셔닝</a>
+      <a href="#model"><span class="nx">12</span>수익모델</a>
+      <a href="#gtm"><span class="nx">13</span>GTM</a>
+      <a href="#roadmap"><span class="nx">14</span>검증 & 로드맵</a>
+      <a href="#financials"><span class="nx">15</span>재무 시나리오</a>
+      <a href="#thesis"><span class="nx">16</span>투자 논리 & 반론</a>
+      <a href="#ask"><span class="nx">17</span>The Ask · 팀</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 01 SUMMARY ========= -->
+<section id="summary">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">01</span><p class="kicker" style="margin:0">Executive Summary</p></div>
+    <h2>녹음기가 아니라,<br/>개인 에이전트 경제의 <span class="accent">진입점</span>이다.</h2>
+    <p class="lead">ARCA는 매일 들고 다니고 싶은 기억 코어로 현실 대화를 붙잡아, 후속 메시지·할 일·일정·브리핑으로 전환한다. 이 행위가 반복되면 개인마다 복제 불가능한 memory graph가 쌓이고, 이는 나를 학습한 디지털 트윈과 나 대신 일하는 개인 에이전트의 연료가 된다.</p>
+
+    <div class="grid g4" style="margin:32px 0">
+      <div class="card"><div class="stat num">$52.6B</div><div class="statlabel">AI 에이전트 시장 2030E · CAGR 46% — 종착 시장</div></div>
+      <div class="card"><div class="stat cream num">2M+</div><div class="statlabel">Plaud 사용자 · 약 $100M ARR — "캡처에 돈을 낸다"는 증명</div></div>
+      <div class="card"><div class="stat cream num">$1.5B</div><div class="statlabel">Granola 밸류 — "대화 정리 = 엔터프라이즈 컨텍스트"의 증명</div></div>
+      <div class="card"><div class="stat num">2</div><div class="statlabel">독립 캡처 웨어러블이 빅테크에 인수 — 사용자 소유 레인이 비었다</div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card flat">
+        <p class="tag a">오늘 파는 것 · Wedge</p>
+        <ul class="clean small" style="margin-top:14px">
+          <li>대화 → 자동 Action Pack (메시지·할 일·일정·CRM·브리핑)</li>
+          <li>화자분리·맥락이 정확한 전사 + 사람/프로젝트별 기억</li>
+          <li>가지고 싶은 키치한 컴패니언: Core 하나 + 교체형 Shell</li>
+          <li>North Star — Conversation-to-Action Completion Rate</li>
+        </ul>
+      </div>
+      <div class="card flat">
+        <p class="tag o">향하는 곳 · Vision</p>
+        <ul class="clean small" style="margin-top:14px">
+          <li>내 데이터로 만든 디지털 트윈("me")</li>
+          <li>어떤 몸에도 로그인하는 개인 에이전트 (Soulware)</li>
+          <li>THE ZONE 마켓플레이스 — 개인 에이전트를 거래·구독</li>
+          <li>THE ZONE SNS — 사람과 에이전트가 공존</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:26px">
+      <b>한 문장 투자 논리.</b> 빅테크가 막 비워준 "데이터를 사용자가 소유하는" 독립 레인에서, 가장 마찰이 낮은 캡처로 시작한다. 빅테크가 복제할 수 없는 개인 컨텍스트를 자산으로 쌓아, 개인 에이전트 경제의 운영체제로 키운다. 우리가 증명할 단 하나는 "내 삶의 데이터로 만든 개인 에이전트에 사람들이 매달 구독료를 낸다"이다.
+    </div>
+  </div>
+</section>
+
+<!-- ========= 02 WHY NOW ========= -->
+<section id="why" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">02</span><p class="kicker" style="margin:0">Why Now</p></div>
+    <h2>독립 레인이 <span class="accent">방금 비었다.</span></h2>
+    <p class="lead">2025–2026년, 세 가지가 동시에 일어났다. 빅테크가 캡처 웨어러블을 흡수했고, 사용자는 프라이버시를 이유로 독립·오픈 진영으로 이동했으며, 에이전트의 영혼과 몸을 분리하는 표준이 등장했다.</p>
+
+    <div class="card" style="margin-top:20px">
+      <div class="tl-row"><div class="tl-date">2025.01</div><div><h4>omi, 시드 $2M (Tim Draper 등)</h4><p class="small muted" style="margin:0">오픈소스·로컬저장·HIPAA 기반 $89 AI 웨어러블. ARCA의 캡처 스택 기반.</p></div></div>
+      <div class="tl-row"><div class="tl-date">2025.05–07</div><div><h4>OpenAI, Jony Ive의 io 인수 약 $6.5B</h4><p class="small muted" style="margin:0">화면 없는 맥락 인지 디바이스. AI 하드웨어가 차세대 인터페이스라는 신호.</p></div></div>
+      <div class="tl-row"><div class="tl-date">2025.07</div><div><h4>Amazon, Bee 인수</h4><p class="small muted" style="margin:0">$49 캡처 밴드. 독립 플레이어가 하나 사라졌다.</p></div></div>
+      <div class="tl-row"><div class="tl-date">2025.12</div><div><h4>Meta, Limitless 인수 후 하드웨어 판매 중단</h4><p class="small muted" style="margin:0">HIPAA 보호 소멸, 한국·EU 차단. 사용자가 프라이버시를 이유로 Omi로 이동.</p></div></div>
+      <div class="tl-row"><div class="tl-date">2026.01–03</div><div><h4>Plaud 2M+·약 $100M ARR / Granola $1.5B</h4><p class="small muted" style="margin:0">"캡처에 돈을 낸다" + "대화 정리 SW는 유니콘"으로 카테고리가 입증됐다.</p></div></div>
+      <div class="tl-row"><div class="tl-date">2026.02–04</div><div><h4>soul.md · SoulSpec · MCP 확산</h4><p class="small muted" style="margin:0">에이전트 페르소나·컨텍스트를 기기와 무관하게 이식하는 표준화. Soulware의 기술적 토대.</p></div></div>
+      <p class="figcap">Fig.1 — 2025–2026 카테고리 타임라인 (출처: Appendix)</p>
+    </div>
+
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card"><p class="tag o">Vacated lane</p><p class="small" style="margin-top:12px;color:var(--cream-dim)">두 독립 강자가 빅테크에 흡수되며 "내 데이터를 내가 소유"하는 진영이 비었다. ARCA가 그 자리에 선다.</p></div>
+      <div class="card"><p class="tag a">User migration</p><p class="small" style="margin-top:12px;color:var(--cream-dim)">인수 직후 사용자가 프라이버시를 이유로 능동적으로 이동했다. 수요가 증명된 이탈이다.</p></div>
+      <div class="card"><p class="tag a">Agentic inflection</p><p class="small" style="margin-top:12px;color:var(--cream-dim)">Gartner: 2026년 말 엔터프라이즈 앱의 40%가 에이전트 탑재(2025년 5% 미만). 에이전트가 먹을 개인 컨텍스트의 가치가 급증한다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 03 PROBLEM ========= -->
+<section id="problem">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">03</span><p class="kicker" style="margin:0">Problem</p></div>
+    <h2>기록 부족이 아니라<br/><span class="accent">실행 전환 실패</span>다.</h2>
+    <p class="lead">더 근본적인 문제가 있다. 미래의 개인 AI가 제대로 일하려면 내 현실 맥락을 학습해야 하는데, 그 맥락의 대부분은 문서가 아니라 사라지는 대화 속에 있다. 그것을 올리는 마찰이 너무 크다.</p>
+
+    <div class="card flat center" style="margin:26px 0;padding:34px">
+      <p class="kicker" style="justify-content:center">제품 가치 방정식</p>
+      <p style="font-size:clamp(18px,3vw,28px);font-weight:800;margin:8px 0 6px;letter-spacing:-.02em">
+        가치 = <span class="accent">캡처 확률</span> × <span style="color:var(--amber)">이해 품질</span> × <span class="accent">행동 전환율</span> × <span style="color:var(--amber)">경제적 가치</span>
+      </p>
+      <p class="small muted" style="margin:0">기존 노트 앱은 가운데 항만 키웠다. ARCA는 캡처 확률과 행동 전환율을 동시에 올린다. 곱셈이므로 한 항이 0이면 가치도 0이다.</p>
+    </div>
+
+    <table>
+      <thead><tr><th>상황</th><th>현재 손실</th><th>ARCA 산출물</th></tr></thead>
+      <tbody>
+        <tr><td>투자자·파트너 미팅</td><td>질문·우려·약속·자료요청이 흩어진다</td><td>감사 메시지·요청자료·다음 agenda</td></tr>
+        <tr><td>영업 / BD</td><td>니즈·예산·반대의견 누락이 매출 손실로</td><td>CRM 업데이트·제안 항목·follow-up 초안</td></tr>
+        <tr><td>팀 회의</td><td>결정은 있으나 담당·기한이 불명확</td><td>owner·due·blocker·공유 요약</td></tr>
+        <tr><td>인터뷰·리서치</td><td>좋은 발화가 콘텐츠로 전환되지 못한다</td><td>quote·insight·theme·다음 질문</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted" style="margin-top:16px">결정적 차이는 가능성이 아니라 행동이다. 사람들은 중요한 순간에 폰을 꺼내 잠금을 풀고 앱을 찾아 녹음을 시작하지 않는다. 데일리 캐리 디바이스와 낮은 마찰이 하드웨어의 존재 이유다.</p>
+  </div>
+</section>
+
+<!-- ========= 04 VISION LADDER ========= -->
+<section id="vision" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">04</span><p class="kicker" style="margin:0">The Big Picture</p></div>
+    <h2>한 칸씩 오르는 <span class="accent">5단 사다리.</span></h2>
+    <p class="lead">각 단은 사용자 가치와 사업 자산을 동시에 만든다. 오늘의 좁은 가치가 내일의 해자로 복리된다. 디지털 트윈을 처음부터 팔지 않는다. 캡처에서 시작해 사다리를 오른다.</p>
+
+    <div class="ladder" style="margin-top:24px">
+      <div class="rung"><div class="n num">1</div><div><div class="en">Capture · ARCA (omi-based)</div><h4>마찰 없는 캡처 — 데이터 second brain</h4><p class="small muted" style="margin:0">버튼 한 번으로 현실 대화를 붙잡는다.</p><div class="asset">쌓이는 자산: 반복 캡처 데이터 · 데일리 캐리 습관</div></div></div>
+      <div class="rung"><div class="n num">2</div><div><div class="en">Structure · Action OS + Memory Graph</div><h4>대화 → 실행 + 사람/프로젝트 기억 <span class="tag o" style="vertical-align:middle">오늘 수익화</span></h4><p class="small muted" style="margin:0">승인형 Action Pack과 관계·맥락 그래프.</p><div class="asset">쌓이는 자산: 구조화된 개인 컨텍스트 · switching cost</div></div></div>
+      <div class="rung"><div class="n num">3</div><div><div class="en">Twin · Your "me"</div><h4>나를 학습한 디지털 트윈</h4><p class="small muted" style="margin:0">말투·선호·관계·의사결정 기준을 아는 개인 모델.</p><div class="asset">쌓이는 자산: 복제 불가능한 종단 개인 데이터</div></div></div>
+      <div class="rung"><div class="n num">4</div><div><div class="en">Labor · Personal Agents (BYOA / Soulware)</div><h4>나 대신 일하는 에이전트, 어떤 몸에도 로그인</h4><p class="small muted" style="margin:0">영혼(에이전트)과 몸(하드웨어)의 분리.</p><div class="asset">쌓이는 자산: 워크플로우 생태계 · 이식 가능한 소유권</div></div></div>
+      <div class="rung"><div class="n num">5</div><div><div class="en">THE ZONE · Marketplace & SNS</div><h4>개인 에이전트를 거래·구독하고, 사람과 에이전트가 공존</h4><p class="small muted" style="margin:0">소유한 "me"를 사고팔고, 대신 사회활동하게 한다.</p><div class="asset">쌓이는 자산: 네트워크 효과 · take-rate 경제</div></div></div>
+    </div>
+
+    <div class="callout a" style="margin-top:26px">
+      <b>왜 이 순서인가.</b> 트윈·에이전트·마켓플레이스를 한 번에 팔면 "다섯 개의 어려운 회사를 묶은 것"으로 보인다. ARCA는 가장 구체적이고 돈이 되는 2단에서 시작해, 각 단의 자산이 다음 단을 가능케 한다. 투자자가 사는 것은 오늘의 wedge와 위로 오를 수밖에 없는 사다리다.
+    </div>
+  </div>
+</section>
+
+<!-- ========= 05 PRODUCT ========= -->
+<section id="product">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">05</span><p class="kicker" style="margin:0">Product</p></div>
+    <h2>Core 하나, <span class="accent">갈아 끼우는 몸.</span></h2>
+    <p class="lead">Plaud는 상황별로 다른 기기를 산다. ARCA는 같은 코어를 상황별 쉘에 끼운다. 케이스·키링·피규어·웨어러블 시장을 하나로 묶는다. 근간 스택은 오픈소스 omi 기반으로 하드웨어 리스크를 낮추고, 차별화는 경험 레이어에 집중한다.</p>
+
+    <div class="grid g3" style="margin:24px 0">
+      <div class="card"><p class="tag a">Arc Core</p><h3 style="margin-top:12px">기억을 담는 엔진</h3><p class="small muted" style="margin:0">버튼·마이크·저장·배터리·얼굴 상태 UI를 통합한 인증된 표준 모듈. 통화녹음용 접촉면 포함.</p></div>
+      <div class="card"><p class="tag a">Arc Shell</p><h3 style="margin-top:12px">내가 선택하는 몸</h3><p class="small muted" style="margin:0">키링·클립·뱃지·펜던트·폰 부착·데스크 토템·캐릭터. 비전자 외피로 매일 휴대와 애착을 만든다.</p></div>
+      <div class="card"><p class="tag a">Arc Studio</p><h3 style="margin-top:12px">내가 만드는 캐릭터</h3><p class="small muted" style="margin:0">"강아지 닮은 펜던트", "도깨비 마스코트"를 주문하는 AI 커스터마이즈. 검증된 템플릿 위에서만.</p></div>
+    </div>
+
+    <div class="layers" style="margin-top:8px">
+      <div class="layer l4"><div><div class="len">Layer 4 — Action</div><div class="lname">ARCA Action</div></div><div class="lbody small">대화 종료 시 승인 가능한 행동 패키지. 보낼 메시지·할 일·일정·브리핑. <b>Draft first, send after approval.</b></div></div>
+      <div class="layer l3"><div><div class="len">Layer 3 — Memory</div><div class="lname">ARCA Memory</div></div><div class="lbody small">대화를 Person·Project·Commitment·Action 객체로 구조화. 회의록 리스트가 아니라 <b>memory graph.</b></div></div>
+      <div class="layer l2"><div><div class="len">Layer 2 — Shell</div><div class="lname">ARCA Shell</div></div><div class="lbody small">상황·취향별 교체형 외피. 장식이 아니라 매일 휴대와 애착을 만드는 <b>adoption layer.</b></div></div>
+      <div class="layer l1"><div><div class="len">Layer 1 — Core</div><div class="lname">ARCA Core</div></div><div class="lbody small">행동 안에 들어가는 캡처 인터페이스. 완벽한 처리장치가 아니라 <b>캡처 확률을 높이는 물성.</b></div></div>
+    </div>
+
+    <div class="grid g4" style="margin-top:24px">
+      <div class="concept"><div class="blob" style="background:linear-gradient(135deg,#E8E0D2,#B8AE9C)"></div><h4>A · 미니멀</h4><p class="tiny" style="margin:0">무광 화이트 조약돌, 원형 LED 표정.</p></div>
+      <div class="concept"><div class="blob" style="background:linear-gradient(135deg,#9C7A4A,#6B4E2A)"></div><h4>B · 유기적</h4><p class="tiny" style="margin:0">목재·석재 질감 펜던트.</p></div>
+      <div class="concept" style="border-color:var(--orange)"><div class="blob" style="background:linear-gradient(135deg,#FF6A1A,#DC5000)"></div><h4>C · 키치 ★</h4><p class="tiny" style="margin:0">파스텔 TPU 캐릭터. 갖고 싶은 친구. <b style="color:var(--orange-br)">진입 wedge.</b></p></div>
+      <div class="concept"><div class="blob" style="background:linear-gradient(135deg,#3A3A3E,#101012)"></div><h4>D · 하이테크</h4><p class="tiny" style="margin:0">글로시 블랙 캡슐, 데스크 도크.</p></div>
+    </div>
+    <p class="figcap">Fig.2 — Core 더미 + Shell 콘셉트. 첫 출시는 검증된 3종으로 시작한다.</p>
+  </div>
+</section>
+
+<!-- ========= 06 MOAT ========= -->
+<section id="moat" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">06</span><p class="kicker" style="margin:0">The Moat</p></div>
+    <h2>기술 뼈대는 빌리고,<br/><span class="accent">욕망은 직접 만든다.</span></h2>
+    <p class="lead">전사·화자분리·메모리·BLE 같은 기본 스택은 오픈소스로 60–70% 확보된다. 복제 불가능한 해자는 네 곳에서 나온다.</p>
+
+    <div class="grid g2" style="margin-top:22px">
+      <div class="card">
+        <p class="tag o">Moat 1 — 커스터마이즈 검증 엔진</p>
+        <h3 style="margin-top:12px">자유로워 보이지만, 검증된 템플릿 안에서만 자유롭다</h3>
+        <p class="small muted">Arc Studio에서 프롬프트를 치면 즉시 출력하지 않는다. 코어 소켓·마이크 개방부·버튼 접근성·LED 가시성·충전·안테나 keep-out·최소 벽두께·무게·출력 가능성을 자동 검사한다. 이 DFM 검증 파이프라인이 "커스터마이즈 가능한데도 양산 가능한" 유일한 회사로 만든다.</p>
+      </div>
+      <div class="card">
+        <p class="tag o">Moat 2 — 인증 경계</p>
+        <h3 style="margin-top:12px">코어는 한 번 인증, 쉘은 비전자 액세서리</h3>
+        <p class="small muted">무선기기는 외형을 바꿔 팔면 KC·FCC 인증 이슈가 생긴다. ARCA는 전자 코어만 인증하고(FCC 모듈러 인증 접근), 커스텀 쉘은 전자 성능을 건드리지 않는 액세서리로 설계한다. 무한 커스터마이즈와 양산·규제를 양립시키는 구조적 우위다.</p>
+      </div>
+      <div class="card">
+        <p class="tag a">Moat 3 — 크리에이터 쉘 마켓</p>
+        <h3 style="margin-top:12px">생태계가 곧 성벽</h3>
+        <p class="small muted">검증된 템플릿 위에서 크리에이터가 캐릭터·쉘을 올리고 판다. 케이스·피규어·키링 시장의 공급을 끌어오고, 이는 5단 THE ZONE 마켓플레이스의 콜드스타트를 미리 푼다.</p>
+      </div>
+      <div class="card">
+        <p class="tag a">Moat 4 — 종단 개인 데이터</p>
+        <h3 style="margin-top:12px">파운데이션 모델이 못 가진 것</h3>
+        <p class="small muted">시간에 걸쳐 쌓인 취향·습관·관계·의사결정 맥락. 모델이 좋아져도 복제되지 않는 자산이며, MCP로 이식 가능하고 사용자가 소유한다. 브랜드·산업디자인과 함께 복붙 불가능한 해자를 만든다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 07 SOULWARE ========= -->
+<section id="soulware">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">07</span><p class="kicker" style="margin:0">AI Soulware</p></div>
+    <h2>영혼은 소유하고,<br/><span class="accent">몸은 갈아 끼운다.</span></h2>
+    <p class="lead">하드웨어의 "One Core, Many Bodies"가 소프트웨어에서 그대로 반복된다. 빅테크가 만든 똑같은 AI가 아니라, 내가 캡처한 데이터로 파인튜닝한 나만의 에이전트를 어떤 몸에든 로그인하듯 연동한다. 하드웨어와 영혼이 분리되어 거래되는 소울웨어·구독형 에이전트 비즈니스다.</p>
+
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:22px;align-items:center;margin:30px 0;text-align:center">
+      <div class="card"><p class="tag o" style="margin-bottom:10px">THE SOUL — 소유</p><h3>개인 에이전트</h3><p class="small muted" style="margin:0">내 컨텍스트·말투·관계·취향. 이식(MCP)·파인튜닝·소유·거래 가능.</p></div>
+      <div style="font-size:34px;color:var(--orange-br)">⇄</div>
+      <div class="card"><p class="tag a" style="margin-bottom:10px">THE BODY — 교체</p><h3>하드웨어</h3><p class="small muted" style="margin:0">ARCA Core·폰·스마트가전·웨어러블·반려·휴머노이드 로봇.</p></div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card flat"><p class="tag a">표준화 중</p><p class="small" style="margin-top:10px;color:var(--cream-dim)">soul.md·SoulSpec: 같은 페르소나 정의가 챗봇·앱·로봇에서 동작. "영혼 이식"이 임의 발명이 아닌 이유.</p></div>
+      <div class="card flat"><p class="tag a">컨텍스트 이식</p><p class="small" style="margin-top:10px;color:var(--cream-dim)">MCP를 OpenAI·Google이 채택. "내 컨텍스트를 어떤 에이전트로도 가져간다"의 기술 토대.</p></div>
+      <div class="card flat"><p class="tag o">몸이 오는 중</p><p class="small" style="margin-top:10px;color:var(--cream-dim)">Figure·1X·Optimus 모멘텀. 단 2028년 이후 옵션 가치이며, 라운드를 여기에 베팅하지 않는다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 08 STRATEGY ========= -->
+<section id="strategy" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">08</span><p class="kicker" style="margin:0">Strategy</p></div>
+    <h2>모두가 엔터프라이즈로 갈 때,<br/><span class="accent">소비자의 마음부터 잡는다.</span></h2>
+    <p class="lead">초개인화 시대의 해자는 사용자의 애착이다. 엔터프라이즈는 이미 Plaud와 빅테크가 점유하고 있다. ARCA는 "갖고 싶은 친구" 포지션으로 B2C를 선점하고, 바이럴로 조직 내부에 침투한 뒤, 엔터프라이즈로 역진입한다.</p>
+
+    <div class="grid g3" style="margin:24px 0">
+      <div class="card"><div class="stat num" style="font-size:30px">STEP 1</div><h3 style="margin-top:10px">B2C 선점</h3><p class="small muted" style="margin:0">키치한 컴패니언으로 데스크·가방 위에 올라간다. EDC·크리에이터 문화로 시각적 확산. "녹음기"가 아니라 "내 하루를 기억해주는 친구".</p></div>
+      <div class="card"><div class="stat num" style="font-size:30px">STEP 2</div><h3 style="margin-top:10px">바이럴 → 팀 침투</h3><p class="small muted" style="margin:0">창업자·세일즈·PM이 개인용으로 들여와 팀에 공유. 프로슈머 주도 PLG로 워크스페이스가 자연 확장.</p></div>
+      <div class="card"><div class="stat num" style="font-size:30px">STEP 3</div><h3 style="margin-top:10px">엔터프라이즈 역진입</h3><p class="small muted" style="margin:0"><b>회사 마스코트.</b> 브랜드 커스텀 Core+Shell과 사내 에이전트로, 위에서 영업하는 대신 아래에서 끌려 들어간다.</p></div>
+    </div>
+
+    <div class="callout">
+      <b>왜 역방향이 옳은가.</b> 캡처·전사·요약의 엔터프라이즈 정면 경쟁은 Plaud·Granola·빅테크가 자본과 유통으로 이긴다. 반면 "가지고 싶은 물성과 애착"은 그들이 만들지 못한다. 소비자가 사랑하는 물건은 조직 안으로 끌려 들어간다. Notion·Figma·Slack이 증명한 bottom-up 경로다.
+    </div>
+  </div>
+</section>
+
+<!-- ========= 09 THE ZONE ========= -->
+<section id="thezone">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">09</span><p class="kicker" style="margin:0">THE ZONE — Endgame</p></div>
+    <h2>사람과 에이전트가 <span class="accent">공존하는 장.</span></h2>
+    <p class="lead">ARCA가 개인의 "me"를 만들면, THE ZONE은 그 me들이 만나고 일하고 거래되는 네트워크가 된다. 두 개의 면이 있다. 개인 에이전트를 거래·구독하는 마켓플레이스, 그리고 사람과 에이전트가 함께 활동하는 SNS.</p>
+
+    <div class="grid g2" style="margin-top:20px">
+      <div class="card">
+        <p class="tag o">Marketplace</p>
+        <h3 style="margin-top:12px">개인 에이전트를 거래·구독</h3>
+        <ul class="clean small" style="margin-top:8px">
+          <li>크리에이터의 "me"-agent를 팬이 구독 (Poe·Character.AI가 수요 증명)</li>
+          <li>도메인 에이전트(세일즈·리서치·법무)와 캐릭터 쉘 거래에 take-rate</li>
+          <li>일반 GPT가 아니라 희소한 개인화 에이전트를 거래해 단가·구독성이 높다</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p class="tag a">Agent SNS</p>
+        <h3 style="margin-top:12px">내 에이전트가 나를 대신해 활동</h3>
+        <ul class="clean small" style="margin-top:8px">
+          <li>내 트윈이 네트워킹·필터링·초안 작성을 대행</li>
+          <li>에이전트 간 상호작용 (Agents Society 등 초기 실험 존재)</li>
+          <li class="muted">가장 미검증 레그다. 근시일 기둥이 아니라 옵션 가치로 제시한다.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card flat" style="margin-top:22px">
+      <p class="kicker">왜 ARCA가 이 마켓을 지을 자격이 있나</p>
+      <p class="small muted" style="margin:0">마켓플레이스는 콜드스타트가 어렵다. ARCA의 답은 공급이 캡처에서 자동 생성된다는 것이다. 사용자는 에이전트를 만들지 않는다. 그냥 살아가며 캡처할 뿐이고, 트윈은 수동 저작이 아니라 주변 데이터에서 자라난다. 게다가 6단계 moat인 크리에이터 쉘 마켓이 공급자 생태계를 미리 키워둔다. 이것이 수동 제작·$0.03/대화의 GPT Store와 다른 점이다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 10 MARKET ========= -->
+<section id="market" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">10</span><p class="kicker" style="margin:0">Market</p></div>
+    <h2>오늘의 카테고리에서 시작해<br/><span class="accent">에이전트 경제로</span> 확장한다.</h2>
+    <p class="lead">단일 과장 숫자 대신, 실제로 서 있는 세 개의 동심원으로 본다. 안쪽에서 돈을 벌며 바깥으로 확장한다.</p>
+
+    <div class="grid g2" style="margin-top:22px;align-items:center">
+      <div>
+        <div class="rings">
+          <div class="ring r1">TAM<br/><span>$52.6B · AI 에이전트 2030E</span></div>
+          <div class="ring r2">SAM<br/><span>~$19.6B · 개인 AI 2030E</span></div>
+          <div class="ring r3">SOM<br/><span>대화 인텔리전스</span></div>
+        </div>
+        <p class="figcap center">Fig.3 — TAM / SAM / SOM (MarketsAndMarkets, Research&amp;Markets)</p>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>시장</th><th>규모 / 전망</th><th>출처</th></tr></thead>
+          <tbody>
+            <tr><td>AI 에이전트</td><td><b class="num">$7.84B→$52.6B</b> (’30), 46%</td><td>M&amp;M</td></tr>
+            <tr><td>개인 AI 어시스턴트</td><td><b class="num">$3.4B→$19.6B</b> (’30), 42%</td><td>R&amp;M</td></tr>
+            <tr><td>대화형 AI</td><td><b class="num">~$17B</b> (’26), ~25%</td><td>TBRC</td></tr>
+            <tr><td>웨어러블 AI</td><td><b class="num">$43.6B→$310B</b> (’33)</td><td>Grand View</td></tr>
+            <tr><td>디지털 트윈*</td><td><b class="num">~$34B</b> (’26)</td><td>Fortune BI</td></tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin-top:8px">*개인(사람)의 디지털 트윈은 별도 세그먼트로 집계되지 않으며 산업용 수치다. 기관별 추정 편차가 크므로 방향성 지표로 본다.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <h3>카테고리가 이미 증명한 것</h3>
+    <div class="bars" style="margin-top:16px;max-width:780px">
+      <div class="bar"><div>Sierra · 엔터프라이즈 에이전트</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="val num">$15B</div></div>
+      <div class="bar"><div>Granola · 미팅 인텔</div><div class="track"><div class="fill" style="width:10%"></div></div><div class="val num">$1.5B</div></div>
+      <div class="bar"><div>Plaud ARR · 캡처 HW</div><div class="track"><div class="fill a" style="width:1%"></div></div><div class="val num">~$100M</div></div>
+      <div class="bar"><div>Character.AI · 소비자 에이전트</div><div class="track"><div class="fill a" style="width:0.4%"></div></div><div class="val num">~$30M</div></div>
+    </div>
+    <p class="small muted" style="margin-top:16px">읽는 법: 돈은 엔터프라이즈 에이전트에 몰려 있고(Sierra), 소비자 개인 에이전트는 몰입은 깊지만 수익화는 얕다(Character.AI). 이것이 ARCA의 과제이자 기회다. 16절에서 정면으로 다룬다.</p>
+  </div>
+</section>
+
+<!-- ========= 11 COMPETITION ========= -->
+<section id="competition">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">11</span><p class="kicker" style="margin:0">Competition</p></div>
+    <h2>비어 있는 사분면:<br/><span class="accent">실행가능 × 사용자 소유.</span></h2>
+    <p class="lead">전사 정확도·배터리·가격으로 싸우면 진다. 축을 바꾼다. 가로축은 캡처 중심에서 행동·소유 중심으로, 세로축은 빅테크·폐쇄에서 독립·오픈·사용자 소유로.</p>
+
+    <div style="max-width:780px;margin:28px auto 0;position:relative;padding-left:42px;padding-bottom:40px">
+      <div class="matrix">
+        <div class="qline" style="left:50%;top:0;bottom:0;width:1px"></div>
+        <div class="qline" style="top:50%;left:0;right:0;height:1px"></div>
+        <div class="ql" style="left:16px;top:14px">폐쇄 · 캡처</div>
+        <div class="ql" style="right:16px;top:14px">폐쇄 · 행동</div>
+        <div class="ql" style="left:16px;bottom:14px">오픈 · 캡처</div>
+        <div class="ql" style="right:16px;bottom:14px;color:var(--orange-br);font-weight:700">오픈 · 행동 ★</div>
+        <div class="dot" style="left:24%;top:30%"><div class="d"></div><div class="lbl">Bee/Limitless→빅테크</div></div>
+        <div class="dot" style="left:30%;top:62%"><div class="d"></div><div class="lbl">Plaud</div></div>
+        <div class="dot" style="left:26%;top:80%"><div class="d"></div><div class="lbl">omi (오픈)</div></div>
+        <div class="dot" style="left:70%;top:26%"><div class="d"></div><div class="lbl">Granola</div></div>
+        <div class="dot" style="left:62%;top:36%"><div class="d"></div><div class="lbl">Otter/Fireflies</div></div>
+        <div class="dot" style="left:82%;top:20%"><div class="d"></div><div class="lbl">빅테크 에이전트</div></div>
+        <div class="dot arca" style="left:78%;top:76%"><div class="d"></div><div class="lbl">ARCA</div></div>
+      </div>
+      <div class="axislab" style="bottom:0;left:50%;transform:translateX(-50%)">캡처 중심 ⟶ 행동 · 소유 중심</div>
+      <div class="axislab" style="left:-2px;top:50%;transform:rotate(-90deg) translateX(50%);transform-origin:left">빅테크 ⟶ 독립 · 사용자 소유</div>
+    </div>
+    <p class="figcap center" style="margin-bottom:28px">Fig.4 — 경쟁 포지셔닝 2×2</p>
+
+    <table>
+      <thead><tr><th>경쟁군</th><th>강점</th><th>빈틈</th><th>ARCA 대응</th></tr></thead>
+      <tbody>
+        <tr><td>Plaud</td><td>물리 버튼·웨어러블·팀</td><td>capture-first, 실행·정체성 약함</td><td>Action OS·Shell로 캡처 이후를 점유</td></tr>
+        <tr><td>Granola</td><td>노트 UX·엔터프라이즈 컨텍스트</td><td>물리 캡처 없음, 즉흥 대화 약함</td><td>현실 대화 캡처 + Action Pack</td></tr>
+        <tr><td>Bee/Limitless→빅테크</td><td>ambient memory·자본</td><td>상시 청취 불안·데이터 소유권</td><td>버튼·가시 상태·Vault/Work/Share·소유</td></tr>
+        <tr><td>스마트폰 앱</td><td>이미 녹음·전사 가능</td><td>중요한 순간에 행동이 안 일어남</td><td>데일리 캐리·저마찰로 캡처 확률↑</td></tr>
+        <tr><td>GPT Store / 마켓</td><td>유통·규모</td><td>수동 제작·$0.03/대화·개인화 약함</td><td>캡처에서 자란 개인 에이전트·구독</td></tr>
+      </tbody>
+    </table>
+    <div class="callout" style="margin-top:22px"><b>한 줄 경쟁 명제.</b> Plaud made AI note-taking <em>physical</em>. ARCA makes AI memory <em>personal, actionable, and owned</em>. Plaud가 녹음 분량을 본다면, ARCA는 완료된 행동과 소유된 컨텍스트를 본다.</div>
+  </div>
+</section>
+
+<!-- ========= 12 MODEL ========= -->
+<section id="model" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">12</span><p class="kicker" style="margin:0">Business Model</p></div>
+    <h2>하드웨어는 획득, 구독은 반복,<br/>마켓플레이스는 <span class="accent">복리.</span></h2>
+
+    <div class="fly" style="margin:24px 0 8px">
+      <div class="node"><h4>Core 판매</h4><p class="tiny" style="margin:0">$129–179 · 획득</p></div>
+      <div class="ar">→</div>
+      <div class="node"><h4>Pro 구독</h4><p class="tiny" style="margin:0">$9–15/mo · 반복</p></div>
+      <div class="ar">→</div>
+    </div>
+    <div class="fly">
+      <div class="node"><h4>Shell · Studio</h4><p class="tiny" style="margin:0">$19–59 · 정체성·마진</p></div>
+      <div class="ar">→</div>
+      <div class="node"><h4>Team · 마스코트</h4><p class="tiny" style="margin:0">$15–25/seat · 확장</p></div>
+      <div class="ar">→</div>
+    </div>
+    <div class="card" style="margin-top:14px"><p class="small" style="margin:0;text-align:center;color:var(--cream-dim)"><b>장기:</b> Vertical Pack → Marketplace take-rate + 개인 에이전트 구독 = 사다리 4–5단의 수익 레이어. 데이터가 쌓일수록 트윈이 좋아지고, 트윈이 좋아질수록 구독·거래가 늘며, 그것이 다시 데이터를 부른다.</p></div>
+
+    <div class="divider"></div>
+    <h3>가격 비교</h3>
+    <table>
+      <thead><tr><th>제품</th><th>하드웨어</th><th>구독</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>Plaud NotePin / S</td><td class="num">$159 / $179</td><td class="num">$8–30/mo</td><td>2M+ 유저</td></tr>
+        <tr><td>Limitless (인수 전)</td><td class="num">$99</td><td class="num">$29/mo</td><td>Meta 인수로 판매 중단</td></tr>
+        <tr><td>Granola</td><td>—</td><td class="num">$14–18/seat</td><td>$1.5B 밸류</td></tr>
+        <tr><td>Personal.ai</td><td>—</td><td class="num">$40/mo</td><td>개인 트윈/PLM</td></tr>
+        <tr><td>Character.AI</td><td>—</td><td class="num">$9.99/mo</td><td>75분 평균 세션</td></tr>
+        <tr><td><b>ARCA (제안)</b></td><td class="num"><b>$129–179</b></td><td class="num"><b>$9–15/mo</b></td><td>+ Shell·Team·마켓플레이스</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ========= 13 GTM ========= -->
+<section id="gtm">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">13</span><p class="kicker" style="margin:0">Go-to-Market</p></div>
+    <h2>프로슈머가 끌고,<br/><span class="accent">키치함이 퍼뜨린다.</span></h2>
+    <p class="lead">한국에서 만들고 검증은 영어권에서 한다. 첫 시장은 AI 생산성 도구에 이미 돈을 내는 영어권 프로슈머와, 키치한 소품을 사랑하는 소비자다.</p>
+
+    <div class="grid g2" style="margin-top:22px;align-items:center">
+      <div class="funnel">
+        <div class="step" style="background:#FF6A1A;width:100%">랜딩 · "Choose your first shell"</div>
+        <div class="step" style="background:#E8742A;width:84%">Action Pack Challenge · 실제 파일 업로드</div>
+        <div class="step" style="background:#D98A2E;width:66%">Concierge MVP · Action Pack에 지불</div>
+        <div class="step" style="background:#C98A5A;width:48%">2주 Pilot · 주 3회+, retention 40%+</div>
+        <div class="step" style="background:#A1876B;width:32%">유료 전환 · deposit · 추천</div>
+      </div>
+      <div>
+        <h3>채널</h3>
+        <ul class="clean small">
+          <li>X·LinkedIn·Reddit·Product Hunt — 창업자·AI 생산성 커뮤니티</li>
+          <li>YouTube Shorts·TikTok·EDC·desk-setup 크리에이터 — 쉘 바이럴</li>
+          <li>프라이버시 이주민에게 "소유하는 캡처" 메시지</li>
+        </ul>
+        <div class="callout a" style="margin-top:16px"><b>주의.</b> "쉘 파는 회사"로 보이면 안 된다. 모든 쉘 옆에 어떤 행동 완결을 돕는지를 붙인다. 키치함은 주인공이 아니라 진입 마찰을 낮추는 장치다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 14 ROADMAP ========= -->
+<section id="roadmap" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">14</span><p class="kicker" style="margin:0">Validation &amp; Roadmap</p></div>
+    <h2>설문이 아니라 <span class="accent">행동 데이터로</span> 증명한다.</h2>
+    <p class="lead">가설을 하나의 완제품에 묶지 않는다. 세 개의 MVP로 분리해 실패 원인을 분리한다. North Star는 Conversation-to-Action Completion Rate다.</p>
+
+    <div class="grid g3" style="margin:22px 0">
+      <div class="card"><p class="tag a">Software MVP</p><h3 style="margin-top:10px;font-size:17px">Action Pack에 돈 내는가</h3><p class="small muted" style="margin:0">업로드→전사→액션 추출→초안. 승인율 50%+, $10/mo 지불의향.</p></div>
+      <div class="card"><p class="tag a">Physical MVP</p><h3 style="margin-top:10px;font-size:17px">매일 들고 다니고 싶은가</h3><p class="small muted" style="margin:0">전자 없는 3D 코어 + 쉘 4종 + 렌더·영상·LP. vote 100+, deposit 10–30.</p></div>
+      <div class="card"><p class="tag a">Hardware MVP</p><h3 style="margin-top:10px;font-size:17px">폰보다 캡처를 늘리는가</h3><p class="small muted" style="margin:0">버튼 녹음·상태 UI·저장·업로드. captures/week 2×, upload &lt;2min.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="tl-row"><div class="tl-date">Day 0–7</div><div><h4>3D 코어 더미·쉘 4종·앱 Figma 5화면·30초 영상·영어 LP 3개</h4><p class="small muted" style="margin:0">게이트: waitlist 300 · 인터뷰 20 · shell vote 100 · deposit 10–30</p></div></div>
+      <div class="tl-row"><div class="tl-date">Day 8–21</div><div><h4>업로드·전사·Action Pack·후속 메시지·다음 미팅 브리핑</h4><p class="small muted" style="margin:0">게이트: pilot 20 · 주 3회+ · 승인율 50%+ · $10/mo 지불의향</p></div></div>
+      <div class="tl-row"><div class="tl-date">Day 22–45</div><div><h4>omi/M5Stack/XIAO 테스트·얼굴 UI·버튼 녹음·저장·Wi-Fi 업로드</h4><p class="small muted" style="margin:0">게이트: prototype 3 · 1시간+ 녹음 · upload &lt;2min</p></div></div>
+      <div class="tl-row"><div class="tl-date">Day 46–90</div><div><h4>Product Hunt·Reddit·X·Shorts 런치 · 크리에이터 아웃리치</h4><p class="small muted" style="margin:0">게이트: waitlist 2K–5K · deposit 100+ · retention 40%+</p></div></div>
+      <div class="tl-row"><div class="tl-date">6–18mo</div><div><h4>3단 진입 — 트윈 베타: "내 데이터로 만든 me가 작업을 대신"</h4><p class="small muted" style="margin:0">가장 중요한 게이트: 개인 에이전트 유료 구독 retention (16절의 "증명할 단 하나")</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 15 FINANCIALS ========= -->
+<section id="financials">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">15</span><p class="kicker" style="margin:0">Financial Scenario</p></div>
+    <h2>예측이 아니라 <span class="accent">검증용 모델.</span></h2>
+    <p class="lead">아래는 가정 기반 illustrative 모델이다. 실제 달성은 초기 행동 데이터(캡처율·승인율·전환·shell attach)에 달려 있다.</p>
+
+    <div class="grid g2" style="margin-top:22px;align-items:end">
+      <div>
+        <div class="bars">
+          <div class="bar"><div>Y1 · 10K cores</div><div class="track"><div class="fill" style="width:3%"></div></div><div class="val num">$2–3M</div></div>
+          <div class="bar"><div>Y2 · 80K cores</div><div class="track"><div class="fill" style="width:24%"></div></div><div class="val num">$15–25M</div></div>
+          <div class="bar"><div>Y3 · 300K cores</div><div class="track"><div class="fill" style="width:95%"></div></div><div class="val num">~$85M</div></div>
+        </div>
+        <p class="figcap">Fig.5 — 매출 시나리오 (illustrative)</p>
+      </div>
+      <div class="card flat">
+        <p class="kicker">Y3 구성 (예시 가정)</p>
+        <table>
+          <tbody>
+            <tr><td>Core 300K × $149</td><td class="num" style="text-align:right">$44.7M</td></tr>
+            <tr><td>구독 105K × $12 × 12</td><td class="num" style="text-align:right">$15.1M</td></tr>
+            <tr><td>Shell 300K × 2.2 × $29</td><td class="num" style="text-align:right">$19.1M</td></tr>
+            <tr><td>Team 30K × $18 × 12</td><td class="num" style="text-align:right">$6.5M</td></tr>
+            <tr><td><b>합계</b></td><td class="num" style="text-align:right"><b>~$85M</b></td></tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin-top:8px">상단 레이어(트윈 구독·마켓플레이스 take-rate)는 4–5단에서 더해지는 upside이며 본 모델에 미반영.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= 16 THESIS ========= -->
+<section id="thesis" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">16</span><p class="kicker" style="margin:0">Investment Thesis</p></div>
+    <h2>설득은 과장이 아니라 <span class="accent">정직</span>에서 나온다.</h2>
+    <p class="lead">투자자가 던질 가장 날카로운 반론을 먼저 꺼내고, 각각의 대응과 무엇을 증명하면 해소되는지를 붙인다.</p>
+
+    <div class="card" style="margin:18px 0">
+      <p class="kicker">Bull case</p>
+      <ul class="clean small" style="margin:0">
+        <li>두 독립 강자가 빅테크에 흡수되며 "사용자 소유" 레인이 비었고, 사용자가 능동적으로 그쪽으로 이동 중이다.</li>
+        <li>비전의 모든 레그에 외부 증거가 있다. 캡처(Omi/Plaud), 트윈(Personal.ai), 에이전트 노동(Sierra $15B), 페르소나 이식(soul.md), 컨텍스트 이식(MCP). 우리는 발명이 아니라 통합한다.</li>
+        <li>종단·멀티모달 개인 컨텍스트는 파운데이션 모델이 못 가진 자산이며, 커스터마이즈 검증 엔진은 복제 불가능한 제조 해자다.</li>
+      </ul>
+    </div>
+
+    <div class="grid g2">
+      <div class="obj"><div class="q"><b>① 빅테크 플랫폼 리스크.</b> 캡처·모델·마켓을 다 가졌다.</div><div class="a"><div class="lab">대응</div>그들의 사업은 데이터를 수확하는 것이다. 사용자가 소유·이식하게 두는 것은 구조적 이해상충이며, 이주 사례가 그 불신을 증명한다.<div class="derisk"><b>증명:</b> 프라이버시 이주민 retention + 컨텍스트·영혼 export/소유 기능.</div></div></div>
+      <div class="obj"><div class="q"><b>② 왜 일반인이 에이전트를 만드나.</b> 공급 콜드스타트.</div><div class="a"><div class="lab">대응</div>사용자는 아무것도 만들지 않는다. 캡처가 곧 빌드이며, 트윈은 주변 데이터에서 자라난다. 크리에이터 쉘 마켓이 공급을 미리 키운다.<div class="derisk"><b>증명:</b> 무설정 N일 패시브 캡처로 쓸 만한 "me"가 나오는 days-to-useful-twin.</div></div></div>
+      <div class="obj"><div class="q"><b>③ 데이터 해자가 약하다.</b> 모델이 좋아지면 전사는 commodity.</div><div class="a"><div class="lab">대응</div>범용 작업은 맞다. 해자는 시간에 걸친 취향·습관·관계이며, 어떤 파운데이션 모델도 못 가진 종단 데이터다.<div class="derisk"><b>증명:</b> 개인 데이터 덕에 vanilla LLM보다 측정 가능하게 잘하는 과제 1개.</div></div></div>
+      <div class="obj"><div class="q"><b>④ 마켓플레이스 수익화가 잔혹.</b> GPT Store $0.03/대화.</div><div class="a"><div class="lab">대응</div>일반 GPT가 아니라 개인화된(희소·고가치) 에이전트와 구독이다. 마이크로페이아웃이 아니라 구독 경제다.<div class="derisk"><b>증명(최우선):</b> 누군가 구독하는 "me"-agent 1개의 유료 retention.</div></div></div>
+      <div class="obj"><div class="q"><b>⑤ "에이전트 SNS"는 장난감 같다.</b></div><div class="a"><div class="lab">대응</div>현존 사례는 노벨티지만 진지하게 탐구 중이다. ARCA판은 나를 대리하는 그라운디드 버전이다.<div class="derisk"><b>대응:</b> 근시일 기둥으로 팔지 않는다. 가장 미검증 레그이며 옵션 가치로 명시한다.</div></div></div>
+      <div class="obj"><div class="q"><b>⑥ 프라이버시·규제.</b> 상시 녹음은 법적으로 민감.</div><div class="a"><div class="lab">대응</div>이것이 오히려 우위다. 소유·동의·로컬 우선으로 가면 Meta를 아프게 한 규칙이 우리를 돕는다.<div class="derisk"><b>증명:</b> consent·로컬·사용자키 아키텍처를 기능으로 출시, Limitless를 막은 한국·EU 통과.</div></div></div>
+    </div>
+
+    <div class="callout" style="margin-top:26px">
+      <b>증명할 단 하나.</b> 실제 사람이 자신의(혹은 타인의) 캡처된 삶 데이터로 만든 개인 에이전트에 매달 구독료를 낸다. 이 한 루프를 닫으면 나머지(마켓플레이스·임베디먼트·SNS)는 underwrite할 만한 옵션 가치가 된다. 실패하면 아름다운 데모일 뿐 사업은 아니다. 우리는 라운드를 이 한 가지 증명에 건다.
+    </div>
+  </div>
+</section>
+
+<!-- ========= 17 ASK ========= -->
+<section id="ask">
+  <div class="wrap">
+    <div class="sectionhead"><span class="idx">17</span><p class="kicker" style="margin:0">The Ask · Team</p></div>
+    <h2>90일 안에 <span class="accent">행동 증거를</span> 만든다.</h2>
+
+    <div class="grid g2" style="margin-top:20px;align-items:start">
+      <div class="card">
+        <p class="kicker">초기 예산 · 90일 검증 (₩)</p>
+        <table>
+          <tbody>
+            <tr><td>프로토타입 (omi·보드·쉘·배터리·3D)</td><td class="num" style="text-align:right">₩4–8M</td></tr>
+            <tr><td>제품·UX 디자인 (앱·쉘·영상)</td><td class="num" style="text-align:right">₩3–6M</td></tr>
+            <tr><td>소프트웨어 MVP</td><td class="num" style="text-align:right">₩5–12M</td></tr>
+            <tr><td>사용자 검증·마케팅</td><td class="num" style="text-align:right">₩2–6M</td></tr>
+            <tr><td>법무·보안·인증 사전검토</td><td class="num" style="text-align:right">₩2–5M</td></tr>
+          </tbody>
+        </table>
+        <p class="tiny" style="margin-top:8px">지원사업·엔젤/프리시드로 90일 게이트 통과 → 시드 라운드로 트윈·에이전트 레이어 확장.</p>
+      </div>
+      <div>
+        <h3>현재 자산 → 보완</h3>
+        <ul class="clean small">
+          <li><b>제품·전략:</b> Memory Core + Action OS + Shell + 사다리 정리 완료 → 행동 검증 데이터 확보</li>
+          <li><b>소프트웨어:</b> 전사·화자분리·분석·Obsidian/Notion/Slack 연동 파이프라인 가동 중 → pilot 20명 승인율</li>
+          <li><b>하드웨어:</b> omi 기반 V0 경로 → embedded·오디오·배터리/RF 검증</li>
+          <li><b>법무·보안:</b> Vault/Work/Share 철학 → 동의·정책·B2B 보안</li>
+        </ul>
+        <div class="callout" style="margin-top:16px"><b>왜 지금 우리에게.</b> 작동하는 캡처→액션 파이프라인이 이미 있고, 빅테크가 비운 레인과 표준화되는 Soulware 위에, 가장 마찰 낮은 진입점으로 사다리를 오를 준비가 됐다.</div>
+      </div>
+    </div>
+
+    <div class="center" style="margin-top:38px">
+      <p style="font-size:clamp(22px,3.6vw,34px);font-weight:800;color:var(--orange-br);margin:0;letter-spacing:-.03em">Own your agent. Plug into any body.</p>
+      <p class="muted" style="margin-top:8px">ARCA는 그 시작점이다. 당신의 기억이 당신의 에이전트가 되는 곳.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========= FOOTER ========= -->
+<footer class="foot">
+  <div class="wrap">
+    <p class="kicker">Appendix · Sources (2026.06)</p>
+    <p class="small muted" style="max-width:780px">시장 추정치는 기관별 스코프 차이로 편차가 크므로 방향성 지표로 사용한다. 일부 수치(Plaud $2B 밸류, Gartner·프로젝션)는 단일·2차 출처로 신뢰도 중하다. 개인 디지털 트윈은 별도 시장으로 집계되지 않는다.</p>
+    <div class="srclist" style="margin-top:18px">
+      <a href="https://www.omi.me/blogs/news/omi-raises-2m-from-tim-draper">omi $2M 시드 (omi.me)</a>
+      <a href="https://www.cnbc.com/2025/12/05/meta-limitless-ai-wearable.html">Meta–Limitless (CNBC)</a>
+      <a href="https://sfstandard.com/2025/12/14/big-tech-scooping-ai-wearable-startups-customers-spooked/">유저 Omi 이주 (SF Standard)</a>
+      <a href="https://techcrunch.com/2025/07/22/amazon-acquires-bee-the-ai-wearable-that-records-everything-you-say/">Amazon–Bee (TechCrunch)</a>
+      <a href="https://www.cnbc.com/2025/05/21/openai-buys-iphone-designer-jony-ive-device-startup-for-6point4-billion.html">OpenAI–io (CNBC)</a>
+      <a href="https://techcrunch.com/2026/03/25/granola-raises-125m-hits-1-5b-valuation-as-it-expands-from-meeting-notetaker-to-enterprise-ai-app/">Granola $1.5B (TechCrunch)</a>
+      <a href="https://dataconomy.com/2026/01/05/plaud-launches-notepin-s-ai-notetaker-at-ces-2026/">Plaud NotePin S (Dataconomy)</a>
+      <a href="https://www.marketsandmarkets.com/Market-Reports/ai-agents-market-15761548.html">AI 에이전트 시장 (MarketsAndMarkets)</a>
+      <a href="https://www.researchandmarkets.com/reports/6226037/personal-ai-assistant-market-report">개인 AI 어시스턴트 (R&amp;M)</a>
+      <a href="https://www.grandviewresearch.com/industry-analysis/wearable-ai-market-report">웨어러블 AI (Grand View)</a>
+      <a href="https://www.gartner.com/en/newsroom/press-releases/2025-08-26-gartner-predicts-40-percent-of-enterprise-apps-will-feature-task-specific-ai-agents-by-2026-up-from-less-than-5-percent-in-2025">Gartner 40% 에이전트</a>
+      <a href="https://siliconangle.com/2026/05/04/ai-agent-startup-sierra-valued-15b-new-950m-funding-round/">Sierra $15B (SiliconANGLE)</a>
+      <a href="https://github.com/rokoss21/soul.md">soul.md</a>
+      <a href="https://soulspec.org/robotics">SoulSpec</a>
+      <a href="https://www.anthropic.com/news/model-context-protocol">MCP (Anthropic)</a>
+      <a href="https://poe.com/blog/introducing-creator-monetization-for-poe">Poe 크리에이터 수익화</a>
+    </div>
+    <p class="tiny" style="margin-top:24px">© 2026 THE ZONE · ARCA — Investment Memo. 재무 수치는 illustrative이며 투자 권유가 아니다.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var body=document.body, reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function reveal(){ body.classList.add('ready'); var i=document.getElementById('intro'), f=document.getElementById('flash'); if(i)i.classList.add('gone'); if(f)f.style.display='none'; }
+
+  // ---- scroll reveal + bar fills + stagger ----
+  var sel='section .sectionhead,section .lead,section .card,section .rung,section .layer,section .obj,section .concept,section .callout,section table,section .bars,section .fly .node,section .funnel,section .rings,section .matrix,section .tl-row,section .toc,section .figcap';
+  var els=[].slice.call(document.querySelectorAll(sel));
+  [].forEach.call(document.querySelectorAll('.g2,.g3,.g4'),function(g){[].forEach.call(g.children,function(c,i){c.style.transitionDelay=(i*70)+'ms';});});
+  var fills=[].slice.call(document.querySelectorAll('.bar .fill'));
+  fills.forEach(function(fl){fl.dataset.w=fl.style.width||'0';fl.style.width='0';fl.style.transition='width 1.1s cubic-bezier(.2,.7,.2,1)';});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -7% 0px'});
+    els.forEach(function(e){io.observe(e);});
+    var bio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){[].forEach.call(e.target.querySelectorAll('.fill'),function(fl){fl.style.width=fl.dataset.w;});bio.unobserve(e.target);}});},{threshold:.25});
+    [].forEach.call(document.querySelectorAll('.bars'),function(b){bio.observe(b);});
+  } else { els.forEach(function(e){e.classList.add('in');}); fills.forEach(function(fl){fl.style.width=fl.dataset.w;}); }
+
+  // ---- number count-up ----
+  if(!reduce && 'IntersectionObserver' in window){
+    var countUp=function(el){
+      var raw=el.getAttribute('data-num')||el.textContent; el.setAttribute('data-num',raw);
+      var m=raw.match(/-?\d[\d,]*\.?\d*/); if(!m)return;
+      var numStr=m[0].replace(/,/g,''), target=parseFloat(numStr), dec=(numStr.split('.')[1]||'').length;
+      var pre=raw.slice(0,m.index), suf=raw.slice(m.index+m[0].length), t0=null, dur=1300;
+      function fmt(v){return pre+(dec?v.toFixed(dec):Math.round(v).toLocaleString())+suf;}
+      function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=fmt(target*e);if(p<1)requestAnimationFrame(step);else el.textContent=raw;}
+      requestAnimationFrame(step);
+    };
+    var sio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){countUp(e.target);sio.unobserve(e.target);}});},{threshold:.5});
+    [].forEach.call(document.querySelectorAll('#summary .stat'),function(s){sio.observe(s);});
+  }
+
+  // ---- cover eyes follow cursor ----
+  var cf=document.querySelector('.cover .arca-face'), pup=document.querySelector('.cover .pupils');
+  if(cf&&pup&&!reduce){ window.addEventListener('mousemove',function(e){var r=cf.getBoundingClientRect();if(!r.width)return;var dx=(e.clientX-(r.left+r.width/2))/(r.width/2),dy=(e.clientY-(r.top+r.height/2))/(r.height/2);dx=Math.max(-1,Math.min(1,dx));dy=Math.max(-1,Math.min(1,dy));pup.style.transform='translate('+(dx*7)+'px,'+(dy*7)+'px)';},{passive:true}); }
+
+  // ---- intro choreography: blink → eyes widen → world opens ----
+  if(reduce || !('animate' in Element.prototype)){ reveal(); return; }
+  var iEyes=document.getElementById('iEyes'), iPup=document.getElementById('iPupils'),
+      face=document.getElementById('introFace'), hello=document.getElementById('introHello'),
+      flash=document.getElementById('flash'), intro=document.getElementById('intro');
+  var done=false; function finish(){ if(done)return; done=true; reveal(); }
+  try{
+    face.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1)'}],{duration:620,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'});
+    hello.animate([{opacity:0},{opacity:.85}],{duration:480,delay:340,fill:'both'});
+    function blink(t){iEyes.animate([{transform:'scaleY(1)'},{transform:'scaleY(.08)'},{transform:'scaleY(1)'}],{duration:230,delay:t,easing:'ease-in-out'});}
+    blink(820); blink(1240);
+    setTimeout(function(){
+      iEyes.animate([{transform:'scale(1)'},{transform:'scale(1.5)'}],{duration:640,easing:'cubic-bezier(.3,0,.2,1)',fill:'forwards'});
+      iPup.animate([{transform:'scale(1)'},{transform:'scale(1.32)'}],{duration:640,easing:'ease-out',fill:'forwards'});
+      face.animate([{transform:'scale(1)'},{transform:'scale(1.14)'}],{duration:640,easing:'ease-in',fill:'forwards'});
+      hello.animate([{opacity:.85},{opacity:0}],{duration:280,fill:'forwards'});
+    },1700);
+    setTimeout(function(){ flash.animate([{clipPath:'circle(0% at 50% 46%)'},{clipPath:'circle(78% at 50% 46%)'}],{duration:560,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}); },2340);
+    setTimeout(function(){ intro.animate([{opacity:1},{opacity:0}],{duration:420,fill:'forwards'}); },2640);
+    setTimeout(function(){ finish(); flash.animate([{opacity:1},{opacity:0}],{duration:620,fill:'forwards'}); },3000);
+    setTimeout(function(){ if(flash)flash.style.display='none'; },3760);
+  }catch(e){ finish(); }
+  if(intro) intro.addEventListener('click',finish);
+  setTimeout(finish,4400);
+})();
+</script>
+</body>
+</html>
