@@ -10,8 +10,16 @@ recording, record in the browser, or let an ESP32-S3 recorder upload a WAV file.
 ARCA then produces a color-coded transcript, grounded summary, decisions,
 action items, and follow-up drafts.
 
+And you can delegate: press **⌘K** and say **"arca it — wrap up my latest
+meeting."** ARCA streams the whole loop live — recall the relevant memories,
+reason over them, draft the recap and follow-ups, file the report back into
+your second brain, and report completion.
+
 > **Runs with zero keys.** ARCA works in demo mode out of the box, then activates
-> each live layer as soon as its API key is present.
+> each live layer as soon as its API key is present. A fresh install ships with
+> four showcase memories so the feed (and delegation) is alive before your
+> first recording; edit or delete them like any memory, or disable with
+> `ARCA_SHOWCASE=off`.
 
 ---
 
@@ -165,3 +173,8 @@ status later.
 | `PATCH` | `/api/memories/{id}` | Toggle an action item or set tags |
 | `DELETE` | `/api/memories/{id}` | Delete a memory |
 | `POST` | `/api/integrations` | Push `{memoryId, targets[]}` to Obsidian/Notion/Slack |
+| `POST` | `/api/arca/delegate` | `{command}` -> SSE stream of delegation events, ending in a report |
+
+The delegation loop reasons with Claude when `ANTHROPIC_API_KEY` is set and
+degrades to grounded demo reasoning (built from the recalled memories' own
+decisions and action plans) when it isn't — the loop always completes.

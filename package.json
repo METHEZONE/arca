@@ -6,7 +6,7 @@
     "dev": "next dev --port 4174",
     "build": "next build",
     "start": "next start --port 4174",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
     "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
@@ -27,6 +27,8 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.10",
     "puppeteer-core": "^25.2.1",
     "typescript": "latest"
   }
