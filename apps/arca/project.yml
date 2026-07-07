@@ -1,0 +1,135 @@
+name: ARCA
+options:
+  bundleIdPrefix: com.thezone.arca
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+    watchOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  ArcaVoiceKit:
+    path: Packages/ArcaVoiceKit
+
+targets:
+  ARCA:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: ArcaVoice
+      - path: ArcaVoiceWidgets/RecordingIntents.swift
+    dependencies:
+      - package: ArcaVoiceKit
+        product: ArcaVoiceKit
+      - target: ArcaVoiceWatch
+        destinationFilters: [iOS]
+      - target: ArcaVoiceWidgets
+        destinationFilters: [iOS]
+      - target: ArcaVoiceShare
+        destinationFilters: [iOS]
+    info:
+      path: ArcaVoice/Support/Info.plist
+      properties:
+        CFBundleDisplayName: ARCA
+        NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
+        NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
+        NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
+        NSSupportsLiveActivities: true
+        NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
+        NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.thezone.arca.voice
+            CFBundleURLSchemes: [arca]
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        LSMinimumSystemVersion: "26.0"
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_NAME: ARCA
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        ENABLE_HARDENED_RUNTIME: true
+        SWIFT_STRICT_CONCURRENCY: complete
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS[sdk=macosx*]: ArcaVoice/Support/ArcaVoice-macOS.entitlements
+        CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]: ArcaVoice/Support/ArcaVoice-iOS.entitlements
+        CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]: ArcaVoice/Support/ArcaVoice-iOS.entitlements
+
+  ArcaVoiceWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ArcaVoiceWidgets
+    dependencies:
+      - package: ArcaVoiceKit
+        product: ArcaVoiceKit
+    info:
+      path: ArcaVoiceWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: ARCA
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice.widgets
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: ArcaVoice/Support/ArcaVoice-iOS.entitlements
+
+  ArcaVoiceShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ArcaVoiceShare
+    dependencies:
+      - package: ArcaVoiceKit
+        product: ArcaVoiceKit
+    info:
+      path: ArcaVoiceShare/Info.plist
+      properties:
+        CFBundleDisplayName: Share to ARCA
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: ArcaVoiceShare.ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 4
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice.share
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: ArcaVoiceShare/ArcaVoiceShare.entitlements
+
+  ArcaVoiceWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: ArcaVoiceWatch
+    info:
+      path: ArcaVoiceWatch/Support/Info.plist
+      properties:
+        CFBundleDisplayName: ARCA
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.thezone.arca.voice
+        NSMicrophoneUsageDescription: ARCA records voice notes from your wrist.
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_NAME: ARCA
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice.watchkitapp
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        SWIFT_STRICT_CONCURRENCY: complete
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
