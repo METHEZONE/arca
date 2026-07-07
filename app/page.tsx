@@ -7,6 +7,7 @@ import { Capture } from "@/components/Capture";
 import { Feed } from "@/components/Feed";
 import { MemoryDrawer } from "@/components/MemoryDrawer";
 import { HardwareBridge } from "@/components/HardwareBridge";
+import { ArcaIt } from "@/components/ArcaIt";
 
 function summarize(m: Memory): MemorySummary {
   return {
@@ -84,6 +85,10 @@ export default function Home() {
     [notify],
   );
 
+  const onDelegationFiled = useCallback((memory: Memory) => {
+    setMemories((prev) => [summarize(memory), ...prev.filter((m) => m.id !== memory.id)]);
+  }, []);
+
   const onUpdated = useCallback((memory: Memory) => {
     setDetail(memory);
     setMemories((prev) => prev.map((m) => (m.id === memory.id ? summarize(memory) : m)));
@@ -146,6 +151,8 @@ export default function Home() {
 
         <HardwareBridge />
       </main>
+
+      <ArcaIt onFiled={onDelegationFiled} notify={notify} />
 
       {openId ? (
         <MemoryDrawer
