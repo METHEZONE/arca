@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import "./styles.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://arca-the-zone-bio.vercel.app"),
   title: "ARCA — Command Surface",
   description:
-    "ARCA turns recordings into transcripts, memory notes, action plans, and connector-ready second-brain records.",
+    "ARCA turns recordings into transcripts, memory notes, action plans, and connector-ready second-brain records — then does the work you delegate with two words: arca it.",
+  openGraph: {
+    siteName: "ARCA",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
