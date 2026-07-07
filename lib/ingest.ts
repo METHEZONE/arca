@@ -1,5 +1,5 @@
 import { autoPushTargets } from "@/lib/config";
-import { transcribe } from "@/lib/transcription/elevenlabs";
+import { transcribe } from "@/lib/transcription";
 import { analyze } from "@/lib/analysis";
 import { pushToTargets } from "@/lib/integrations";
 import { newMemoryId, saveMemory, updateMemory } from "@/lib/secondbrain/store";

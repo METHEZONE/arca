@@ -31,7 +31,7 @@ cp .env.local.example .env.local
 
 | Capability | Env | Provider |
 |---|---|---|
-| Transcription + speakers | `ELEVENLABS_API_KEY` | ElevenLabs Scribe (`scribe_v1`) |
+| Transcription + speakers | `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` | OpenAI diarized STT first, ElevenLabs Scribe fallback |
 | Notes & action plans | `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` | Claude / OpenAI |
 | Obsidian sync | `OBSIDIAN_VAULT_PATH` | local/synced vault folder |
 | Notion sync | `NOTION_API_KEY` + `NOTION_DATABASE_ID` | Notion API |
@@ -87,7 +87,7 @@ token. Set it before exposing ARCA through a tunnel, cloud host, or shared Wi-Fi
 ## How it works
 
 ```
- recording ──▶ Ingest API ──▶ Transcribe (ElevenLabs Scribe, diarized)
+ recording ──▶ Ingest API ──▶ Transcribe (OpenAI diarized STT → ElevenLabs Scribe fallback)
                                       │
                                       ▼
                            Analyze (Claude/OpenAI)
@@ -120,7 +120,7 @@ lib/
   ingest.ts                    # shared ingest pipeline
   types.ts                     # shared domain model
   config.ts                    # env reads + capability resolution
-  transcription/elevenlabs.ts  # Scribe STT with speaker diarization
+  transcription/                # OpenAI / ElevenLabs / demo transcription router
   analysis/                    # claude.ts · openai.ts · demo.ts · router
   secondbrain/store.ts         # local persistence
   integrations/                # obsidian.ts · notion.ts · slack.ts

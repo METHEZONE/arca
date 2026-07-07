@@ -24,7 +24,7 @@ type ElevenLabsResponse = {
 // Demo transcript (no API key)
 // ---------------------------------------------------------------------------
 
-function buildDemoTranscript(): Transcript {
+export function buildDemoTranscript(warning?: string): Transcript {
   type RawSeg = { speaker: string; speakerLabel: string; text: string; startMs: number; endMs: number };
 
   const raw: RawSeg[] = [
@@ -144,7 +144,7 @@ function buildDemoTranscript(): Transcript {
     segments,
     speakerCount: speakerMap.size,
     speakers,
-    warning: "ELEVENLABS_API_KEY is missing, so ARCA used a demo transcript.",
+    warning: warning ?? "No transcription provider is configured, so ARCA used a demo transcript.",
   };
 }
 
@@ -158,7 +158,14 @@ function resolveSpeakerLabel(speakerId: string, order: Map<string, number>): str
   return `Speaker ${n + 1}`;
 }
 
-async function transcribeLive(file: File, apiKey: string): Promise<Transcript> {
+export async function transcribeWithElevenLabs(
+  file: File,
+  apiKey = elevenLabsKey(),
+): Promise<Transcript> {
+  if (!apiKey) {
+    throw new Error("ELEVENLABS_API_KEY is missing.");
+  }
+
   const form = new FormData();
   form.append("model_id", elevenLabsModel());
   form.append("file", file);
@@ -276,6 +283,6 @@ async function transcribeLive(file: File, apiKey: string): Promise<Transcript> {
 
 export async function transcribe(file: File): Promise<Transcript> {
   const key = elevenLabsKey();
-  if (!key) return buildDemoTranscript();
-  return transcribeLive(file, key);
+  if (!key) return buildDemoTranscript("ELEVENLABS_API_KEY is missing, so ARCA used a demo transcript.");
+  return transcribeWithElevenLabs(file, key);
 }

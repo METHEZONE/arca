@@ -15,12 +15,31 @@ function env(name: string): string | undefined {
 
 /* ----------------------------- Transcription ----------------------------- */
 
+export type TranscriptionProvider = "auto" | "openai" | "elevenlabs" | "demo";
+
+export function transcriptionProvider(): TranscriptionProvider {
+  const forced = env("TRANSCRIPTION_PROVIDER")?.toLowerCase();
+  if (
+    forced === "auto" ||
+    forced === "openai" ||
+    forced === "elevenlabs" ||
+    forced === "demo"
+  ) {
+    return forced;
+  }
+  return "auto";
+}
+
 export function elevenLabsKey(): string | undefined {
   return env("ELEVENLABS_API_KEY");
 }
 
 export function elevenLabsModel(): string {
-  return env("ELEVENLABS_STT_MODEL") ?? "scribe_v1";
+  return env("ELEVENLABS_STT_MODEL") ?? "scribe_v2";
+}
+
+export function openAiTranscriptionModel(): string {
+  return env("OPENAI_TRANSCRIPTION_MODEL") ?? "gpt-4o-transcribe-diarize";
 }
 
 /* ------------------------------- Analysis -------------------------------- */
@@ -180,11 +199,19 @@ export function capabilities(): Capabilities {
     {
       key: "transcription",
       label: "Transcription + Speakers",
-      configured: Boolean(elevenLabsKey()),
-      provider: elevenLabsKey() ? `ElevenLabs ${elevenLabsModel()}` : undefined,
-      detail: elevenLabsKey()
-        ? "Speaker-diarized transcripts with word timestamps."
-        : "Set ELEVENLABS_API_KEY for real diarized transcripts.",
+      configured: Boolean(openAiKey() || elevenLabsKey()),
+      provider:
+        transcriptionProvider() === "demo"
+          ? "Demo"
+          : openAiKey()
+            ? `OpenAI ${openAiTranscriptionModel()}`
+            : elevenLabsKey()
+              ? `ElevenLabs ${elevenLabsModel()}`
+              : undefined,
+      detail:
+        openAiKey() || elevenLabsKey()
+          ? "Speaker-diarized transcripts with provider fallback."
+          : "Set OPENAI_API_KEY or ELEVENLABS_API_KEY for real diarized transcripts.",
     },
     {
       key: "analysis",
@@ -228,7 +255,7 @@ export function capabilities(): Capabilities {
   ];
 
   return {
-    demoMode: provider === "demo" && !elevenLabsKey(),
+    demoMode: provider === "demo" && !(openAiKey() || elevenLabsKey()),
     analysisProvider: provider,
     autoPushTargets: autoPushTargets(),
     items,

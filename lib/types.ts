@@ -19,7 +19,7 @@ export type TranscriptSegment = {
 };
 
 export type Transcript = {
-  provider: Extract<Provider, "elevenlabs" | "demo">;
+  provider: Extract<Provider, "elevenlabs" | "openai" | "demo">;
   language: string;
   durationSec: number;
   /** Speaker-prefixed plain text, good for reading and for LLM context. */
