@@ -1,9 +1,10 @@
-import { mkdir, readFile, writeFile, unlink, readdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile, unlink, readdir, access } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { dataDir } from "@/lib/config";
 import type { Memory, MemorySummary, ActionStatus } from "@/lib/types";
 import { toMemorySummary } from "@/lib/types";
+import { getShowcaseMemory, isShowcaseId, showcaseMemories } from "./showcase";
 
 const ID_RE = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_DATA_DIR = "data";
@@ -35,6 +36,21 @@ function memoryPath(id: string): string {
   return join(memoriesDir(), `${id}.json`);
 }
 
+// A deleted showcase memory leaves a tombstone so it stays deleted even
+// though its source is compiled into the app.
+function tombstonePath(id: string): string {
+  return join(memoriesDir(), `${id}.tombstone`);
+}
+
+async function isTombstoned(id: string): Promise<boolean> {
+  try {
+    await access(tombstonePath(id));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function saveMemory(memory: Memory): Promise<void> {
   validateId(memory.id);
   await ensureDir();
@@ -47,30 +63,43 @@ export async function getMemory(id: string): Promise<Memory | null> {
     const raw = await readFile(memoryPath(id), "utf-8");
     return JSON.parse(raw) as Memory;
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw err;
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
+  if (isShowcaseId(id) && !(await isTombstoned(id))) {
+    return getShowcaseMemory(id);
+  }
+  return null;
 }
 
 export async function listMemories(): Promise<MemorySummary[]> {
   await ensureDir();
-  let entries: string[];
+  let entries: string[] = [];
   try {
     entries = await readdir(memoriesDir());
   } catch {
-    return [];
+    // Fall through with an empty disk listing — showcase still applies.
   }
 
   const summaries: MemorySummary[] = [];
+  const diskIds = new Set<string>();
   for (const entry of entries) {
     if (!entry.endsWith(".json")) continue;
     try {
       const raw = await readFile(join(memoriesDir(), entry), "utf-8");
       const memory = JSON.parse(raw) as Memory;
+      diskIds.add(memory.id);
       summaries.push(toMemorySummary(memory));
     } catch {
       // Skip corrupt/unreadable files
     }
+  }
+
+  // Showcase memories ride along until materialized (edited) or tombstoned
+  // (deleted), so a fresh deploy never opens onto an empty feed.
+  for (const memory of showcaseMemories()) {
+    if (diskIds.has(memory.id)) continue;
+    if (await isTombstoned(memory.id)) continue;
+    summaries.push(toMemorySummary(memory));
   }
 
   summaries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
@@ -114,13 +143,21 @@ export async function setActionItemStatus(
 
 export async function deleteMemory(id: string): Promise<boolean> {
   validateId(id);
+  let removed = false;
   try {
     await unlink(memoryPath(id));
-    return true;
+    removed = true;
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return false;
-    throw err;
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
+  // Tombstone showcase ids so they don't resurface from the compiled source
+  // on the next list (whether or not a materialized copy was just removed).
+  if (isShowcaseId(id) && getShowcaseMemory(id) && !(await isTombstoned(id))) {
+    await ensureDir();
+    await writeFile(tombstonePath(id), new Date().toISOString(), "utf-8");
+    removed = true;
+  }
+  return removed;
 }
 
 export function newMemoryId(): string {
