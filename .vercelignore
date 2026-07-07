@@ -1,5 +1,16 @@
 external
 node_modules
+tmp
+apps
+deck
+ir
+examples
+hardware
+docs
+data
+.slack
+result.json
+*.pdf
 .next
 .build
 tsconfig.tsbuildinfo

@@ -10,3 +10,23 @@ uploads/
 data/
 *.log
 .vercel
+apps/arca/ArcaVoice/Support/BundledKeys.plist
+
+# OS / editor noise
+.DS_Store
+
+# Build & tool artifacts
+tsconfig.tsbuildinfo
+tmp/
+nohup.out
+result.json
+apps/**/.build/
+
+# Local agent/session state
+.agents/
+.slack/
+.omx/
+
+# Regenerable exports (scripts/export-arcahyundai-pdf.mjs, deck router preview)
+arcahyundai-pitch.pdf
+ir/arca-pitch-router-preview.html
