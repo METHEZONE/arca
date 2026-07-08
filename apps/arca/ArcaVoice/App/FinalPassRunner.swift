@@ -53,6 +53,7 @@ enum FinalPassRunner {
                 try record.modelContext?.save()
 
                 if let notes = output.notes {
+                    sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)
                 }
             } catch {
@@ -86,6 +87,22 @@ enum FinalPassRunner {
                 userNotes: record.note?.roughMarkdown,
                 ownerName: ownerName, languageHints: languageHints)
         }
+    }
+
+    /// iOS only — a recording that came from the Watch reports its summary
+    /// back to the Watch, closing the wrist loop.
+    private static func sendToWatchIfWatchMemo(record: RecordingSession, notes: MeetingNotes) {
+        #if os(iOS)
+        guard record.source == .watchMemo else { return }
+        let actions = notes.actionItems.prefix(5).map { item in
+            item.assigneeName.map { "\(item.text) — \($0)" } ?? item.text
+        }
+        PhoneWatchSync.shared.sendSummary(
+            uid: record.directoryName,
+            title: record.title,
+            summaryMarkdown: notes.summaryMarkdown,
+            actionItems: Array(actions))
+        #endif
     }
 
     /// macOS only — sends the summary through the ARCA Composio Gmail connection.

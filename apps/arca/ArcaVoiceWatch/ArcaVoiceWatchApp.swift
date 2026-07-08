@@ -8,7 +8,13 @@ struct ArcaVoiceWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            FaceRecordView()
+            NavigationStack {
+                TabView {
+                    FaceRecordView()
+                    SummaryListView()
+                }
+                .tabViewStyle(.verticalPage)
+            }
         }
     }
 }

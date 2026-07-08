@@ -19,6 +19,20 @@ final class PhoneWatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         session.activate()
     }
 
+    /// Ships a finished summary back to the Watch. transferUserInfo queues
+    /// and survives both apps being closed — the Watch shows it on next open.
+    func sendSummary(uid: String, title: String, summaryMarkdown: String, actionItems: [String]) {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        WCSession.default.transferUserInfo([
+            "type": "summary",
+            "uid": uid,
+            "title": title,
+            "summary": summaryMarkdown,
+            "actions": actionItems,
+            "at": Date.now.timeIntervalSince1970,
+        ])
+    }
+
     // MARK: WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState,
