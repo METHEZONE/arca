@@ -19,7 +19,9 @@
 		1BF4B10888A1054050274B6C /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DDCF20A4A4EA9B0B6B9FD0 /* ShareViewController.swift */; };
 		225496038B58E3099EB410B0 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
 		2A540D8A36A52CF650EF0A35 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
+		2B08901B1DE80BE8563B618B /* SummaryNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */; };
 		3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
+		331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
 		35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
@@ -54,6 +56,7 @@
 		9AEF97622424C7E8D2A0245C /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = BCAAE3A5420E2AC1E4DE05F1 /* ArcaVoiceKit */; };
 		9DC70E96CA4ECEBA49531B62 /* DebugTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E20975BF767500024D5E80F /* DebugTrace.swift */; };
 		9FAC3E0DBE0142DEAA514558 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */; };
 		AA28F03E1B9D53033B6D43DB /* ArcaSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */; };
 		AB46DD9B63F867D5DD5694F0 /* ArcaShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */; };
 		AE7C5FE0B3D368F697B59A47 /* PhoneWatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */; };
@@ -76,9 +79,11 @@
 		D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
+		DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AF3176B12884BB78616861 /* SummaryListView.swift */; };
 		F2506724CEE24F11719072B9 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		F3E745C6272817671239CF28 /* SkinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785C78DA8EA61A38047E7465 /* SkinsView.swift */; };
 		F4DE08FA7A3AA67AA81E677D /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
+		F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
 		FE768817571590D07AC89C90 /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43B589F1254CC496D339F2A1 /* ArcaVoiceKit */; };
 /* End PBXBuildFile section */
 
@@ -140,6 +145,7 @@
 		081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
 		08C67787A4026B8F5719B5BB /* WatchRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecorder.swift; sourceTree = "<group>"; };
 		0AA434C8AF00098C130A7852 /* SessionPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaths.swift; sourceTree = "<group>"; };
+		10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSummaryStore.swift; sourceTree = "<group>"; };
 		11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvestFilter.swift; sourceTree = "<group>"; };
 		1242AE25F7831562835F5E0F /* FocusMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusMode.swift; sourceTree = "<group>"; };
 		124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAgent.swift; sourceTree = "<group>"; };
@@ -173,10 +179,13 @@
 		64DC3EBEA6736025A0FFAE93 /* ArcaVoiceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaVoiceWidgetsBundle.swift; sourceTree = "<group>"; };
 		71690C5DDCBB80162041242A /* RelaySync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaySync.swift; sourceTree = "<group>"; };
 		785C78DA8EA61A38047E7465 /* SkinsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsView.swift; sourceTree = "<group>"; };
+		78AF3176B12884BB78616861 /* SummaryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryListView.swift; sourceTree = "<group>"; };
 		7D040B49523067F15BC91CA7 /* ChatTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTabView.swift; sourceTree = "<group>"; };
 		82731CD2C6E93B4C80F2272C /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		836495A6A9F0B481863F388F /* ArcaVoice-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ArcaVoice-macOS.entitlements"; sourceTree = "<group>"; };
+		836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryNotifier.swift; sourceTree = "<group>"; };
 		8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityController.swift; sourceTree = "<group>"; };
+		9017F59421D2C0F63F092C3D /* AudioRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRelay.swift; sourceTree = "<group>"; };
 		944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGrab.swift; sourceTree = "<group>"; };
 		9616C74E40C61399BFFF316E /* ContextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextView.swift; sourceTree = "<group>"; };
 		98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcher.swift; sourceTree = "<group>"; };
@@ -198,6 +207,7 @@
 		CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D1E297C0A34F32907C8096A8 /* EngineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineFactory.swift; sourceTree = "<group>"; };
 		D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEngine.swift; sourceTree = "<group>"; };
+		D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAudioBar.swift; sourceTree = "<group>"; };
 		D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectorHub.swift; sourceTree = "<group>"; };
 		DA2108C8890C2111D74F4D45 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DE2E70D6F63358C5E15E5E24 /* ArcaVoice-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ArcaVoice-iOS.entitlements"; sourceTree = "<group>"; };
@@ -318,7 +328,9 @@
 				45CA137F6F45E228FF0612F1 /* ArcaVoiceWatchApp.swift */,
 				CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */,
 				F78A32E703ECAAC127268AFC /* FaceRecordView.swift */,
+				78AF3176B12884BB78616861 /* SummaryListView.swift */,
 				08C67787A4026B8F5719B5BB /* WatchRecorder.swift */,
+				10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */,
 				289DDA43D652B1B04FDB7252 /* WatchSync.swift */,
 				9527B3DD12757C9FACAC0868 /* Support */,
 			);
@@ -350,6 +362,8 @@
 		658DC0BB79171E22CF10A905 /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
+				9017F59421D2C0F63F092C3D /* AudioRelay.swift */,
+				D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */,
 				EF038E0787776F6E8E323E0D /* SessionDetailView.swift */,
 				2295B2F2A54A71248802D0A1 /* SessionListView.swift */,
 			);
@@ -446,6 +460,7 @@
 				71690C5DDCBB80162041242A /* RelaySync.swift */,
 				DA2108C8890C2111D74F4D45 /* RootView.swift */,
 				0AA434C8AF00098C130A7852 /* SessionPaths.swift */,
+				836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */,
 				1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */,
 			);
 			path = App;
@@ -700,6 +715,7 @@
 				AA28F03E1B9D53033B6D43DB /* ArcaSkin.swift in Sources */,
 				691BE8125B684F1717F806EC /* ArcaTheme.swift in Sources */,
 				95F26638142C47C082C1BE29 /* ArcaVoiceApp.swift in Sources */,
+				331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */,
 				DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */,
 				B21429B28BC93C8E843B1C5B /* BrainEntry.swift in Sources */,
 				C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */,
@@ -734,6 +750,7 @@
 				6F5C3824266A4A13181C143C /* RootView.swift in Sources */,
 				5006E0E4F2E47958AFB01670 /* ScreenGrab.swift in Sources */,
 				8796EF58C9B6E368F9016DBC /* ScreenshotWatcher.swift in Sources */,
+				F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */,
 				CD1002CA56927BF8FE91D31A /* SessionDetailView.swift in Sources */,
 				644FFA60D7949368499BCC8A /* SessionListView.swift in Sources */,
 				72DFE8866767CD9A2FD13202 /* SessionPaths.swift in Sources */,
@@ -742,6 +759,7 @@
 				F3E745C6272817671239CF28 /* SkinsView.swift in Sources */,
 				C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */,
 				8AD1F41A8864A72E9047CA70 /* SpiritFace.swift in Sources */,
+				2B08901B1DE80BE8563B618B /* SummaryNotifier.swift in Sources */,
 				48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */,
 				75A2C962704E733B29979FAB /* TaskListView.swift in Sources */,
 				0BA6B4B26E4010E08C2A9E74 /* TodoColumn.swift in Sources */,
@@ -769,7 +787,9 @@
 			files = (
 				C810FEF3E59368728C16B8C5 /* ArcaVoiceWatchApp.swift in Sources */,
 				C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */,
+				DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */,
 				1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */,
+				A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */,
 				B7D0D1A766334C1C56D7EC5E /* WatchSync.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

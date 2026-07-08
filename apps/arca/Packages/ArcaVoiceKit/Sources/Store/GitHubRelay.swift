@@ -92,6 +92,46 @@ public struct GitHubRelay: Sendable {
         return Remote(value: value, sha: sha)
     }
 
+    /// Fetches a file's raw bytes (nil on 404). Uses the raw media type so
+    /// blobs over the 1MB inline-JSON limit (audio) still come through.
+    public func pullRaw(path: String) async throws -> Data? {
+        var r = request(path)
+        r.setValue("application/vnd.github.raw+json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await URLSession.shared.data(for: r)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 404 { return nil }
+        guard (200..<300).contains(status) else {
+            throw RelayError.api(status, String(data: data, encoding: .utf8) ?? "")
+        }
+        return data
+    }
+
+    /// Writes raw bytes (audio, images) to the repo. Same sha/conflict
+    /// semantics as `push`. GitHub caps contents-API files at 100MB.
+    @discardableResult
+    public func pushRaw(_ blob: Data, path: String, sha: String?,
+                        message: String) async throws -> String {
+        var body: [String: Any] = [
+            "message": message,
+            "content": blob.base64EncodedString(),
+        ]
+        if let sha { body["sha"] = sha }
+        var r = request(path, method: "PUT")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await uploadBody(URLSession.shared, for: r, body: payload)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 409 || status == 422 { throw RelayError.conflict }
+        guard (200..<300).contains(status) else {
+            throw RelayError.api(status, String(data: data, encoding: .utf8) ?? "")
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [String: Any],
+              let newSha = content["sha"] as? String
+        else { throw RelayError.api(status, "no sha in response") }
+        return newSha
+    }
+
     /// Encodes and writes a JSON file. Pass the sha from the last pull; a stale
     /// sha means another device wrote first → RelayError.conflict (re-pull,
     /// re-merge, retry).

@@ -12,6 +12,7 @@ public struct AutonomyClassifier: Sendable {
 
     public struct Judgment: Sendable {
         public var actionKind: TaskActionKind
+        public var urgency: TaskUrgency
         public var rationale: String
         /// A concrete, self-contained instruction ARCA would follow to do it.
         public var executionPlan: String
@@ -40,10 +41,15 @@ public struct AutonomyClassifier: Sendable {
                         "enum": ["research", "draft", "send", "broad", "manual"],
                         "description": "research=read-only lookup/summary; draft=prepare a message/doc but don't send; send=send/schedule/file something; broad=multi-step or ambiguous end-to-end; manual=inherently needs the user (a personal decision, attending a meeting, creative judgment).",
                     ],
+                    "urgency": [
+                        "type": "string",
+                        "enum": ["now", "today", "soon", "someday"],
+                        "description": "When this needs to happen: now=blocking or deadline-critical, drop everything; today=should be done before the day ends; soon=this week; someday=no real time pressure. Judge from explicit deadlines, blocking language, consequences of delay, and how perishable the task is.",
+                    ],
                     "rationale": ["type": "string", "description": "One-line reason for this classification, in English"],
                     "executionPlan": ["type": "string", "description": "A concrete one-to-two sentence instruction ARCA would follow if it ran this in the background, in English. If manual, describe what the user needs to decide."],
                 ],
-                "required": ["actionKind", "rationale", "executionPlan"],
+                "required": ["actionKind", "urgency", "rationale", "executionPlan"],
             ] as [String: Any],
         ]
 
@@ -81,8 +87,10 @@ public struct AutonomyClassifier: Sendable {
             throw ClassifierError.badResponse
         }
         let kind = TaskActionKind(rawValue: (input["actionKind"] as? String) ?? "manual") ?? .manual
+        let urgency = TaskUrgency(rawValue: (input["urgency"] as? String) ?? "soon") ?? .soon
         return Judgment(
             actionKind: kind,
+            urgency: urgency,
             rationale: (input["rationale"] as? String) ?? "",
             executionPlan: (input["executionPlan"] as? String) ?? "")
     }

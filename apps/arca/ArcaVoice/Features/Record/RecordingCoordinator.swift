@@ -115,25 +115,42 @@ final class RecordingCoordinator {
 
     /// Stops capture, persists the session, and kicks off the background
     /// final pass. Returns the stored session for navigation.
+    ///
+    /// This must ALWAYS reach `.idle` — a hang here leaves the recording UI
+    /// (notch timer, island) running forever. Every await is bounded.
     @discardableResult
     func stop(modelContext: ModelContext, ownerName: String) async -> RecordingSession? {
-        guard phase == .recording, let session = captureSession, let directoryName else { return nil }
+        guard phase != .stopping else { return nil }
+        guard phase == .recording, let session = captureSession, let directoryName else {
+            // Inconsistent state (recording flag without a live session) must
+            // reset rather than silently return and wedge the timer.
+            forceReset()
+            return nil
+        }
         phase = .stopping
+        let recordingStartedAt = startedAt ?? .now
+        // Freeze the UI timers the moment the user asks to stop.
+        startedAt = nil
 
         #if os(iOS)
         liveActivity.end()
         #endif
 
         do {
-            let artifacts = try await session.stop()
+            let artifacts = try await withTimeout(seconds: 20) { try await session.stop() }
             routerTask?.cancel()
-            // Let live transcribers finalize their tails.
-            for task in transcriberTasks { await task.value }
+            // Let live transcribers finalize their tails — bounded, because a
+            // wedged analyzer must not hold the whole app in "stopping".
+            for task in transcriberTasks {
+                let watchdog = Task { try? await Task.sleep(for: .seconds(8)); task.cancel() }
+                await task.value
+                watchdog.cancel()
+            }
             transcriberTasks = []
             captureSession = nil
 
             let record = RecordingSession(
-                title: Self.defaultTitle(startedAt: startedAt ?? .now),
+                title: Self.defaultTitle(startedAt: recordingStartedAt),
                 source: artifacts.files.keys.contains(.systemAudio) ? .macMeeting : .voiceMemo,
                 directoryName: directoryName
             )
@@ -161,8 +178,40 @@ final class RecordingCoordinator {
             return record
         } catch {
             errorMessage = error.localizedDescription
-            phase = .idle
+            forceReset()
             return nil
+        }
+    }
+
+    /// Last-resort teardown: cancel everything and return to idle. Audio that
+    /// was written so far stays on disk; retryFailed can heal it on relaunch.
+    func forceReset() {
+        routerTask?.cancel()
+        for task in transcriberTasks { task.cancel() }
+        transcriberTasks = []
+        captureSession = nil
+        directoryName = nil
+        startedAt = nil
+        phase = .idle
+        #if os(iOS)
+        liveActivity.end()
+        #endif
+    }
+
+    /// Runs an async throwing operation with a hard deadline.
+    private func withTimeout<T: Sendable>(
+        seconds: Double,
+        _ operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await operation() }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw CancellationError()
+            }
+            guard let first = try await group.next() else { throw CancellationError() }
+            group.cancelAll()
+            return first
         }
     }
 

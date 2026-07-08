@@ -32,6 +32,7 @@ final class TaskEngine {
             let j = try await AutonomyClassifier(apiKey: key, model: model)
                 .classify(title: task.title, detail: task.detail)
             task.actionKind = j.actionKind
+            task.urgency = j.urgency
             task.autonomyRationale = j.rationale
             if task.detail.isEmpty { task.detail = j.executionPlan }
             task.touch()

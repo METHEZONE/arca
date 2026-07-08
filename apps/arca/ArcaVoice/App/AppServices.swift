@@ -206,11 +206,22 @@ final class AppServices {
     }
 
     func stopRecording() {
-        guard let mainContext else { return }
         Task { @MainActor in
+            guard let mainContext else {
+                // No store to save into — still never leave the UI recording.
+                coordinator.forceReset()
+                return
+            }
+            // Belt-and-braces: if stop somehow wedges past its own timeouts,
+            // yank the coordinator back to idle so the timer can't run forever.
+            let watchdog = Task { @MainActor [coordinator] in
+                try? await Task.sleep(for: .seconds(40))
+                if coordinator.phase != .idle { coordinator.forceReset() }
+            }
             if let saved = await coordinator.stop(modelContext: mainContext, ownerName: ownerName) {
                 sessionToOpen = saved
             }
+            watchdog.cancel()
         }
     }
 }

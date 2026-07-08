@@ -47,6 +47,34 @@ public enum AutonomyLevel: Int, Codable, Sendable, CaseIterable, Comparable {
     }
 }
 
+/// ARCA's own judgment of when a task needs to happen — assigned by the
+/// classifier alongside the autonomy call, used to order the quest log.
+public enum TaskUrgency: String, Codable, Sendable, CaseIterable {
+    case now        // blocking or deadline-critical — do first
+    case today      // should happen before the day ends
+    case soon       // this week
+    case someday    // no real time pressure
+
+    /// Sort order: most urgent first.
+    public var rank: Int {
+        switch self {
+        case .now: return 0
+        case .today: return 1
+        case .soon: return 2
+        case .someday: return 3
+        }
+    }
+
+    public var label: String {
+        switch self {
+        case .now: return "NOW"
+        case .today: return "TODAY"
+        case .soon: return "SOON"
+        case .someday: return "SOMEDAY"
+        }
+    }
+}
+
 public enum TaskState: String, Codable, Sendable {
     case open, tossed, running, done, needsUser, failed
     /// Deleted by the user. Kept as a tombstone (not hard-deleted) so relay
@@ -88,6 +116,7 @@ public final class TodoTask {
     public var updatedAt: Date = Date.now
     public var stateRaw: String = "open"
     public var actionKindRaw: String = "manual"
+    public var urgencyRaw: String = "soon"
     /// ARCA's one-line reasoning for the autonomy judgment (why tossable or not).
     public var autonomyRationale: String = ""
     /// Result/log after ARCA runs it.
@@ -102,6 +131,10 @@ public final class TodoTask {
     public var actionKind: TaskActionKind {
         get { TaskActionKind(rawValue: actionKindRaw) ?? .manual }
         set { actionKindRaw = newValue.rawValue }
+    }
+    public var urgency: TaskUrgency {
+        get { TaskUrgency(rawValue: urgencyRaw) ?? .soon }
+        set { urgencyRaw = newValue.rawValue }
     }
 
     public init(title: String, detail: String = "", actionKind: TaskActionKind = .manual,
@@ -149,6 +182,8 @@ public struct TaskWire: Codable, Sendable {
     public var updatedAt: Date
     public var stateRaw: String
     public var actionKindRaw: String
+    /// Optional so relay payloads written before urgency existed still decode.
+    public var urgencyRaw: String?
     public var autonomyRationale: String
     public var resultMarkdown: String?
     public var sourceRaw: String
@@ -161,6 +196,7 @@ public struct TaskWire: Codable, Sendable {
         updatedAt = task.updatedAt
         stateRaw = task.stateRaw
         actionKindRaw = task.actionKindRaw
+        urgencyRaw = task.urgencyRaw
         autonomyRationale = task.autonomyRationale
         resultMarkdown = task.resultMarkdown
         sourceRaw = task.sourceRaw
@@ -174,6 +210,7 @@ public struct TaskWire: Codable, Sendable {
         task.updatedAt = updatedAt
         task.stateRaw = stateRaw
         task.actionKindRaw = actionKindRaw
+        if let urgencyRaw { task.urgencyRaw = urgencyRaw }
         task.autonomyRationale = autonomyRationale
         task.resultMarkdown = resultMarkdown
         task.sourceRaw = sourceRaw

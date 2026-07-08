@@ -27,6 +27,10 @@ struct SessionDetailView: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
 
+                if !session.audioAssets.isEmpty || session.source != .screenshot {
+                    SessionAudioBar(session: session)
+                }
+
                 if session.state == .processing {
                     ProgressView("High-quality transcription & speaker separation in progress…")
                         .frame(maxWidth: .infinity)

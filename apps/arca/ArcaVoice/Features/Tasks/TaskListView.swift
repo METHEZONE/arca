@@ -28,6 +28,14 @@ struct TaskListView: View {
 
     private var level: AutonomyLevel { AutonomyLevel(rawValue: autonomyLevelRaw) ?? .readOnly }
 
+    /// ARCA's own triage order: most urgent first, newest first within a tier.
+    private var orderedTasks: [TodoTask] {
+        tasks.sorted {
+            if $0.urgency.rank != $1.urgency.rank { return $0.urgency.rank < $1.urgency.rank }
+            return $0.createdAt > $1.createdAt
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -35,7 +43,18 @@ struct TaskListView: View {
                 scopePicker
                 list
             }
-            .background(Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea())
+            .background {
+                ZStack {
+                    Color(red: 0.03, green: 0.05, blue: 0.09)
+                    Circle().fill(Color(red: 1.0, green: 0.48, blue: 0.1).opacity(0.22))
+                        .frame(width: 320, height: 320).blur(radius: 80)
+                        .offset(x: -130, y: -230)
+                    Circle().fill(Color(red: 0.29, green: 0.62, blue: 1.0).opacity(0.16))
+                        .frame(width: 300, height: 300).blur(radius: 90)
+                        .offset(x: 150, y: 260)
+                }
+                .ignoresSafeArea()
+            }
             .navigationTitle("Tasks")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -54,7 +73,7 @@ struct TaskListView: View {
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .glassEffect(.regular.tint(.black.opacity(0.25)), in: RoundedRectangle(cornerRadius: 16))
                 .onSubmit(addTask)
             Button(action: addTask) {
                 Image(systemName: "plus.circle.fill")
@@ -103,7 +122,7 @@ struct TaskListView: View {
                         .listRowSeparator(.hidden)
                         .padding(.top, 30)
                 } else {
-                    ForEach(tasks) { task in
+                    ForEach(orderedTasks) { task in
                         QuestRow(task: task, level: level)
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
@@ -204,7 +223,7 @@ struct TaskListView: View {
                 }
             }
             .padding(14)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .glassEffect(.regular.tint(.black.opacity(0.25)), in: RoundedRectangle(cornerRadius: 18))
             .swipeActions(edge: .trailing) {
                 Button(role: .destructive) {
                     task.state = .trashed
@@ -261,9 +280,17 @@ private struct QuestRow: View {
             .padding(.top, 2)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
+                HStack(spacing: 6) {
+                    Text(task.urgency.label)
+                        .font(.system(size: 9, weight: .heavy))
+                        .tracking(0.8)
+                        .foregroundStyle(task.urgency == .someday ? AnyShapeStyle(.secondary) : AnyShapeStyle(urgencyColor))
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(urgencyColor.opacity(0.16), in: Capsule())
+                    Text(task.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
                 if !task.autonomyRationale.isEmpty {
                     Text(task.autonomyRationale)
                         .font(.caption)
@@ -278,7 +305,12 @@ private struct QuestRow: View {
             trailing
         }
         .padding(14)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .glassEffect(.regular.tint(urgencyTint), in: RoundedRectangle(cornerRadius: 18))
+        .overlay(alignment: .leading) {
+            UnevenRoundedRectangle(topLeadingRadius: 18, bottomLeadingRadius: 18)
+                .fill(urgencyColor.opacity(task.state == .open ? 0.85 : 0.3))
+                .frame(width: 3)
+        }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive, action: delete) {
                 Label("Delete", systemImage: "trash")
@@ -335,6 +367,24 @@ private struct QuestRow: View {
             Image(systemName: "person.fill")
                 .foregroundStyle(.secondary)
                 .help("This one needs you")
+        }
+    }
+
+    private var urgencyColor: Color {
+        switch task.urgency {
+        case .now: return Color(red: 1.0, green: 0.27, blue: 0.23)
+        case .today: return Color(red: 1.0, green: 0.58, blue: 0.1)
+        case .soon: return Color(red: 1.0, green: 0.84, blue: 0.31)
+        case .someday: return Color.white.opacity(0.4)
+        }
+    }
+
+    /// Glass tint: urgent quests glow warm, calm ones stay neutral-dark.
+    private var urgencyTint: Color {
+        switch task.urgency {
+        case .now: return Color(red: 0.5, green: 0.08, blue: 0.04).opacity(0.35)
+        case .today: return Color(red: 0.45, green: 0.22, blue: 0.02).opacity(0.3)
+        case .soon, .someday: return .black.opacity(0.25)
         }
     }
 
