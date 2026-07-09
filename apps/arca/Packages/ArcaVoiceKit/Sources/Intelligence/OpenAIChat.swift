@@ -31,6 +31,7 @@ public struct OpenAIChat: Sendable {
             let message = String(data: data, encoding: .utf8).map { String($0.prefix(300)) } ?? ""
             throw ChatError.api((response as? HTTPURLResponse)?.statusCode ?? 0, message)
         }
+        AIUsageLog.recordResponse(provider: "openai", model: model, source: "chat", data: data)
         return try Self.parseText(from: data)
     }
 

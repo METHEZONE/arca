@@ -21,6 +21,6 @@ let package = Package(
             name: "ArcaVoiceKit",
             dependencies: ["ArcaVoiceCore", "Capture", "Transcribe", "Diarize", "Intelligence", "Store"]
         ),
-        .testTarget(name: "ArcaVoiceKitTests", dependencies: ["ArcaVoiceKit"]),
+        .testTarget(name: "ArcaVoiceKitTests", dependencies: ["ArcaVoiceKit", "ArcaVoiceCore"]),
     ]
 )

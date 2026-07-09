@@ -32,7 +32,7 @@ final class AmbientOps {
         let k = KeychainStore.get(.composio); return (k?.isEmpty == false) ? k : nil
     }
     private var composioUser: String? {
-        UserDefaults.standard.string(forKey: "composioUserId")
+        AccountDefaults.string("composioUserId")
     }
     private var anthropicKey: String? {
         let k = KeychainStore.get(.anthropic); return (k?.isEmpty == false) ? k : nil

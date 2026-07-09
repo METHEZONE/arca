@@ -8,14 +8,25 @@ public enum NoteStyle: String, Codable, Sendable, CaseIterable {
 
 public struct MeetingNotes: Sendable, Codable {
     public struct ActionItem: Sendable, Codable {
+        public var id: UUID?
         public var text: String
         public var assigneeName: String?
         public var due: Date?
+        public var todoTaskUID: String?
+        public var calendarEventID: String?
 
-        public init(text: String, assigneeName: String? = nil, due: Date? = nil) {
+        public var isLinked: Bool {
+            todoTaskUID != nil || calendarEventID != nil
+        }
+
+        public init(id: UUID? = nil, text: String, assigneeName: String? = nil, due: Date? = nil,
+                    todoTaskUID: String? = nil, calendarEventID: String? = nil) {
+            self.id = id
             self.text = text
             self.assigneeName = assigneeName
             self.due = due
+            self.todoTaskUID = todoTaskUID
+            self.calendarEventID = calendarEventID
         }
     }
 

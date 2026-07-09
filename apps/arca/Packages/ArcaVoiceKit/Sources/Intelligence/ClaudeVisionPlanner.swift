@@ -117,6 +117,7 @@ public struct ClaudeVisionPlanner: Sendable {
             let message = String(data: data, encoding: .utf8).map { String($0.prefix(300)) } ?? ""
             throw VisionError.api((response as? HTTPURLResponse)?.statusCode ?? 0, message)
         }
+        AIUsageLog.recordResponse(provider: "anthropic", model: model, source: "vision", data: data)
         return try Self.parsePlan(from: data)
     }
 

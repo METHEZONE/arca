@@ -59,14 +59,19 @@ final class NotchAgent {
     }
 
     func acceptMeeting() {
+        let meetingApp = AppServices.shared.meetingDetector.pending?.meetingApp
         AppServices.shared.meetingDetector.accept()
         set(.idle)
-        AppServices.shared.startRecording()
+        AppServices.shared.startRecording(meetingApp: meetingApp)
     }
 
     func dismissMeeting() {
         AppServices.shared.meetingDetector.dismiss()
         set(.idle)
+    }
+
+    func showNotice(_ message: String, seconds: TimeInterval = 6) {
+        set(.notice(message), autoDismissAfter: seconds)
     }
 
     func startRecordingFromMenu() {
@@ -86,7 +91,7 @@ final class NotchAgent {
         Task { @MainActor in
             guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
                 DebugTrace.log("no anthropic key")
-                set(.notice("Anthropic key needed — add it in Settings"), autoDismissAfter: 6)
+                set(.notice("Anthropic key needed — add it in Settings to create screenshot action plans."), autoDismissAfter: 6)
                 return
             }
             do {
@@ -115,7 +120,7 @@ final class NotchAgent {
                 set(.planReady(plan.offerLine), autoDismissAfter: 45)
             } catch {
                 DebugTrace.log("vision failed: \(error)")
-                set(.notice(error.localizedDescription), autoDismissAfter: 8)
+                set(.notice(UserFacingError.message(for: error)), autoDismissAfter: 8)
             }
         }
     }

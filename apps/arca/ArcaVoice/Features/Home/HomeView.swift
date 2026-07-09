@@ -220,7 +220,7 @@ struct HomeView: View {
                 try? context.save()
                 withAnimation(.spring(duration: 0.35)) { shotResult = plan.offerLine }
             } catch {
-                shotResult = String(error.localizedDescription.prefix(140))
+                shotResult = String(UserFacingError.message(for: error).prefix(140))
             }
         }
     }

@@ -30,3 +30,6 @@ apps/**/.build/
 # Regenerable exports (scripts/export-arcahyundai-pdf.mjs, deck router preview)
 arcahyundai-pitch.pdf
 ir/arca-pitch-router-preview.html
+
+# Xcode user state
+xcuserdata/

@@ -11,6 +11,7 @@ import ArcaVoiceKit
 struct DashboardView: View {
     let agent: NotchAgent
     @State private var zone = AppServices.shared.zone
+    @State private var usageSnapshot = AIUsageSnapshot.loading
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,10 +24,17 @@ struct DashboardView: View {
                 TodoColumn()
                     .frame(width: 340)
             }
+            .frame(maxHeight: .infinity)
+            Divider().overlay(.white.opacity(0.08))
+            AIUsageMeter(snapshot: usageSnapshot)
+                .padding(.top, 10)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 14)
         .foregroundStyle(.white)
+        .task {
+            usageSnapshot = await AIUsageSnapshot.load()
+        }
     }
 
     private var topBar: some View {
@@ -70,6 +78,256 @@ struct DashboardView: View {
     private var miniEyes: some View {
         ArcaFace(mood: .idle, size: 22, halo: false)
             .frame(width: 24, height: 24)
+    }
+}
+
+// MARK: - AI usage meter
+
+private struct AIUsageMeter: View {
+    let snapshot: AIUsageSnapshot
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Label("AI Usage", systemImage: "gauge.medium")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.82))
+                Spacer()
+                Text(snapshot.updatedLabel)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.42))
+            }
+
+            HStack(spacing: 8) {
+                ForEach(snapshot.items) { item in
+                    UsagePill(item: item)
+                }
+            }
+        }
+        .frame(height: 62)
+    }
+}
+
+private struct UsagePill: View {
+    let item: AIUsageItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(item.tint)
+                    .frame(width: 6, height: 6)
+                Text(item.name)
+                    .font(.caption2.weight(.bold))
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Text(item.connectionLabel)
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.54))
+                    .lineLimit(1)
+            }
+            Text(item.weeklyLabel)
+                .font(.caption2.monospacedDigit())
+                .foregroundStyle(.white.opacity(0.9))
+                .lineLimit(1)
+            Text(item.remainingLabel)
+                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.46))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(.white.opacity(0.06), lineWidth: 1)
+        }
+    }
+}
+
+private struct AIUsageItem: Identifiable {
+    let id: String
+    let name: String
+    let connectionLabel: String
+    let weeklyLabel: String
+    let remainingLabel: String
+    let tint: Color
+}
+
+private struct AIUsageSnapshot {
+    var items: [AIUsageItem]
+    var updatedAt: Date?
+
+    static let loading = AIUsageSnapshot(
+        items: [
+            AIUsageItem(id: "loading-codex", name: "Codex", connectionLabel: "checking", weeklyLabel: "7d usage ...", remainingLabel: "quota pending", tint: .white.opacity(0.45)),
+            AIUsageItem(id: "loading-claude", name: "Claude", connectionLabel: "checking", weeklyLabel: "7d usage ...", remainingLabel: "balance pending", tint: .white.opacity(0.45)),
+        ],
+        updatedAt: nil
+    )
+
+    var updatedLabel: String {
+        guard let updatedAt else { return "refreshing" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return "updated \(formatter.string(from: updatedAt))"
+    }
+
+    static func load() async -> AIUsageSnapshot {
+        let codex = LocalAIUsageReader.codexUsage()
+        let apiUsage = LocalAIUsageReader.apiUsage()
+        return AIUsageSnapshot(
+            items: [
+                AIUsageItem(
+                    id: "codex",
+                    name: "Codex",
+                    connectionLabel: codex.isAuthenticated ? "auth" : "no auth",
+                    weeklyLabel: codex.weeklyTokens > 0 ? "\(Self.compact(codex.weeklyTokens)) tok / 7d" : "no local tokens / 7d",
+                    remainingLabel: "remaining hidden by auth",
+                    tint: codex.isAuthenticated ? ArcaTheme.idle : .white.opacity(0.35)
+                ),
+                AIUsageItem(
+                    id: "claude",
+                    name: "Claude",
+                    connectionLabel: apiUsage.hasAnthropicKey ? "API key" : "no key",
+                    weeklyLabel: apiUsage.anthropicTokens > 0 ? "\(Self.compact(apiUsage.anthropicTokens)) tok / 7d" : "no ARCA log / 7d",
+                    remainingLabel: "billing balance needs API",
+                    tint: apiUsage.hasAnthropicKey ? .orange : .white.opacity(0.35)
+                ),
+                AIUsageItem(
+                    id: "openai",
+                    name: "OpenAI",
+                    connectionLabel: apiUsage.hasOpenAIKey ? "API key" : "no key",
+                    weeklyLabel: apiUsage.openAITokens > 0 ? "\(Self.compact(apiUsage.openAITokens)) tok / 7d" : "no ARCA log / 7d",
+                    remainingLabel: "billing balance needs API",
+                    tint: apiUsage.hasOpenAIKey ? .green : .white.opacity(0.35)
+                ),
+            ],
+            updatedAt: Date()
+        )
+    }
+
+    private static func compact(_ value: Int) -> String {
+        if value >= 1_000_000 {
+            return String(format: "%.1fM", Double(value) / 1_000_000)
+        }
+        if value >= 1_000 {
+            return String(format: "%.1fk", Double(value) / 1_000)
+        }
+        return "\(value)"
+    }
+}
+
+private enum LocalAIUsageReader {
+    struct CodexUsage {
+        var isAuthenticated: Bool
+        var weeklyTokens: Int
+    }
+
+    struct APIUsage {
+        var hasAnthropicKey: Bool
+        var hasOpenAIKey: Bool
+        var anthropicTokens: Int
+        var openAITokens: Int
+    }
+
+    static func codexUsage(now: Date = Date()) -> CodexUsage {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let authURL = home.appendingPathComponent(".codex/auth.json")
+        let sessionsURL = home.appendingPathComponent(".codex/sessions")
+        let cutoff = now.addingTimeInterval(-7 * 24 * 60 * 60)
+        return CodexUsage(
+            isAuthenticated: FileManager.default.fileExists(atPath: authURL.path),
+            weeklyTokens: sumCodexTokens(in: sessionsURL, since: cutoff)
+        )
+    }
+
+    static func apiUsage(now: Date = Date()) -> APIUsage {
+        let cutoff = now.addingTimeInterval(-7 * 24 * 60 * 60)
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let logURL = home
+            .appendingPathComponent("Library/Application Support/ARCA", isDirectory: true)
+            .appendingPathComponent("ai-usage.jsonl")
+        let totals = sumAPITokens(in: logURL, since: cutoff)
+        return APIUsage(
+            hasAnthropicKey: hasKey(.anthropic, environmentName: "ANTHROPIC_API_KEY"),
+            hasOpenAIKey: hasKey(.openAI, environmentName: "OPENAI_API_KEY"),
+            anthropicTokens: totals["anthropic"] ?? 0,
+            openAITokens: totals["openai"] ?? 0
+        )
+    }
+
+    private static func hasKey(_ kind: ApiKeyKind, environmentName: String) -> Bool {
+        if KeychainStore.get(kind)?.isEmpty == false { return true }
+        return ProcessInfo.processInfo.environment[environmentName]?.isEmpty == false
+    }
+
+    private static func sumCodexTokens(in directory: URL, since cutoff: Date) -> Int {
+        guard let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles]
+        ) else { return 0 }
+
+        var total = 0
+        for case let url as URL in enumerator where url.pathExtension == "jsonl" {
+            let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            guard modified >= cutoff else { continue }
+            total += sumTokens(inJSONLLinesAt: url)
+        }
+        return total
+    }
+
+    private static func sumAPITokens(in file: URL, since cutoff: Date) -> [String: Int] {
+        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return [:] }
+        var totals: [String: Int] = [:]
+        for line in text.split(separator: "\n") {
+            guard let data = String(line).data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let provider = json["provider"] as? String,
+                  let timestamp = json["timestamp"] as? String,
+                  let date = ISO8601DateFormatter().date(from: timestamp),
+                  date >= cutoff
+            else { continue }
+            let tokens = (json["inputTokens"] as? Int ?? 0) + (json["outputTokens"] as? Int ?? 0)
+            totals[provider, default: 0] += tokens
+        }
+        return totals
+    }
+
+    private static func sumTokens(inJSONLLinesAt file: URL) -> Int {
+        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return 0 }
+        var total = 0
+        for line in text.split(separator: "\n") {
+            guard let data = String(line).data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data)
+            else { continue }
+            total += sumUsageTokens(in: json)
+        }
+        return total
+    }
+
+    private static func sumUsageTokens(in value: Any) -> Int {
+        if let dict = value as? [String: Any] {
+            var total = 0
+            if let usage = dict["usage"] as? [String: Any] {
+                if let explicit = usage["total_tokens"] as? Int { total += explicit }
+                else {
+                    total += usage["input_tokens"] as? Int ?? 0
+                    total += usage["output_tokens"] as? Int ?? 0
+                    total += usage["cached_input_tokens"] as? Int ?? 0
+                }
+            }
+            for child in dict.values {
+                total += sumUsageTokens(in: child)
+            }
+            return total
+        }
+        if let array = value as? [Any] {
+            return array.reduce(0) { $0 + sumUsageTokens(in: $1) }
+        }
+        return 0
     }
 }
 

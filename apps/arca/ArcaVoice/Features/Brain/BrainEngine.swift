@@ -301,6 +301,13 @@ final class BrainEngine {
         edges.filter { $0.a == nodeId || $0.b == nodeId }
     }
 
+    func nodeMatches(_ nodeId: String, query: String) -> Bool {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return true }
+        let haystack = "\(nodeText[nodeId] ?? "") \(nodes.first(where: { $0.id == nodeId })?.label ?? "")"
+        return haystack.range(of: trimmed, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+    }
+
     // MARK: - Weave (AI-discovered insights)
 
     /// Sends recent memories/session notes to Claude and asks it to name

@@ -15,11 +15,14 @@ final class AppServices {
     var sessionToOpen: RecordingSession?
     /// Deep-link/App-Intent routing: "talk" | "record" | "chat" — consumed by RootView.
     var pendingRoute: String?
+    /// Startup/config warning shown once by RootView instead of crashing.
+    var startupNotice: String?
 
     #if os(macOS)
     let meetingDetector = MeetingDetector()
     let notch = NotchAgent()
     let zone = ZoneEngine()
+    let dayLog = DayLogEngine()
     @ObservationIgnored private var notchWindow: NotchWindowController?
     @ObservationIgnored private var screenshotWatcher: ScreenshotWatcher?
     @ObservationIgnored private let hotkeyMonitor = HotkeyMonitor()
@@ -53,6 +56,7 @@ final class AppServices {
         #if os(macOS)
         DebugTrace.install()
         zone.configure(container: container)
+        dayLog.configure(container: container)
         #endif
 
         #if os(macOS)
@@ -85,6 +89,12 @@ final class AppServices {
                 self?.notch.captureAndChat()
             }
             self.hotkeyMonitor.start()
+
+            if let startupNotice = self.startupNotice {
+                self.notch.showNotice(startupNotice, seconds: 10)
+            } else if !EngineFactory.hasSummarizerKey {
+                self.notch.showNotice("Add an Anthropic or OpenAI key in Settings to enable AI summaries and action plans.", seconds: 8)
+            }
 
             // Bring-up hook: ARCA_SELFTEST_IMAGE=<path> runs the screenshot→plan
             // flow once at launch, no click needed. Deterministic verification.
@@ -197,11 +207,12 @@ final class AppServices {
     }
     #endif
 
-    func startRecording() {
+    func startRecording(meetingApp: String? = nil) {
         Task { @MainActor in
             await coordinator.start(
                 locale: TranscriptionPrefs.liveLocale,
-                languageHints: TranscriptionPrefs.languageHints)
+                languageHints: TranscriptionPrefs.languageHints,
+                meetingApp: meetingApp)
         }
     }
 

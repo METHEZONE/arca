@@ -9,6 +9,7 @@ import ArcaVoiceKit
 final class MeetingDetector {
     struct DetectedMeeting: Equatable {
         let label: String
+        let meetingApp: String?
     }
 
     private(set) var pending: DetectedMeeting?
@@ -37,6 +38,14 @@ final class MeetingDetector {
         ("com.microsoft.edgemac", "Edge meeting"),
     ]
 
+    private static let storableMeetingApps: [String: String] = [
+        "us.zoom.xos": "Zoom",
+        "com.microsoft.teams2": "Teams",
+        "com.microsoft.teams": "Teams",
+        "com.hnc.Discord": "Discord",
+        "com.tinyspeck.slackmacgap": "Slack",
+    ]
+
     static func label(forBundleID bundleID: String) -> String? {
         meetingApps.first { bundleID.hasPrefix($0.prefix) }?.label
     }
@@ -63,12 +72,21 @@ final class MeetingDetector {
         for user in users where !knownPIDs.contains(user.pid) {
             guard let bundleID = user.bundleID else { continue }
             if let label = Self.label(forBundleID: bundleID) {
-                let meeting = DetectedMeeting(label: label)
+                let meeting = DetectedMeeting(label: label, meetingApp: Self.detectRunningMeetingApp())
                 pending = meeting
                 onDetect?(meeting)
                 return
             }
         }
+    }
+
+    static func detectRunningMeetingApp() -> String? {
+        let matches = NSWorkspace.shared.runningApplications.compactMap { app -> String? in
+            guard let bundleID = app.bundleIdentifier else { return nil }
+            return storableMeetingApps[bundleID]
+        }
+        let unique = Set(matches)
+        return unique.count == 1 ? unique.first : nil
     }
 
     func accept() {

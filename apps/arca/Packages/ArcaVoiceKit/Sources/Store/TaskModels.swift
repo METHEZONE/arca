@@ -225,14 +225,17 @@ public final class ChatLogEntry {
     public var createdAt: Date
     /// Conversation this turn belongs to. Older rows migrate into "legacy".
     public var conversationId: String = "legacy"
+    /// Optional project grouping for the companion home chat rail.
+    public var projectName: String?
     /// Optional attached image (a screenshot the turn was about), JPEG.
     public var imageData: Data?
 
     public init(role: String, text: String, conversationId: String = UUID().uuidString,
-                imageData: Data? = nil, createdAt: Date = .now) {
+                projectName: String? = nil, imageData: Data? = nil, createdAt: Date = .now) {
         self.roleRaw = role
         self.text = text
         self.conversationId = conversationId
+        self.projectName = projectName
         self.imageData = imageData
         self.createdAt = createdAt
     }

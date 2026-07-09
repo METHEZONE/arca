@@ -147,7 +147,7 @@ final class ChatSession {
                 proposedBrowserTask = ClaudeChat.browserTask(in: raw)
                 #endif
             } catch {
-                appendAssistant(error.localizedDescription)
+                appendAssistant(UserFacingError.message(for: error))
             }
             isThinking = false
         }

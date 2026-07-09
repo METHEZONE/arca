@@ -28,6 +28,8 @@ struct SessionListView: View {
                             Image(systemName: "video.fill")
                         } else if session.source == .watchMemo {
                             Image(systemName: "applewatch")
+                        } else if session.source == .dayLog {
+                            Image(systemName: "sun.horizon.fill")
                         }
                     }
                     .font(.caption)

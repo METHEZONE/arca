@@ -94,7 +94,7 @@ final class ConnectorHub {
 
     private var apiKey: String? { KeychainStore.get(.composio) }
     private var userId: String? {
-        let id = UserDefaults.standard.string(forKey: "composioUserId")
+        let id = AccountDefaults.string("composioUserId")
         return (id?.isEmpty ?? true) ? nil : id
     }
 

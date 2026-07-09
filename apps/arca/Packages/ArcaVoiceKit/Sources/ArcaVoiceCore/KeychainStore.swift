@@ -23,6 +23,10 @@ public struct KeychainStore {
     /// was created by an earlier binary of the app (ACL mismatch after a
     /// product rename), which left rotated keys stale.
     public static func set(_ value: String, for key: ApiKeyKind) throws {
+        try set(value, for: key, accountId: AccountStore.currentAccountId())
+    }
+
+    public static func set(_ value: String, for key: ApiKeyKind, accountId: String) throws {
         guard let data = value.data(using: .utf8) else {
             throw KeychainError.encodingFailed
         }
@@ -30,10 +34,10 @@ public struct KeychainStore {
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
-        var status = SecItemUpdate(baseQuery(for: key) as CFDictionary,
+        var status = SecItemUpdate(baseQuery(for: key, accountId: accountId) as CFDictionary,
                                    update as CFDictionary)
         if status == errSecItemNotFound {
-            var query = baseQuery(for: key)
+            var query = baseQuery(for: key, accountId: accountId)
             query[kSecValueData as String] = data
             query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
             status = SecItemAdd(query as CFDictionary, nil)
@@ -45,7 +49,11 @@ public struct KeychainStore {
 
     /// Fetch the key for `kind`, or `nil` if none is stored.
     public static func get(_ key: ApiKeyKind) -> String? {
-        var query = baseQuery(for: key)
+        get(key, accountId: AccountStore.currentAccountId())
+    }
+
+    public static func get(_ key: ApiKeyKind, accountId: String) -> String? {
+        var query = baseQuery(for: key, accountId: accountId)
         query[kSecReturnData as String] = kCFBooleanTrue
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -62,14 +70,22 @@ public struct KeychainStore {
 
     /// Remove the key for `kind`. A missing item is not an error.
     public static func delete(_ key: ApiKeyKind) {
-        SecItemDelete(baseQuery(for: key) as CFDictionary)
+        delete(key, accountId: AccountStore.currentAccountId())
     }
 
-    private static func baseQuery(for key: ApiKeyKind) -> [String: Any] {
+    public static func delete(_ key: ApiKeyKind, accountId: String) {
+        SecItemDelete(baseQuery(for: key, accountId: accountId) as CFDictionary)
+    }
+
+    static func keychainAccount(for key: ApiKeyKind, accountId: String) -> String {
+        AccountStore.isDefault(accountId) ? key.rawValue : "\(accountId).\(key.rawValue)"
+    }
+
+    private static func baseQuery(for key: ApiKeyKind, accountId: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: key.rawValue,
+            kSecAttrAccount as String: keychainAccount(for: key, accountId: accountId),
         ]
     }
 }

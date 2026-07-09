@@ -45,7 +45,8 @@ enum CurlTransport {
 
         let (out, status) = try await runProcess("/usr/bin/curl", args)
         guard status == 0 else {
-            throw URLError(.cannotConnectToHost, userInfo: [NSLocalizedDescriptionKey: "curl exit \(status)"])
+            let code: URLError.Code = status == 28 ? .timedOut : .cannotConnectToHost
+            throw URLError(code, userInfo: [NSLocalizedDescriptionKey: "curl exit \(status)"])
         }
         // Last line is the HTTP status code (from -w); everything before is the body.
         guard let newline = out.lastIndex(of: 0x0A) else {

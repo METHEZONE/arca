@@ -111,6 +111,22 @@ protocol SyncBackend {                  // Store — 지금은 CloudKit, 미래�
 }
 ```
 
+## Accounts & multi-tenancy seams
+
+- ARCA currently ships with a permanent `default` local account for Min's existing setup.
+- `default` is a compatibility contract: Keychain, `~/.arca/connections.json`, SwiftData's existing store, sessions, and legacy `UserDefaults` keys stay exactly where they were.
+- `AccountStore` persists the local registry at `~/.arca/accounts.json` and stores the selected account id in `UserDefaults.currentAccountId`.
+- First run creates only the `default` account from legacy `ownerName` and `summaryEmailRecipient`; it does not move, rename, or migrate existing data.
+- Non-default accounts are local-only namespaces for future users on the same machine.
+- Keychain accounts become `<accountId>.<kind>` outside `default`; `default` still uses raw `ApiKeyKind` names.
+- Composio connection files stay at `~/.arca/connections.json` for `default`; other accounts use `~/.arca/accounts/<id>/connections.json`.
+- Account-scoped defaults use `acct.<id>.<key>` outside `default`; legacy keys remain unprefixed for `default`.
+- SwiftData keeps the platform default store for `default`; other accounts use `Application Support/ArcaVoice/accounts/<id>/arca.store`.
+- Session audio/files keep `Application Support/ArcaVoice/sessions` for `default`; other accounts use `Application Support/ArcaVoice/accounts/<id>/sessions`.
+- The Settings account switcher records the next account and asks for app restart instead of swapping containers live.
+- A future cloud auth layer should own account identity, device membership, sync tokens, and conflict policy, then map authenticated user ids onto these local account ids.
+- A future sync service can plug in below `AccountStore`, scoped defaults, Keychain account naming, config URLs, SwiftData store selection, and session paths without breaking Min's local default.
+
 ## Engine decisions
 
 (리서치 결과 반영 — 아래 "Stack decision" 섹션에 확정 기록)

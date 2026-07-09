@@ -22,6 +22,7 @@ public struct SessionWire: Codable, Sendable {
     public var stateRaw: String
     public var sourceRaw: String
     public var duration: TimeInterval
+    public var meetingApp: String?
     public var segments: [SegmentWire]
     public var roughMarkdown: String?
     public var enhancedMarkdown: String?
@@ -37,6 +38,7 @@ public struct SessionWire: Codable, Sendable {
         stateRaw = session.stateRaw
         sourceRaw = session.sourceRaw
         duration = session.duration
+        meetingApp = session.meetingApp
         segments = session.segments
             .filter(\.isFinal)
             .sorted { $0.start < $1.start }
@@ -61,6 +63,7 @@ public struct SessionWire: Codable, Sendable {
         session.stateRaw = stateRaw
         session.sourceRaw = sourceRaw
         session.duration = duration
+        session.meetingApp = meetingApp
 
         for old in session.segments { context.delete(old) }
         session.segments = segments.map {

@@ -74,6 +74,7 @@ public struct ClaudeSummarizer: Summarizer {
             throw ClaudeSummarizerError.api(status: http.statusCode, message: Self.apiErrorMessage(from: data))
         }
 
+        AIUsageLog.recordResponse(provider: "anthropic", model: model, source: "summary", data: data)
         return try Self.parseNotes(from: data, style: style, userNotes: userNotes)
     }
 

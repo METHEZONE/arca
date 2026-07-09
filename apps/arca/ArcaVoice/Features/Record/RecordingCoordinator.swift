@@ -28,6 +28,7 @@ final class RecordingCoordinator {
     private var transcriberTasks: [Task<Void, Never>] = []
     private var directoryName: String?
     private var languageHints: [String] = []
+    private var meetingApp: String?
     #if os(iOS)
     private let liveActivity = RecordingActivityController.shared
     #endif
@@ -36,13 +37,14 @@ final class RecordingCoordinator {
         finalizedSegments + volatileSegments.values.sorted { $0.start < $1.start }
     }
 
-    func start(locale: Locale, languageHints: [String] = []) async {
+    func start(locale: Locale, languageHints: [String] = [], meetingApp: String? = nil) async {
         guard phase == .idle else { return }
         errorMessage = nil
         finalizedSegments = []
         volatileSegments = [:]
         roughNotes = ""
         self.languageHints = languageHints
+        self.meetingApp = meetingApp
 
         let engine = makeDefaultCaptureEngine()
         var channels = engine.availableChannels
@@ -154,6 +156,9 @@ final class RecordingCoordinator {
                 source: artifacts.files.keys.contains(.systemAudio) ? .macMeeting : .voiceMemo,
                 directoryName: directoryName
             )
+            if record.source == .macMeeting {
+                record.meetingApp = meetingApp
+            }
             record.duration = artifacts.duration
             record.state = .processing
             for (channel, url) in artifacts.files {
@@ -191,6 +196,7 @@ final class RecordingCoordinator {
         transcriberTasks = []
         captureSession = nil
         directoryName = nil
+        meetingApp = nil
         startedAt = nil
         phase = .idle
         #if os(iOS)

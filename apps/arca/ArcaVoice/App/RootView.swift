@@ -87,7 +87,7 @@ struct RootView: View {
             }
         }
         #else
-        library
+        CompanionHomeView()
         #endif
     }
 

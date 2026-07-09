@@ -16,6 +16,7 @@ public enum SessionSource: String, Codable, Sendable {
     case screenshot
     case shared
     case imported
+    case dayLog
 }
 
 @Model
@@ -28,6 +29,7 @@ public final class RecordingSession {
     /// Folder name under the app's sessions directory holding this session's audio.
     public var directoryName: String
     public var processingError: String?
+    public var meetingApp: String?
     /// Last local mutation — relay merge is last-writer-wins.
     public var updatedAt: Date = Date.now
 
@@ -53,6 +55,7 @@ public final class RecordingSession {
         self.duration = 0
         self.directoryName = directoryName
         self.processingError = nil
+        self.meetingApp = nil
         self.audioAssets = []
         self.segments = []
         self.note = nil
@@ -109,13 +112,15 @@ public final class StoredSegment {
 public final class SpeakerRecord {
     public var name: String
     public var colorHex: String
+    public var email: String?
     /// Serialized [SpeakerEmbedding] — the voice-print that lets ARCA recognize
     /// this person in future meetings.
     public var embeddingData: Data?
 
-    public init(name: String, colorHex: String, embeddingData: Data? = nil) {
+    public init(name: String, colorHex: String, email: String? = nil, embeddingData: Data? = nil) {
         self.name = name
         self.colorHex = colorHex
+        self.email = email
         self.embeddingData = embeddingData
     }
 }

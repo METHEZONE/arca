@@ -38,7 +38,7 @@ struct TodoColumn: View {
                         ReplyApprovalRow(proposal: proposal)
                     }
                     ForEach(tasks) { task in
-                        TaskRow(task: task, level: level)
+                        TodoTaskRow(task: task, level: level)
                     }
                     if !completed.isEmpty {
                         completedSection
@@ -112,7 +112,7 @@ struct TodoColumn: View {
     }
 }
 
-private struct TaskRow: View {
+struct TodoTaskRow: View {
     @Bindable var task: TodoTask
     let level: AutonomyLevel
     @Environment(\.modelContext) private var context

@@ -21,12 +21,6 @@ targets:
     dependencies:
       - package: ArcaVoiceKit
         product: ArcaVoiceKit
-      - target: ArcaVoiceWatch
-        destinationFilters: [iOS]
-      - target: ArcaVoiceWidgets
-        destinationFilters: [iOS]
-      - target: ArcaVoiceShare
-        destinationFilters: [iOS]
     info:
       path: ArcaVoice/Support/Info.plist
       properties:
@@ -49,6 +43,7 @@ targets:
         PRODUCT_NAME: ARCA
         PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY[sdk=macosx*][config=Debug]: "-"
         DEVELOPMENT_TEAM: Q85V836Q45
         ENABLE_HARDENED_RUNTIME: true
         SWIFT_STRICT_CONCURRENCY: complete

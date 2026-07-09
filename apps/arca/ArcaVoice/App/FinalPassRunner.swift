@@ -56,6 +56,7 @@ enum FinalPassRunner {
                     SummaryNotifier.summaryReady(record: record, notes: notes)
                     sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)
+                    autoExportToObsidianIfEnabled(record: record)
                 }
             } catch {
                 record.state = .ready
@@ -113,7 +114,7 @@ enum FinalPassRunner {
         let defaults = UserDefaults.standard
         let enabled = defaults.object(forKey: "autoEmailSummary") as? Bool ?? true
         guard enabled else { return }
-        let recipient = defaults.string(forKey: "summaryEmailRecipient") ?? "me@thezonebio.com"
+        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
         guard !recipient.isEmpty, let sender = ComposioEmailSender.fromArcaConfig() else { return }
         do {
             try await sender.sendSummary(to: recipient, sessionTitle: record.title,
@@ -121,6 +122,26 @@ enum FinalPassRunner {
         } catch {
             record.processingError = error.localizedDescription
             try? record.modelContext?.save()
+        }
+        #endif
+    }
+
+    /// macOS only — writes the completed meeting note to the linked Obsidian vault.
+    private static func autoExportToObsidianIfEnabled(record: RecordingSession) {
+        #if os(macOS)
+        let defaults = UserDefaults.standard
+        let enabled = defaults.object(forKey: "autoObsidianExport") as? Bool ?? true
+        guard enabled,
+              let path = AccountDefaults.string("obsidianVaultPath"),
+              !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        do {
+            let expanded = (path as NSString).expandingTildeInPath
+            _ = try ObsidianExporter.exportSession(record, to: URL(fileURLWithPath: expanded))
+        } catch {
+            DebugTrace.log("obsidian auto-export failed: \(error.localizedDescription)")
         }
         #endif
     }

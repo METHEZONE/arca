@@ -7,6 +7,8 @@ import SwiftData
 /// connections ("weave insights") glowing ember on top. Canvas-only drawing
 /// so the force simulation can run at 60fps without layout thrash.
 struct BrainView: View {
+    var searchQuery: String = ""
+
     @Environment(\.modelContext) private var context
     @State private var engine = BrainEngine()
 
@@ -116,9 +118,20 @@ struct BrainView: View {
         positions.reserveCapacity(engine.nodes.count)
         for node in engine.nodes { positions[node.id] = node.position }
 
+        let hasSearch = !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
         for edge in engine.edges {
             guard let a = positions[edge.a], let b = positions[edge.b] else { continue }
-            drawEdge(&ctx, a: a, b: b, edge: edge, t: t)
+            if hasSearch {
+                let highlighted = engine.nodeMatches(edge.a, query: searchQuery)
+                    || engine.nodeMatches(edge.b, query: searchQuery)
+                ctx.drawLayer { layer in
+                    layer.opacity = highlighted ? 1 : 0.25
+                    drawEdge(&layer, a: a, b: b, edge: edge, t: t)
+                }
+            } else {
+                drawEdge(&ctx, a: a, b: b, edge: edge, t: t)
+            }
         }
 
         var insightNodeIds = Set<String>()
@@ -129,9 +142,17 @@ struct BrainView: View {
 
         for node in engine.nodes {
             let glowing = node.kind == .insight || insightNodeIds.contains(node.id)
-            drawNode(&ctx, node: node, glowing: glowing, selected: node.id == engine.selectedNode, t: t)
-            if labeled.contains(node.id) {
-                drawLabel(&ctx, node: node)
+            let highlighted = !hasSearch || engine.nodeMatches(node.id, query: searchQuery)
+            var renderNode = node
+            if hasSearch, highlighted {
+                renderNode.weight = min(1, renderNode.weight + 0.18)
+            }
+            ctx.drawLayer { layer in
+                layer.opacity = highlighted ? 1 : 0.25
+                drawNode(&layer, node: renderNode, glowing: glowing, selected: node.id == engine.selectedNode, t: t)
+                if labeled.contains(node.id) || (hasSearch && highlighted) {
+                    drawLabel(&layer, node: renderNode)
+                }
             }
         }
     }

@@ -30,15 +30,34 @@ public enum ArcaConfig {
     }
 
     /// ~/.arca/connections.json — Composio credentials + connected accounts,
-    /// shared with the main ARCA app.
+    /// shared with the main ARCA app for the default account.
     public struct Connections: Decodable {
         public let userId: String
         public let composioApiKey: String?
         public let connectedAccounts: [String: String]?
     }
 
+    public static func connectionsURL(accountId: String) -> URL {
+        connectionsURL(accountId: accountId, arcaDirectory: arcaDirectory)
+    }
+
+    static func connectionsURL(accountId: String, arcaDirectory: URL) -> URL {
+        if AccountStore.isDefault(accountId) {
+            return arcaDirectory.appendingPathComponent("connections.json")
+        }
+        return arcaDirectory
+            .appendingPathComponent("accounts", isDirectory: true)
+            .appendingPathComponent(accountId, isDirectory: true)
+            .appendingPathComponent("connections.json")
+    }
+
+    public static func prepareConnectionsDirectoryForWrite(accountId: String) throws {
+        let directory = connectionsURL(accountId: accountId).deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
+
     public static func loadConnections() -> Connections? {
-        let url = arcaDirectory.appendingPathComponent("connections.json")
+        let url = connectionsURL(accountId: AccountStore.currentAccountId())
         guard let data = try? Data(contentsOf: url) else { return nil }
         return try? JSONDecoder().decode(Connections.self, from: data)
     }
@@ -55,7 +74,8 @@ public enum ArcaConfig {
         else { return }
         let defaults = UserDefaults.standard
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-        let changed = defaults.string(forKey: "importedBundledKeysHash") != digest
+        let hashKey = AccountDefaults.key("importedBundledKeysHash")
+        let changed = defaults.string(forKey: hashKey) != digest
 
         func store(_ value: String?, as kind: ApiKeyKind) {
             guard let value, !value.isEmpty,
@@ -70,9 +90,9 @@ public enum ArcaConfig {
             defaults.set(repo, forKey: "relayRepo")
         }
         if let userId = dict["composioUserId"], !userId.isEmpty {
-            defaults.set(userId, forKey: "composioUserId")
+            AccountDefaults.set(userId, for: "composioUserId")
         }
-        defaults.set(digest, forKey: "importedBundledKeysHash")
+        defaults.set(digest, forKey: hashKey)
     }
 
     /// Imports staged keys into the Keychain whenever voice-keys.json changes
@@ -88,7 +108,7 @@ public enum ArcaConfig {
             return
         }
         let defaults = UserDefaults.standard
-        let hashKey = "importedVoiceKeysHash"
+        let hashKey = AccountDefaults.key("importedVoiceKeysHash")
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
         let fileChanged = defaults.string(forKey: hashKey) != digest
         if let key = keys.openAI, !key.isEmpty,

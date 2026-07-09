@@ -1,5 +1,6 @@
 import Foundation
 import ArcaVoiceCore
+import Store
 
 /// Sends meeting-summary emails through Composio's Gmail toolkit, reusing the
 /// credentials in ~/.arca/connections.json (shared with the main ARCA app).
@@ -13,11 +14,29 @@ public struct ComposioEmailSender: Sendable {
     private let userId: String
     private let connectedAccountId: String
     private let endpoint = URL(string: "https://backend.composio.dev/api/v3/tools/execute/GMAIL_SEND_EMAIL")!
+    private let sendHandler: @Sendable (String, String, String) async throws -> Void
 
     public init(apiKey: String, userId: String, connectedAccountId: String) {
         self.apiKey = apiKey
         self.userId = userId
         self.connectedAccountId = connectedAccountId
+        self.sendHandler = { recipient, subject, htmlBody in
+            try await Self.sendViaComposio(
+                apiKey: apiKey,
+                userId: userId,
+                connectedAccountId: connectedAccountId,
+                recipient: recipient,
+                subject: subject,
+                htmlBody: htmlBody
+            )
+        }
+    }
+
+    public init(sendHandler: @escaping @Sendable (String, String, String) async throws -> Void) {
+        self.apiKey = ""
+        self.userId = ""
+        self.connectedAccountId = ""
+        self.sendHandler = sendHandler
     }
 
     /// Builds a sender from ~/.arca/connections.json; nil when Composio or the
@@ -33,6 +52,13 @@ public struct ComposioEmailSender: Sendable {
     }
 
     public func send(to recipient: String, subject: String, htmlBody: String) async throws {
+        try await sendHandler(recipient, subject, htmlBody)
+    }
+
+    private static func sendViaComposio(apiKey: String, userId: String, connectedAccountId: String,
+                                        recipient: String, subject: String,
+                                        htmlBody: String) async throws {
+        let endpoint = URL(string: "https://backend.composio.dev/api/v3/tools/execute/GMAIL_SEND_EMAIL")!
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
@@ -70,6 +96,44 @@ public struct ComposioEmailSender: Sendable {
         let subject = "📝 \(notes.title.isEmpty ? sessionTitle : notes.title)"
         try await send(to: recipient, subject: subject,
                        htmlBody: Self.html(sessionTitle: sessionTitle, notes: notes, date: date))
+    }
+
+    public func sendSummary(to recipients: [String], sessionTitle: String,
+                            notes: MeetingNotes, date: Date) async -> [EmailSendResult] {
+        let normalized = Self.normalizedRecipients(recipients)
+        var results: [EmailSendResult] = []
+        for recipient in normalized {
+            do {
+                try await sendSummary(to: recipient, sessionTitle: sessionTitle, notes: notes, date: date)
+                results.append(EmailSendResult(recipient: recipient, success: true, errorDescription: nil))
+            } catch {
+                results.append(EmailSendResult(
+                    recipient: recipient,
+                    success: false,
+                    errorDescription: error.localizedDescription
+                ))
+            }
+        }
+        return results
+    }
+
+    public func sendSummary(record: RecordingSession, notes: MeetingNotes,
+                            to recipients: [String]) async -> [EmailSendResult] {
+        await sendSummary(to: recipients, sessionTitle: record.title, notes: notes, date: record.createdAt)
+    }
+
+    public static func normalizedRecipients(_ recipients: [String]) -> [String] {
+        var seen: Set<String> = []
+        var output: [String] = []
+        for raw in recipients {
+            let recipient = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !recipient.isEmpty else { continue }
+            let key = recipient.lowercased()
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            output.append(recipient)
+        }
+        return output
     }
 
     static func html(sessionTitle: String, notes: MeetingNotes, date: Date) -> String {
@@ -125,5 +189,18 @@ public struct ComposioEmailSender: Sendable {
             case .tool(let message): return "Email send failed: \(message)"
             }
         }
+    }
+}
+
+public struct EmailSendResult: Sendable, Equatable, Identifiable {
+    public var id: String { recipient }
+    public var recipient: String
+    public var success: Bool
+    public var errorDescription: String?
+
+    public init(recipient: String, success: Bool, errorDescription: String? = nil) {
+        self.recipient = recipient
+        self.success = success
+        self.errorDescription = errorDescription
     }
 }
