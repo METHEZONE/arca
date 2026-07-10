@@ -36,6 +36,12 @@ targets:
             CFBundleURLSchemes: [arca]
         UIBackgroundModes: [audio]
         UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         LSMinimumSystemVersion: "26.0"
     settings:
       base:
