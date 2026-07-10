@@ -66,9 +66,55 @@ public struct KeychainStore {
               let data = item as? Data,
               let value = String(data: data, encoding: .utf8)
         else {
-            return nil
+            // 진단용 파일 트레이스: 앱이 실제로 받는 OSStatus를 남긴다
+            // (-25300 = not found, -25293 = authFailed — 파일 키체인 ACL이
+            // 바이너리 해시에 고정되어 재빌드마다 깨지는 케이스)
+            diagnose("get \(key.rawValue) status=\(status)")
+            // 폴백: 키의 원본인 ~/.arca 스테이징 파일에서 직접 읽는다.
+            // 키체인 ACL/서명 변경/재설치 그 무엇에도 핵심 기능이 죽지 않게.
+            return fileFallback(for: key, accountId: accountId)
         }
         return value
+    }
+
+    /// macOS 기본 계정 한정 — Keychain이 거부해도 스테이징 파일이 진실의 원천.
+    private static func fileFallback(for key: ApiKeyKind, accountId: String) -> String? {
+        #if os(macOS)
+        guard AccountStore.isDefault(accountId) else { return nil }
+        switch key {
+        case .openAI:
+            return nonEmpty(ArcaConfig.loadVoiceKeys()?.openAI)
+        case .anthropic:
+            return nonEmpty(ArcaConfig.loadVoiceKeys()?.anthropic)
+        case .composio:
+            return nonEmpty(ArcaConfig.loadConnections()?.composioApiKey)
+        case .github:
+            return nil
+        }
+        #else
+        return nil
+        #endif
+    }
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        (value?.isEmpty ?? true) ? nil : value
+    }
+
+    /// ~/Library/Application Support/<앱폴더>/keychain-trace.log 에 한 줄 append.
+    /// unified log가 읽히지 않는 환경 진단용 — 값은 절대 기록하지 않는다.
+    private static func diagnose(_ message: String) {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        guard let dir = base?.appendingPathComponent("ArcaVoice", isDirectory: true) else { return }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("keychain-trace.log")
+        let line = "\(Date().timeIntervalSince1970) [\(service)] \(message)\n"
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: Data(line.utf8))
+        } else {
+            try? Data(line.utf8).write(to: url)
+        }
     }
 
     /// Remove the key for `kind`. A missing item is not an error.
