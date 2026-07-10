@@ -156,17 +156,22 @@ struct CompanionHomeView: View {
                 Label("Right rail", systemImage: "sidebar.right")
             }
         }
-        if mode == .library {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    selectedSession = nil
-                    showRecorder = true
-                } label: {
-                    Label("New Recording", systemImage: "mic.badge.plus")
-                }
-                .keyboardShortcut("n", modifiers: .command)
+        // 녹음은 핵심 기능 — 어떤 모드에서도 ⌘N 한 번에 시작된다.
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                startNewRecording()
+            } label: {
+                Label("New Recording", systemImage: "mic.badge.plus")
             }
+            .keyboardShortcut("n", modifiers: .command)
         }
+    }
+
+    private func startNewRecording() {
+        selectedSession = nil
+        activeConversationId = nil
+        showRecorder = true
+        mode = .library
     }
 
     private var sidebar: some View {
@@ -343,6 +348,7 @@ struct CompanionHomeView: View {
             .padding(.vertical, 18)
             .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
 
+            recordCTA
             statsRow
             recentHighlights
             Spacer(minLength: 18)
@@ -354,6 +360,30 @@ struct CompanionHomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 24)
+    }
+
+    /// 홈 정중앙의 녹음 시작 버튼 — 핵심 기능은 첫 화면에서 한 번에.
+    private var recordCTA: some View {
+        Button {
+            if coordinator.phase == .idle {
+                startNewRecording()
+            } else {
+                showRecorder = true
+                mode = .library
+            }
+        } label: {
+            Label(coordinator.phase == .idle ? "녹음 시작" : "녹음 중 — 열기",
+                  systemImage: coordinator.phase == .idle ? "mic.fill" : "waveform")
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .padding(.horizontal, 26)
+                .padding(.vertical, 13)
+                .background(
+                    coordinator.phase == .idle ? ArcaTheme.recording : ArcaSkins.current.hi,
+                    in: Capsule()
+                )
+                .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
     }
 
     private var statsRow: some View {
@@ -665,24 +695,30 @@ private struct CompanionLibraryView: View {
     private var coordinator: RecordingCoordinator { services.coordinator }
 
     var body: some View {
-        NavigationSplitView {
+        // 다크 3분할 안에 NavigationSplitView를 중첩하면 사이드바가 겹쳐
+        // 깨져 보인다 — 평평한 2컬럼으로 렌더링한다.
+        HStack(spacing: 0) {
             SessionListView(selection: $selectedSession)
-                .navigationTitle("ARCA")
-        } detail: {
-            if showRecorder || coordinator.phase != .idle {
-                RecordView { saved in
-                    showRecorder = false
-                    selectedSession = saved
+                .scrollContentBackground(.hidden)
+                .frame(width: 300)
+            Divider()
+            Group {
+                if showRecorder || coordinator.phase != .idle {
+                    RecordView { saved in
+                        showRecorder = false
+                        selectedSession = saved
+                    }
+                } else if let selectedSession {
+                    SessionDetailView(session: selectedSession)
+                } else {
+                    ContentUnavailableView(
+                        "Select a recording or start a new one",
+                        systemImage: "waveform.badge.mic",
+                        description: Text("Press ⌘N to start recording right away.")
+                    )
                 }
-            } else if let selectedSession {
-                SessionDetailView(session: selectedSession)
-            } else {
-                ContentUnavailableView(
-                    "Select a recording or start a new one",
-                    systemImage: "waveform.badge.mic",
-                    description: Text("Press ⌘N to start recording right away.")
-                )
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

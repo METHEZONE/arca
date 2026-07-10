@@ -25,6 +25,7 @@ struct ConnectorsView: View {
     @State private var showingVaultPicker = false
     @State private var obsidianExportResult: String?
     @State private var isExportingObsidian = false
+    @State private var isImportingObsidian = false
     #if os(macOS)
     @State private var isImportingMembase = false
     @State private var membaseResult: String?
@@ -87,9 +88,11 @@ struct ConnectorsView: View {
                     ObsidianConnectorRow(
                         vaultPath: obsidianVaultPath,
                         isExporting: isExportingObsidian,
+                        isImporting: isImportingObsidian,
                         resultText: obsidianExportResult,
                         onChooseFolder: { showingVaultPicker = true },
-                        onExport: exportToObsidian
+                        onExport: exportToObsidian,
+                        onImport: importFromObsidian
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -349,6 +352,24 @@ struct ConnectorsView: View {
         }
     }
 
+    private func importFromObsidian() {
+        guard !isImportingObsidian else { return }
+        isImportingObsidian = true
+        obsidianExportResult = nil
+        Task {
+            defer { isImportingObsidian = false }
+            do {
+                let result = try ObsidianImporter.importVault(
+                    from: URL(fileURLWithPath: obsidianVaultPath, isDirectory: true),
+                    context: modelContext
+                )
+                obsidianExportResult = "\(result.imported)개 가져옴 · \(result.skipped)개 건너뜀"
+            } catch {
+                obsidianExportResult = error.localizedDescription
+            }
+        }
+    }
+
     #if os(macOS)
     private func importFromMembase() {
         guard !isImportingMembase else { return }
@@ -524,9 +545,11 @@ private struct ConnectorRow: View {
 private struct ObsidianConnectorRow: View {
     let vaultPath: String
     let isExporting: Bool
+    let isImporting: Bool
     let resultText: String?
     let onChooseFolder: () -> Void
     let onExport: () -> Void
+    let onImport: () -> Void
 
     private var isConnected: Bool {
         guard !vaultPath.isEmpty else { return false }
@@ -565,6 +588,22 @@ private struct ObsidianConnectorRow: View {
                 .foregroundStyle(.secondary)
                 .opacity(isConnected ? 1 : 0.5)
                 .disabled(!isConnected || isExporting)
+
+                Button(action: onImport) {
+                    HStack(spacing: 6) {
+                        if isImporting {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "arrow.down.doc")
+                        }
+                        Text("받아오기")
+                    }
+                }
+                .buttonStyle(.plain)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+                .opacity(isConnected ? 1 : 0.5)
+                .disabled(!isConnected || isImporting)
             }
         } detail: {
             if isConnected {

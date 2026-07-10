@@ -43,7 +43,6 @@ targets:
         PRODUCT_NAME: ARCA
         PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.voice
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_IDENTITY[sdk=macosx*][config=Debug]: "-"
         DEVELOPMENT_TEAM: Q85V836Q45
         ENABLE_HARDENED_RUNTIME: true
         SWIFT_STRICT_CONCURRENCY: complete
