@@ -40,7 +40,12 @@ struct ConnectorsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // 주의: Settings의 NavigationLink로 푸시되는 화면이므로 여기서
+        // NavigationStack을 또 만들면 macOS에서 높이가 0으로 붕괴한다.
+        content
+    }
+
+    private var content: some View {
             List {
                 Section {
                     headerCard
@@ -143,7 +148,6 @@ struct ConnectorsView: View {
                     obsidianExportResult = error.localizedDescription
                 }
             }
-        }
     }
 
     private var headerCard: some View {

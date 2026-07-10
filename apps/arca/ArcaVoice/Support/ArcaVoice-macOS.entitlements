@@ -2,13 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!--
-	  No app sandbox. ARCA Voice is a personal power tool, not an App Store app:
-	  it reads screenshots on ~/Desktop, shared config in ~/.arca, and records
-	  system audio. Sandbox file-access temporary exceptions caused Data(contentsOf:)
-	  on ~/Desktop to hang. Mic + system-audio capture rely on TCC consent
-	  (NSMicrophoneUsageDescription / NSAudioCaptureUsageDescription), which is
-	  independent of the sandbox. Network egress is unrestricted without the sandbox.
-	-->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
 </dict>
 </plist>
