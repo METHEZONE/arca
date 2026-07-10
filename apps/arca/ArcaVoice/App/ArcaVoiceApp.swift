@@ -55,6 +55,33 @@ struct ArcaVoiceApp: App {
     private static func makeContainer() throws -> ModelContainer {
         let accountId = AccountStore.currentAccountId()
         if AccountStore.isDefault(accountId) {
+            #if ARCA_TEST_BUILD
+            // 테스트 앱은 본편의 default.store를 절대 공유하지 않는다 —
+            // 자기만의 스토어 파일에 격리.
+            let schema = Schema([
+                RecordingSession.self,
+                AudioAsset.self,
+                StoredSegment.self,
+                SpeakerRecord.self,
+                SessionNote.self,
+                TodoTask.self,
+                ChatLogEntry.self,
+                MemoryFact.self,
+                ReplyProposal.self,
+            ])
+            let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            let url = base
+                .appendingPathComponent("ArcaVoiceTest", isDirectory: true)
+                .appendingPathComponent("arca-test.store")
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            return try ModelContainer(
+                for: schema,
+                configurations: ModelConfiguration(schema: schema, url: url)
+            )
+            #else
             return try ModelContainer(for:
                 RecordingSession.self,
                 AudioAsset.self,
@@ -66,6 +93,7 @@ struct ArcaVoiceApp: App {
                 MemoryFact.self,
                 ReplyProposal.self
             )
+            #endif
         }
 
         let schema = Schema([

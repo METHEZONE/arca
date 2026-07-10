@@ -15,8 +15,11 @@ public enum ApiKeyKind: String, Sendable, CaseIterable {
 /// live only on-device, under a generic-password item scoped to one service.
 /// Works on the macOS app sandbox and on iOS.
 public struct KeychainStore {
-    /// Shared service identifier for every ARCA Voice key item.
-    public static let service = "com.thezone.arca.voice"
+    /// Shared service identifier for every ARCA Voice key item. Keyed to the
+    /// running app's bundle id so a test build (com.thezone.arca.voice.test)
+    /// keeps fully separate keys with zero keychain-ACL crossings; the main
+    /// app resolves to the same literal as before, so nothing migrates.
+    public static let service = Bundle.main.bundleIdentifier ?? "com.thezone.arca.voice"
 
     /// Store (or replace) the key for `kind`. An empty string is treated as a delete.
     /// Update-in-place first: delete+add silently fails on macOS when the item

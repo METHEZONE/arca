@@ -167,11 +167,16 @@ struct CompanionHomeView: View {
         }
     }
 
+    /// 원탭 녹음: 누르는 즉시 녹음이 시작되고 라이브 전사 화면으로 간다.
+    /// 중간 "Tap to start recording" 화면을 거치지 않는다.
     private func startNewRecording() {
         selectedSession = nil
         activeConversationId = nil
         showRecorder = true
         mode = .library
+        if coordinator.phase == .idle {
+            services.startRecording()
+        }
     }
 
     private var sidebar: some View {
@@ -333,8 +338,20 @@ struct CompanionHomeView: View {
     private var homeHero: some View {
         VStack(spacing: 20) {
             Spacer(minLength: 24)
-            ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180, halo: true)
-                .frame(width: 210, height: 210)
+            // iOS 홈과 동일한 문법: ARCA를 누르면 바로 녹음.
+            Button {
+                if coordinator.phase == .idle {
+                    startNewRecording()
+                } else {
+                    showRecorder = true
+                    mode = .library
+                }
+            } label: {
+                ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180, halo: true)
+                    .frame(width: 210, height: 210)
+            }
+            .buttonStyle(.plain)
+            .help("ARCA를 누르면 바로 녹음이 시작돼요")
 
             VStack(spacing: 8) {
                 Text(CompanionHomeViewModel.greeting(ownerName: services.ownerName))
@@ -719,6 +736,12 @@ private struct CompanionLibraryView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        // 세션을 클릭하면 녹음 대기 화면이 아니라 그 세션의 전사가 보여야 한다.
+        .onChange(of: selectedSession) { _, newValue in
+            if newValue != nil, coordinator.phase == .idle {
+                showRecorder = false
+            }
         }
     }
 }

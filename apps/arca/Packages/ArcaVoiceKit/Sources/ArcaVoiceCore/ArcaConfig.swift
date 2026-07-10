@@ -129,6 +129,17 @@ public enum ArcaConfig {
                 NSLog("[ArcaVoice] key import: anthropic failed: %@", "\(error)")
             }
         }
+        // Composio는 connections.json이 원본 — Keychain에 없으면 같이 채워서
+        // 커넥터 허브가 어느 빌드(본편/테스트)에서든 바로 살아나게 한다.
+        if let composio = loadConnections()?.composioApiKey, !composio.isEmpty,
+           KeychainStore.get(.composio) == nil {
+            do {
+                try KeychainStore.set(composio, for: .composio)
+                NSLog("[ArcaVoice] key import: composio stored")
+            } catch {
+                NSLog("[ArcaVoice] key import: composio failed: %@", "\(error)")
+            }
+        }
         defaults.set(digest, forKey: hashKey)
     }
 }
