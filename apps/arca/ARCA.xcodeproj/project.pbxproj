@@ -13,10 +13,12 @@
 		0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		0E92345997357839377901B4 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		103900A43A7B7901C8143B0C /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
+		189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19E5C51A1863C1860E4F6A3C /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
 		1A9E34AF467D6004D2D63347 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		1AFE0013D06EB360A29C7129 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C67787A4026B8F5719B5BB /* WatchRecorder.swift */; };
+		1B7A4610553C11524C286C5B /* ArcaVoiceShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 46563D0E0437DC570089BD7E /* ArcaVoiceShare.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1BB78D5658CB29EA71E55CA2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		1BF4B10888A1054050274B6C /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DDCF20A4A4EA9B0B6B9FD0 /* ShareViewController.swift */; };
 		1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
@@ -33,6 +35,7 @@
 		331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		342252208D76A5C060F846D5 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
 		35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
+		35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		3EC4A0508B690429C9911FC2 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
@@ -169,6 +172,56 @@
 		FE768817571590D07AC89C90 /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43B589F1254CC496D339F2A1 /* ArcaVoiceKit */; };
 		FF70AD33492BBD2C0CA42CE6 /* SessionPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA434C8AF00098C130A7852 /* SessionPaths.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5701C15398A92D7AD1B3BC25 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DF7410141AE838F425272054 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 310CF35C6A7E2CA054FF05FE;
+			remoteInfo = ArcaVoiceWatch;
+		};
+		7F62250FE5FBB6B189FB537D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DF7410141AE838F425272054 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D033CFF376733706A1D56D11;
+			remoteInfo = ArcaVoiceShare;
+		};
+		82E2CA4A6E807C14E144F06A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DF7410141AE838F425272054 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D37175D7CF4D57539D49BDE;
+			remoteInfo = ArcaVoiceWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		248E60C7034EA02D4A72F71E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */,
+				1B7A4610553C11524C286C5B /* ArcaVoiceShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		260F33930E7B0019E65DD5C4 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		00A8BD7E8A8EFAE6C8B0A82C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -670,10 +723,15 @@
 				2030BBB2C59F8FBC3EE2DC54 /* Sources */,
 				B4501CD1C31FBBD02412F036 /* Resources */,
 				9404A464EF20AE3BCB41DD7C /* Frameworks */,
+				248E60C7034EA02D4A72F71E /* Embed Foundation Extensions */,
+				260F33930E7B0019E65DD5C4 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B68B45DFA3AE72FD14C0B9E0 /* PBXTargetDependency */,
+				6F74DBC81C54F43F8D75B9D5 /* PBXTargetDependency */,
+				AB1962A9ED996A0C29AE5DF9 /* PBXTargetDependency */,
 			);
 			name = ARCA;
 			packageProductDependencies = (
@@ -997,6 +1055,33 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6F74DBC81C54F43F8D75B9D5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+			);
+			target = D033CFF376733706A1D56D11 /* ArcaVoiceShare */;
+			targetProxy = 7F62250FE5FBB6B189FB537D /* PBXContainerItemProxy */;
+		};
+		AB1962A9ED996A0C29AE5DF9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+			);
+			target = 310CF35C6A7E2CA054FF05FE /* ArcaVoiceWatch */;
+			targetProxy = 5701C15398A92D7AD1B3BC25 /* PBXContainerItemProxy */;
+		};
+		B68B45DFA3AE72FD14C0B9E0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+			);
+			target = 2D37175D7CF4D57539D49BDE /* ArcaVoiceWidgets */;
+			targetProxy = 82E2CA4A6E807C14E144F06A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1465203299F6AFC647FE168C /* Release */ = {

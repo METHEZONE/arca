@@ -21,6 +21,16 @@ targets:
     dependencies:
       - package: ArcaVoiceKit
         product: ArcaVoiceKit
+      # iOS-only companions ride inside the app bundle; macOS gets none of them.
+      - target: ArcaVoiceWidgets
+        embed: true
+        destinationFilters: [iOS]
+      - target: ArcaVoiceShare
+        embed: true
+        destinationFilters: [iOS]
+      - target: ArcaVoiceWatch
+        embed: true
+        destinationFilters: [iOS]
     info:
       path: ArcaVoice/Support/Info.plist
       properties:
