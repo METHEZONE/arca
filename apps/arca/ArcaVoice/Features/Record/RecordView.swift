@@ -85,6 +85,12 @@ struct RecordView: View {
                 .fill(ArcaTheme.recording)
                 .frame(width: 10, height: 10)
                 .opacity(pulseOpacity)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                        pulseOpacity = 0.3
+                    }
+                }
+                .onDisappear { pulseOpacity = 1.0 }
 
             if let startedAt = coordinator.startedAt {
                 Text(startedAt, style: .timer)

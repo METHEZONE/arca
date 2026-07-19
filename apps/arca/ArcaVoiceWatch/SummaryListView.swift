@@ -3,10 +3,13 @@ import SwiftUI
 /// The page under the face: summaries that came back from the iPhone.
 struct SummaryListView: View {
     @State private var store = WatchSummaryStore.shared
+    @State private var transfers = WatchTransferStatus.shared
+
+    private var inFlight: Bool { transfers.sending > 0 || transfers.awaitingSummary }
 
     var body: some View {
         Group {
-            if store.items.isEmpty {
+            if store.items.isEmpty && !inFlight {
                 VStack(spacing: 8) {
                     Image(systemName: "text.bubble")
                         .font(.title3)
@@ -18,15 +21,27 @@ struct SummaryListView: View {
                 }
                 .padding()
             } else {
-                List(store.items) { item in
-                    NavigationLink(value: item.id) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(item.title)
-                                .font(.system(.footnote, design: .rounded, weight: .semibold))
-                                .lineLimit(2)
-                            Text(item.receivedAt, style: .relative)
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                List {
+                    if inFlight {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text(transfers.sending > 0
+                                 ? "Sending to iPhone…"
+                                 : "Processing on your iPhone…")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    ForEach(store.items) { item in
+                        NavigationLink(value: item.id) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(item.title)
+                                    .font(.system(.footnote, design: .rounded, weight: .semibold))
+                                    .lineLimit(2)
+                                Text(item.receivedAt, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
                     }
                 }

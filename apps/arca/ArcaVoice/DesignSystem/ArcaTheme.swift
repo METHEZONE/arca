@@ -9,6 +9,9 @@ enum ArcaTheme {
     /// ARCA's face color: the glowing cyan of a friendly pixel-display robot.
     static let pixel = Color(red: 0.32, green: 0.91, blue: 0.90)
 
+    /// The deep-night backdrop the spirit floats on (iPhone home).
+    static let spiritNight = Color(red: 0.03, green: 0.05, blue: 0.09)
+
     /// Speaker orb palette — assigned in order of first appearance.
     static let speakerColors: [Color] = [
         .blue, .orange, .green, .purple, .pink, .teal, .indigo, .mint,

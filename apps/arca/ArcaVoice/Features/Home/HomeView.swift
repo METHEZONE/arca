@@ -32,7 +32,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea()
+            ArcaTheme.spiritNight.ignoresSafeArea()
 
             VStack(spacing: 28) {
                 Spacer()
