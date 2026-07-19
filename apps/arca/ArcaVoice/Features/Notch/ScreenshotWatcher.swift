@@ -56,6 +56,8 @@ final class ScreenshotWatcher {
     private static weak var active: ScreenshotWatcher?
 
     private func handleAdded(paths: [String]) {
+        // The companion runs for weeks; don't hoard every path ever seen.
+        if seenPaths.count > 2000 { seenPaths.removeAll() }
         for path in paths {
             guard !seenPaths.contains(path) else { continue }
             seenPaths.insert(path)

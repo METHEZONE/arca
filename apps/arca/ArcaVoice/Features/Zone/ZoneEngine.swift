@@ -44,6 +44,9 @@ final class ZoneEngine {
 
     private var pollTask: Task<Void, Never>?
     private var container: ModelContainer?
+    /// Inbound ids already classified this ZONE — unread mail stays unread
+    /// in Gmail, so without this every 90s poll re-handles the same items.
+    private var processedIDs: Set<String> = []
 
     func configure(container: ModelContainer) { self.container = container }
 
@@ -53,6 +56,7 @@ final class ZoneEngine {
         startedAt = .now
         handled = []
         attention = []
+        processedIDs = []
         FocusMode.setDoNotDisturb(true)
         AppServices.shared.notch.zoneChanged(true)
 
@@ -82,6 +86,7 @@ final class ZoneEngine {
         let classifier = AutonomyClassifier(apiKey: key, model: model)
 
         for item in items {
+            guard processedIDs.insert(item.id).inserted else { continue }
             do {
                 let j = try await classifier.classify(title: item.title, detail: item.body)
                 let level = AutonomyLevel.current

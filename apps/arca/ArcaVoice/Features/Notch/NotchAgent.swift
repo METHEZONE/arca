@@ -189,7 +189,9 @@ final class NotchAgent {
 
     /// Triggered by the hotkey: capture the whole screen and chat about it.
     func captureAndChat() {
-        set(.readingCapture)
+        // Bounded like acceptScreenshot — a stalled grab must not pin the
+        // notch on "reading" forever.
+        set(.readingCapture, autoDismissAfter: 80)
         Task { @MainActor in
             guard let (data, mediaType) = await ScreenGrab.fullScreenJPEG() else {
                 set(.notice("Screen capture failed — check Screen Recording permission"), autoDismissAfter: 6)
@@ -253,6 +255,11 @@ final class NotchAgent {
             autoDismissTask = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(seconds))
                 guard !Task.isCancelled, self?.mode == target else { return }
+                // An ignored meeting prompt must release the detector, or
+                // `pending` stays set and no meeting is ever detected again.
+                if case .meetingPrompt = target {
+                    AppServices.shared.meetingDetector.dismiss()
+                }
                 self?.set(.idle)
             }
         }

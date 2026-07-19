@@ -50,6 +50,9 @@ final class TaskEngine {
         task.resultMarkdown = "▸ Starting…"
         task.touch()
         try? task.modelContext?.save()
+        // Push the running state now, not just the outcome — the other
+        // device gets to watch ARCA actually working.
+        RelaySync.shared.scheduleSync()
 
         Task { @MainActor in
             runningCount += 1

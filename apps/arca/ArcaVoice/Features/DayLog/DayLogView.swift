@@ -21,6 +21,11 @@ struct DayLogView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
+                if let status = engine.statusMessage {
+                    Label(status, systemImage: "info.circle")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.orange)
+                }
                 timelineSection
                 snapshotsSection
                 pastDigestsSection

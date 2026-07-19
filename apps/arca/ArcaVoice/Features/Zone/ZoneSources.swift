@@ -6,6 +6,9 @@ import ArcaVoiceKit
 /// Extend with Slack/calendar the same way. Read-only.
 enum ZoneSources {
     struct Inbound: Sendable {
+        /// Stable identity (Gmail message id) so a 90s poll loop never
+        /// re-processes the same unread mail.
+        var id: String
         var title: String
         var body: String
         var source: String
@@ -45,7 +48,9 @@ enum ZoneSources {
             let subject = (m["subject"] as? String) ?? "(No subject)"
             let preview = (m["preview"] as? [String: Any])?["body"] as? String
             let body = preview ?? (m["messageText"] as? String) ?? ""
-            return Inbound(title: "📧 \(subject) — \(sender)",
+            let id = (m["messageId"] as? String) ?? (m["id"] as? String)
+                ?? "\(subject)|\(sender)"
+            return Inbound(id: id, title: "📧 \(subject) — \(sender)",
                            body: String(body.prefix(600)), source: "gmail")
         }
     }

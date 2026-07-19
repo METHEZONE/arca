@@ -11,6 +11,7 @@ import ArcaVoiceKit
 struct DashboardView: View {
     let agent: NotchAgent
     @State private var zone = AppServices.shared.zone
+    @State private var relay = RelaySync.shared
     @State private var usageSnapshot = AIUsageSnapshot.loading
 
     var body: some View {
@@ -26,8 +27,12 @@ struct DashboardView: View {
             }
             .frame(maxHeight: .infinity)
             Divider().overlay(.white.opacity(0.08))
-            AIUsageMeter(snapshot: usageSnapshot)
-                .padding(.top, 10)
+            HStack(alignment: .top, spacing: 12) {
+                AIUsageMeter(snapshot: usageSnapshot)
+                Spacer()
+                syncHealth
+            }
+            .padding(.top, 10)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 14)
@@ -78,6 +83,32 @@ struct DashboardView: View {
     private var miniEyes: some View {
         ArcaFace(mood: .idle, size: 22, halo: false)
             .frame(width: 24, height: 24)
+    }
+
+    /// iPhone↔Mac relay health — a broken token or dead network used to fail
+    /// in total silence while the devices quietly drifted apart.
+    @ViewBuilder private var syncHealth: some View {
+        if let error = relay.lastError {
+            Label {
+                Text("Sync failing — \(error)")
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            } icon: {
+                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+            }
+            .font(.caption2)
+            .foregroundStyle(.orange)
+            .frame(maxWidth: 260, alignment: .trailing)
+            .help(error)
+        } else if let at = relay.lastSyncAt {
+            Label {
+                Text("Synced \(at, style: .relative) ago")
+            } icon: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+            }
+            .font(.caption2)
+            .foregroundStyle(.white.opacity(0.45))
+        }
     }
 }
 
