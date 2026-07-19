@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import WatchKit
 
 /// Records voice notes on the Watch and ships them to the iPhone for the
 /// full transcription pipeline. AAC mono 24kHz keeps transfers small
@@ -65,6 +66,7 @@ final class WatchRecorder {
         startedAt = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
+        WKInterfaceDevice.current().play(.click)
         WatchSync.shared.send(file: fileURL, duration: duration, createdAt: started)
     }
 }

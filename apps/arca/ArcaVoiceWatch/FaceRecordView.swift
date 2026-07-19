@@ -6,6 +6,7 @@ import SwiftUI
 /// listening" boundary), the eyes curve happy, and a timer runs.
 struct FaceRecordView: View {
     @State private var recorder = WatchRecorder()
+    @State private var transfers = WatchTransferStatus.shared
 
     // Life-loop state
     @State private var blinkAmount: CGFloat = 1.0
@@ -56,6 +57,10 @@ struct FaceRecordView: View {
                             .font(.system(.caption2, design: .monospaced))
                             .foregroundStyle(.green.opacity(0.8))
                     }
+
+                    if !isListening {
+                        transferStatusLine
+                    }
                 }
 
                 if let error = recorder.errorMessage {
@@ -85,6 +90,27 @@ struct FaceRecordView: View {
                     breathing = false
                 }
             }
+        }
+    }
+
+    /// Where the last recording is on its journey to the iPhone — the wrist
+    /// shouldn't have to wonder whether a send actually happened.
+    @ViewBuilder private var transferStatusLine: some View {
+        if transfers.sending > 0 {
+            Label("Sending to iPhone…", systemImage: "iphone.and.arrow.forward.outward")
+                .font(.caption2)
+                .foregroundStyle(.orange)
+                .transition(.opacity)
+        } else if transfers.awaitingSummary {
+            Label("On your iPhone — summary soon", systemImage: "checkmark.circle")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .transition(.opacity)
+        } else if transfers.sendFailed {
+            Label("Send failed — try again near your iPhone", systemImage: "exclamationmark.triangle")
+                .font(.caption2)
+                .foregroundStyle(.orange)
+                .transition(.opacity)
         }
     }
 

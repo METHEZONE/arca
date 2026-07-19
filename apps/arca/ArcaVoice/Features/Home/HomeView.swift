@@ -3,6 +3,7 @@ import SwiftUI
 import SwiftData
 import Photos
 import UIKit
+import os
 import ArcaVoiceKit
 
 /// iPhone home: ARCA itself. The spirit floats mid-screen — tap it and it
@@ -16,6 +17,7 @@ struct HomeView: View {
     @State private var screenshotOffered = false
     @State private var readingShot = false
     @State private var shotResult: String?
+    @State private var shotFailed = false
     @State private var tapBounce = false
 
     private var phase: RecordingCoordinator.Phase { services.coordinator.phase }
@@ -69,6 +71,14 @@ struct HomeView: View {
             if phase == .active { RecordingActivityController.shared.startCompanion() }
         }
         .onAppear { RecordingActivityController.shared.startCompanion() }
+        .alert("Something went wrong", isPresented: Binding(
+            get: { services.coordinator.errorMessage != nil },
+            set: { if !$0 { services.coordinator.errorMessage = nil } }
+        )) {
+            Button("OK") { services.coordinator.errorMessage = nil }
+        } message: {
+            Text(services.coordinator.errorMessage ?? "")
+        }
     }
 
     // MARK: - Face interactions
@@ -145,9 +155,10 @@ struct HomeView: View {
     private func resultCard(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Label("Action plan saved", systemImage: "sparkles")
+                Label(shotFailed ? "Couldn't finish that" : "Action plan saved",
+                      systemImage: shotFailed ? "exclamationmark.triangle" : "sparkles")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(ArcaFace.ember)
+                    .foregroundStyle(shotFailed ? .orange : ArcaFace.ember)
                 Spacer()
                 Button {
                     withAnimation { shotResult = nil }
@@ -174,11 +185,11 @@ struct HomeView: View {
             defer { readingShot = false }
             let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
             guard status == .authorized || status == .limited else {
-                shotResult = "Photos access needed — allow it in Settings and try again."
+                showShotResult("Photos access needed — allow it in Settings and try again.", failed: true)
                 return
             }
             guard let key = KeychainStore.get(.anthropic), !key.isEmpty else {
-                shotResult = "Anthropic key needed — check Settings."
+                showShotResult("Anthropic key needed — check Settings.", failed: true)
                 return
             }
             let options = PHFetchOptions()
@@ -188,23 +199,12 @@ struct HomeView: View {
                 format: "(mediaSubtype & %d) != 0",
                 PHAssetMediaSubtype.photoScreenshot.rawValue)
             guard let asset = PHAsset.fetchAssets(with: .image, options: options).firstObject else {
-                shotResult = "Couldn't find the screenshot in Photos."
+                showShotResult("Couldn't find the screenshot in Photos.", failed: true)
                 return
             }
-            let image: UIImage? = await withCheckedContinuation { continuation in
-                let req = PHImageRequestOptions()
-                req.deliveryMode = .highQualityFormat
-                req.isNetworkAccessAllowed = true
-                PHImageManager.default().requestImage(
-                    for: asset, targetSize: CGSize(width: 1600, height: 1600),
-                    contentMode: .aspectFit, options: req
-                ) { image, info in
-                    let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
-                    if !degraded { continuation.resume(returning: image) }
-                }
-            }
+            let image = await Self.loadFullQualityImage(for: asset)
             guard let jpeg = image?.jpegData(compressionQuality: 0.7) else {
-                shotResult = "Couldn't load the screenshot."
+                showShotResult("Couldn't load the screenshot — is iCloud reachable?", failed: true)
                 return
             }
             do {
@@ -218,9 +218,52 @@ struct HomeView: View {
                 record.note = note
                 context.insert(record)
                 try? context.save()
-                withAnimation(.spring(duration: 0.35)) { shotResult = plan.offerLine }
+                showShotResult(plan.offerLine, failed: false)
             } catch {
-                shotResult = String(UserFacingError.message(for: error).prefix(140))
+                showShotResult(String(UserFacingError.message(for: error).prefix(140)), failed: true)
+            }
+        }
+    }
+
+    private func showShotResult(_ text: String, failed: Bool) {
+        UINotificationFeedbackGenerator().notificationOccurred(failed ? .warning : .success)
+        shotFailed = failed
+        withAnimation(.spring(duration: 0.35)) { shotResult = text }
+    }
+
+    /// Fetches the full-quality image, resuming exactly once no matter what
+    /// Photos delivers — degraded frame, iCloud error, cancellation, or
+    /// nothing at all (a 20s timeout backstops the continuation).
+    private static func loadFullQualityImage(for asset: PHAsset) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            let resumed = OSAllocatedUnfairLock(initialState: false)
+            @Sendable func finish(_ image: UIImage?) {
+                let first = resumed.withLock { done -> Bool in
+                    if done { return false }
+                    done = true
+                    return true
+                }
+                if first { continuation.resume(returning: image) }
+            }
+            let req = PHImageRequestOptions()
+            req.deliveryMode = .highQualityFormat
+            req.isNetworkAccessAllowed = true
+            PHImageManager.default().requestImage(
+                for: asset, targetSize: CGSize(width: 1600, height: 1600),
+                contentMode: .aspectFit, options: req
+            ) { image, info in
+                let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                let failed = info?[PHImageErrorKey] != nil
+                    || ((info?[PHImageCancelledKey] as? Bool) ?? false)
+                if failed {
+                    finish(nil)
+                } else if !degraded {
+                    finish(image)
+                }
+            }
+            Task {
+                try? await Task.sleep(for: .seconds(20))
+                finish(nil)
             }
         }
     }

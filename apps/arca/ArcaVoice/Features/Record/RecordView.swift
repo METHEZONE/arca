@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// The recording surface: live transcript on the left, the user's rough notes
 /// on the right (stacked on iPhone). Volatile text breathes at lower opacity
@@ -92,8 +95,14 @@ struct RecordView: View {
             Spacer()
 
             Button {
+                #if os(iOS)
+                UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                #endif
                 Task {
                     if let saved = await coordinator.stop(modelContext: modelContext, ownerName: ownerName) {
+                        #if os(iOS)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        #endif
                         onSaved(saved)
                     }
                 }
@@ -148,6 +157,9 @@ struct RecordView: View {
 
     private var recordButton: some View {
         Button {
+            #if os(iOS)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            #endif
             Task {
                 await coordinator.start(
                     locale: TranscriptionPrefs.liveLocale,
