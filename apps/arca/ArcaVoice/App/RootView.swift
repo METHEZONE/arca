@@ -51,6 +51,12 @@ struct RootView: View {
                     await AmbientOps.shared.harvest(context: modelContext)
                 }
             }
+            #if os(iOS)
+            if phase == .background {
+                BackgroundRefresh.flushOnBackground()
+                BackgroundRefresh.schedule()
+            }
+            #endif
         }
         // Shared capture → straight into the context flow, kip!-style.
         .sheet(item: $contextItem) { item in

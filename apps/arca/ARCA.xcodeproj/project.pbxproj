@@ -34,6 +34,7 @@
 		327C390E9EB82EC1888FDD5B /* SpiritFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */; };
 		331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		342252208D76A5C060F846D5 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		3453CE7D27DC507331B5C18F /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
 		35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
 		35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
@@ -101,6 +102,7 @@
 		8E08E042E647373568FA6689 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		8E0CC13FCAF29F7CFB1A48C2 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		8F0DBA040CC02B982A6D7CB7 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
+		924D6BA8A87EC54C60B9DF25 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
 		93F85BAD90DB4B5B346AC98D /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
 		95D34F10E946443FB6E24BA0 /* ConnectorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */; };
 		95F26638142C47C082C1BE29 /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
@@ -243,6 +245,7 @@
 		2295B2F2A54A71248802D0A1 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
 		289DDA43D652B1B04FDB7252 /* WatchSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSync.swift; sourceTree = "<group>"; };
 		2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaSkin.swift; sourceTree = "<group>"; };
+		2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
 		307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ArcaVoiceWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		30954CEF8090ACBD1A63750D /* ARCA.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ARCA.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32119B9D537A00E6D116EA27 /* RecordingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingLiveActivity.swift; sourceTree = "<group>"; };
@@ -574,6 +577,7 @@
 				82731CD2C6E93B4C80F2272C /* AppServices.swift */,
 				06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */,
 				51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */,
+				2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */,
 				5E20975BF767500024D5E80F /* DebugTrace.swift */,
 				D1E297C0A34F32907C8096A8 /* EngineFactory.swift */,
 				3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */,
@@ -881,6 +885,7 @@
 				691BE8125B684F1717F806EC /* ArcaTheme.swift in Sources */,
 				95F26638142C47C082C1BE29 /* ArcaVoiceApp.swift in Sources */,
 				331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */,
+				924D6BA8A87EC54C60B9DF25 /* BackgroundRefresh.swift in Sources */,
 				DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */,
 				B21429B28BC93C8E843B1C5B /* BrainEntry.swift in Sources */,
 				C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */,
@@ -968,6 +973,7 @@
 				8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */,
 				821675514E0AF335504778BC /* ArcaVoiceApp.swift in Sources */,
 				C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */,
+				3453CE7D27DC507331B5C18F /* BackgroundRefresh.swift in Sources */,
 				3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */,
 				EF1E159AC864EFC90CC1242B /* BrainEntry.swift in Sources */,
 				4E959DE0AAF10547AFA64C6C /* BrainView.swift in Sources */,

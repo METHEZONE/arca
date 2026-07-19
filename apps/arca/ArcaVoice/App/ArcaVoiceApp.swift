@@ -41,6 +41,7 @@ struct ArcaVoiceApp: App {
         #endif
         #if os(iOS)
         PhoneWatchSync.shared.configure(container: container)
+        BackgroundRefresh.register()
         #endif
         AppServices.shared.configure(container: container)
     }

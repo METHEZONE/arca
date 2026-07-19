@@ -44,7 +44,8 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice
             CFBundleURLSchemes: [arca]
-        UIBackgroundModes: [audio]
+        UIBackgroundModes: [audio, fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.thezone.arca.voice.relaysync]
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UISupportedInterfaceOrientations~ipad:
