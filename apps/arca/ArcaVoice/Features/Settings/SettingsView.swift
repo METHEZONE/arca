@@ -67,6 +67,9 @@ struct SettingsView: View {
                 SecureField("OpenAI API Key (sk-…)", text: $openAIKey)
                 SecureField("Anthropic API Key (sk-ant-…)", text: $anthropicKey)
                 Button(saved ? "Saved ✓" : "Save keys") {
+                    #if os(iOS)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    #endif
                     saveKeys()
                 }
             } header: {
@@ -168,7 +171,9 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
+        #if os(macOS)
         .frame(minWidth: 440, minHeight: 400)
+        #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }

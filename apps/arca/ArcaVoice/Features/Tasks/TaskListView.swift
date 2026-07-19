@@ -257,6 +257,7 @@ struct TaskListView: View {
     private func addTask() {
         let title = draftTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let task = TodoTask(title: title)
         context.insert(task)
         try? context.save()
@@ -354,6 +355,7 @@ private struct QuestRow: View {
     @ViewBuilder private var trailing: some View {
         if task.isTossable(at: level) && task.state == .open {
             Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 TaskEngine.shared.toss(task)
             } label: {
                 Text("Toss")
@@ -389,6 +391,7 @@ private struct QuestRow: View {
     }
 
     private func complete() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
         task.state = .done
         task.touch()
         try? task.modelContext?.save()
@@ -398,6 +401,7 @@ private struct QuestRow: View {
     /// Tombstone, not a hard delete — a hard delete resurrects on the next
     /// relay pull because the other side still has the task.
     private func delete() {
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
         task.state = .trashed
         task.touch()
         try? task.modelContext?.save()

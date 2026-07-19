@@ -197,6 +197,7 @@ struct ContextView: View {
 
     private func runSuggestion(_ suggestion: ContextEngine.Suggestion) {
         guard !runningIDs.contains(suggestion.id), results[suggestion.id] == nil else { return }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         runningIDs.insert(suggestion.id)
         let instruction = instructionText.trimmingCharacters(in: .whitespacesAndNewlines)
         Task {

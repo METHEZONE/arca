@@ -347,6 +347,7 @@ private struct TranscriptRow: View {
                         )
                         .frame(minWidth: 320)
                         .padding()
+                        .presentationCompactAdaptation(.sheet)
                     }
                     Text(Duration.seconds(segment.start).formatted(.time(pattern: .minuteSecond)))
                         .font(.caption2.monospacedDigit())

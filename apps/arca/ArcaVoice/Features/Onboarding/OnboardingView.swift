@@ -43,6 +43,7 @@ struct OnboardingView: View {
     }
 
     private func advance() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
             page = min(page + 1, pageCount - 1)
         }

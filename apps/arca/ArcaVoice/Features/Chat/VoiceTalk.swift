@@ -1,6 +1,7 @@
 #if os(iOS)
 import AVFoundation
 import Foundation
+import NaturalLanguage
 import Speech
 
 /// Voice conversation with ARCA: tap to talk (live on-device STT), release →
@@ -12,7 +13,7 @@ final class VoiceTalk: NSObject {
     private(set) var isListening = false
     private(set) var isSpeaking = false
     private(set) var liveTranscript = ""
-    private(set) var error: String?
+    var error: String?
     /// While on, assistant replies are spoken aloud.
     var voiceRepliesOn = false
 
@@ -122,13 +123,22 @@ final class VoiceTalk: NSObject {
         try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
         let utterance = AVSpeechUtterance(string: String(clean.prefix(600)))
-        let premium = AVSpeechSynthesisVoice.speechVoices()
-            .filter { $0.language.hasPrefix("en") && $0.quality == .premium }
-            .first
-        utterance.voice = premium ?? AVSpeechSynthesisVoice(language: "en-US")
+        utterance.voice = Self.voice(for: clean)
         utterance.rate = 0.5
         isSpeaking = true
         synthesizer.speak(utterance)
+    }
+
+    /// Speak in the reply's own language — ARCA answers in Korean as often as
+    /// English, and Hangul through an English voice is noise, not speech.
+    private static func voice(for text: String) -> AVSpeechSynthesisVoice? {
+        let code = NLLanguageRecognizer.dominantLanguage(for: text)?.rawValue ?? "en"
+        let candidates = AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix(code) }
+        return candidates.first { $0.quality == .premium }
+            ?? candidates.first { $0.quality == .enhanced }
+            ?? candidates.first
+            ?? AVSpeechSynthesisVoice(language: "en-US")
     }
 
     func stopSpeaking() {

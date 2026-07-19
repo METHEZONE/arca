@@ -72,6 +72,7 @@ struct ActionItemsCard: View {
             )
             .frame(minWidth: 300)
             .padding()
+            .presentationCompactAdaptation(.sheet)
         }
     }
 

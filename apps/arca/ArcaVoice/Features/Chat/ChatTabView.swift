@@ -49,6 +49,22 @@ struct ChatTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .arcaOpenTalk)) { _ in
             Task { await beginVoiceTurn() }
         }
+        // Voice failures used to be swallowed — the mic button just did
+        // nothing. Permission denials land here with a way to fix them.
+        .alert("Voice needs a little help", isPresented: Binding(
+            get: { voice.error != nil },
+            set: { if !$0 { voice.error = nil } }
+        )) {
+            Button("Open Settings") {
+                voice.error = nil
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("OK", role: .cancel) { voice.error = nil }
+        } message: {
+            Text(voice.error ?? "")
+        }
     }
 
     private var conversations: [ConversationSummary] {
@@ -121,6 +137,7 @@ struct ChatTabView: View {
     private func endVoiceTurn() {
         let text = voice.stopListening()
         guard !text.isEmpty else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         chat.draftText = text
         chat.send()
     }
@@ -192,6 +209,7 @@ struct ChatTabView: View {
         HStack(spacing: 8) {
             // Voice turn: tap to talk, tap the ember arrow (or here) to send.
             Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 if voice.isListening {
                     endVoiceTurn()
                 } else {
@@ -212,6 +230,7 @@ struct ChatTabView: View {
                 .focused($inputFocused)
                 .onSubmit { chat.send() }
             Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 voice.voiceRepliesOn = false
                 chat.send()
             } label: {
