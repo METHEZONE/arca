@@ -1,5 +1,17 @@
 # ARCA — your independent second brain
 
+## Repository layout — two products, one repo
+
+| Path | What it is | Stack |
+|------|------------|-------|
+| `/` (root) | ARCA web dashboard + landing/pitch pages | Next.js (TypeScript) |
+| `apps/arca/` | **ARCA companion — fully native Apple apps**: iOS app, macOS notch companion, watchOS app, share extension, widgets/Live Activity | Swift 6 / SwiftUI, `ARCA.xcodeproj` via xcodegen |
+
+> **Not Electron. Not a web wrapper.** The apps in `apps/arca/` are native
+> SwiftUI targets built with Xcode and shipped through TestFlight
+> (`com.thezone.arca.voice`). The Next.js app at the root is a separate
+> product surface. See `apps/arca/README.md` for the native build.
+
 ARCA turns recordings into **speaker-separated transcripts, structured
 notes, and an executable action plan**, then automatically files each memory
 into your second brain and pushes it to the connectors you control:
