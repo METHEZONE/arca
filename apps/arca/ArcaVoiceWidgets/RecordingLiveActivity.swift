@@ -12,7 +12,7 @@ struct RecordingLiveActivity: Widget {
         ActivityConfiguration(for: RecordingActivityAttributes.self) { context in
             // Lock Screen / banner presentation.
             HStack(spacing: 12) {
-                SpiritGlyph(happy: context.state.isRecording && !context.state.isPaused)
+                SpiritGlyph(happy: context.state.isLively)
                     .frame(width: 34, height: 34)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(context.state.isRecording ? context.attributes.title : "ARCA")
@@ -20,8 +20,9 @@ struct RecordingLiveActivity: Widget {
                         .lineLimit(1)
                     Text(context.state.isRecording
                          ? (context.state.isPaused ? "Paused" : "Listening")
-                         : "With you — tap to record")
+                         : (context.state.detail ?? "With you — tap to record"))
                         .font(.caption)
+                        .lineLimit(1)
                         .foregroundStyle(context.state.isRecording ? Color.green : Color(red: 1.0, green: 0.478, blue: 0.102))
                 }
                 Spacer()
@@ -45,7 +46,7 @@ struct RecordingLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    SpiritGlyph(happy: context.state.isRecording && !context.state.isPaused)
+                    SpiritGlyph(happy: context.state.isLively)
                         .frame(width: 40, height: 40)
                         .padding(.leading, 4)
                 }
@@ -84,10 +85,12 @@ struct RecordingLiveActivity: Widget {
                             }
                             .buttonStyle(.plain)
                         } else {
-                            Image(systemName: "sparkles")
+                            Image(systemName: context.state.detail == nil ? "sparkles" : "brain.head.profile")
                                 .foregroundStyle(Color(red: 1.0, green: 0.478, blue: 0.102))
-                            Text("ARCA is with you")
+                                .symbolEffect(.pulse, isActive: context.state.detail != nil)
+                            Text(context.state.detail ?? "ARCA is with you")
                                 .font(.caption)
+                                .lineLimit(1)
                                 .foregroundStyle(.white.opacity(0.85))
                             Spacer()
                             Link(destination: URL(string: "arca://talk")!) {
@@ -102,7 +105,7 @@ struct RecordingLiveActivity: Widget {
                     .padding(.top, 2)
                 }
             } compactLeading: {
-                SpiritGlyph(happy: context.state.isRecording && !context.state.isPaused)
+                SpiritGlyph(happy: context.state.isLively)
                     .frame(width: 22, height: 22)
             } compactTrailing: {
                 if context.state.isRecording {
@@ -111,12 +114,13 @@ struct RecordingLiveActivity: Widget {
                         .foregroundStyle(.green)
                         .frame(width: 44)
                 } else {
-                    Image(systemName: "sparkles")
+                    Image(systemName: context.state.detail == nil ? "sparkles" : "brain.head.profile")
                         .font(.system(size: 11))
+                        .symbolEffect(.pulse, isActive: context.state.detail != nil)
                         .foregroundStyle(Color(red: 1.0, green: 0.478, blue: 0.102))
                 }
             } minimal: {
-                SpiritGlyph(happy: context.state.isRecording && !context.state.isPaused)
+                SpiritGlyph(happy: context.state.isLively)
                     .frame(width: 18, height: 18)
             }
             .keylineTint(context.state.isRecording ? .green : Color(red: 1.0, green: 0.478, blue: 0.102))

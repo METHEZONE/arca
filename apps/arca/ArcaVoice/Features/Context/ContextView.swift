@@ -20,6 +20,7 @@ struct ContextView: View {
     @State private var instructionText = ""
     @State private var directReply: String?
     @State private var isAnsweringDirect = false
+    @State private var analysisLogged = false
 
     private static let ember = Color(red: 1.0, green: 0.478, blue: 0.102)
 
@@ -60,12 +61,44 @@ struct ContextView: View {
             if item.kind == .image, let url = SharedInbox.imageURL(for: item) {
                 thumbnail = UIImage(contentsOfFile: url.path)
             }
+            RecordingActivityController.shared.note("Reading what you shared…", for: 45)
             await engine.analyze(item: item)
         }
         .onChange(of: engine.isAnalyzing) { wasAnalyzing, nowAnalyzing in
             if wasAnalyzing && !nowAnalyzing {
                 revealSuggestions()
+                persistAnalysis()
             }
+        }
+    }
+
+    /// Every share leaves a trace: the item + ARCA's read land in the chat
+    /// log (one conversation per share), so history survives this sheet.
+    private var shareConversationId: String { "share-\(item.id.uuidString)" }
+
+    private func log(role: String, text: String, imageData: Data? = nil) {
+        guard !text.isEmpty else { return }
+        modelContext.insert(ChatLogEntry(role: role, text: text,
+                                         conversationId: shareConversationId,
+                                         imageData: imageData))
+        try? modelContext.save()
+    }
+
+    private func persistAnalysis() {
+        guard !analysisLogged else { return }
+        analysisLogged = true
+        let jpeg = thumbnail?.jpegData(compressionQuality: 0.6)
+        log(role: "user", text: "📎 \(kindCaption)" + (item.text.map { ": \($0.prefix(200))" } ?? ""),
+            imageData: jpeg)
+        if let error = engine.error {
+            log(role: "assistant", text: "Couldn't read this: \(error)")
+            RecordingActivityController.shared.note("Couldn't read that share", for: 8)
+        } else {
+            log(role: "assistant", text: engine.summary)
+            let count = engine.suggestions.count
+            RecordingActivityController.shared.note(
+                count > 0 ? "\(count) action\(count == 1 ? "" : "s") ready" : "Read it — open ARCA",
+                for: 20)
         }
     }
 
@@ -207,6 +240,8 @@ struct ContextView: View {
                 results[suggestion.id] = result
                 runningIDs.remove(suggestion.id)
             }
+            log(role: "assistant", text: "▸ \(suggestion.label) — \(result)")
+            RecordingActivityController.shared.note(result, for: 15)
         }
     }
 
@@ -222,6 +257,8 @@ struct ContextView: View {
                 directReply = reply
                 isAnsweringDirect = false
             }
+            log(role: "user", text: text)
+            log(role: "assistant", text: reply)
         }
     }
 }

@@ -11,6 +11,7 @@ final class RecordingActivityController {
     static let shared = RecordingActivityController()
 
     private var activity: Activity<RecordingActivityAttributes>?
+    private var noteTask: Task<Void, Never>?
 
     /// Ambient presence — call whenever the app becomes active. Re-ups the
     /// stale date; if a recording is live it leaves that state alone.
@@ -70,6 +71,31 @@ final class RecordingActivityController {
             segmentCount: segmentCount)
         Task { @MainActor in
             await self.activity?.update(ActivityContent(state: state, staleDate: Self.staleDate))
+        }
+    }
+
+    /// A transient life sign in the island while ARCA works ("Reading your
+    /// screenshot…", "3 actions ready") — reverts to the resting companion
+    /// line after `seconds`. No-op during a recording.
+    func note(_ text: String, for seconds: TimeInterval = 10) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        adoptExistingActivities()
+        if activity == nil { startCompanion() }
+        guard let activity, !activity.content.state.isRecording else { return }
+        noteTask?.cancel()
+        let state = RecordingActivityAttributes.ContentState(
+            mode: "companion", startedAt: .now, detail: String(text.prefix(80)))
+        Task { @MainActor in
+            await activity.update(ActivityContent(state: state, staleDate: Self.staleDate))
+        }
+        noteTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled,
+                  let activity = self?.activity,
+                  !activity.content.state.isRecording else { return }
+            let resting = RecordingActivityAttributes.ContentState(
+                mode: "companion", startedAt: .now)
+            await activity.update(ActivityContent(state: resting, staleDate: Self.staleDate))
         }
     }
 

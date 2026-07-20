@@ -181,6 +181,7 @@ struct HomeView: View {
     /// same magic as the Mac notch, one tap instead of zero.
     private func readLatestScreenshot() {
         readingShot = true
+        RecordingActivityController.shared.note("Reading your screenshot…", for: 45)
         Task { @MainActor in
             defer { readingShot = false }
             let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
@@ -229,6 +230,8 @@ struct HomeView: View {
         UINotificationFeedbackGenerator().notificationOccurred(failed ? .warning : .success)
         shotFailed = failed
         withAnimation(.spring(duration: 0.35)) { shotResult = text }
+        RecordingActivityController.shared.note(
+            failed ? "Couldn't read that screenshot" : text, for: 15)
     }
 
     /// Fetches the full-quality image, resuming exactly once no matter what

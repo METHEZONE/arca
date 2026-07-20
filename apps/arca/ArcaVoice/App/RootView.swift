@@ -62,8 +62,23 @@ struct RootView: View {
         .sheet(item: $contextItem) { item in
             ContextView(item: item) { chatItem in
                 contextItem = nil
+                // Hand the whole thread to the chat tab — image, analysis,
+                // results — so "Open full chat" continues, not restarts.
+                var payload: [String: Any] = [
+                    "conversationId": "share-\(chatItem.id.uuidString)",
+                ]
+                if let text = chatItem.text { payload["text"] = text }
+                if chatItem.kind == .image, let url = SharedInbox.imageURL(for: chatItem),
+                   let data = try? Data(contentsOf: url) {
+                    payload["imageData"] = data
+                }
                 SharedInbox.remove(chatItem)
                 selectedTab = .chat
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(350))
+                    NotificationCenter.default.post(name: .arcaChatWithShare, object: nil,
+                                                    userInfo: payload)
+                }
             } onDone: {
                 if let item = contextItem { SharedInbox.remove(item) }
                 contextItem = nil
@@ -88,6 +103,10 @@ struct RootView: View {
                 if coordinator.phase == .idle { services.startRecording() }
             case "chat":
                 selectedTab = .chat
+            case "context":
+                // The share extension just deep-linked us open — present the
+                // shared item's action sheet immediately.
+                presentPendingContextIfNeeded()
             default:
                 break
             }

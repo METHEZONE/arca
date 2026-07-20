@@ -138,6 +138,23 @@ final class ShareViewController: UIViewController {
     }
 
     private func finish() {
+        openHostApp()
         extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+    }
+
+    /// Jump straight into ARCA so the action sheet appears without a second
+    /// tap. Extensions can't touch UIApplication.shared, so we walk the
+    /// responder chain up to the hosting app and ask it to open our URL.
+    private func openHostApp() {
+        guard let url = URL(string: "arca://context") else { return }
+        let selector = NSSelectorFromString("openURL:")
+        var responder: UIResponder? = self
+        while let current = responder {
+            if current.responds(to: selector) {
+                current.perform(selector, with: url)
+                return
+            }
+            responder = current.next
+        }
     }
 }

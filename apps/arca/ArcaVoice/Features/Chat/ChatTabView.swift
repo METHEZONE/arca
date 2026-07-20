@@ -49,6 +49,28 @@ struct ChatTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .arcaOpenTalk)) { _ in
             Task { await beginVoiceTurn() }
         }
+        // "Open full chat" from a shared item — continue its conversation
+        // (image + analysis already persisted), or start one from the image.
+        .onReceive(NotificationCenter.default.publisher(for: .arcaChatWithShare)) { note in
+            guard let conversationId = note.userInfo?["conversationId"] as? String else { return }
+            voice.stopSpeaking()
+            chat.endConversation()
+            let existing = log.filter { $0.conversationId == conversationId }
+            let next = ChatSession(conversationId: conversationId)
+            if !existing.isEmpty {
+                next.restore(from: existing)
+                chat = next
+            } else {
+                chat = next
+                if let data = note.userInfo?["imageData"] as? Data {
+                    chat.begin(withImage: data, prompt: note.userInfo?["text"] as? String)
+                } else if let text = note.userInfo?["text"] as? String {
+                    chat.draftText = text
+                    chat.send()
+                }
+            }
+            inputFocused = true
+        }
         // Voice failures used to be swallowed — the mic button just did
         // nothing. Permission denials land here with a way to fix them.
         .alert("Voice needs a little help", isPresented: Binding(
@@ -268,13 +290,25 @@ private struct HistoryBubble: View {
     var body: some View {
         HStack {
             if isUser { Spacer(minLength: 40) }
-            Text(entry.text)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(
-                    isUser ? AnyShapeStyle(ArcaTheme.idle.opacity(0.25)) : AnyShapeStyle(.quaternary.opacity(0.5)),
-                    in: RoundedRectangle(cornerRadius: 14))
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
+                if let data = entry.imageData, let ui = UIImage(data: data) {
+                    Image(uiImage: ui)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 220, maxHeight: 160)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .opacity(0.85)
+                }
+                if !entry.text.isEmpty {
+                    Text(entry.text)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .background(
+                            isUser ? AnyShapeStyle(ArcaTheme.idle.opacity(0.25)) : AnyShapeStyle(.quaternary.opacity(0.5)),
+                            in: RoundedRectangle(cornerRadius: 14))
+                }
+            }
             if !isUser { Spacer(minLength: 40) }
         }
     }

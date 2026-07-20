@@ -5,6 +5,9 @@ import Foundation
 extension Notification.Name {
     /// Chat tab listens: drop into a live voice turn.
     static let arcaOpenTalk = Notification.Name("arca.openTalk")
+    /// Chat tab listens: continue a shared item's conversation in full chat.
+    /// userInfo: conversationId (String), text (String?), imageData (Data?).
+    static let arcaChatWithShare = Notification.Name("arca.chatWithShare")
 }
 
 /// "Talk to ARCA" — wire it to the Action Button or Back Tap via Shortcuts.
