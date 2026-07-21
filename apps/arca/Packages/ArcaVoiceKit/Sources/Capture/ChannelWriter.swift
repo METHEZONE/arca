@@ -17,11 +17,19 @@ final class ChannelWriter: @unchecked Sendable {
         self.fileURL = directory.appendingPathComponent("\(channel.rawValue).m4a")
 
         let channelCount = min(sourceFormat.channelCount, 2)
+        // AAC only encodes the standard rates — pro interfaces (96k+) and
+        // odd aggregate-device rates otherwise kill file creation with '!dat'.
+        // The converter resamples buffers to the file rate, so clamping is safe.
+        let aacRates: [Double] = [8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000]
+        let fileRate = aacRates.contains(sourceFormat.sampleRate) ? sourceFormat.sampleRate : 48000
+        // The encoder rejects bitrates outside the valid range for the
+        // rate/channel combo (96kbps @16kHz mono = '!dat') — scale it.
+        let bitRate = min(96_000, Int(fileRate) * 2) * Int(channelCount)
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: sourceFormat.sampleRate,
+            AVSampleRateKey: fileRate,
             AVNumberOfChannelsKey: channelCount,
-            AVEncoderBitRateKey: 96_000,
+            AVEncoderBitRateKey: bitRate,
         ]
         do {
             self.file = try AVAudioFile(forWriting: fileURL, settings: settings,
@@ -29,7 +37,8 @@ final class ChannelWriter: @unchecked Sendable {
         } catch {
             throw CaptureError.fileCreationFailed(error.localizedDescription)
         }
-        self.sampleRate = sourceFormat.sampleRate
+        // Elapsed counts frames written at the FILE rate, not the source rate.
+        self.sampleRate = fileRate
     }
 
     var elapsed: TimeInterval {

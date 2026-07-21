@@ -113,6 +113,19 @@ struct RootView: View {
         }
         #else
         CompanionHomeView()
+            // arca://record|stop (arca-test:// on the test app) — lets
+            // Shortcuts/Raycast and the ARCA Test verification harness drive
+            // the core loop without touching the UI.
+            .onOpenURL { url in
+                switch url.host ?? url.lastPathComponent {
+                case "record":
+                    if coordinator.phase == .idle { services.startRecording() }
+                case "stop":
+                    services.stopRecording()
+                default:
+                    break
+                }
+            }
         #endif
     }
 

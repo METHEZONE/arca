@@ -61,67 +61,98 @@ public struct MicOnlyCaptureEngine: AudioCaptureEngine {
     }
 }
 
+/// Bring-up trace hook — the app points this at its trace file so capture
+/// failures are diagnosable outside Xcode (unified log is unreliable here).
+public enum CaptureTrace {
+    nonisolated(unsafe) public static var sink: (@Sendable (String) -> Void)?
+    static func log(_ message: String) { sink?(message) }
+}
+
 #if os(macOS)
 public struct MeetingCaptureEngine: AudioCaptureEngine {
+    /// True when the most recent start had to drop the system-audio channel
+    /// (TCC denied, tap failure) and recorded mic-only instead.
+    nonisolated(unsafe) public static var lastStartDroppedSystemAudio = false
+
     public var availableChannels: Set<CaptureChannel> { [.microphone, .systemAudio] }
 
     public init() {}
 
     public func start(config: CaptureConfig) async throws -> any CaptureSession {
         guard await MicCapture.requestPermission() else {
+            CaptureTrace.log("meeting start: mic permission denied")
             throw CaptureError.microphonePermissionDenied
         }
         try FileManager.default.createDirectory(at: config.outputDirectory, withIntermediateDirectories: true)
 
         let mic = MicCapture()
 
-        // System audio is set up first: its TCC prompt should appear before
-        // recording starts, and activation failure must abort cleanly.
-        let tap: SystemAudioTap?
-        let systemWriter: ChannelWriter?
+        // The other side's audio is a bonus, not the recording: if the tap
+        // can't come up (audio-capture TCC denied, aggregate device failure),
+        // degrade to mic-only instead of killing the whole meeting.
+        Self.lastStartDroppedSystemAudio = false
+        var tap: SystemAudioTap?
+        var systemWriter: ChannelWriter?
         if config.channels.contains(.systemAudio) {
-            let activeTap = SystemAudioTap()
-            try activeTap.activate()
-            guard var asbd = activeTap.streamDescription,
-                  let tapFormat = AVAudioFormat(streamDescription: &asbd) else {
-                activeTap.stop()
-                throw CaptureError.formatUnavailable
+            do {
+                let activeTap = SystemAudioTap()
+                try activeTap.activate()
+                guard var asbd = activeTap.streamDescription,
+                      let tapFormat = AVAudioFormat(streamDescription: &asbd) else {
+                    activeTap.stop()
+                    throw CaptureError.formatUnavailable
+                }
+                tap = activeTap
+                systemWriter = try ChannelWriter(channel: .systemAudio, directory: config.outputDirectory,
+                                                 sourceFormat: tapFormat)
+                CaptureTrace.log("meeting start: system-audio tap active")
+            } catch {
+                CaptureTrace.log("meeting start: system-audio tap failed (\(error)) — mic-only")
+                tap?.stop()
+                tap = nil
+                systemWriter = nil
+                Self.lastStartDroppedSystemAudio = true
             }
-            tap = activeTap
-            systemWriter = try ChannelWriter(channel: .systemAudio, directory: config.outputDirectory,
-                                             sourceFormat: tapFormat)
-        } else {
-            tap = nil
-            systemWriter = nil
         }
 
+        // Freeze for the @Sendable stop closure (vars can't be captured).
+        let activeTap = tap
+        let activeWriter = systemWriter
+
         let session = ActiveCaptureSession(onStop: { @Sendable in
-            tap?.stop()
+            activeTap?.stop()
             var files: [CaptureChannel: URL] = [:]
             var duration: TimeInterval = 0
             if let micResult = mic.stop() {
                 files[.microphone] = micResult.url
                 duration = micResult.duration
             }
-            if let systemWriter {
-                files[.systemAudio] = systemWriter.fileURL
-                duration = max(duration, systemWriter.elapsed)
+            if let activeWriter {
+                files[.systemAudio] = activeWriter.fileURL
+                duration = max(duration, activeWriter.elapsed)
             }
             guard !files.isEmpty else { throw CaptureError.formatUnavailable }
             return CaptureArtifacts(files: files, duration: duration)
         })
 
-        if let tap, let systemWriter {
-            try tap.start { buffer in
-                if let captured = systemWriter.write(buffer) {
-                    session.yield(captured)
+        if let activeTap, let activeWriter {
+            do {
+                try activeTap.start { buffer in
+                    if let captured = activeWriter.write(buffer) {
+                        session.yield(captured)
+                    }
                 }
+            } catch {
+                CaptureTrace.log("meeting start: tap IO failed (\(error)) — mic-only")
+                activeTap.stop()
+                Self.lastStartDroppedSystemAudio = true
             }
         }
 
         try mic.start(directory: config.outputDirectory) { captured in
             session.yield(captured)
         }
+        CaptureTrace.log("meeting start: mic running")
         return session
     }
 }

@@ -27,22 +27,41 @@ public struct ProcessingPipeline: Sendable {
         hints: TranscriptHints = TranscriptHints(),
         userNotes: String? = nil
     ) async throws -> Output {
-        let channelTurns = try await withThrowingTaskGroup(
-            of: (CaptureChannel, [SpeakerTurn]).self
+        // One dead channel (empty mic file, corrupt tap) must not sink the
+        // whole pass — transcribe per channel, keep what succeeds, and only
+        // fail if EVERY channel failed.
+        var channelErrors: [String] = []
+        let channelTurns = await withTaskGroup(
+            of: Result<(CaptureChannel, [SpeakerTurn]), Error>.self
         ) { group in
             for (channel, url) in files {
                 let transcriber = finalTranscriber
                 group.addTask {
-                    let transcript = try await transcriber.transcribe(
-                        fileURL: url, channel: channel, hints: hints)
-                    return (channel, Self.turns(from: transcript, channel: channel))
+                    // A header-only file means the channel never captured.
+                    let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
+                    guard size > 4096 else {
+                        return .success((channel, []))
+                    }
+                    do {
+                        let transcript = try await transcriber.transcribe(
+                            fileURL: url, channel: channel, hints: hints)
+                        return .success((channel, Self.turns(from: transcript, channel: channel)))
+                    } catch {
+                        return .failure(error)
+                    }
                 }
             }
             var result: [CaptureChannel: [SpeakerTurn]] = [:]
-            for try await (channel, turns) in group {
-                result[channel] = turns
+            for await outcome in group {
+                switch outcome {
+                case .success(let (channel, turns)): result[channel] = turns
+                case .failure(let error): channelErrors.append(error.localizedDescription)
+                }
             }
             return result
+        }
+        if channelTurns.isEmpty, let firstError = channelErrors.first {
+            throw PipelineError.allChannelsFailed(firstError)
         }
 
         let merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
@@ -74,5 +93,15 @@ public struct ProcessingPipeline: Sendable {
             }
         }
         return turns
+    }
+}
+
+public enum PipelineError: Error, LocalizedError {
+    case allChannelsFailed(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .allChannelsFailed(let detail): return "Transcription failed on every channel: \(detail)"
+        }
     }
 }

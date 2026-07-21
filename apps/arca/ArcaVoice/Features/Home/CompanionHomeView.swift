@@ -104,6 +104,36 @@ struct CompanionHomeView: View {
         }
         .background(background.ignoresSafeArea())
         .foregroundStyle(.white)
+        // Recording failures were invisible on the Mac — same silent-death
+        // class the iPhone home had. Now they land as a dismissible banner.
+        .overlay(alignment: .top) {
+            if let error = services.coordinator.errorMessage {
+                HStack(spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(error)
+                        .font(.callout)
+                        .lineLimit(2)
+                    Spacer()
+                    Button {
+                        services.coordinator.errorMessage = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.orange.opacity(0.5)))
+                .padding(.top, 12)
+                .padding(.horizontal, 20)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.35), value: services.coordinator.errorMessage != nil)
         .toolbar { toolbar }
         .sheet(isPresented: $showSettings) {
             NavigationStack { SettingsView() }

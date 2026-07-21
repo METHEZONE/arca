@@ -97,9 +97,21 @@ final class RecordingCoordinator {
             #if os(iOS)
             liveActivity.start(title: "Recording meeting", startedAt: startedAt ?? .now)
             #endif
+            DebugTrace.log("record started, channels: \(channels.map(\.rawValue).sorted())")
+            #if os(macOS)
+            if includeSystemAudio && MeetingCaptureEngine.lastStartDroppedSystemAudio {
+                AppServices.shared.notch.showNotice(
+                    "상대방 오디오 캡처를 못 열어 마이크만 녹음 중이에요 — 설정 > 개인정보 보호 > 화면 및 시스템 오디오 녹음 확인",
+                    seconds: 10)
+            }
+            #endif
         } catch {
             errorMessage = error.localizedDescription
             phase = .idle
+            DebugTrace.log("record start failed: \(error)")
+            #if os(macOS)
+            AppServices.shared.notch.showNotice("녹음 시작 실패 — \(error.localizedDescription)", seconds: 10)
+            #endif
         }
     }
 

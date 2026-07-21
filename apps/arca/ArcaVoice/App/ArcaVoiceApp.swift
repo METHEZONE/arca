@@ -35,6 +35,7 @@ struct ArcaVoiceApp: App {
 
         // Personal build: keys ship in the bundle so every device just works.
         ArcaConfig.importBundledKeysIfNeeded()
+        CaptureTrace.sink = { DebugTrace.log("capture: \($0)") }
         #if os(macOS)
         // The ~/.arca staging file still wins on the Mac (rotate keys there).
         ArcaConfig.importVoiceKeysIntoKeychainIfNeeded()
