@@ -20,13 +20,29 @@ struct BrainView: View {
     @State private var pulseOn = false
 
     private let fixedDt: Double = 1.0 / 60.0
-    private let background = Color(red: 0.03, green: 0.05, blue: 0.09)
+    private let background = Color(red: 0.02, green: 0.02, blue: 0.03)
     private let ember = Color(red: 1.0, green: 0.478, blue: 0.102)
+    /// DESIGN.md tokens: warm off-white #ffedd7, copper #dc5000.
+    private let offWhite = Color(red: 1.0, green: 0.929, blue: 0.843)
+    private let copper = Color(red: 0.863, green: 0.314, blue: 0.0)
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
                 background.ignoresSafeArea()
+
+                // Inside-the-skull depth: a faint warm core and darkened rim.
+                // Static gradients — zero per-frame cost.
+                RadialGradient(colors: [copper.opacity(0.07), .clear],
+                               center: .center, startRadius: 0,
+                               endRadius: min(geo.size.width, geo.size.height) * 0.55)
+                    .ignoresSafeArea()
+                RadialGradient(colors: [.clear, .black.opacity(0.55)],
+                               center: .center,
+                               startRadius: min(geo.size.width, geo.size.height) * 0.38,
+                               endRadius: max(geo.size.width, geo.size.height) * 0.75)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
 
                 if engine.nodes.isEmpty {
                     emptyState
@@ -155,6 +171,8 @@ struct BrainView: View {
                 }
             }
         }
+
+        drawFirings(&ctx, positions: positions)
     }
 
     private func labelNodeIds() -> Set<String> {
@@ -184,13 +202,52 @@ struct BrainView: View {
                 layer.stroke(path, with: shading, lineWidth: CGFloat(1.25 + edge.strength * 1.5))
             }
         } else {
-            let opacity = 0.08 + 0.04 * min(max(edge.strength, 0), 1)
-            ctx.stroke(path, with: .color(.white.opacity(opacity)), lineWidth: CGFloat(0.75 + edge.strength * 1.25))
+            // A synapse, not a wire: warm gradient, visible but quiet, with a
+            // soft under-glow on the strong ones.
+            let strength = min(max(edge.strength, 0), 1)
+            let shading = GraphicsContext.Shading.linearGradient(
+                Gradient(colors: [offWhite.opacity(0.35), copper.opacity(0.5)]),
+                startPoint: a, endPoint: b)
+            if strength > 0.55 {
+                ctx.drawLayer { layer in
+                    layer.opacity = 0.12
+                    layer.addFilter(.blur(radius: 4))
+                    layer.stroke(path, with: shading, lineWidth: CGFloat(2.5 + strength * 2.5))
+                }
+            }
+            ctx.drawLayer { layer in
+                layer.opacity = 0.30 + 0.35 * strength
+                layer.stroke(path, with: shading, lineWidth: CGFloat(0.8 + strength * 1.4))
+            }
+        }
+    }
+
+    /// The traveling spark of a synapse firing — a bright dot running the
+    /// edge's curve with a warm tail.
+    private func drawFirings(_ ctx: inout GraphicsContext, positions: [String: CGPoint]) {
+        for firing in engine.firings {
+            guard let edge = engine.edges.first(where: { $0.id == firing.edgeId }),
+                  let a = positions[edge.a], let b = positions[edge.b] else { continue }
+            let progress = engine.firingProgress(firing)
+            let point = pointOnCurve(from: a, to: b, seedId: edge.id, t: progress)
+            let fade = sin(progress * .pi) // bright mid-flight, soft at both ends
+
+            ctx.drawLayer { layer in
+                layer.opacity = 0.5 * fade
+                layer.addFilter(.blur(radius: 5))
+                layer.fill(Path(ellipseIn: CGRect(x: point.x - 6, y: point.y - 6, width: 12, height: 12)),
+                           with: .color(ember))
+            }
+            ctx.drawLayer { layer in
+                layer.opacity = 0.95 * fade
+                layer.fill(Path(ellipseIn: CGRect(x: point.x - 2, y: point.y - 2, width: 4, height: 4)),
+                           with: .color(offWhite))
+            }
         }
     }
 
     private func drawNode(_ ctx: inout GraphicsContext, node: BrainEngine.Node, glowing: Bool, selected: Bool, t: Double) {
-        let radius = CGFloat(6 + 10 * min(max(node.weight, 0), 1))
+        let radius = CGFloat(5 + 8 * min(max(node.weight, 0), 1) + 5 * node.degree)
         let center = node.position
         let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
 
@@ -211,7 +268,24 @@ struct BrainView: View {
             let innerRect = rect.insetBy(dx: radius * 0.35, dy: radius * 0.35)
             ctx.fill(Path(ellipseIn: innerRect), with: .color(ember.opacity(0.3)))
         } else {
-            ctx.fill(Path(ellipseIn: rect), with: .color(.white.opacity(0.88)))
+            // A neuron, not a dot: warm core with a soft halo; hubs (higher
+            // degree) glow bigger and warmer than leaf memories.
+            let heat = 0.25 + 0.75 * node.degree
+            let haloRadius = radius * CGFloat(1.8 + 1.4 * node.degree)
+            let haloRect = CGRect(x: center.x - haloRadius, y: center.y - haloRadius,
+                                  width: haloRadius * 2, height: haloRadius * 2)
+            ctx.drawLayer { layer in
+                layer.opacity = 0.10 + 0.22 * heat
+                layer.addFilter(.blur(radius: 5))
+                layer.fill(Path(ellipseIn: haloRect), with: .color(copper))
+            }
+            ctx.fill(
+                Path(ellipseIn: rect),
+                with: .radialGradient(
+                    Gradient(colors: [offWhite, offWhite.opacity(0.85),
+                                      copper.opacity(0.55 + 0.35 * heat)]),
+                    center: CGPoint(x: center.x - radius * 0.25, y: center.y - radius * 0.25),
+                    startRadius: 0, endRadius: radius * 1.15))
         }
 
         if selected {
@@ -221,9 +295,9 @@ struct BrainView: View {
     }
 
     private func drawLabel(_ ctx: inout GraphicsContext, node: BrainEngine.Node) {
-        let radius = CGFloat(6 + 10 * min(max(node.weight, 0), 1))
+        let radius = CGFloat(5 + 8 * min(max(node.weight, 0), 1) + 5 * node.degree)
         let point = CGPoint(x: node.position.x, y: node.position.y + radius + 4)
-        ctx.draw(Text(node.label).font(.caption2).foregroundStyle(.white.opacity(0.6)), at: point, anchor: .top)
+        ctx.draw(Text(node.label).font(.caption2).foregroundStyle(offWhite.opacity(0.6)), at: point, anchor: .top)
     }
 
     /// A gentle quadratic arc rather than a straight line — the bend is
@@ -240,6 +314,22 @@ struct BrainView: View {
         let control = CGPoint(x: mid.x + nx * bend, y: mid.y + ny * bend)
         path.addQuadCurve(to: b, control: control)
         return path
+    }
+
+    /// The point at parameter `t` along the same quadratic curve
+    /// `curvedPath` draws — used to place a firing's traveling spark.
+    private func pointOnCurve(from a: CGPoint, to b: CGPoint, seedId: String, t: Double) -> CGPoint {
+        let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+        let dx = b.x - a.x, dy = b.y - a.y
+        let dist = max((dx * dx + dy * dy).squareRoot(), 1)
+        let nx = -dy / dist, ny = dx / dist
+        let seed = CGFloat(abs(seedId.hashValue % 1000)) / 1000.0 - 0.5
+        let bend = dist * 0.18 * seed
+        let c = CGPoint(x: mid.x + nx * bend, y: mid.y + ny * bend)
+        let u = CGFloat(1 - t), v = CGFloat(t)
+        return CGPoint(
+            x: u * u * a.x + 2 * u * v * c.x + v * v * b.x,
+            y: u * u * a.y + 2 * u * v * c.y + v * v * b.y)
     }
 
     // MARK: - Overlays

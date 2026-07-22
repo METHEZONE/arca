@@ -21,6 +21,20 @@ final class BrainEngine {
         var weight: Double
         var position: CGPoint
         var velocity: CGPoint = .zero
+        /// Cluster index (by memory source) — nodes from the same place pool
+        /// into the same "lobe" of the brain.
+        var group: Int = 0
+        /// Normalized connectivity 0…1 — hubs sit deeper in the center and
+        /// render bigger/brighter.
+        var degree: Double = 0
+    }
+
+    /// A signal traveling along one synapse — spawned by the simulation,
+    /// drawn by the view as a bright dot running the edge's curve.
+    struct Firing: Sendable {
+        let edgeId: String
+        let start: Double
+        let duration: Double
     }
 
     struct Edge: Identifiable, Sendable {
@@ -37,6 +51,11 @@ final class BrainEngine {
     var selectedNode: String?
     private(set) var isWeaving = false
     var lastError: String?
+    /// In-flight synapse signals (pruned as they land).
+    private(set) var firings: [Firing] = []
+    private var nextFireAt: Double = 1.5
+    /// Number of distinct source groups in the current load.
+    private(set) var groupCount: Int = 1
 
     /// Full source text per node id — kept out of `Node` so the struct stays
     /// small (Canvas redraws read `nodes`/`edges` every animation frame).
@@ -65,6 +84,7 @@ final class BrainEngine {
             let text: String
             let kind: NodeKind
             let createdAt: Date
+            let source: String
         }
 
         let facts = (try? context.fetch(FetchDescriptor<MemoryFact>())) ?? []
@@ -76,7 +96,8 @@ final class BrainEngine {
                 label: String(fact.text.prefix(40)),
                 text: fact.text,
                 kind: fact.kindRaw == "insight" ? .insight : .memory,
-                createdAt: fact.createdAt)
+                createdAt: fact.createdAt,
+                source: fact.kindRaw == "insight" ? "insight" : fact.sourceRaw)
         }
         for session in sessions {
             guard let summary = session.note?.summaryMarkdown, !summary.isEmpty else { continue }
@@ -85,12 +106,20 @@ final class BrainEngine {
                 label: session.title,
                 text: "\(session.title). \(summary)",
                 kind: .session,
-                createdAt: session.createdAt))
+                createdAt: session.createdAt,
+                source: "session"))
         }
 
         candidates.sort { $0.createdAt > $1.createdAt }
         let capped = Array(candidates.prefix(Self.maxNodes))
         nodeText = Dictionary(uniqueKeysWithValues: capped.map { ($0.id, $0.text) })
+
+        // Memories from the same source pool into the same lobe.
+        var groupIndex: [String: Int] = [:]
+        for c in capped where groupIndex[c.source] == nil {
+            groupIndex[c.source] = groupIndex.count
+        }
+        groupCount = max(groupIndex.count, 1)
 
         var previous: [String: (CGPoint, CGPoint)] = [:]
         for node in nodes { previous[node.id] = (node.position, node.velocity) }
@@ -98,9 +127,21 @@ final class BrainEngine {
         nodes = capped.map { c in
             let (pos, vel) = previous[c.id] ?? (Self.initialPosition(for: c.id), .zero)
             let baseWeight: Double = c.kind == .session ? 0.6 : (c.kind == .insight ? 0.75 : 0.4)
-            return Node(id: c.id, label: c.label, kind: c.kind, weight: baseWeight, position: pos, velocity: vel)
+            return Node(id: c.id, label: c.label, kind: c.kind, weight: baseWeight,
+                        position: pos, velocity: vel, group: groupIndex[c.source] ?? 0)
         }
         edges = Self.buildBaselineEdges(nodes: nodes, nodeText: nodeText)
+
+        // Connectivity → hubs: normalized degree drives size and centering.
+        var degreeById: [String: Int] = [:]
+        for edge in edges {
+            degreeById[edge.a, default: 0] += 1
+            degreeById[edge.b, default: 0] += 1
+        }
+        let maxDegree = Double(max(degreeById.values.max() ?? 1, 1))
+        for i in nodes.indices {
+            nodes[i].degree = Double(degreeById[nodes[i].id] ?? 0) / maxDegree
+        }
     }
 
     // MARK: - Simulation
@@ -115,7 +156,16 @@ final class BrainEngine {
         var fx = [Double](repeating: 0, count: n)
         var fy = [Double](repeating: 0, count: n)
 
-        // Repulsion — every node pushes every other node away.
+        // Repulsion — every node pushes every other node away. The constant
+        // adapts to density (gravity·π·R³/n): equilibrium spacing then fills
+        // the containment disc for ANY node count, instead of a fixed
+        // constant that overflows the boundary once the brain grows and
+        // stacks nodes along it.
+        let sideForRepulsion = min(Double(size.width), Double(size.height))
+        let repulsionR = max(40, sideForRepulsion * 0.42)
+        let repulsionK = min(Self.repulsionCap,
+                             Self.gravityK * .pi * repulsionR * repulsionR * repulsionR
+                                 / Double(max(n, 8)))
         let minDist2 = Self.minDistance * Self.minDistance
         for i in 0..<n {
             for j in (i + 1)..<n {
@@ -124,7 +174,7 @@ final class BrainEngine {
                 var dist2 = Double(dx * dx + dy * dy)
                 if dist2 < minDist2 { dist2 = minDist2 }
                 let dist = dist2.squareRoot()
-                let force = Self.repulsionK / dist2
+                let force = repulsionK / dist2
                 let ux = Double(dx) / dist, uy = Double(dy) / dist
                 fx[i] += ux * force; fy[i] += uy * force
                 fx[j] -= ux * force; fy[j] -= uy * force
@@ -146,11 +196,41 @@ final class BrainEngine {
             fx[j] -= ux * force; fy[j] -= uy * force
         }
 
-        // Gravity — a gentle pull toward the center so the map doesn't drift off.
+        // Gravity — hubs (high degree) get pulled deeper toward the center,
+        // so well-connected memories sit at the brain's core and leaf notes
+        // drift to the cortex. Each lobe (source group) also has an anchor
+        // placed around the center that its nodes lean toward — memories from
+        // one place pool together organically instead of spreading uniformly.
         let cx = Double(size.width) / 2, cy = Double(size.height) / 2
+        let shortSide = min(Double(size.width), Double(size.height))
+        let containR = max(40, shortSide * 0.42)
         for i in 0..<n {
-            fx[i] += (cx - Double(nodes[i].position.x)) * Self.gravityK
-            fy[i] += (cy - Double(nodes[i].position.y)) * Self.gravityK
+            let hubPull = Self.gravityK * (0.6 + 0.9 * nodes[i].degree)
+            fx[i] += (cx - Double(nodes[i].position.x)) * hubPull
+            fy[i] += (cy - Double(nodes[i].position.y)) * hubPull
+
+            if groupCount > 1 {
+                let angle = Double(nodes[i].group) * 2.399963 // golden angle
+                let ax = cx + cos(angle) * containR * 0.45
+                let ay = cy + sin(angle) * containR * 0.45
+                fx[i] += (ax - Double(nodes[i].position.x)) * Self.lobeK
+                fy[i] += (ay - Double(nodes[i].position.y)) * Self.lobeK
+            }
+        }
+
+        // Soft radial containment instead of rectangular walls. Walls made
+        // overflow nodes STACK along the border in a rigid grid (the exact
+        // failure mode this replaced); a radial spring past the boundary
+        // keeps the mass a soft organic disc with nothing to line up against.
+        for i in 0..<n {
+            let dx = Double(nodes[i].position.x) - cx
+            let dy = Double(nodes[i].position.y) - cy
+            let r = (dx * dx + dy * dy).squareRoot()
+            if r > containR {
+                let pull = (r - containR) * Self.containK / max(r, 1)
+                fx[i] -= dx * pull
+                fy[i] -= dy * pull
+            }
         }
 
         // Gentle perpetual drift so the map still feels alive at rest, even
@@ -164,14 +244,23 @@ final class BrainEngine {
             fy[i] += cos(simTime * 0.4 + phase * 1.3) * Self.driftK
         }
 
-        // Integrate, damp, clamp speed, and keep positions on-canvas. Margin
-        // and speed clamp scale with canvas size so the same constants work
-        // for both a full-window BrainView and a 64pt BrainPreviewCard.
-        let shortSide = min(Double(size.width), Double(size.height))
-        let margin = max(6, min(60, shortSide * 0.12))
+        // Synapse firing: every second or two a random edge carries a signal
+        // (insight edges fire more). The view draws the traveling spark.
+        if simTime >= nextFireAt, !edges.isEmpty {
+            let pool = edges.filter(\.isInsight).isEmpty
+                ? edges
+                : edges + edges.filter(\.isInsight) // insight edges twice as likely
+            if let edge = pool.randomElement() {
+                firings.append(Firing(edgeId: edge.id, start: simTime,
+                                      duration: Double.random(in: 0.7...1.1)))
+            }
+            nextFireAt = simTime + Double.random(in: 0.8...2.0)
+        }
+        firings.removeAll { simTime - $0.start > $0.duration }
+
+        // Integrate, damp, and clamp speed. The radial containment above is
+        // the boundary; positions are never hard-clamped.
         let speedClamp = min(Self.maxSpeed, max(4, shortSide * 0.4))
-        let maxX = max(Double(size.width) - margin, margin)
-        let maxY = max(Double(size.height) - margin, margin)
         for i in 0..<n {
             var vx = (Double(nodes[i].velocity.x) + fx[i]) * Self.damping
             var vy = (Double(nodes[i].velocity.y) + fy[i]) * Self.damping
@@ -180,35 +269,39 @@ final class BrainEngine {
                 let scale = speedClamp / speed
                 vx *= scale; vy *= scale
             }
-            var px = Double(nodes[i].position.x) + vx
-            var py = Double(nodes[i].position.y) + vy
-            if px < margin { px = margin; vx *= -0.3 }
-            if px > maxX { px = maxX; vx *= -0.3 }
-            if py < margin { py = margin; vy *= -0.3 }
-            if py > maxY { py = maxY; vy *= -0.3 }
-            nodes[i].position = CGPoint(x: CGFloat(px), y: CGFloat(py))
+            nodes[i].position = CGPoint(x: nodes[i].position.x + CGFloat(vx),
+                                        y: nodes[i].position.y + CGFloat(vy))
             nodes[i].velocity = CGPoint(x: CGFloat(vx), y: CGFloat(vy))
         }
     }
 
-    // Force constants. Dry-run reasoning: worst-case repulsion at the min
-    // distance clamp is repulsionK / minDistance^2 ≈ 9000/576 ≈ 15.6 per
-    // neighbor pair; summed across a small cluster this can spike well above
-    // maxSpeed, but the per-axis speed clamp (28 px/tick) bounds it every
-    // frame regardless, and damping (0.82) halves residual velocity roughly
-    // every 3-4 ticks so clusters relax instead of oscillating. Springs pull
-    // with at most springK * displacement (0.02 * a few hundred px ≈ single
-    // digits) and gravity is similarly small (0.015 * half-canvas ≈ single
-    // digits) — both far under the speed clamp, so they never dominate.
-    // Position clamping with a soft bounce (-0.3) is the final backstop:
-    // nodes can never leave the canvas no matter what the forces do.
-    private static let repulsionK: Double = 9000
+    /// Progress 0…1 of a firing at the engine's current clock, eased.
+    func firingProgress(_ firing: Firing) -> Double {
+        let raw = min(max((simTime - firing.start) / firing.duration, 0), 1)
+        // easeInOut
+        return raw < 0.5 ? 2 * raw * raw : 1 - pow(-2 * raw + 2, 2) / 2
+    }
+
+    // Force constants. Stability reasoning: worst-case repulsion at the min
+    // distance clamp can spike well above maxSpeed, but the per-axis speed
+    // clamp bounds it every frame, and damping (0.82) halves residual
+    // velocity roughly every 3-4 ticks so clusters relax instead of
+    // oscillating. Springs, gravity, and the lobe pull are all far under the
+    // speed clamp. The radial containment spring is the boundary backstop —
+    // no hard position clamp exists, by design.
+    /// Ceiling for the adaptive repulsion constant (huge canvases, few nodes).
+    private static let repulsionCap: Double = 24000
     private static let springK: Double = 0.02
     private static let gravityK: Double = 0.015
     private static let damping: Double = 0.82
     private static let maxSpeed: Double = 28
     private static let minDistance: Double = 24
     private static let driftK: Double = 0.6
+    /// Pull toward the node's source-group anchor — strong enough to pool
+    /// lobes, weak enough that keyword springs can still bridge them.
+    private static let lobeK: Double = 0.004
+    /// Radial boundary spring per px past the containment radius.
+    private static let containK: Double = 0.06
 
     private static func springRestLength(strength: Double) -> Double {
         max(30, 130 - 90 * min(max(strength, 0), 1))
