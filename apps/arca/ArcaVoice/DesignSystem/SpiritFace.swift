@@ -41,6 +41,11 @@ struct ArcaFace: View {
     @State private var act: MicroAct = .none
     @State private var hop: CGFloat = 0
 
+    /// Reduced motion means fewer/gentler animations, not zero — the
+    /// continuous bob/orbit/pulse loops and idle fidgeting (hops, floats)
+    /// are movement, so they stop; the mood-driven eye shape still changes.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // Site tokens
     static let eyeTop = Color(red: 1.0, green: 0.965, blue: 0.925)    // #fff6ec
     static let eyeBottom = Color(red: 1.0, green: 0.890, blue: 0.788) // #ffe3c9
@@ -144,21 +149,56 @@ struct ArcaFace: View {
                     .offset(x: -26 * s, y: 16 * s + (bob ? -1 : 1) * max(1.2, 1.5 * s))
             }
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: mood == .working ? 0.5 : 2.6)
-                .repeatForever(autoreverses: true)) { bob = true }
-            withAnimation(.linear(duration: mood == .working ? 1.1 : 2.6)
-                .repeatForever(autoreverses: false)) { orbit = true }
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulse = true
-            }
-        }
+        .onAppear { syncMotion() }
+        .onChange(of: mood) { _, _ in syncMotion() }
         .task { await blinkLoop() }
         .task { await lifeLoop() }
         .onReceive(NotificationCenter.default.publisher(for: .arcaSkinChanged)) { _ in
             skinTick += 1
         }
         .animation(.spring(duration: 0.35, bounce: 0.3), value: mood)
+    }
+
+    /// Long-lived moods (idle, zone) must not run continuous animation: a
+    /// repeatForever loop re-renders the whole face at display refresh rate
+    /// for hours and was measured burning ~58% CPU at idle. They stay static
+    /// and get their life from `lifeLoop`'s periodic micro-acts instead;
+    /// only the short-lived active moods run continuous loops.
+    private func syncMotion() {
+        guard !reduceMotion else {
+            // Reduced motion: no continuous bob/orbit/pulse. The mood still
+            // reads through the eye shape and aura color/opacity alone.
+            var still = Transaction(); still.disablesAnimations = true
+            withTransaction(still) { bob = false; orbit = false; pulse = false }
+            return
+        }
+
+        switch mood {
+        case .idle, .zone:
+            withAnimation(.easeInOut(duration: 0.6)) { bob = false }
+        case .listening, .thinking, .working, .happy:
+            withAnimation(.easeInOut(duration: mood == .working ? 0.5 : 2.6)
+                .repeatForever(autoreverses: true)) { bob = true }
+        }
+
+        if mood == .thinking || mood == .working {
+            var reset = Transaction(); reset.disablesAnimations = true
+            withTransaction(reset) { orbit = false }
+            withAnimation(.linear(duration: mood == .working ? 1.1 : 2.6)
+                .repeatForever(autoreverses: false)) { orbit = true }
+        } else {
+            var still = Transaction(); still.disablesAnimations = true
+            withTransaction(still) { orbit = false }
+        }
+
+        if mood == .listening {
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        } else {
+            var still = Transaction(); still.disablesAnimations = true
+            withTransaction(still) { pulse = false }
+        }
     }
 
     /// Where the eyes actually point — a glance briefly overrides the cursor.
@@ -240,11 +280,21 @@ struct ArcaFace: View {
     /// The soul: every few seconds ARCA does one small thing — glances off,
     /// double-blinks, hops, grins, or dozes. Idle only; never busy, never loud.
     private func lifeLoop() async {
-        guard alive else { return }
+        // Hops, floats, and glances are all movement — skip the whole loop
+        // under reduced motion rather than thin it out piecemeal.
+        guard alive, !reduceMotion else { return }
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(Double.random(in: 5...13)))
+            // ZONE breathes once in a while — a single aura pulse, then rest.
+            // (Continuous pulse would pin the render loop for hours.)
+            if mood == .zone {
+                withAnimation(.easeInOut(duration: 1.4)) { pulse = true }
+                try? await Task.sleep(for: .milliseconds(1500))
+                withAnimation(.easeInOut(duration: 1.4)) { pulse = false }
+                continue
+            }
             guard mood == .idle, act == .none else { continue }
-            switch Int.random(in: 0..<6) {
+            switch Int.random(in: 0..<7) {
             case 0, 1: // glance off to one side, then back
                 act = .glance(Bool.random() ? 1 : -1)
                 try? await Task.sleep(for: .milliseconds(Int.random(in: 900...1600)))
@@ -269,6 +319,12 @@ struct ArcaFace: View {
                 act = .doze
                 try? await Task.sleep(for: .seconds(Double.random(in: 1.8...3.0)))
                 act = .none
+            case 5: // a slow float — a few gentle bobs, then settle back down
+                withAnimation(.easeInOut(duration: 1.3).repeatCount(3, autoreverses: true)) {
+                    bob = true
+                }
+                try? await Task.sleep(for: .seconds(3.9))
+                withAnimation(.easeInOut(duration: 0.8)) { bob = false }
             default: // tiny hop only
                 withAnimation(.spring(duration: 0.2, bounce: 0.55)) {
                     hop = -max(2, 3 * size / 100)

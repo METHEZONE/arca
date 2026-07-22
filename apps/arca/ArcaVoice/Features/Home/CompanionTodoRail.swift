@@ -68,7 +68,7 @@ struct CompanionTodoRail: View {
                     .font(.title3)
                     .foregroundStyle(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .white.opacity(0.25) : ArcaSkins.current.hi)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
@@ -86,7 +86,7 @@ struct CompanionTodoRail: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.green)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
 
             if showProcessed {
                 if processed.isEmpty {

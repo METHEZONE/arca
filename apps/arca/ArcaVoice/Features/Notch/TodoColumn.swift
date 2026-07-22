@@ -69,7 +69,7 @@ struct TodoColumn: View {
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(draft.isEmpty ? .white.opacity(0.3) : ArcaTheme.idle)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(draft.isEmpty)
         }
     }
@@ -130,7 +130,7 @@ struct TodoTaskRow: View {
                     Image(systemName: task.state == .done ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(.white.opacity(0.5))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(task.title)
@@ -160,8 +160,8 @@ struct TodoTaskRow: View {
                             .frame(width: 20, height: 20)
                             .background(.white.opacity(0.1), in: Circle())
                     }
-                    .buttonStyle(.plain)
-                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                    .buttonStyle(.arcaPress)
+                    .transition(.opacity.combined(with: .scale(scale: 0.92)))
                     .help("Delete — won't be tossed, won't come back")
                 }
                 tossButton
@@ -204,7 +204,7 @@ struct TodoTaskRow: View {
                     .background(ArcaTheme.idle, in: Capsule())
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .help("ARCA can run this: \(task.autonomyRationale)")
         } else if task.actionKind == .manual && task.state == .open && !task.autonomyRationale.isEmpty {
             Image(systemName: "person.fill")

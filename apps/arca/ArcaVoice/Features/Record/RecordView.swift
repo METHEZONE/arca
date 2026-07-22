@@ -26,7 +26,7 @@ struct RecordView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .alert("Something went wrong", isPresented: .constant(coordinator.errorMessage != nil)) {
+        .alert("Recording error", isPresented: .constant(coordinator.errorMessage != nil)) {
             Button("OK") { coordinator.errorMessage = nil }
         } message: {
             Text(coordinator.errorMessage ?? "")
@@ -181,7 +181,7 @@ struct RecordView: View {
                         .foregroundStyle(.white)
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
     }
 }
 

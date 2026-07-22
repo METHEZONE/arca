@@ -71,7 +71,7 @@ struct ParticipantsCard: View {
                             } label: {
                                 participantChip(participant)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.arcaPress)
                         }
                     }
                 }
@@ -95,7 +95,7 @@ struct ParticipantsCard: View {
                                 } label: {
                                     suggestionChip(attendee)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.arcaPress)
                             }
                         }
                     }

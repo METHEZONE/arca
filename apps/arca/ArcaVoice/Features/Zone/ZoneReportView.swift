@@ -110,10 +110,10 @@ struct ZoneReportView: View {
                         .background(choice.isRecommended ? ArcaTheme.idle.opacity(0.12) : Color.secondary.opacity(0.08),
                                     in: RoundedRectangle(cornerRadius: 12))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                 }
                 Button("I'll look later") { advance() }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -141,7 +141,7 @@ struct ZoneReportView: View {
         HStack {
             if !zone.attention.isEmpty && index < zone.attention.count {
                 Button("View handled items") { index = zone.attention.count }
-                    .buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
+                    .buttonStyle(.arcaPress).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             Button("Close") { zone.showReport = false; dismiss() }

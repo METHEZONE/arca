@@ -172,7 +172,7 @@ struct ConnectorsView: View {
                 .padding(.vertical, 8)
                 .background(ConnectorPalette.ember, in: Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(isSyncing)
 
             if !hub.lastPullSummary.isEmpty {
@@ -204,7 +204,7 @@ struct ConnectorsView: View {
                 }
                 .font(.subheadline.weight(.semibold))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(disconnectedConnectors.isEmpty)
 
             Spacer()
@@ -224,7 +224,7 @@ struct ConnectorsView: View {
                 .padding(.vertical, 7)
                 .background(ConnectorPalette.ember, in: Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(selectedDisconnectedSlugs.isEmpty || isBatchConnecting)
         }
         .padding(.horizontal, 2)
@@ -461,7 +461,7 @@ private struct ConnectorRow: View {
                         .foregroundStyle(isSelected ? ConnectorPalette.green : .secondary)
                         .frame(width: 24)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .disabled(isPending)
             }
 
@@ -495,7 +495,7 @@ private struct ConnectorRow: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .disabled(isPulling)
 
                 pill(text: "연결됨", filled: true)
@@ -511,7 +511,7 @@ private struct ConnectorRow: View {
                         pill(text: "연결", filled: false)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .disabled(isConnecting)
             }
         }
@@ -573,7 +573,7 @@ private struct ObsidianConnectorRow: View {
                 Button(action: onChooseFolder) {
                     Label(isConnected ? "볼트 변경" : "볼트 선택", systemImage: "folder")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(ConnectorPalette.ember)
 
@@ -587,7 +587,7 @@ private struct ObsidianConnectorRow: View {
                         Text("메모리 내보내기")
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.secondary)
                 .opacity(isConnected ? 1 : 0.5)
@@ -603,7 +603,7 @@ private struct ObsidianConnectorRow: View {
                         Text("받아오기")
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.secondary)
                 .opacity(isConnected ? 1 : 0.5)
@@ -646,7 +646,7 @@ private struct MembaseConnectorRow: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.secondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(isImporting)
         } detail: {
             EmptyView()

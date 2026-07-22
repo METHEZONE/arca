@@ -17,6 +17,17 @@ public struct ClaudeChat: Sendable {
     or the screen to help (opening a website, filling a form, clicking, etc.), propose it on the \
     last line of your reply in exactly this format: `[BROWSER: <one sentence describing what to \
     do>]`. Don't use that tag otherwise.
+
+    When the user asks to put something on their calendar (even casually — "구글캘린더추가좀", \
+    "add this to my calendar"), NEVER ask for confirmation, never restate the details as a \
+    question, and never say you'll open a calendar screen — you create the event yourself. \
+    Extract the details from the conversation, fill gaps with sensible defaults (60 minutes if \
+    no end time; if the year is missing use the next upcoming occurrence relative to today's \
+    date below), reply with ONE short confirmation line in the user's language, and end the \
+    reply with the event on its own last line in exactly this format: \
+    `[CALENDAR: {"title":"...","start":"YYYY-MM-DDTHH:MM","durationMinutes":60,\
+    "location":"...","description":"..."}]`. Put meeting links (Meet/Zoom URLs) in "location"; \
+    "location" and "description" may be omitted. Don't use that tag otherwise.
     """
 
     private let extraSystem: String
@@ -35,10 +46,18 @@ public struct ClaudeChat: Sendable {
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
+        // The model can't resolve "next Wednesday" or a year-less "7월 29일"
+        // without knowing when now is — required for calendar actions.
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd (EEEE) HH:mm"
+        let dateBlock = "\nRight now it is \(dateFormatter.string(from: Date())) " +
+            "in the user's time zone (\(TimeZone.current.identifier))."
+
         let body: [String: Any] = [
             "model": model,
             "max_tokens": maxTokens,
-            "system": Self.systemPrompt + extraSystem,
+            "system": Self.systemPrompt + dateBlock + extraSystem,
             "messages": messages.map(Self.wireMessage),
         ]
         let payload = try JSONSerialization.data(withJSONObject: body)
@@ -100,6 +119,29 @@ public struct ClaudeChat: Sendable {
         reply.replacingOccurrences(of: #"\[BROWSER:.*?\]"#, with: "",
                                    options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The reply text with every action tag (`[BROWSER: …]`, `[CALENDAR: …]`)
+    /// stripped for display.
+    public static func stripActionTags(_ reply: String) -> String {
+        stripBrowserTag(reply)
+            .replacingOccurrences(of: #"\[CALENDAR:\s*\{.*\}\s*\]"#, with: "",
+                                  options: [.regularExpression])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Extracts a `[CALENDAR: {...}]` event the model wants created, if any.
+    public static func calendarDraft(in reply: String) -> CalendarEventDraft? {
+        guard let range = reply.range(of: #"\[CALENDAR:\s*(\{.*\})\s*\]"#,
+                                      options: .regularExpression) else { return nil }
+        let match = String(reply[range])
+        guard let open = match.firstIndex(of: "{"),
+              let close = match.lastIndex(of: "}") else { return nil }
+        let json = String(match[open...close])
+        guard let data = json.data(using: .utf8),
+              let draft = try? JSONDecoder().decode(CalendarEventDraft.self, from: data),
+              !draft.title.isEmpty, draft.startDate != nil else { return nil }
+        return draft
     }
 
     public enum ChatError: Error, LocalizedError {

@@ -43,7 +43,7 @@ struct ChatPanel: View {
                     .frame(width: 24, height: 24)
                     .background(.white.opacity(0.1), in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
         }
         .padding(.vertical, 8)
     }
@@ -105,7 +105,7 @@ struct ChatPanel: View {
                     .font(.system(size: 24))
                     .foregroundStyle(chat.draftText.isEmpty ? .white.opacity(0.3) : ArcaTheme.idle)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(chat.draftText.isEmpty || chat.isThinking)
         }
         .onAppear { inputFocused = true }

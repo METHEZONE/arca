@@ -260,7 +260,7 @@ struct BrainView: View {
                 .foregroundStyle(.white)
                 .opacity(pulseOn ? 0.5 : 1)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(engine.isWeaving)
 
             if let error = engine.lastError {
@@ -302,7 +302,7 @@ struct BrainView: View {
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .help("Reload Memory Brain")
         }
         .font(.caption.weight(.semibold))
@@ -324,7 +324,7 @@ struct BrainView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.white.opacity(0.4))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                 }
                 Text(node.label)
                     .font(.subheadline.weight(.semibold))
@@ -386,7 +386,7 @@ struct BrainView: View {
                 Label("Refresh", systemImage: "arrow.clockwise")
                     .font(.caption.weight(.semibold))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .foregroundStyle(ember)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

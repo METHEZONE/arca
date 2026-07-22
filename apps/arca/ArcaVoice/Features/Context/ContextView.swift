@@ -190,7 +190,9 @@ struct ContextView: View {
                     .foregroundStyle(.white.opacity(0.9))
                     .padding(12)
                     .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
-                    .transition(.opacity)
+                    // Match the suggestion cards' entrance above so both card
+                    // types in this sheet feel like one motion language.
+                    .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
         }
     }
@@ -308,7 +310,7 @@ private struct SuggestionCard: View {
                     .strokeBorder(ember.opacity(result == nil ? 0.35 : 0.12), lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
         .disabled(result != nil || isRunning)
     }
 }

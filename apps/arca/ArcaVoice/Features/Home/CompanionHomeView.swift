@@ -122,7 +122,7 @@ struct CompanionHomeView: View {
                             .font(.caption.weight(.bold))
                             .foregroundStyle(.white.opacity(0.6))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -240,7 +240,7 @@ struct CompanionHomeView: View {
                         .labelStyle(.titleAndIcon)
                         .font(.caption.weight(.semibold))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .foregroundStyle(ArcaSkins.current.hi)
             }
             .padding(.horizontal, 16)
@@ -259,14 +259,16 @@ struct CompanionHomeView: View {
                     .padding(.vertical, 9)
                     .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .padding(16)
         }
     }
 
     private func sidebarButton(mode item: CompanionHomeMode) -> some View {
         Button {
-            withAnimation(.spring(duration: 0.25)) {
+            // Sidebar nav fires tens of times a session — kept brief so
+            // repeated clicks never feel like they're waiting on the UI.
+            withAnimation(.spring(duration: 0.18)) {
                 mode = item
                 if item != .home { activeConversationId = nil }
             }
@@ -283,7 +285,7 @@ struct CompanionHomeView: View {
             .background(self.mode == item ? .white.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 12))
             .foregroundStyle(self.mode == item ? .white : .white.opacity(0.68))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
     }
 
     private var chatList: some View {
@@ -322,7 +324,7 @@ struct CompanionHomeView: View {
             .padding(.vertical, 8)
             .background(activeConversationId == conversation.id ? .white.opacity(0.11) : .white.opacity(0.035), in: RoundedRectangle(cornerRadius: 11))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
         .contextMenu {
             Menu("프로젝트 지정") {
                 ForEach(projectNames, id: \.self) { project in
@@ -380,7 +382,7 @@ struct CompanionHomeView: View {
                 ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180, halo: true)
                     .frame(width: 210, height: 210)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .help("ARCA를 누르면 바로 녹음이 시작돼요")
 
             VStack(spacing: 8) {
@@ -430,7 +432,7 @@ struct CompanionHomeView: View {
                 )
                 .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
     }
 
     private var statsRow: some View {
@@ -445,7 +447,7 @@ struct CompanionHomeView: View {
             } label: {
                 statChip("스킨", systemImage: "sparkles")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
         }
     }
 
@@ -478,7 +480,7 @@ struct CompanionHomeView: View {
                     .padding(12)
                     .background(.white.opacity(0.065), in: RoundedRectangle(cornerRadius: 12))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
             }
         }
     }
@@ -601,7 +603,7 @@ private struct CompanionChatThread: View {
                     Label("홈으로", systemImage: "chevron.left")
                         .font(.system(.callout, design: .rounded, weight: .semibold))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 Spacer()
             }
             .padding(.horizontal, 22)
@@ -687,7 +689,7 @@ private struct CompanionChatInput: View {
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || disabled ? .white.opacity(0.25) : ArcaSkins.current.hi)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || disabled)
         }
@@ -720,7 +722,7 @@ private struct CompanionDraftComposer: View {
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .white.opacity(0.24) : ArcaSkins.current.hi)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }

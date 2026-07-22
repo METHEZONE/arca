@@ -24,6 +24,7 @@ struct SessionListView: View {
                     HStack(spacing: 6) {
                         Text(session.createdAt, format: .dateTime.month().day())
                         Text(Duration.seconds(session.duration).formatted(.time(pattern: .minuteSecond)))
+                            .monospacedDigit()
                         if session.source == .macMeeting {
                             Image(systemName: "video.fill")
                         } else if session.source == .watchMemo {

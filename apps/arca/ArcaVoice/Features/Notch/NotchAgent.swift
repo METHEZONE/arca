@@ -29,6 +29,9 @@ final class NotchAgent {
     /// Where the cursor is relative to the notch, normalized -1…1 — the idle
     /// eyes follow it. Updated by the window controller's mouse monitor.
     var pointerLook: CGPoint = .zero
+    /// Throttle stamp for the pointer-look monitor (15Hz cap — see
+    /// NotchWindowController); not observable state.
+    @ObservationIgnored var lastPointerLookAt = ContinuousClock.now - .seconds(1)
     /// The live conversation, present while `mode == .chat`.
     private(set) var chat: ChatSession?
     /// The window controller hooks this to resize the panel per mode.
@@ -246,7 +249,9 @@ final class NotchAgent {
 
     private func set(_ newMode: Mode, autoDismissAfter seconds: TimeInterval? = nil) {
         autoDismissTask?.cancel()
-        withAnimation(.spring(duration: 0.4, bounce: 0.25)) {
+        // This mode switch fires many times a session (idle ↔ chat ↔
+        // dashboard) — kept under the 300ms UI ceiling so it stays snappy.
+        withAnimation(.spring(duration: 0.3, bounce: 0.25)) {
             mode = newMode
         }
         onModeChange?(newMode)

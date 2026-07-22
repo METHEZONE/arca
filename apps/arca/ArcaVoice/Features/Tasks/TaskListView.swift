@@ -277,7 +277,7 @@ private struct QuestRow: View {
                     .strokeBorder(Color.white.opacity(0.35), lineWidth: 1.5)
                     .frame(width: 22, height: 22)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .padding(.top, 2)
 
             VStack(alignment: .leading, spacing: 4) {

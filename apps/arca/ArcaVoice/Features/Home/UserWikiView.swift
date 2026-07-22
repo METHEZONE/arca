@@ -72,7 +72,7 @@ struct UserWikiView: View {
                     .background(ArcaSkins.current.mid, in: RoundedRectangle(cornerRadius: 12))
                     .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(isGenerating)
         }
     }
@@ -95,7 +95,7 @@ struct UserWikiView: View {
                     .padding(.vertical, 9)
                     .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 12))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .disabled(isGenerating)
             Spacer()
         }

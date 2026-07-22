@@ -188,7 +188,7 @@ struct DayLogView: View {
                             }
                             .padding(.vertical, 8)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.arcaPress)
                     }
                 }
             }

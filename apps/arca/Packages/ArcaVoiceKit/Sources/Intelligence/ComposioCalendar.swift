@@ -28,9 +28,10 @@ public struct ComposioCalendar: Sendable {
                                 connectedAccountId: calendarAccount)
     }
 
-    /// Creates a one-hour event. Date-only due dates are scheduled at 09:00 in
-    /// the current calendar/time zone.
-    public func createEvent(title: String, date: Date, description: String) async throws -> String {
+    /// Creates an event (one hour by default). Date-only due dates are
+    /// scheduled at 09:00 in the current calendar/time zone.
+    public func createEvent(title: String, date: Date, description: String,
+                            durationMinutes: Int = 60, location: String? = nil) async throws -> String {
         let start = Self.eventStart(for: date)
         // Composio's GOOGLECALENDAR_CREATE_EVENT schema (verified via
         // GET /api/v3/tools/GOOGLECALENDAR_CREATE_EVENT): snake_case args,
@@ -44,18 +45,23 @@ public struct ComposioCalendar: Sendable {
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let minutes = max(durationMinutes, 5)
+        var arguments: [String: Any] = [
+            "calendar_id": "primary",
+            "summary": title,
+            "description": description,
+            "start_datetime": formatter.string(from: start),
+            "timezone": TimeZone.current.identifier,
+            "event_duration_hour": minutes / 60,
+            "event_duration_minutes": minutes % 60,
+        ]
+        if let location, !location.isEmpty {
+            arguments["location"] = location
+        }
         let body: [String: Any] = [
             "connected_account_id": connectedAccountId,
             "user_id": userId,
-            "arguments": [
-                "calendar_id": "primary",
-                "summary": title,
-                "description": description,
-                "start_datetime": formatter.string(from: start),
-                "timezone": TimeZone.current.identifier,
-                "event_duration_hour": 1,
-                "event_duration_minutes": 0,
-            ] as [String: Any],
+            "arguments": arguments,
         ]
         let payload = try JSONSerialization.data(withJSONObject: body)
 

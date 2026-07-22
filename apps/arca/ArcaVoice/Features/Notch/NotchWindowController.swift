@@ -80,13 +80,19 @@ final class NotchWindowController {
         // The idle eyes follow the cursor anywhere on screen. Mouse-move
         // monitors need no special permission (unlike keyboard taps).
         let notchCenter = CGPoint(x: screen.frame.midX, y: screen.frame.maxY)
+        // Throttle: unthrottled, a mouse sweep fires dozens of look updates,
+        // each kicking a 0.5s eye animation — continuous mouse motion kept the
+        // face re-rendering nonstop. 15Hz is indistinguishable through the
+        // ease-out smoothing.
         let updateLook: (NSPoint) -> Void = { [weak agent] location in
             guard let agent else { return }
+            guard ContinuousClock.now - agent.lastPointerLookAt > .milliseconds(66) else { return }
             let dx = max(-1, min(1, (location.x - notchCenter.x) / (screen.frame.width / 2)))
             let dy = max(-1, min(1, (notchCenter.y - location.y) / 600))
             // Deadzone: tiny cursor jitters shouldn't twitch the eyes.
             let current = agent.pointerLook
             guard abs(dx - current.x) > 0.06 || abs(dy - current.y) > 0.06 else { return }
+            agent.lastPointerLookAt = ContinuousClock.now
             agent.pointerLook = CGPoint(x: dx, y: dy)
         }
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { event in

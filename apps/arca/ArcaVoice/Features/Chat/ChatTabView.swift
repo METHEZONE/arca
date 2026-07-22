@@ -139,7 +139,7 @@ struct ChatTabView: View {
                                           : Color.secondary.opacity(0.10))
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.arcaPress)
                     }
                 }
                 .padding(.horizontal, 12)

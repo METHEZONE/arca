@@ -14,6 +14,7 @@ struct NotchView: View {
     @State private var breathing = false
     /// "cozy" = eyes peek below the notch; "clean" = invisible until needed.
     @AppStorage("notchStyle") private var notchStyle = "cozy"
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Surface: Equatable {
         case idle, menu, recording, stopping
@@ -131,7 +132,7 @@ struct NotchView: View {
                         // shape springs open, and vanishes first on close.
                         .transition(.asymmetric(
                             insertion: .opacity.animation(.easeOut(duration: 0.22).delay(0.1)),
-                            removal: .opacity.animation(.easeIn(duration: 0.08))))
+                            removal: .opacity.animation(.easeOut(duration: 0.08))))
                 }
             }
             .frame(width: shapeSize.width, height: shapeSize.height, alignment: .top)
@@ -145,7 +146,7 @@ struct NotchView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task { await blinkLoop() }
         .onChange(of: surface == .recording) { _, recording in
-            if recording {
+            if recording, !reduceMotion {
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     breathing = true
                 }
@@ -225,7 +226,7 @@ struct NotchView: View {
                         .frame(width: 16, height: 16)
                         .background(.red.opacity(0.85), in: Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
             }
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(.black.opacity(0.85), in: Capsule())
@@ -308,7 +309,7 @@ struct NotchView: View {
                             .frame(width: 30, height: 30)
                             .background(.red.opacity(0.85), in: Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                 }
             }
             .padding(.horizontal, 16)
@@ -463,7 +464,7 @@ struct NotchView: View {
         .animation(.easeOut(duration: 0.5), value: agent.pointerLook)
         .frame(height: geometry.hasNotch ? 22 : 30)
         .task(id: state == .working) {
-            guard state == .working else { return }
+            guard state == .working, !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
                 breathing = true
             }
@@ -529,7 +530,7 @@ struct NotchView: View {
                         in: Capsule())
             .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
     }
 
     private func blinkLoop() async {

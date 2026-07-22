@@ -46,7 +46,7 @@ struct BrainPreviewCard: View {
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.thinMaterial))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
         .task {
             engine.load(context: context)
             totalNodeCount = engine.nodes.count

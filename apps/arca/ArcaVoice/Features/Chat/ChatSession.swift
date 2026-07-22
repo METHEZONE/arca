@@ -18,9 +18,18 @@ final class ChatSession {
     /// Guards duplicate memory extraction when a chat surface closes twice.
     @ObservationIgnored private var memoriesExtracted = false
     @ObservationIgnored private var hasNewTurns = false
+    /// Extra grounding that rides every turn's system prompt — e.g. the full
+    /// meeting record when this chat is scoped to one session.
+    @ObservationIgnored private var contextBlock: String?
 
     init(conversationId: String = UUID().uuidString) {
         self.conversationId = conversationId
+    }
+
+    /// Scopes this conversation to a specific record (a meeting, a day log…):
+    /// the block is injected into the system prompt on every turn.
+    func attachContext(_ block: String) {
+        contextBlock = block
     }
 
     func restore(from entries: [ChatLogEntry]) {
@@ -124,7 +133,10 @@ final class ChatSession {
         proposedBrowserTask = nil
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         let history = messages
-        let memoryBlock = MemoryPrompt.systemBlock(facts: memoryFacts())
+        var memoryBlock = MemoryPrompt.systemBlock(facts: memoryFacts())
+        if let contextBlock {
+            memoryBlock = "\n\n" + contextBlock + memoryBlock
+        }
         Task { @MainActor in
             do {
                 let raw: String
@@ -141,11 +153,16 @@ final class ChatSession {
                 } else {
                     raw = "An OpenAI or Anthropic key is required."
                 }
-                let visible = ClaudeChat.stripBrowserTag(raw)
+                let visible = ClaudeChat.stripActionTags(raw)
                 appendAssistant(visible.isEmpty ? "(No response)" : visible)
                 #if os(macOS)
                 proposedBrowserTask = ClaudeChat.browserTask(in: raw)
                 #endif
+                // Calendar actions run immediately — the user already asked;
+                // asking again ("shall I add it?") is the failure mode.
+                if let draft = ClaudeChat.calendarDraft(in: raw) {
+                    await createCalendarEvent(from: draft)
+                }
             } catch {
                 appendAssistant(UserFacingError.message(for: error))
             }
@@ -156,6 +173,27 @@ final class ChatSession {
     private func appendAssistant(_ text: String) {
         messages.append(ChatMessage(role: .assistant, parts: [.text(text)]))
         persist(role: "assistant", text: text)
+    }
+
+    /// Executes a `[CALENDAR: …]` action the model emitted and reports the
+    /// outcome in the conversation. No confirmation round-trip by design.
+    private func createCalendarEvent(from draft: CalendarEventDraft) async {
+        guard let start = draft.startDate else {
+            appendAssistant("⚠️ 캘린더 등록 실패: 시작 시간을 해석하지 못했어요 (\(draft.start))")
+            return
+        }
+        do {
+            try await CalendarEventCreator.create(
+                title: draft.title,
+                start: start,
+                durationMinutes: draft.durationMinutes ?? 60,
+                location: draft.location,
+                description: draft.description ?? "")
+            let when = start.formatted(.dateTime.month().day().weekday().hour().minute())
+            appendAssistant("✅ 캘린더에 추가했어요 — \(draft.title), \(when)")
+        } catch {
+            appendAssistant("⚠️ 캘린더 등록 실패: \(UserFacingError.message(for: error))")
+        }
     }
 
     // MARK: - Codex browser delegation (Mac only)

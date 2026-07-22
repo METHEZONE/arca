@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("transcribeLocale") private var localeID = "auto"
     @AppStorage("autoEmailSummary") private var autoEmailSummary = true
     @AppStorage("autoObsidianExport") private var autoObsidianExport = true
+    @AppStorage("autoRosterCapture") private var autoRosterCapture = true
     @AppStorage("chatHotkey") private var chatHotkey = "rightCommand"
     @AppStorage("chatModel") private var chatModel = "claude-sonnet-5"
     @AppStorage("autonomyLevel") private var autonomyRaw = AutonomyLevel.readOnly.rawValue
@@ -136,6 +137,9 @@ struct SettingsView: View {
                         AccountDefaults.set(value, for: "summaryEmailRecipient")
                     }
                 Toggle("회의록 Obsidian 자동 저장", isOn: $autoObsidianExport)
+                #if os(macOS)
+                Toggle("회의 참가자 자동 인식 — 통화 화면에서 이름을 읽어 전사에 반영", isOn: $autoRosterCapture)
+                #endif
             } header: {
                 Text("Summary Email")
             } footer: {

@@ -18,6 +18,43 @@ enum ArcaTheme {
     ]
 }
 
+/// Spacing scale — so paddings converge on a shared rhythm instead of ad hoc
+/// literals. Multiples of 4; reach for these before writing a raw number.
+enum ArcaSpacing {
+    static let xs: CGFloat = 4
+    static let sm: CGFloat = 8
+    static let md: CGFloat = 12
+    static let lg: CGFloat = 16
+    static let xl: CGFloat = 20
+    static let xxl: CGFloat = 24
+}
+
+/// Corner-radius scale — same intent as `ArcaSpacing`. Cards/rows use `md`,
+/// larger sheets/tiles use `lg`, the rare hero surface uses `xl`.
+enum ArcaRadius {
+    static let sm: CGFloat = 8
+    static let md: CGFloat = 12
+    static let lg: CGFloat = 16
+    static let xl: CGFloat = 20
+}
+
+/// Press feedback for any custom-content button. A bare `.buttonStyle(.arcaPress)`
+/// strips the system's default press highlight and puts nothing back, so
+/// taps feel unacknowledged. This gives every button the same quick,
+/// subtle dip Emil Kowalski's button guidance calls for (scale 0.95–0.98,
+/// 100–160ms ease-out) — visually identical to `.plain` at rest.
+struct ArcaPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == ArcaPressStyle {
+    static var arcaPress: ArcaPressStyle { ArcaPressStyle() }
+}
+
 /// ARCA's digital eyes: chunky pixel blobs on its "screen", glowing cyan —
 /// the friendly robot-pet look. Draw at small sizes (8–24pt); the pixel grid
 /// stays readable because cells are large relative to the eye.

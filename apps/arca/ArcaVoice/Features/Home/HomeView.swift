@@ -71,7 +71,7 @@ struct HomeView: View {
             if phase == .active { RecordingActivityController.shared.startCompanion() }
         }
         .onAppear { RecordingActivityController.shared.startCompanion() }
-        .alert("Something went wrong", isPresented: Binding(
+        .alert("Recording error", isPresented: Binding(
             get: { services.coordinator.errorMessage != nil },
             set: { if !$0 { services.coordinator.errorMessage = nil } }
         )) {

@@ -11,7 +11,9 @@ enum FinalPassRunner {
         files: [CaptureChannel: URL],
         userNotes: String?,
         ownerName: String,
-        languageHints: [String]
+        languageHints: [String],
+        rosterSnapshots: [RosterSnapshot] = [],
+        recordingStartedAt: Date? = nil
     ) {
         guard let pipeline = EngineFactory.processingPipeline() else {
             record.state = .ready
@@ -22,10 +24,14 @@ enum FinalPassRunner {
 
         Task { @MainActor in
             do {
+                // Names read off the meeting screen double as vocabulary hints
+                // so transcription spells them right.
+                let rosterNames = RosterNameMapper.participantNames(
+                    in: rosterSnapshots, ownerName: ownerName)
                 let output = try await pipeline.process(
                     files: files,
                     ownerName: ownerName,
-                    hints: TranscriptHints(languageCodes: languageHints),
+                    hints: TranscriptHints(vocabulary: rosterNames, languageCodes: languageHints),
                     userNotes: (userNotes?.isEmpty == false) ? userNotes : nil)
 
                 // The final pass replaces live segments wholesale.
@@ -36,6 +42,29 @@ enum FinalPassRunner {
                         channel: turn.channel,
                         speakerKey: output.transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey,
                         isFinal: true))
+                }
+
+                // Meet/Zoom roster → transcript names: rename diarized remote
+                // speakers to the names seen on their tiles.
+                if let startedAt = recordingStartedAt, !rosterSnapshots.isEmpty {
+                    let remote = record.segments.filter {
+                        $0.channelRaw != CaptureChannel.microphone.rawValue
+                    }
+                    let turns = remote.map {
+                        RosterNameMapper.TurnRef(key: $0.speakerKey ?? "Other",
+                                                 start: $0.start, end: $0.end)
+                    }
+                    let renames = RosterNameMapper.renames(
+                        snapshots: rosterSnapshots, startedAt: startedAt,
+                        remoteTurns: turns, ownerName: ownerName)
+                    if !renames.isEmpty {
+                        for segment in remote {
+                            if let name = renames[segment.speakerKey ?? "Other"] {
+                                segment.speakerKey = name
+                            }
+                        }
+                        DebugTrace.log("roster renames applied: \(renames)")
+                    }
                 }
                 if let notes = output.notes {
                     let note = record.note ?? SessionNote(roughMarkdown: userNotes ?? "")

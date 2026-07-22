@@ -32,7 +32,7 @@ struct BriefingCard: View {
                         .background(ArcaSkins.current.mid.opacity(0.85), in: Capsule())
                         .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .disabled(ops.isBriefing)
             }
 
@@ -132,7 +132,7 @@ struct ReplyApprovalRow: View {
                 Button("Skip") {
                     AmbientOps.shared.skip(proposal, context: context)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 Button {
@@ -157,7 +157,7 @@ struct ReplyApprovalRow: View {
                     .background(ArcaSkins.current.mid, in: Capsule())
                     .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .disabled(sending || proposal.draft.isEmpty)
             }
         }

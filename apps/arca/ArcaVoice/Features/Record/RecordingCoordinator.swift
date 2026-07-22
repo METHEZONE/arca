@@ -32,6 +32,9 @@ final class RecordingCoordinator {
     #if os(iOS)
     private let liveActivity = RecordingActivityController.shared
     #endif
+    #if os(macOS)
+    private let rosterWatcher = MeetingRosterWatcher()
+    #endif
 
     var displaySegments: [LiveSegment] {
         finalizedSegments + volatileSegments.values.sorted { $0.start < $1.start }
@@ -97,6 +100,13 @@ final class RecordingCoordinator {
             #if os(iOS)
             liveActivity.start(title: "Recording meeting", startedAt: startedAt ?? .now)
             #endif
+            #if os(macOS)
+            // A call is on screen — start reading participant names off it so
+            // the transcript can carry real names instead of "Speaker 1".
+            if channels.contains(.systemAudio) {
+                rosterWatcher.start()
+            }
+            #endif
             DebugTrace.log("record started, channels: \(channels.map(\.rawValue).sorted())")
             #if os(macOS)
             if includeSystemAudio && MeetingCaptureEngine.lastStartDroppedSystemAudio {
@@ -149,6 +159,11 @@ final class RecordingCoordinator {
         #if os(iOS)
         liveActivity.end()
         #endif
+        #if os(macOS)
+        let rosterSnapshots = rosterWatcher.stop()
+        #else
+        let rosterSnapshots: [RosterSnapshot] = []
+        #endif
 
         do {
             let artifacts = try await withTimeout(seconds: 20) { try await session.stop() }
@@ -191,7 +206,9 @@ final class RecordingCoordinator {
             phase = .idle
             startedAt = nil
             FinalPassRunner.run(record: record, files: artifacts.files, userNotes: roughNotes,
-                                ownerName: ownerName, languageHints: languageHints)
+                                ownerName: ownerName, languageHints: languageHints,
+                                rosterSnapshots: rosterSnapshots,
+                                recordingStartedAt: recordingStartedAt)
             return record
         } catch {
             errorMessage = error.localizedDescription
@@ -203,6 +220,9 @@ final class RecordingCoordinator {
     /// Last-resort teardown: cancel everything and return to idle. Audio that
     /// was written so far stays on disk; retryFailed can heal it on relaunch.
     func forceReset() {
+        #if os(macOS)
+        _ = rosterWatcher.stop()
+        #endif
         routerTask?.cancel()
         for task in transcriberTasks { task.cancel() }
         transcriberTasks = []

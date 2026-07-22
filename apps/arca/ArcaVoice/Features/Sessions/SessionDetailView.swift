@@ -9,6 +9,7 @@ struct SessionDetailView: View {
     @Query private var speakerRecords: [SpeakerRecord]
     @State private var participantOnlyAttendees: [CalendarAttendeeInfo] = []
     @State private var showingEmailSheet = false
+    @State private var showingMeetingChat = false
 
     private var sortedSegments: [StoredSegment] {
         session.segments.sorted { $0.start < $1.start }
@@ -122,12 +123,22 @@ struct SessionDetailView: View {
         .toolbar {
             ToolbarItem {
                 Button {
+                    showingMeetingChat = true
+                } label: {
+                    Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                }
+            }
+            ToolbarItem {
+                Button {
                     showingEmailSheet = true
                 } label: {
                     Label("회의록 보내기", systemImage: "envelope")
                 }
                 .disabled(meetingNotes == nil)
             }
+        }
+        .sheet(isPresented: $showingMeetingChat) {
+            MeetingChatSheet(session: session)
         }
         .sheet(isPresented: $showingEmailSheet) {
             if let notes = meetingNotes {
@@ -146,6 +157,7 @@ struct SessionDetailView: View {
             Text(session.createdAt, format: .dateTime.month().day().hour().minute())
             Text("·")
             Text(Duration.seconds(session.duration).formatted(.time(pattern: .minuteSecond)))
+                .monospacedDigit()
             if session.source == .macMeeting {
                 Label(session.meetingApp.map { "Video call · \($0)" } ?? "Video call",
                       systemImage: "video.fill")
@@ -155,6 +167,18 @@ struct SessionDetailView: View {
                     .background(.blue.opacity(0.12), in: Capsule())
             }
             Spacer()
+            Button {
+                showingMeetingChat = true
+            } label: {
+                Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(ArcaFace.ember.opacity(0.14), in: Capsule())
+                    .foregroundStyle(ArcaFace.ember)
+            }
+            .buttonStyle(.arcaPress)
+            .help("이 회의록에 대해 ARCA와 대화")
         }
         .font(.subheadline)
         .foregroundStyle(.secondary)
@@ -330,7 +354,7 @@ private struct TranscriptRow: View {
                             .foregroundStyle(color)
                             .underline(hoveringSpeaker, color: color)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.arcaPress)
                     #if os(macOS)
                     .onHover { hoveringSpeaker = $0 }
                     #endif

@@ -41,7 +41,7 @@ struct SessionAudioBar: View {
                     .font(.system(size: 34))
                     .foregroundStyle(.tint)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
 
             VStack(spacing: 3) {
                 Slider(

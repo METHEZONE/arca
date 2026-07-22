@@ -58,7 +58,7 @@ struct DashboardView: View {
                     .frame(width: 26, height: 26)
                     .background(.white.opacity(0.12), in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.arcaPress)
             .help("Open the ARCA app")
         }
         .padding(.vertical, 10)
@@ -76,7 +76,7 @@ struct DashboardView: View {
             .padding(.horizontal, 12).padding(.vertical, 6)
             .background(ArcaTheme.recording.opacity(0.9), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
         .help("Start recording — live transcript, speakers separated")
     }
 
@@ -383,7 +383,7 @@ private struct ChatLogColumn: View {
                     Label("New chat", systemImage: "plus.bubble")
                         .font(.caption.weight(.semibold))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .foregroundStyle(ArcaTheme.idle)
             }
             .padding(.top, 6)
@@ -452,7 +452,7 @@ private struct ZoneToggle: View {
             .background(zone.isActive ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.white.opacity(0.12)),
                         in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
         .help(zone.isActive ? "End focus mode and get the report" : "Start focus mode — ARCA guards interruptions")
     }
 }

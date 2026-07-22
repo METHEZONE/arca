@@ -1,4 +1,3 @@
-import EventKit
 import SwiftData
 import SwiftUI
 import ArcaVoiceKit
@@ -150,7 +149,7 @@ struct ActionItemsCard: View {
                 } label: {
                     Image(systemName: "pencil.circle")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.arcaPress)
                 .foregroundStyle(.tertiary)
                 .accessibilityLabel("Edit action item")
             }
@@ -230,26 +229,7 @@ struct ActionItemsCard: View {
     }
 
     private func createCalendarEvent(title: String, due: Date, description: String) async throws -> String {
-        if let calendar = ComposioCalendar.fromArcaConfig() {
-            return try await calendar.createEvent(title: title, date: due, description: description)
-        }
-        return try await createEventWithEventKit(title: title, due: due, description: description)
-    }
-
-    private func createEventWithEventKit(title: String, due: Date, description: String) async throws -> String {
-        let store = EKEventStore()
-        let granted = try await store.requestWriteOnlyAccessToEvents()
-        guard granted else { throw CalendarFallbackError.accessDenied }
-
-        let start = ComposioCalendar.eventStart(for: due)
-        let event = EKEvent(eventStore: store)
-        event.title = title
-        event.notes = description
-        event.startDate = start
-        event.endDate = start.addingTimeInterval(3600)
-        event.calendar = store.defaultCalendarForNewEvents
-        try store.save(event, span: .thisEvent)
-        return event.eventIdentifier ?? UUID().uuidString
+        try await CalendarEventCreator.create(title: title, start: due, description: description)
     }
 
     private func save(_ next: [MeetingNotes.ActionItem]) {
@@ -349,12 +329,3 @@ private struct ActionItemEditor: View {
     }
 }
 
-private enum CalendarFallbackError: LocalizedError {
-    case accessDenied
-
-    var errorDescription: String? {
-        switch self {
-        case .accessDenied: return "Calendar access denied"
-        }
-    }
-}

@@ -6,6 +6,7 @@ struct SkinsView: View {
     @State private var wearing = ArcaSkins.current.id
     @State private var rolling = false
     @State private var rollFace = 0
+    @State private var rollTask: Task<Void, Never>?
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14)]
 
@@ -21,7 +22,7 @@ struct SkinsView: View {
                         ArcaFace(mood: .happy, size: 150, halo: true,
                                  skinOverride: ArcaSkins.all[rollFace % ArcaSkins.all.count])
                             .id(rollFace)
-                            .transition(.scale(scale: 0.7).combined(with: .opacity))
+                            .transition(.scale(scale: 0.92).combined(with: .opacity))
                     } else {
                         ArcaFace(mood: .happy, size: 150)
                     }
@@ -38,8 +39,9 @@ struct SkinsView: View {
                         .foregroundStyle(.white)
                         .shadow(color: ArcaSkins.current.mid.opacity(0.5), radius: 8)
                 }
-                .buttonStyle(.plain)
-                .disabled(rolling)
+                .buttonStyle(.arcaPress)
+                // No .disabled(rolling) — tapping again mid-roll cancels and
+                // restarts the reel instead of going dead until it settles.
 
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(ArcaSkins.all) { skin in
@@ -63,15 +65,20 @@ struct SkinsView: View {
     }
 
     /// The gacha: spin through faces, ease out, land on the rolled skin.
+    /// Cancels any roll already in flight so a mid-spin tap restarts the
+    /// reel cleanly instead of queuing behind (or being blocked by) it.
     private func roll() {
+        rollTask?.cancel()
         rolling = true
-        Task { @MainActor in
+        rollTask = Task { @MainActor in
             var delay = 70.0
             for i in 1...14 {
+                guard !Task.isCancelled else { return }
                 withAnimation(.spring(duration: 0.14)) { rollFace += 1 }
                 try? await Task.sleep(for: .milliseconds(Int(delay)))
                 if i > 8 { delay *= 1.35 } // ease out — the reel slows down
             }
+            guard !Task.isCancelled else { return }
             let landed = ArcaSkins.roll()
             wearing = landed.id
             withAnimation(.spring(duration: 0.4, bounce: 0.55)) { rolling = false }
@@ -115,7 +122,7 @@ private struct SkinCard: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.arcaPress)
     }
 }
 
