@@ -11,36 +11,44 @@ struct SessionDetailView: View {
     @State private var showingEmailSheet = false
     @State private var showingMeetingChat = false
 
-    private var sortedSegments: [StoredSegment] {
-        session.segments.sorted { $0.start < $1.start }
+    /// Everything the screen derives from the segment list, computed in ONE
+    /// pass. These used to be separate computed vars that each re-sorted and
+    /// re-scanned every segment (and the per-row email lookup was a linear
+    /// scan of speaker records), which froze the view for long meetings.
+    private struct TranscriptModel {
+        var segments: [StoredSegment] = []
+        var speakerNames: [String] = []
+        var colorsByKey: [String: Color] = [:]
+        var emailsByName: [String: String] = [:]
     }
 
-    private var speakerColorMap: [String: Color] {
-        var map: [String: Color] = [:]
-        for segment in sortedSegments {
+    private func makeTranscriptModel() -> TranscriptModel {
+        var model = TranscriptModel()
+        model.segments = session.segments.sorted { $0.start < $1.start }
+
+        var seen: Set<String> = []
+        for segment in model.segments {
+            let name = displayName(for: segment)
+            if !seen.contains(name) {
+                seen.insert(name)
+                model.speakerNames.append(name)
+            }
             let key = segment.speakerKey ?? segment.channelRaw
-            if map[key] == nil {
-                map[key] = SessionSpeakerStyle.color(for: displayName(for: segment))
+            if model.colorsByKey[key] == nil {
+                model.colorsByKey[key] = SessionSpeakerStyle.color(for: name)
             }
         }
-        return map
-    }
-
-    private var speakerNames: [String] {
-        var seen: Set<String> = []
-        var names: [String] = []
-        for segment in sortedSegments {
-            let name = displayName(for: segment)
-            guard !seen.contains(name) else { continue }
-            seen.insert(name)
-            names.append(name)
+        for record in speakerRecords {
+            if let email = record.email, !email.isEmpty {
+                model.emailsByName[record.name.lowercased()] = email
+            }
         }
-        return names
+        return model
     }
 
-    private var participants: [SessionParticipant] {
-        var output = speakerNames.map {
-            SessionParticipant(name: $0, email: email(for: $0), isSegmentSpeaker: true)
+    private func participants(names: [String], emails: [String: String]) -> [SessionParticipant] {
+        var output = names.map {
+            SessionParticipant(name: $0, email: emails[$0.lowercased()], isSegmentSpeaker: true)
         }
         let existingKeys = Set(output.map(\.id))
         for attendee in participantOnlyAttendees {
@@ -83,8 +91,9 @@ struct SessionDetailView: View {
     }
 
     var body: some View {
+        let model = makeTranscriptModel()
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 header
 
                 if !session.audioAssets.isEmpty || (session.source != .screenshot && session.source != .dayLog) {
@@ -106,8 +115,8 @@ struct SessionDetailView: View {
                 }
 
                 ParticipantsCard(
-                    participants: participants,
-                    speakerNames: speakerNames,
+                    participants: participants(names: model.speakerNames, emails: model.emailsByName),
+                    speakerNames: model.speakerNames,
                     sessionStart: session.createdAt,
                     sessionEnd: session.createdAt.addingTimeInterval(max(session.duration, 60)),
                     onSaveSpeaker: saveSpeaker(oldName:newName:email:),
@@ -115,7 +124,7 @@ struct SessionDetailView: View {
                 )
 
                 notesSection
-                transcriptSection
+                transcriptSection(model: model)
             }
             .padding()
         }
@@ -142,10 +151,14 @@ struct SessionDetailView: View {
         }
         .sheet(isPresented: $showingEmailSheet) {
             if let notes = meetingNotes {
+                // Recomputed here on purpose: the sheet opens rarely and the
+                // model built in `body` isn't in scope inside the closure.
+                let sheetModel = makeTranscriptModel()
                 EmailMinutesSheet(
                     session: session,
                     notes: notes,
-                    participants: participants,
+                    participants: participants(names: sheetModel.speakerNames,
+                                               emails: sheetModel.emailsByName),
                     fallbackRecipient: AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
                 )
             }
@@ -211,19 +224,21 @@ struct SessionDetailView: View {
         }
     }
 
+    /// Rows render lazily — a two-hour meeting has 1000+ segments, and
+    /// building them all eagerly is what used to freeze the screen on open.
     @ViewBuilder
-    private var transcriptSection: some View {
-        if !sortedSegments.isEmpty {
-            VStack(alignment: .leading, spacing: 14) {
+    private func transcriptSection(model: TranscriptModel) -> some View {
+        if !model.segments.isEmpty {
+            LazyVStack(alignment: .leading, spacing: 14) {
                 Label("Transcript", systemImage: "waveform")
                     .font(.headline)
 
-                ForEach(sortedSegments, id: \.persistentModelID) { segment in
+                ForEach(model.segments, id: \.persistentModelID) { segment in
                     TranscriptRow(
                         segment: segment,
-                        color: speakerColorMap[segment.speakerKey ?? segment.channelRaw] ?? .secondary,
-                        email: email(for: displayName(for: segment)),
-                        speakerNames: speakerNames,
+                        color: model.colorsByKey[segment.speakerKey ?? segment.channelRaw] ?? .secondary,
+                        email: model.emailsByName[displayName(for: segment).lowercased()],
+                        speakerNames: model.speakerNames,
                         onSaveSpeaker: saveSpeaker(oldName:newName:email:)
                     )
                 }
@@ -235,12 +250,6 @@ struct SessionDetailView: View {
 
     private func displayName(for segment: StoredSegment) -> String {
         segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
-    }
-
-    private func email(for name: String) -> String? {
-        speakerRecords.first {
-            $0.name.caseInsensitiveCompare(name) == .orderedSame
-        }?.email
     }
 
     private func saveSpeaker(oldName: String, newName: String, email: String?) {
