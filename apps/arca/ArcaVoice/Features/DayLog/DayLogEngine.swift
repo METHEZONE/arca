@@ -234,6 +234,13 @@ final class DayLogEngine {
 
     private func captureSnapshotIfAllowed() {
         guard isEnabled, snapshotsEnabled, !isLocked, !Self.isUserIdle else { return }
+        // Never ATTEMPT a capture without permission — the attempt itself
+        // summons the system dialog, and this fires every few minutes.
+        guard ScreenCapturePermission.requestOnce() else {
+            screenCaptureNeedsPermission = true
+            DebugTrace.log("daylog snapshot skipped: screen recording not granted")
+            return
+        }
         let dayDir = Self.dayDirectory(for: .now)
         guard Self.snapshotCount(in: dayDir) < 120 else { return }
 

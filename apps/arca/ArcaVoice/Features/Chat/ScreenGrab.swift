@@ -5,6 +5,7 @@ import AppKit
 /// Shells to `screencapture` (needs Screen Recording permission, prompted once).
 enum ScreenGrab {
     static func fullScreenJPEG(maxDimension: CGFloat = 1600) async -> (Data, String)? {
+        guard await MainActor.run(body: { ScreenCapturePermission.requestOnce() }) else { return nil }
         let tmp = FileManager.default.temporaryDirectory
             .appendingPathComponent("arca-screen-\(UUID().uuidString).png")
         let ok = await run("/usr/sbin/screencapture", ["-x", tmp.path])
@@ -16,6 +17,7 @@ enum ScreenGrab {
     /// Captures the video-call window when one is on screen (matched by window
     /// title), the full screen otherwise. Used by the meeting roster watcher.
     static func meetingWindowJPEG(maxDimension: CGFloat = 1600) async -> (Data, String)? {
+        guard await MainActor.run(body: { ScreenCapturePermission.granted }) else { return nil }
         if let windowID = meetingWindowID() {
             let tmp = FileManager.default.temporaryDirectory
                 .appendingPathComponent("arca-meet-\(UUID().uuidString).png")
