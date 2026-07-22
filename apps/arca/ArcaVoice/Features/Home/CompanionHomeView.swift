@@ -379,7 +379,8 @@ struct CompanionHomeView: View {
                     mode = .library
                 }
             } label: {
-                ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180, halo: true)
+                ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180,
+                         halo: true, followsPointer: true)
                     .frame(width: 210, height: 210)
             }
             .buttonStyle(.arcaPress)

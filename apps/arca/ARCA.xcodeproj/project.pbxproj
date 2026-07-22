@@ -40,6 +40,7 @@
 		35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		3EC4A0508B690429C9911FC2 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
+		3F912A22A9BE2C7452C08199 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
@@ -95,6 +96,7 @@
 		821675514E0AF335504778BC /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
 		842FA6613CC50564B90453E9 /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
 		84F6D3B732E8A92FAD17B0C0 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
+		85BF8142317587B2ABE2E728 /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
 		876B935C1FABD5AD0EB2E807 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
 		8796EF58C9B6E368F9016DBC /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */; };
 		8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2EB7A5B10040606E35425 /* ArcaTheme.swift */; };
@@ -119,6 +121,7 @@
 		9D4E15F80647F2399BB43FC4 /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		9DC70E96CA4ECEBA49531B62 /* DebugTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E20975BF767500024D5E80F /* DebugTrace.swift */; };
 		9FAC3E0DBE0142DEAA514558 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		A31222589649A037D38B86DA /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
 		A3C8A637CBF3D17816618F86 /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
 		A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */; };
@@ -146,6 +149,7 @@
 		BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		C04F5A834923E8FC2A9F3FF0 /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
 		C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
+		C28F915E28669660B31E54B5 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78A32E703ECAAC127268AFC /* FaceRecordView.swift */; };
 		C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
@@ -316,6 +320,7 @@
 		D1E297C0A34F32907C8096A8 /* EngineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineFactory.swift; sourceTree = "<group>"; };
 		D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEngine.swift; sourceTree = "<group>"; };
 		D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAudioBar.swift; sourceTree = "<group>"; };
+		D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoTriage.swift; sourceTree = "<group>"; };
 		D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectorHub.swift; sourceTree = "<group>"; };
 		DA2108C8890C2111D74F4D45 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DE2E70D6F63358C5E15E5E24 /* ArcaVoice-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ArcaVoice-iOS.entitlements"; sourceTree = "<group>"; };
@@ -331,6 +336,7 @@
 		F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		F78A32E703ECAAC127268AFC /* FaceRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceRecordView.swift; sourceTree = "<group>"; };
 		F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingChatSheet.swift; sourceTree = "<group>"; };
+		FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianAutoImport.swift; sourceTree = "<group>"; };
 		FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiritFace.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -395,6 +401,7 @@
 			children = (
 				A56B192B6C772E42CB6713D0 /* TaskEngine.swift */,
 				3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */,
+				D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */,
 			);
 			path = Tasks;
 			sourceTree = "<group>";
@@ -686,6 +693,7 @@
 			children = (
 				D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */,
 				C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */,
+				FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */,
 				C47D3EC43CFA5109F60636F4 /* ObsidianExporter.swift */,
 				8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */,
 			);
@@ -929,6 +937,7 @@
 				60BA35F3F4FCF453FA95CFB5 /* NotchAgent.swift in Sources */,
 				3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */,
 				D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */,
+				3F912A22A9BE2C7452C08199 /* ObsidianAutoImport.swift in Sources */,
 				B0B352F5C777C6A583690650 /* ObsidianExporter.swift in Sources */,
 				B39038945742E00A8AC54CDF /* ObsidianImporter.swift in Sources */,
 				5C55D8DF3537DBCD2FD09B02 /* OnboardingView.swift in Sources */,
@@ -957,6 +966,7 @@
 				48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */,
 				75A2C962704E733B29979FAB /* TaskListView.swift in Sources */,
 				0BA6B4B26E4010E08C2A9E74 /* TodoColumn.swift in Sources */,
+				A31222589649A037D38B86DA /* TodoTriage.swift in Sources */,
 				103900A43A7B7901C8143B0C /* TranscriptionPrefs.swift in Sources */,
 				45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */,
 				B4862408CD8D517265C1DAE0 /* VoiceTalk.swift in Sources */,
@@ -1020,6 +1030,7 @@
 				CFB46A60755F5B0D8452FEF3 /* NotchAgent.swift in Sources */,
 				9994D5A60E66A2FB059938AF /* NotchView.swift in Sources */,
 				8E0CC13FCAF29F7CFB1A48C2 /* NotchWindowController.swift in Sources */,
+				C28F915E28669660B31E54B5 /* ObsidianAutoImport.swift in Sources */,
 				F2DB196BE9E7EB724781D972 /* ObsidianExporter.swift in Sources */,
 				782EFC269E0629B7DCECAF4E /* ObsidianImporter.swift in Sources */,
 				A9B49BBFEFE96460C3890046 /* OnboardingView.swift in Sources */,
@@ -1048,6 +1059,7 @@
 				821322D39F0C0A6B069DFB72 /* TaskEngine.swift in Sources */,
 				0E92345997357839377901B4 /* TaskListView.swift in Sources */,
 				8B819DFD05C5875C0129784D /* TodoColumn.swift in Sources */,
+				85BF8142317587B2ABE2E728 /* TodoTriage.swift in Sources */,
 				6D25F5D537ED818295A779A6 /* TranscriptionPrefs.swift in Sources */,
 				F7AD10DA730B6B756F6A2B4C /* UserWikiView.swift in Sources */,
 				42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */,

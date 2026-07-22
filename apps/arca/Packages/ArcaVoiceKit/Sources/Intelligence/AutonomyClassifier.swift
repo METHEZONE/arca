@@ -16,6 +16,8 @@ public struct AutonomyClassifier: Sendable {
         public var rationale: String
         /// A concrete, self-contained instruction ARCA would follow to do it.
         public var executionPlan: String
+        /// A concrete deadline stated or clearly implied by the task, if any.
+        public var dueAt: Date?
     }
 
     public init(apiKey: String, model: String = "claude-sonnet-5") {
@@ -48,15 +50,20 @@ public struct AutonomyClassifier: Sendable {
                     ],
                     "rationale": ["type": "string", "description": "One-line reason for this classification, in English"],
                     "executionPlan": ["type": "string", "description": "A concrete one-to-two sentence instruction ARCA would follow if it ran this in the background, in English. If manual, describe what the user needs to decide."],
+                    "dueDate": ["type": "string", "description": "The deadline stated or clearly implied by the task ('내일까지', 'by Friday', a written date), as YYYY-MM-DD resolved against today's date given in the prompt. OMIT entirely when no concrete deadline exists — never invent one."],
                 ],
                 "required": ["actionKind", "urgency", "rationale", "executionPlan"],
             ] as [String: Any],
         ]
 
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd (EEEE)"
         let userText = """
         Classify the following task. The goal is to judge whether ARCA (the user's AI companion) \
         can handle it on its own in the background, on the user's behalf. If it needs personal \
         judgment, a creative decision, or the user's direct attendance, classify it as manual.
+        Today is \(dateFormatter.string(from: Date())).
 
         Title: \(title)
         \(detail.isEmpty ? "" : "Description: \(detail)")
@@ -88,11 +95,20 @@ public struct AutonomyClassifier: Sendable {
         }
         let kind = TaskActionKind(rawValue: (input["actionKind"] as? String) ?? "manual") ?? .manual
         let urgency = TaskUrgency(rawValue: (input["urgency"] as? String) ?? "soon") ?? .soon
+        var dueAt: Date?
+        if let dueString = input["dueDate"] as? String, !dueString.isEmpty {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = .current
+            formatter.dateFormat = "yyyy-MM-dd"
+            dueAt = formatter.date(from: dueString)
+        }
         return Judgment(
             actionKind: kind,
             urgency: urgency,
             rationale: (input["rationale"] as? String) ?? "",
-            executionPlan: (input["executionPlan"] as? String) ?? "")
+            executionPlan: (input["executionPlan"] as? String) ?? "",
+            dueAt: dueAt)
     }
 
     public enum ClassifierError: Error, LocalizedError {

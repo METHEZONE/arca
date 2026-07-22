@@ -211,6 +211,7 @@ struct ActionItemsCard: View {
                 source: "meeting:\(session.directoryName)"
             )
             task.urgency = urgency(for: item.due)
+            task.dueAt = item.due
             modelContext.insert(task)
             next[index].todoTaskUID = task.uid.uuidString
 

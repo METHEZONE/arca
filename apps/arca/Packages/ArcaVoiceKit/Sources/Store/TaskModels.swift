@@ -123,6 +123,9 @@ public final class TodoTask {
     public var resultMarkdown: String?
     /// Where it came from: user, zone (a captured notification), iphone, mac…
     public var sourceRaw: String = "user"
+    /// When this needs to be done, if known (meeting action items carry one;
+    /// user tasks get one when stated). Drives the D-day chip.
+    public var dueAt: Date?
 
     public var state: TaskState {
         get { TaskState(rawValue: stateRaw) ?? .open }

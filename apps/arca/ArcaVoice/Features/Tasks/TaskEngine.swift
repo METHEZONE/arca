@@ -34,6 +34,7 @@ final class TaskEngine {
             task.actionKind = j.actionKind
             task.urgency = j.urgency
             task.autonomyRationale = j.rationale
+            if task.dueAt == nil { task.dueAt = j.dueAt }
             if task.detail.isEmpty { task.detail = j.executionPlan }
             task.touch()
             try? task.modelContext?.save()

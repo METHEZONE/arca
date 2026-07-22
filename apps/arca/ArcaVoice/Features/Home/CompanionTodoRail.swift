@@ -13,10 +13,21 @@ struct CompanionTodoRail: View {
     @AppStorage("autonomyLevel") private var autonomyRaw = AutonomyLevel.readOnly.rawValue
     @State private var draft = ""
     @State private var showProcessed = true
+    @State private var showSuggestions = false
 
     private var level: AutonomyLevel { AutonomyLevel(rawValue: autonomyRaw) ?? .readOnly }
     private var processed: [TodoTask] {
         allTasks.filter { $0.state == .done || $0.state == .failed }.prefix(8).map { $0 }
+    }
+    /// What the human actually has to look at — their own tasks and anything
+    /// waiting on their decision. Urgency → due date → newest.
+    private var humanTasks: [TodoTask] {
+        openTasks.filter(TodoTriage.needsHuman).sorted(by: TodoTriage.humanOrder)
+    }
+    /// ARCA's harvested suggestions — tucked behind a fold so they never bury
+    /// the real work.
+    private var suggestions: [TodoTask] {
+        openTasks.filter { !TodoTriage.needsHuman($0) }
     }
 
     var body: some View {
@@ -35,14 +46,15 @@ struct CompanionTodoRail: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    if openTasks.isEmpty {
-                        emptyLine("열린 투두가 없어요.")
+                    if humanTasks.isEmpty {
+                        emptyLine("확인할 일이 없어요 ✨")
                     } else {
-                        ForEach(openTasks) { task in
+                        ForEach(humanTasks) { task in
                             TodoTaskRow(task: task, level: level)
                         }
                     }
 
+                    suggestionsSection
                     processedSection
                     proposalsSection
                 }
@@ -52,6 +64,31 @@ struct CompanionTodoRail: View {
         .padding(16)
         .foregroundStyle(.white)
         .background(Color.white.opacity(0.035))
+    }
+
+    @ViewBuilder private var suggestionsSection: some View {
+        if !suggestions.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    withAnimation(.spring(duration: 0.25)) { showSuggestions.toggle() }
+                } label: {
+                    HStack {
+                        Label("ARCA 제안 \(suggestions.count)", systemImage: "sparkles")
+                        Spacer()
+                        Image(systemName: showSuggestions ? "chevron.down" : "chevron.right")
+                    }
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.55))
+                }
+                .buttonStyle(.arcaPress)
+
+                if showSuggestions {
+                    ForEach(suggestions) { task in
+                        TodoTaskRow(task: task, level: level)
+                    }
+                }
+            }
+        }
     }
 
     private var quickAdd: some View {

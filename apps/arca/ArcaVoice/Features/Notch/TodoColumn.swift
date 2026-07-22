@@ -15,8 +15,15 @@ struct TodoColumn: View {
            sort: \ReplyProposal.createdAt, order: .reverse) private var proposals: [ReplyProposal]
     @AppStorage("autonomyLevel") private var autonomyRaw = AutonomyLevel.readOnly.rawValue
     @State private var draft = ""
+    @State private var showSuggestions = false
 
     private var level: AutonomyLevel { AutonomyLevel(rawValue: autonomyRaw) ?? .readOnly }
+    private var humanTasks: [TodoTask] {
+        tasks.filter(TodoTriage.needsHuman).sorted(by: TodoTriage.humanOrder)
+    }
+    private var suggestions: [TodoTask] {
+        tasks.filter { !TodoTriage.needsHuman($0) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -37,8 +44,27 @@ struct TodoColumn: View {
                     ForEach(proposals) { proposal in
                         ReplyApprovalRow(proposal: proposal)
                     }
-                    ForEach(tasks) { task in
+                    ForEach(humanTasks) { task in
                         TodoTaskRow(task: task, level: level)
+                    }
+                    if !suggestions.isEmpty {
+                        Button {
+                            withAnimation(.spring(duration: 0.25)) { showSuggestions.toggle() }
+                        } label: {
+                            HStack {
+                                Label("ARCA 제안 \(suggestions.count)", systemImage: "sparkles")
+                                Spacer()
+                                Image(systemName: showSuggestions ? "chevron.down" : "chevron.right")
+                            }
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        }
+                        .buttonStyle(.arcaPress)
+                        if showSuggestions {
+                            ForEach(suggestions) { task in
+                                TodoTaskRow(task: task, level: level)
+                            }
+                        }
                     }
                     if !completed.isEmpty {
                         completedSection
@@ -136,6 +162,26 @@ struct TodoTaskRow: View {
                     Text(task.title)
                         .font(.callout)
                         .strikethrough(task.state == .done)
+                    if task.dueAt != nil || task.urgency == .now || task.urgency == .today {
+                        HStack(spacing: 5) {
+                            if task.urgency == .now || task.urgency == .today {
+                                Text(task.urgency.label)
+                                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                                    .padding(.horizontal, 5).padding(.vertical, 1.5)
+                                    .background(ArcaSkins.current.hi.opacity(0.22), in: Capsule())
+                                    .foregroundStyle(ArcaSkins.current.hi)
+                            }
+                            if let due = task.dueAt {
+                                let label = TodoTriage.dueLabel(for: due)
+                                Label(label.text, systemImage: "calendar")
+                                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                    .padding(.horizontal, 5).padding(.vertical, 1.5)
+                                    .background(label.tint.opacity(0.18), in: Capsule())
+                                    .foregroundStyle(label.tint)
+                            }
+                        }
+                        .padding(.top, 1)
+                    }
                     if !task.autonomyRationale.isEmpty {
                         Text(task.autonomyRationale)
                             .font(.caption2)

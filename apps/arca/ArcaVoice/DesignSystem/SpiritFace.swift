@@ -24,6 +24,13 @@ struct ArcaFace: View {
     /// Idle micro-behaviors (glances, hops, dozing). On by default — ARCA
     /// should feel alive everywhere; turn off for static previews.
     var alive: Bool = true
+    /// The eyes follow the pointer over the face and hovering gets a little
+    /// smile. Hover-only — never intercepts clicks, so it's safe inside a
+    /// Button (the home hero is a tap-to-record button).
+    var followsPointer: Bool = false
+    /// Full emotional interactivity: `followsPointer` plus a squash-and-bounce
+    /// grin on tap. Only for faces that are NOT already buttons.
+    var interactive: Bool = false
 
     /// One-off idle behaviors so ARCA never just sits there.
     private enum MicroAct: Equatable {
@@ -40,6 +47,10 @@ struct ArcaFace: View {
     @State private var skinTick = 0
     @State private var act: MicroAct = .none
     @State private var hop: CGFloat = 0
+    @State private var tilt: CGFloat = 0
+    @State private var squish: CGFloat = 1
+    /// Pointer position over the face, normalized — overrides `look`.
+    @State private var hoverLook: CGPoint?
 
     /// Reduced motion means fewer/gentler animations, not zero — the
     /// continuous bob/orbit/pulse loops and idle fidgeting (hops, floats)
@@ -133,8 +144,9 @@ struct ArcaFace: View {
             }
             // Motion floors: at tiny sizes the scaled travel would be
             // sub-pixel — clamp so the float always reads as "alive".
+            .scaleEffect(x: 2 - squish, y: squish, anchor: .bottom)
             .offset(y: (bob ? -1 : 1) * max(1.6, 2 * s) + hop)
-            .rotationEffect(mood == .working ? .degrees(bob ? -2.2 : 2.2) : .degrees(0))
+            .rotationEffect(mood == .working ? .degrees(bob ? -2.2 : 2.2) : .degrees(tilt))
 
             // ZONE: ARCA holds the shield, on guard duty.
             if mood == .zone {
@@ -157,6 +169,35 @@ struct ArcaFace: View {
             skinTick += 1
         }
         .animation(.spring(duration: 0.35, bounce: 0.3), value: mood)
+        .contentShape(Circle())
+        .onTapGesture {
+            guard interactive else { return }
+            happyBurst()
+        }
+        .onContinuousHover { phase in
+            guard interactive || followsPointer else { return }
+            switch phase {
+            case .active(let point):
+                // First contact: perk up with a quick smile — it noticed you.
+                if hoverLook == nil, act == .none, mood == .idle, !reduceMotion {
+                    Task { @MainActor in
+                        act = .happy
+                        try? await Task.sleep(for: .milliseconds(750))
+                        if act == .happy { act = .none }
+                    }
+                }
+                let dx = max(-1, min(1, (point.x - size / 2) / (size / 2)))
+                let dy = max(-1, min(1, (point.y - size / 2) / (size / 2)))
+                // Deadzone so pointer jitter doesn't twitch the eyes.
+                if let current = hoverLook,
+                   abs(dx - current.x) < 0.05, abs(dy - current.y) < 0.05 { return }
+                withAnimation(.easeOut(duration: 0.35)) {
+                    hoverLook = CGPoint(x: dx, y: dy)
+                }
+            case .ended:
+                withAnimation(.easeOut(duration: 0.6)) { hoverLook = nil }
+            }
+        }
     }
 
     /// Long-lived moods (idle, zone) must not run continuous animation: a
@@ -201,12 +242,41 @@ struct ArcaFace: View {
         }
     }
 
-    /// Where the eyes actually point — a glance briefly overrides the cursor.
+    /// Where the eyes actually point — a glance briefly overrides the cursor,
+    /// and a pointer hovering the face itself wins over everything.
     private var effectiveLook: CGPoint {
+        if let hoverLook { return hoverLook }
         if case .glance(let direction) = act {
             return CGPoint(x: direction, y: look.y * 0.3)
         }
         return look
+    }
+
+    /// Tap response: a squash, a bounce, and a grin — ARCA noticed you.
+    private func happyBurst() {
+        guard act != .happy else { return }
+        if reduceMotion {
+            // Still acknowledge the tap, just without movement.
+            Task { @MainActor in
+                act = .happy
+                try? await Task.sleep(for: .milliseconds(1200))
+                if act == .happy { act = .none }
+            }
+            return
+        }
+        Task { @MainActor in
+            act = .happy
+            withAnimation(.spring(duration: 0.14, bounce: 0.4)) { squish = 0.86 }
+            try? await Task.sleep(for: .milliseconds(120))
+            withAnimation(.spring(duration: 0.3, bounce: 0.65)) {
+                squish = 1
+                hop = -max(4, 8 * size / 100)
+            }
+            try? await Task.sleep(for: .milliseconds(240))
+            withAnimation(.spring(duration: 0.45, bounce: 0.55)) { hop = 0 }
+            try? await Task.sleep(for: .milliseconds(1100))
+            if act == .happy { act = .none }
+        }
     }
 
     /// How the eyes render right now (moods + idle micro-acts).
@@ -278,13 +348,17 @@ struct ArcaFace: View {
     }
 
     /// The soul: every few seconds ARCA does one small thing — glances off,
-    /// double-blinks, hops, grins, or dozes. Idle only; never busy, never loud.
+    /// double-blinks, hops, cocks its head, looks around, or dozes. Hero
+    /// surfaces fidget noticeably more; small status faces stay calm. Late at
+    /// night it gets visibly sleepy. All bursts, never continuous loops.
     private func lifeLoop() async {
         // Hops, floats, and glances are all movement — skip the whole loop
         // under reduced motion rather than thin it out piecemeal.
         guard alive, !reduceMotion else { return }
+        let hero = interactive || followsPointer || size >= 100
         while !Task.isCancelled {
-            try? await Task.sleep(for: .seconds(Double.random(in: 5...13)))
+            let pause = hero ? Double.random(in: 2.8...6.5) : Double.random(in: 5...13)
+            try? await Task.sleep(for: .seconds(pause))
             // ZONE breathes once in a while — a single aura pulse, then rest.
             // (Continuous pulse would pin the render loop for hours.)
             if mood == .zone {
@@ -294,7 +368,12 @@ struct ArcaFace: View {
                 continue
             }
             guard mood == .idle, act == .none else { continue }
-            switch Int.random(in: 0..<7) {
+
+            let hour = Calendar.current.component(.hour, from: Date())
+            let sleepy = hour >= 23 || hour < 7
+            // A sleepy ARCA nods off far more often — it's 2am, let it yawn.
+            let roll = (sleepy && Int.random(in: 0..<3) == 0) ? 4 : Int.random(in: 0..<9)
+            switch roll {
             case 0, 1: // glance off to one side, then back
                 act = .glance(Bool.random() ? 1 : -1)
                 try? await Task.sleep(for: .milliseconds(Int.random(in: 900...1600)))
@@ -315,9 +394,11 @@ struct ArcaFace: View {
                 withAnimation(.spring(duration: 0.4, bounce: 0.55)) { hop = 0 }
                 try? await Task.sleep(for: .milliseconds(700))
                 act = .none
-            case 4: // doze off for a moment
+            case 4: // doze off — longer and droopier late at night
                 act = .doze
-                try? await Task.sleep(for: .seconds(Double.random(in: 1.8...3.0)))
+                withAnimation(.easeInOut(duration: 1.2)) { tilt = sleepy ? 5 : 2 }
+                try? await Task.sleep(for: .seconds(Double.random(in: sleepy ? 3.0...5.5 : 1.8...3.0)))
+                withAnimation(.spring(duration: 0.5, bounce: 0.4)) { tilt = 0 }
                 act = .none
             case 5: // a slow float — a few gentle bobs, then settle back down
                 withAnimation(.easeInOut(duration: 1.3).repeatCount(3, autoreverses: true)) {
@@ -325,6 +406,18 @@ struct ArcaFace: View {
                 }
                 try? await Task.sleep(for: .seconds(3.9))
                 withAnimation(.easeInOut(duration: 0.8)) { bob = false }
+            case 6: // curious — cocks its head, holds it, straightens up
+                withAnimation(.spring(duration: 0.4, bounce: 0.35)) {
+                    tilt = Bool.random() ? 7 : -7
+                }
+                try? await Task.sleep(for: .milliseconds(Int.random(in: 900...1500)))
+                withAnimation(.spring(duration: 0.5, bounce: 0.4)) { tilt = 0 }
+            case 7: // look around the room — left, right, back to you
+                act = .glance(-1)
+                try? await Task.sleep(for: .milliseconds(650))
+                act = .glance(1)
+                try? await Task.sleep(for: .milliseconds(650))
+                act = .none
             default: // tiny hop only
                 withAnimation(.spring(duration: 0.2, bounce: 0.55)) {
                     hop = -max(2, 3 * size / 100)
