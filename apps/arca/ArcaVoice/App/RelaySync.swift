@@ -33,6 +33,7 @@ final class RelaySync {
                 // same heartbeat (each throttles itself internally).
                 if let context = self?.container?.mainContext {
                     await AmbientOps.shared.harvest(context: context)
+                    await AmbientOps.shared.autoBriefIfDue(context: context)
                     TodoTriage.sweepIfDue(context: context)
                     await ObsidianAutoImport.runIfDue(context: context)
                 }

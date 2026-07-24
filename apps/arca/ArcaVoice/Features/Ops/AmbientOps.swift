@@ -273,14 +273,27 @@ final class AmbientOps {
 
     /// The user said yes — send it (Slack), mark the proposal.
     func approve(_ proposal: ReplyProposal, context: ModelContext) async {
-        var args: [String: Any] = ["channel": proposal.channel, "text": proposal.draft]
-        if !proposal.threadTs.isEmpty { args["thread_ts"] = proposal.threadTs }
         do {
-            _ = try await execute("SLACK_SEND_MESSAGE", toolkit: "slack", arguments: args)
+            if proposal.sourceRaw == "gmail" {
+                guard let sender = ComposioEmailSender.fromArcaConfig() else {
+                    throw ProposalError.gmailNotConnected
+                }
+                let html = EmailActionDraft(to: proposal.channel,
+                                            subject: proposal.subject ?? "(제목 없음)",
+                                            body: proposal.draft).htmlBody
+                try await sender.send(to: proposal.channel,
+                                      subject: proposal.subject ?? "(제목 없음)",
+                                      htmlBody: html)
+            } else {
+                var args: [String: Any] = ["channel": proposal.channel, "text": proposal.draft]
+                if !proposal.threadTs.isEmpty { args["thread_ts"] = proposal.threadTs }
+                _ = try await execute("SLACK_SEND_MESSAGE", toolkit: "slack", arguments: args)
+            }
             proposal.stateRaw = "sent"
             proposal.sentAt = .now
             #if os(macOS)
-            AppServices.shared.notch.celebrate("Replied to \(proposal.author)")
+            AppServices.shared.notch.celebrate(
+                proposal.sourceRaw == "gmail" ? "Emailed \(proposal.channel)" : "Replied to \(proposal.author)")
             #endif
         } catch {
             proposal.stateRaw = "failed"
@@ -289,12 +302,38 @@ final class AmbientOps {
         try? context.save()
     }
 
+    private enum ProposalError: LocalizedError {
+        case gmailNotConnected
+        var errorDescription: String? { "Gmail이 연결돼 있지 않아요 — 커넥터에서 연결해 주세요." }
+    }
+
     func skip(_ proposal: ReplyProposal, context: ModelContext) {
         proposal.stateRaw = "skipped"
         try? context.save()
     }
 
     // MARK: - Daily briefing
+
+    /// Self-wake (OpenWorker `selfwake` port): ARCA prepares the morning
+    /// briefing on its own once a day at the configured hour, instead of
+    /// waiting for the user to press the button. Rides the Mac heartbeat.
+    func autoBriefIfDue(context: ModelContext, now: Date = .now) async {
+        let defaults = UserDefaults.standard
+        let hour = defaults.object(forKey: "morningBriefHour") as? Int ?? 8
+        guard Calendar.current.component(.hour, from: now) >= hour else { return }
+        let today = ISO8601DateFormatter.string(from: Calendar.current.startOfDay(for: now),
+                                                timeZone: .current,
+                                                formatOptions: [.withFullDate])
+        guard defaults.string(forKey: "lastAutoBriefDay") != today else { return }
+        defaults.set(today, forKey: "lastAutoBriefDay")
+
+        await generateBriefing(context: context)
+        #if os(macOS)
+        if briefing != nil {
+            AppServices.shared.notch.showNotice("☀️ 아침 브리핑 준비됐어요 — 대시보드에서 확인", seconds: 8)
+        }
+        #endif
+    }
 
     /// What to do today, what to ask of people, what already got done.
     func generateBriefing(context: ModelContext) async {

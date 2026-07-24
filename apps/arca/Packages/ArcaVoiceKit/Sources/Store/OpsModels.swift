@@ -18,6 +18,8 @@ public final class ReplyProposal {
     public var original: String = ""
     /// ARCA's suggested reply (editable before approving).
     public var draft: String = ""
+    /// Email subject — set for gmail proposals, nil for Slack.
+    public var subject: String?
     /// proposed | sent | skipped | failed
     public var stateRaw: String = "proposed"
     public var createdAt: Date = Date.now

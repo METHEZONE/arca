@@ -28,6 +28,13 @@ public struct ClaudeChat: Sendable {
     `[CALENDAR: {"title":"...","start":"YYYY-MM-DDTHH:MM","durationMinutes":60,\
     "location":"...","description":"..."}]`. Put meeting links (Meet/Zoom URLs) in "location"; \
     "location" and "description" may be omitted. Don't use that tag otherwise.
+
+    When the user asks you to send an email and the recipient is known (stated, in the \
+    conversation, or in memory), write the email yourself in the user's language and end the \
+    reply with `[EMAIL: {"to":"a@b.com","subject":"...","body":"..."}]` — "body" is plain \
+    text with \\n newlines. One short line above the tag saying what you're sending. ARCA \
+    will send it directly or queue it for one-tap approval depending on the user's autonomy \
+    setting — never say you can't send email. Don't use that tag otherwise.
     """
 
     private let extraSystem: String
@@ -121,13 +128,29 @@ public struct ClaudeChat: Sendable {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// The reply text with every action tag (`[BROWSER: …]`, `[CALENDAR: …]`)
-    /// stripped for display.
+    /// The reply text with every action tag (`[BROWSER: …]`, `[CALENDAR: …]`,
+    /// `[EMAIL: …]`) stripped for display.
     public static func stripActionTags(_ reply: String) -> String {
         stripBrowserTag(reply)
             .replacingOccurrences(of: #"\[CALENDAR:\s*\{.*\}\s*\]"#, with: "",
                                   options: [.regularExpression])
+            .replacingOccurrences(of: #"\[EMAIL:\s*\{.*\}\s*\]"#, with: "",
+                                  options: [.regularExpression])
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Extracts an `[EMAIL: {...}]` send the model wants executed, if any.
+    public static func emailDraft(in reply: String) -> EmailActionDraft? {
+        guard let range = reply.range(of: #"\[EMAIL:\s*(\{.*\})\s*\]"#,
+                                      options: .regularExpression) else { return nil }
+        let match = String(reply[range])
+        guard let open = match.firstIndex(of: "{"),
+              let close = match.lastIndex(of: "}") else { return nil }
+        let json = String(match[open...close])
+        guard let data = json.data(using: .utf8),
+              let draft = try? JSONDecoder().decode(EmailActionDraft.self, from: data),
+              draft.to.contains("@"), !draft.subject.isEmpty, !draft.body.isEmpty else { return nil }
+        return draft
     }
 
     /// Extracts a `[CALENDAR: {...}]` event the model wants created, if any.

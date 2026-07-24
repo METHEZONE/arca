@@ -163,6 +163,11 @@ final class ChatSession {
                 if let draft = ClaudeChat.calendarDraft(in: raw) {
                     await createCalendarEvent(from: draft)
                 }
+                // Email is external-risk (OpenWorker-style gate): send now at
+                // the user's trust level, otherwise queue a one-tap approval.
+                if let email = ClaudeChat.emailDraft(in: raw) {
+                    await handleEmailAction(email)
+                }
             } catch {
                 appendAssistant(UserFacingError.message(for: error))
             }
@@ -173,6 +178,37 @@ final class ChatSession {
     private func appendAssistant(_ text: String) {
         messages.append(ChatMessage(role: .assistant, parts: [.text(text)]))
         persist(role: "assistant", text: text)
+    }
+
+    /// Executes or queues an `[EMAIL: …]` action, gated by declared action
+    /// risk vs the user's autonomy level (ActionRisk, ported from OpenWorker).
+    private func handleEmailAction(_ draft: EmailActionDraft) async {
+        if ChatAction.email.allowedWithoutApproval(at: AutonomyLevel.current) {
+            guard let sender = ComposioEmailSender.fromArcaConfig() else {
+                appendAssistant("⚠️ Gmail 연결이 없어 보낼 수 없었어요 — 커넥터에서 Gmail을 연결해 주세요.")
+                return
+            }
+            do {
+                try await sender.send(to: draft.to, subject: draft.subject,
+                                      htmlBody: draft.htmlBody)
+                appendAssistant("📤 보냈어요 — \(draft.to), \"\(draft.subject)\"")
+            } catch {
+                appendAssistant("⚠️ 이메일 발송 실패: \(UserFacingError.message(for: error))")
+            }
+        } else {
+            // Below send autonomy: park it in the approval inbox (투두 레일의
+            // 답장 대기) instead of silently dropping or nagging in chat.
+            guard let context = AppServices.shared.container?.mainContext else { return }
+            let proposal = ReplyProposal(
+                source: "gmail", channel: draft.to,
+                author: draft.to,
+                original: "챗에서 작성: \(draft.subject)",
+                draft: draft.body)
+            proposal.subject = draft.subject
+            context.insert(proposal)
+            try? context.save()
+            appendAssistant("✉️ 초안을 준비했어요 — \(draft.to), \"\(draft.subject)\". 투두 레일의 답장 대기에서 한 번에 승인하면 발송돼요. (자율도를 '루틴 처리+발송'으로 올리면 바로 보냅니다.)")
+        }
     }
 
     /// Executes a `[CALENDAR: …]` action the model emitted and reports the

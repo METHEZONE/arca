@@ -106,15 +106,23 @@ struct ReplyApprovalRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Image(systemName: "bubble.left.fill")
+                Image(systemName: proposal.sourceRaw == "gmail" ? "envelope.fill" : "bubble.left.fill")
                     .font(.caption)
                     .foregroundStyle(ArcaSkins.current.mid)
-                Text("Reply to \(proposal.author.isEmpty ? "Slack" : proposal.author)?")
+                Text(proposal.sourceRaw == "gmail"
+                     ? "\(proposal.channel)에게 이메일?"
+                     : "Reply to \(proposal.author.isEmpty ? "Slack" : proposal.author)?")
                     .font(.caption.weight(.bold))
+                    .lineLimit(1)
                 Spacer()
                 Text(proposal.createdAt, style: .relative)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+            }
+            if let subject = proposal.subject, !subject.isEmpty {
+                Text(subject)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
             }
             Text(proposal.original)
                 .font(.caption2)
