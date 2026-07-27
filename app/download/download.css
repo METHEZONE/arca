@@ -1,0 +1,169 @@
+/* ============================================================
+   ARCA — download page (/download)
+   Matches the /arca landing palette: white canvas, signal orange.
+   Scoped entirely under .dl-root so nothing leaks into other pages.
+   ============================================================ */
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+.dl-root {
+  color-scheme: light;
+  --canvas: #ffffff;
+  --ink: #191f28;
+  --sub: #4e5968;
+  --ter: #8b95a1;
+  --line: #f2f4f6;
+  --field: #f7f8fa;
+  --accent: #f73b20;
+  --accent-press: #e2331a;
+  --tint: rgba(247, 59, 32, 0.06);
+
+  min-height: 100dvh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 56px 20px 96px;
+}
+
+.dl-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dl-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.dl-h1 {
+  font-size: clamp(30px, 6vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  margin: 0 0 14px;
+}
+
+.dl-lede {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--sub);
+  margin: 0 0 36px;
+}
+
+.dl-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 14px;
+  background: var(--canvas);
+}
+
+.dl-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.dl-card h2 {
+  font-size: 19px;
+  font-weight: 750;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.dl-meta {
+  font-size: 13px;
+  color: var(--ter);
+  white-space: nowrap;
+}
+
+.dl-card p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--sub);
+  margin: 8px 0 0;
+}
+
+.dl-btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.dl-btn:hover {
+  background: var(--accent-press);
+}
+
+.dl-btn-ghost {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 12px 19px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.dl-note {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ter);
+  margin-top: 12px;
+}
+
+.dl-video {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  display: block;
+  margin: 8px 0 36px;
+  background: #000;
+}
+
+.dl-h3 {
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  margin: 36px 0 12px;
+}
+
+.dl-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--sub);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.dl-foot {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ter);
+  line-height: 1.7;
+}
+
+.dl-foot a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+}
