@@ -15,7 +15,10 @@ idf_component_register(
     INCLUDE_DIRS "."
     REQUIRES
         # board support
-        bsp_extra              # copied from Waveshare's examples, see README
+        bsp_extra                            # copied from Waveshare's examples, see README
+        waveshare__esp32_s3_touch_lcd_1_83   # bsp/esp-bsp.h, bsp/display.h
+        lvgl__lvgl                           # lvgl.h
+        esp_lvgl_port                        # ESP_LVGL_PORT_INIT_CONFIG()
         # platform
         driver
         esp_timer

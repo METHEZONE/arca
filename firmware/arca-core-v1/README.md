@@ -287,12 +287,78 @@ Credentials live on the card, never in the firmware image.
 ### 4. Build and flash
 
 ```bash
+./flash.sh          # build + flash + monitor, figures out the port itself
+```
+
+or by hand:
+
+```bash
 idf.py set-target esp32s3
 idf.py build
 idf.py -p /dev/cu.usbmodem* flash monitor
 ```
 
 Console is USB-CDC over the same Type-C port, no separate UART bridge.
+
+### Build status
+
+**Builds clean** with ESP-IDF 5.5 for esp32s3:
+
+```
+arca_core_v1.bin   1,634,672 bytes   (74% of the app partition still free)
+text 1,385,309   data 261,116   bss 2,890,637
+```
+
+All feature paths verified present in the linked ELF: `bsp_extra_i2s_read`
+(mic), `bsp_sdcard_mount` (card), `bsp_display_start_with_config` (panel),
+`nimble_port_init` + `ble_gatts_add_svcs` (BLE), `esp_wifi_start`,
+`esp_http_client_open` (upload), `lv_arc_create` (the mouth).
+
+Three real bugs the compiler caught, all fixed:
+
+1. `bsp_display_cfg_t.flags` on this BSP has only `buff_dma` and `buff_spiram` —
+   there is no `sw_rotate`. Rotation goes through `lv_display_set_rotation()`.
+2. `wifi_config_t`'s `ssid`/`password` are exactly 32/64 bytes and may legally be
+   unterminated when full, so `snprintf` into them is a truncation error. Copy by
+   measured length instead.
+3. `sessionId` needed an explicit precision bound so the compiler could see the
+   filename can never overrun it.
+
+### If `idf.py` will not run
+
+In a hardened or sandboxed shell, macOS blocks loading non-system-signed
+dylibs, and both `idf.py` (psutil) and the component manager (pydantic) depend
+on prebuilt native extensions:
+
+```
+ImportError: dlopen(.../_psutil_osx.abi3.so): code signature ... not valid for
+use in process: library load disallowed by system policy
+```
+
+Rebuilding them from source does not help — the restriction is on *loading* any
+unsigned dylib. Two tools work around it:
+
+- `tools/vendor_components.py` — resolves and downloads the managed-component
+  tree from the public registry using nothing but `urllib`/`json`/`zipfile`, into
+  `./components`. 11 components, resolved transitively.
+- `build-vendored.sh` — drives CMake + ninja directly with
+  `IDF_COMPONENT_MANAGER=0`, and drops the mbedtls CA bundle (which needs
+  `cryptography`) via `sdkconfig.ci`.
+
+```bash
+./build-vendored.sh           # build
+./build-vendored.sh --flash   # build + flash
+```
+
+Two gotchas this uncovered, both encoded in the scripts:
+
+- the registry's standalone `usb` component does not compile against IDF 5.5 and
+  shadows the in-tree one, so the resolver skips it
+- managed components declare dependencies only in `idf_component.yml`, which the
+  manager reads and CMake does not — so with the manager off they cannot find
+  each other's headers. The top-level `CMakeLists.txt` fixes this in one move by
+  adding every vendored component to `__COMPONENT_REQUIRES_COMMON`, and only
+  when `IDF_COMPONENT_MANAGER=0`, so a normal `idf.py build` is untouched.
 
 ---
 
@@ -402,8 +468,6 @@ You could port it. You would be reimplementing a working driver for no reason.
   ASCII for now; adding Korean means generating a Pretendard subset with
   `lv_font_conv` (project convention: Pretendard with tightened letter-spacing,
   never serif).
-- **Not compiled yet.** This was written against the official BSP's real API
-  (`bsp_extra_codec_init`, `bsp_extra_i2s_read`, `bsp_sdcard_mount`,
-  `bsp_display_start_with_config`) as used in Waveshare's own demos, but it has
-  not been built on a machine with ESP-IDF installed. Expect to fix a few
-  include paths and BSP accessor names on the first `idf.py build`.
+- **Not flashed to hardware yet.** It *builds* (see below) and every feature
+  symbol links, but nothing has run on the board, so the display rotation, the
+  button feel, and the mic gain are all unverified against reality.

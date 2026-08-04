@@ -12,8 +12,10 @@
 
 #include "cJSON.h"
 #include "esp_event.h"
-#include "esp_crt_bundle.h"
 #include "esp_http_client.h"
+#if defined(CONFIG_MBEDTLS_CERTIFICATE_BUNDLE)
+#include "esp_crt_bundle.h"
+#endif
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
@@ -145,8 +147,11 @@ static bool wifi_connect(void)
     wifi_init_once();
 
     wifi_config_t wc = {0};
-    snprintf((char *)wc.sta.ssid, sizeof(wc.sta.ssid), "%s", s_cfg.ssid);
-    snprintf((char *)wc.sta.password, sizeof(wc.sta.password), "%s", s_cfg.password);
+    // wifi_config_t's ssid/password are exactly 32/64 bytes and may legally be
+    // unterminated when full, so copy by measured length rather than snprintf.
+    memcpy(wc.sta.ssid, s_cfg.ssid, strnlen(s_cfg.ssid, sizeof(wc.sta.ssid)));
+    memcpy(wc.sta.password, s_cfg.password,
+           strnlen(s_cfg.password, sizeof(wc.sta.password)));
     wc.sta.threshold.authmode = s_cfg.password[0] ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
 
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
@@ -283,7 +288,11 @@ static bool upload_chunk(const char *wav_path,
         .url             = url,
         .method          = HTTP_METHOD_POST,
         .timeout_ms      = ARCA_UPLOAD_TIMEOUT_MS,
+#if defined(CONFIG_MBEDTLS_CERTIFICATE_BUNDLE)
+        // Verify the server against IDF's bundled root CAs. Without this the
+        // upload would either fail on TLS or, worse, skip verification.
         .crt_bundle_attach = esp_crt_bundle_attach,
+#endif
         .buffer_size     = ARCA_UPLOAD_HTTP_BUF,
         .buffer_size_tx  = 2048,
     };
@@ -362,10 +371,12 @@ static bool upload_file(const char *path)
     const uint32_t total = (audio_bytes + ARCA_UPLOAD_CHUNK_BYTES - 1) / ARCA_UPLOAD_CHUNK_BYTES;
 
     // sessionId = filename without extension, e.g. 20260804T193210
+    // sessionId is the stamped filename, ~20 chars in practice. Bound it
+    // explicitly so the compiler can see it can never overrun.
     char session_id[64];
     const char *base = strrchr(path, '/');
     base = base ? base + 1 : path;
-    snprintf(session_id, sizeof(session_id), "%s", base);
+    snprintf(session_id, sizeof(session_id), "%.63s", base);
     char *dot = strrchr(session_id, '.');
     if (dot) *dot = '\0';
 

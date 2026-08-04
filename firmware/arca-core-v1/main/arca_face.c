@@ -482,9 +482,10 @@ void arca_face_start(void)
         .buffer_size   = ARCA_SCREEN_W * 40,
         .double_buffer = false,
         .flags = {
+            // This BSP's cfg has only these two flags; rotation is applied
+            // below with lv_display_set_rotation(), not here.
             .buff_dma    = true,
             .buff_spiram = false,
-            .sw_rotate   = true,
         },
     };
     bsp_display_start_with_config(&cfg);

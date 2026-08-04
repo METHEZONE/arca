@@ -23,6 +23,19 @@ fi
 mkdir -p "$HERE/components"
 rm -rf "$HERE/components/bsp_extra"
 cp -R "$WORK/ws/$SRC" "$HERE/components/bsp_extra"
+# Waveshare's bsp_extra includes bsp/esp-bsp.h but does not declare the board
+# BSP in REQUIRES - it relies on the component manager reading its manifest.
+# Vendored builds (IDF_COMPONENT_MANAGER=0) need it stated explicitly.
+python3 - "$HERE/components/bsp_extra/CMakeLists.txt" <<'PATCH'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+need = "waveshare__esp32_s3_touch_lcd_1_83"
+old = "REQUIRES esp_driver_gpio esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_codec_dev"
+if need not in s and old in s:
+    p.write_text(s.replace(old, old + "\n             " + need))
+    print("   patched bsp_extra REQUIRES")
+PATCH
+
 echo "==> components/bsp_extra ready"
 
 cat <<'NOTE'

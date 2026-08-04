@@ -4,3 +4,5 @@ sdkconfig.old
 managed_components/
 components/bsp_extra/
 dependencies.lock
+components/*/
+!components/.gitkeep

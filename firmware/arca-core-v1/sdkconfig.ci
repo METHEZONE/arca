@@ -1,0 +1,9 @@
+# LOCAL BUILD OVERRIDE - not the shipped config.
+# The mbedtls CA-bundle generator imports the `cryptography` package, whose
+# native extension will not load in a hardened/sandboxed shell. Passing this
+# file second (see build-vendored.sh) turns the bundle off so the build can
+# complete there. arca_uploader.c guards its use of esp_crt_bundle_attach on
+# CONFIG_MBEDTLS_CERTIFICATE_BUNDLE, so it compiles with or without it.
+# Do NOT use this for a build you intend to actually upload with - without the
+# bundle there are no root CAs and HTTPS to the ingest endpoint will fail.
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=n
