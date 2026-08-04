@@ -160,6 +160,73 @@ The iOS side needs the `bluetooth-central` UIBackgroundMode to keep receiving
 while ARCA is backgrounded. The device advertises whenever unconnected, so the
 phone reconnects by itself when it comes back in range.
 
+
+---
+
+## The face
+
+Eight expressions, drawn as vectors in LVGL. The v0 asset pack
+(`hardware/arca-qbit-facepack`) is 1-bit 128x64 built for an SSD1306; upscaling
+it 2.2x onto a 284x240 colour IPS looks soft and blocky, so the face is redrawn
+instead of blitted.
+
+### Where the proportions come from
+
+The first attempt was drawn by eye and looked bad, in specific measurable ways.
+So the proportions were **measured** off the MIT-licensed Dasai Mochi frame
+export ([upiir/esp32s3_oled_dasai_mochi](https://github.com/upiir/esp32s3_oled_dasai_mochi),
+128x64, 90 frames) using `tools/extract_face_geometry.py`, and expressed as
+fractions of the canvas:
+
+| | measured | what the first attempt did |
+|---|---|---|
+| eye centres | **11.3% and 86.7%** of width — nearly at the edges | 38% / 62% — crowded into the middle |
+| eye width | 9.4% of width, narrow capsules | wide blocks |
+| eye squash | from the **top**, bottom pinned at 51.6%, 42% → 27% → 20% | centred shrink, no pinned baseline |
+| mouth | pinned to the **bottom at 95%**, 50–58% wide, 30–44% tall | small arc floating mid-screen |
+
+The character is in the separation: two small features far apart, a huge arc low
+down, and a lot of empty space. Chrome is deliberately tiny and dim — the first
+version had a status bar, an 11-bar level meter and a big timer all fighting the
+face for attention.
+
+### The mouth breathes with your voice
+
+`draw_mouth()` takes a chord width and a sagitta rather than arc angles, and
+solves the circle through them:
+
+```
+r = H/2 + W²/(8H)        half-angle = asin((W/2)/r)
+```
+
+with the centre placed `r` above the anchor. Parameterising by (width, height)
+is what lets the live input level open and close the mouth smoothly — which
+replaced the bar-graph level meter entirely. It reads as the device *hearing
+you*, and it costs one arc instead of eleven rectangles.
+
+Everything eases toward its target at 40 fps rather than snapping, which is
+where the squish comes from.
+
+### Licensing — read this before shipping
+
+`upiir/esp32s3_oled_dasai_mochi` is **MIT**, so upiir's code and his Rive
+recreation are free to use. That MIT grant does **not** extend to the Dasai
+Mochi character itself, which is a commercial product from
+[dasai.com.au](https://dasai.com.au) and has its own licensing page.
+
+So:
+
+- **Measuring proportions and redrawing original vectors** (what this firmware
+  does) is fine. Two capsules and an arc is not protectable expression.
+- **Shipping, selling, or marketing ARCA Core with the actual Dasai Mochi
+  character** — the plush silhouette, the name, the trade dress — is not. If
+  ARCA Core ever appears in a product page, a demo video, or a YC application,
+  it needs to be wearing its own face.
+
+If you want the literal frames on your own unit, `tools/extract_face_geometry.py`
+already decodes them; converting the sequence to an LVGL image array is a small
+addition. Just keep it off anything public.
+
 ---
 
 ## On-device speech: deliberately not here
@@ -290,12 +357,13 @@ logs it. A glitch beats a stalled microphone.
 | `arca_recorder.c` | I2S capture, pre-roll, PSRAM ring, WAV session writer |
 | `arca_storage.c` | SD mount, queue dirs, space reclaim, crash repair |
 | `arca_uploader.c` | Wi-Fi bursts + streamed chunked multipart POST |
-| `arca_face.c` | LVGL landscape face, 8 expressions, backlight policy |
+| `arca_face.c` | LVGL landscape face, 8 expressions, voice-driven mouth, backlight |
 | `arca_ble.c` | NimBLE GATT: status, control, ADPCM live audio |
 | `arca_power.c` | AXP2101 fuel gauge |
 | `arca_wav.c` | RIFF header write / patch / crash repair |
 | `arca_adpcm.c` | IMA-ADPCM encoder (BLE only — files stay PCM) |
 | `arca_clock.c` | PCF85063 RTC timestamps + SNTP top-up |
+| `tools/extract_face_geometry.py` | measures shape geometry out of a PNG frame sequence (stdlib only, hand-rolled PNG decoder) |
 
 ---
 
