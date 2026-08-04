@@ -1,0 +1,7 @@
+{
+  "ssid": "iPhone",
+  "password": "hotspot-password",
+  "baseUrl": "https://thezonebio.com",
+  "token": "PUT_ARCA_INGEST_TOKEN_HERE",
+  "deviceId": "arca-core-v1-01"
+}
