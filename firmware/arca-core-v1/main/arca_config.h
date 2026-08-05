@@ -16,7 +16,10 @@
 // We run the display rotated so that edge is the TOP edge, which puts
 //   BOOT on the LEFT and PWR on the RIGHT.
 #define ARCA_PIN_BTN_BOOT       0    // LEFT button  - RECORD
-#define ARCA_PIN_BTN_PWR        41   // RIGHT button - SCREEN / MARK / SYNC
+// The RIGHT button has NO GPIO on this board - it goes to the AXP2101's PWRON
+// pin and is read over I2C in arca_power.c. GPIO41 was an early guess; it is
+// absent from the BSP pin map and rests LOW, which the poller read as a
+// permanent press and turned into a "sync now" 1.2 s into every boot.
 // WARNING: PWR is also wired to the AXP2101 PWRKEY. Holding it long enough
 // (PMU default ~6 s) makes the power-management IC cut power in hardware,
 // which no firmware can veto. That is exactly why push-to-talk lives on BOOT.

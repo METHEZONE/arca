@@ -24,8 +24,9 @@ typedef struct {
     bool     mark_fired;
 } btn_t;
 
+// Only BOOT is a GPIO. The RIGHT button hangs off the AXP2101's PWRON pin and
+// is read over I2C in arca_power.c - see the note there.
 static btn_t s_boot = { .pin = ARCA_PIN_BTN_BOOT };
-static btn_t s_pwr  = { .pin = ARCA_PIN_BTN_PWR  };
 
 static inline int64_t now_ms(void) { return esp_timer_get_time() / 1000; }
 
@@ -96,38 +97,9 @@ static void boot_edge_up(btn_t *b, int64_t held_ms)
     }
 }
 
-// ---------------------------------------------------------------- PWR -------
-
-static void pwr_held(btn_t *b, int64_t held_ms)
-{
-    if (!b->consumed && held_ms >= ARCA_PWR_SYNC_HOLD_MS) {
-        b->consumed = true;
-        post(ARCA_EVT_SYNC_NOW | ARCA_EVT_SCREEN_WAKE);
-        arca_state_set_status("sync requested");
-        ESP_LOGI(TAG, "PWR hold -> sync now (release it, ~6s = hardware off)");
-    }
-}
-
-static void pwr_edge_up(btn_t *b, int64_t held_ms)
-{
-    if (b->consumed) return;
-    if (held_ms < CONFIRM_MS) return;
-
-    int64_t since_last = now_ms() - b->last_up_us;
-    if (b->last_up_us != 0 && since_last <= ARCA_DOUBLE_CLICK_MS) {
-        b->last_up_us = 0;
-        post(ARCA_EVT_MARK | ARCA_EVT_SCREEN_WAKE);
-        ESP_LOGI(TAG, "PWR double click -> mark");
-        return;
-    }
-
-    b->last_up_us = now_ms();
-    post(ARCA_EVT_SCREEN_WAKE);
-}
-
 // ---------------------------------------------------------------- task ------
 
-static void tick(btn_t *b, bool is_boot)
+static void tick(btn_t *b)
 {
     bool now = pressed(b);
 
@@ -137,22 +109,19 @@ static void tick(btn_t *b, bool is_boot)
         if (!pressed(b)) return;                 // glitch, ignore entirely
         b->down    = true;
         b->down_us = now_ms() - CONFIRM_MS;
-        if (is_boot) boot_edge_down(b);
+        boot_edge_down(b);
         return;
     }
 
     if (now && b->down) {
-        int64_t held = now_ms() - b->down_us;
-        if (is_boot) boot_held(b, held);
-        else         pwr_held(b, held);
+        boot_held(b, now_ms() - b->down_us);
         return;
     }
 
     if (!now && b->down) {
         int64_t held = now_ms() - b->down_us;
         b->down = false;
-        if (is_boot) boot_edge_up(b, held);
-        else         pwr_edge_up(b, held);
+        boot_edge_up(b, held);
         vTaskDelay(pdMS_TO_TICKS(ARCA_DEBOUNCE_MS));
     }
 }
@@ -161,8 +130,7 @@ static void button_task(void *arg)
 {
     (void)arg;
     for (;;) {
-        tick(&s_boot, true);
-        tick(&s_pwr,  false);
+        tick(&s_boot);
         vTaskDelay(pdMS_TO_TICKS(POLL_MS));
     }
 }
@@ -170,7 +138,7 @@ static void button_task(void *arg)
 void arca_buttons_start(void)
 {
     gpio_config_t cfg = {
-        .pin_bit_mask = (1ULL << ARCA_PIN_BTN_BOOT) | (1ULL << ARCA_PIN_BTN_PWR),
+        .pin_bit_mask = (1ULL << ARCA_PIN_BTN_BOOT),
         .mode         = GPIO_MODE_INPUT,
         .pull_up_en   = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -181,6 +149,6 @@ void arca_buttons_start(void)
     // Polled, not interrupt driven: hold-vs-click needs a timeline anyway, and
     // 10 ms polling costs far less than the debounce logic an ISR would need.
     xTaskCreatePinnedToCore(button_task, "arca_btn", 3072, NULL, 6, NULL, 1);
-    ESP_LOGI(TAG, "buttons up: BOOT(gpio%d)=record  PWR(gpio%d)=screen/mark/sync",
-             ARCA_PIN_BTN_BOOT, ARCA_PIN_BTN_PWR);
+    ESP_LOGI(TAG, "buttons up: BOOT(gpio%d)=record  PWR=AXP2101 PWRON (I2C)",
+             ARCA_PIN_BTN_BOOT);
 }

@@ -6,12 +6,16 @@
 //   LEFT button (BOOT)   hold  = push-to-talk clip
 //                        click = long session, click again to stop
 //                        hold during a session = highlight marker
-//   RIGHT button (PWR)   click = wake screen / toggle stats view
-//                        double click = highlight marker
-//                        hold ~1.2 s = sync to cloud now
+//   RIGHT button (PWR)   short press = wake screen / toggle stats view
+//                        long press  = sync to cloud now
+//
+// The right button is not a GPIO - it is on the AXP2101's PWRON pin and is read
+// over I2C in arca_power.c, which is also why holding it ~6 s cuts power in
+// hardware and no firmware can veto that.
 //
 // Everything lands in /sdcard/arca/queue as plain 16 kHz mono WAV, then gets
-// uploaded in 100-second chunks that the server stitches into one memory.
+// uploaded in 100-second chunks that the server stitches into one memory. The
+// card is required: without it the recorder refuses to start.
 //
 // Deliberately NOT here: on-device speech recognition or conversation. ESP-SR's
 // wake word does not support Korean yet, Whisper does not fit in 8 MB of PSRAM,
@@ -103,19 +107,28 @@ void app_main(void)
 
     arca_power_start();
 
+    // Whether anything below has already put an error on screen. Without this
+    // the unconditional "ready" at the end of app_main() overwrote it, so a
+    // device with no card claimed to be ready and only admitted otherwise when
+    // you pressed record and the recorder refused.
+    bool healthy = true;
+
     if (arca_storage_mount()) {
         arca_storage_repair_queue();
         arca_state_set_flags(true, false, false);
         arca_state_set_queue(arca_storage_queue_count(), 0);
         xEventGroupSetBits(arca_events(), ARCA_EVT_SD_READY);
     } else {
+        // The card is not optional: arca_recorder_begin() refuses without it.
         arca_state_set_face(ARCA_FACE_ERROR);
         arca_state_set_status("insert microSD (FAT32)");
+        healthy = false;
     }
 
     if (!arca_recorder_start()) {
         arca_state_set_face(ARCA_FACE_ERROR);
         arca_state_set_status("mic init failed");
+        healthy = false;
     }
 
     arca_uploader_start();
@@ -124,7 +137,10 @@ void app_main(void)
 
     xTaskCreatePinnedToCore(event_task, "arca_evt", 4096, NULL, 8, NULL, 1);
 
-    arca_state_set_face(ARCA_FACE_IDLE);
-    arca_state_set_status("ready");
-    ESP_LOGI(TAG, "ready. left=record  right=screen/mark/sync");
+    if (healthy) {
+        arca_state_set_face(ARCA_FACE_IDLE);
+        arca_state_set_status("ready");
+    }
+    ESP_LOGI(TAG, "%s. left=record  right=screen/mark/sync",
+             healthy ? "ready" : "started with errors");
 }
