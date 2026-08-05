@@ -21,6 +21,18 @@ final class RecordingCoordinator {
     private(set) var volatileSegments: [CaptureChannel: LiveSegment] = [:]
     var roughNotes: String = ""
     var includeSystemAudio = true
+    /// Who the user said would be in this meeting, set before `start`.
+    ///
+    /// A property rather than a `start` parameter: nine call sites reach that
+    /// method, most of them one-tap intents with no UI to ask from, and they all
+    /// keep compiling this way.
+    var plannedParticipants: [MeetingParticipant] = []
+
+    /// Read here rather than taken from `AppServices` so the coordinator stays
+    /// usable on its own; same default the rest of the app uses.
+    static var ownerName: String {
+        UserDefaults.standard.string(forKey: "ownerName") ?? "Me"
+    }
     var errorMessage: String?
 
     private var captureSession: (any CaptureSession)?
@@ -83,7 +95,12 @@ final class RecordingCoordinator {
                 }
             }
 
-            let transcriber = AppleLiveTranscriber()
+            // The names go to the recognizer before the first buffer, so they
+            // are spelled right in the transcript scrolling past the user —
+            // this is the whole payoff of asking beforehand on an engine that
+            // can't tell voices apart.
+            let transcriber = AppleLiveTranscriber(
+                vocabulary: plannedParticipants.vocabulary(excluding: Self.ownerName))
             for (channel, stream) in streams {
                 let task = Task { [weak self] in
                     do {
@@ -98,7 +115,7 @@ final class RecordingCoordinator {
             }
 
             #if os(iOS)
-            liveActivity.start(title: "Recording meeting", startedAt: startedAt ?? .now)
+            liveActivity.start(title: L("회의 녹음 중", "Recording meeting"), startedAt: startedAt ?? .now)
             #endif
             #if os(macOS)
             // A call is on screen — start reading participant names off it so
@@ -111,7 +128,8 @@ final class RecordingCoordinator {
             #if os(macOS)
             if includeSystemAudio && MeetingCaptureEngine.lastStartDroppedSystemAudio {
                 AppServices.shared.notch.showNotice(
-                    "상대방 오디오 캡처를 못 열어 마이크만 녹음 중이에요 — 설정 > 개인정보 보호 > 화면 및 시스템 오디오 녹음 확인",
+                    L("상대방 오디오 캡처를 못 열어 마이크만 녹음 중이에요 — 설정 > 개인정보 보호 > 화면 및 시스템 오디오 녹음 확인",
+                      "Couldn't capture the other person's audio, so it's mic only — check Settings > Privacy & Security > Screen & System Audio Recording"),
                     seconds: 10)
             }
             #endif
@@ -120,7 +138,10 @@ final class RecordingCoordinator {
             phase = .idle
             DebugTrace.log("record start failed: \(error)")
             #if os(macOS)
-            AppServices.shared.notch.showNotice("녹음 시작 실패 — \(error.localizedDescription)", seconds: 10)
+            AppServices.shared.notch.showNotice(
+                L("녹음 시작 실패 — \(error.localizedDescription)",
+                  "Couldn't start recording — \(error.localizedDescription)"),
+                seconds: 10)
             #endif
         }
     }
@@ -159,10 +180,20 @@ final class RecordingCoordinator {
         #if os(iOS)
         liveActivity.end()
         #endif
+        // A typed roster is a snapshot like any other, so everything
+        // downstream — vocabulary hints for the cloud pass, and the 1:1 rename
+        // that names a single remote speaker — works with no new plumbing.
+        // `activeSpeaker: nil` keeps it out of the active-speaker vote, where a
+        // zero offset would be rejected anyway.
+        var rosterSnapshots: [RosterSnapshot] = []
+        if !plannedParticipants.isEmpty {
+            rosterSnapshots.append(RosterSnapshot(
+                capturedAt: recordingStartedAt,
+                roster: MeetingRoster(participants: plannedParticipants.map(\.name),
+                                      activeSpeaker: nil)))
+        }
         #if os(macOS)
-        let rosterSnapshots = rosterWatcher.stop()
-        #else
-        let rosterSnapshots: [RosterSnapshot] = []
+        rosterSnapshots.append(contentsOf: rosterWatcher.stop())
         #endif
 
         do {
@@ -187,6 +218,8 @@ final class RecordingCoordinator {
                 record.meetingApp = meetingApp
             }
             record.duration = artifacts.duration
+            // Kept whatever the source: a voice memo can have people in it too.
+            record.participants = plannedParticipants
             record.state = .processing
             for (channel, url) in artifacts.files {
                 record.audioAssets.append(AudioAsset(
@@ -230,6 +263,7 @@ final class RecordingCoordinator {
         directoryName = nil
         meetingApp = nil
         startedAt = nil
+        plannedParticipants = []
         phase = .idle
         #if os(iOS)
         liveActivity.end()

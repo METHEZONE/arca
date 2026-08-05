@@ -25,7 +25,8 @@ final class TaskEngine {
     /// Runs ARCA's autonomy judgment for a task and stores the verdict.
     func classify(_ task: TodoTask) async {
         guard let key = anthropicKey else {
-            task.autonomyRationale = "No Anthropic key (add one in Settings)"
+            task.autonomyRationale = L("Anthropic 키가 없어요 (설정에서 추가해 주세요)",
+                                       "No Anthropic key (add one in Settings)")
             return
         }
         do {
@@ -40,7 +41,8 @@ final class TaskEngine {
             try? task.modelContext?.save()
             RelaySync.shared.scheduleSync()
         } catch {
-            task.autonomyRationale = "Couldn't classify: \(Self.friendlyMessage(for: error))"
+            task.autonomyRationale = L("분류 실패: \(Self.friendlyMessage(for: error))",
+                                       "Couldn't classify: \(Self.friendlyMessage(for: error))")
         }
     }
 
@@ -48,7 +50,7 @@ final class TaskEngine {
     func toss(_ task: TodoTask) {
         guard task.isTossable() else { return }
         task.state = .running
-        task.resultMarkdown = "▸ Starting…"
+        task.resultMarkdown = L("▸ 시작합니다…", "▸ Starting…")
         task.touch()
         try? task.modelContext?.save()
         // Push the running state now, not just the outcome — the other
@@ -75,13 +77,15 @@ final class TaskEngine {
                     #else
                     // The phone can't drive Codex — relay it to the Mac agent.
                     task.state = .tossed
-                    task.resultMarkdown = "🛰 Sent to your Mac — ARCA will run it there."
+                    task.resultMarkdown = L("🛰 Mac으로 보냈어요 — ARCA가 거기서 실행할 거예요.",
+                                            "🛰 Sent to your Mac — ARCA will run it there.")
                     #endif
                 case .manual:
                     task.state = .needsUser
                 }
             } catch {
-                task.resultMarkdown = "Failed: \(Self.friendlyMessage(for: error))"
+                task.resultMarkdown = L("실패: \(Self.friendlyMessage(for: error))",
+                                        "Failed: \(Self.friendlyMessage(for: error))")
                 task.state = .failed
             }
             task.touch()
@@ -116,6 +120,7 @@ final class TaskEngine {
             $0.autonomyRationale.hasPrefix("Couldn't classify")
                 || $0.autonomyRationale.hasPrefix("분류 실패")
                 || $0.autonomyRationale.hasPrefix("No Anthropic key")
+                || $0.autonomyRationale.hasPrefix("Anthropic 키가 없어요")
         }
         guard !failed.isEmpty else { return }
         Task { @MainActor in
@@ -127,7 +132,8 @@ final class TaskEngine {
     private static func friendlyMessage(for error: Error) -> String {
         let description = error.localizedDescription
         if description.lowercased().contains("credit balance") {
-            return "Anthropic credit balance is empty — add credits to enable AI features."
+            return L("Anthropic 크레딧이 비었어요 — 크레딧을 채우면 AI 기능이 다시 켜져요.",
+                     "Anthropic credit balance is empty — add credits to enable AI features.")
         }
         return String(description.prefix(140))
     }

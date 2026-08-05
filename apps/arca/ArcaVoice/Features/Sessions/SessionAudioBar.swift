@@ -64,7 +64,8 @@ struct SessionAudioBar: View {
         Button {
             Task { await relay.upload(session: session) }
         } label: {
-            Label("Send audio to my other devices", systemImage: "arrow.up.to.line.compact")
+            Label(L("다른 기기로 오디오 보내기", "Send audio to my other devices"),
+                  systemImage: "arrow.up.to.line.compact")
                 .font(.caption)
         }
         .buttonStyle(.borderless)
@@ -76,9 +77,10 @@ struct SessionAudioBar: View {
             Image(systemName: "waveform.slash")
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Recording lives on another device")
+                Text(L("녹음이 다른 기기에 있어요", "Recording lives on another device"))
                     .font(.subheadline.weight(.medium))
-                Text("Pull it through your brain to re-listen here.")
+                Text(L("브레인을 통해 가져오면 여기서 다시 들을 수 있어요.",
+                       "Pull it through your brain to re-listen here."))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -89,7 +91,7 @@ struct SessionAudioBar: View {
                 if isWorking {
                     ProgressView().controlSize(.small)
                 } else {
-                    Text("Download")
+                    Text(L("가져오기", "Download"))
                         .font(.caption.weight(.semibold))
                 }
             }

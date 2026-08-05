@@ -55,7 +55,7 @@ struct TaskListView: View {
                 }
                 .ignoresSafeArea()
             }
-            .navigationTitle("Tasks")
+            .navigationTitle(L("할 일", "Tasks"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -69,7 +69,7 @@ struct TaskListView: View {
 
     private var quickAddBar: some View {
         HStack(spacing: 10) {
-            TextField("Toss me a quest…", text: $draftTitle)
+            TextField(L("퀘스트를 맡겨 주세요…", "Toss me a quest…"), text: $draftTitle)
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -92,9 +92,9 @@ struct TaskListView: View {
     }
 
     private var scopePicker: some View {
-        Picker("Task scope", selection: $scope) {
-            Text("Open").tag(TaskScope.open)
-            Text("Done").tag(TaskScope.done)
+        Picker(L("할 일 범위", "Task scope"), selection: $scope) {
+            Text(L("진행 중", "Open")).tag(TaskScope.open)
+            Text(L("완료", "Done")).tag(TaskScope.done)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal, 16)
@@ -146,7 +146,8 @@ struct TaskListView: View {
                         }
                     }
                 } footer: {
-                    Text("Completed tasks stay in SwiftData on this device and sync through the arca-brain relay as tasks.json when relay sync is configured.")
+                    Text(L("완료한 일은 이 기기의 SwiftData에 남고, 릴레이 동기화를 설정해 두면 arca-brain 릴레이를 통해 tasks.json으로 동기화돼요.",
+                           "Completed tasks stay in SwiftData on this device and sync through the arca-brain relay as tasks.json when relay sync is configured."))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .textCase(nil)
@@ -161,10 +162,11 @@ struct TaskListView: View {
     private var completedEmptyState: some View {
         VStack(spacing: 12) {
             SpiritFace(mood: .idle, size: 80)
-            Text("No completed quests yet.")
+            Text(L("아직 완료한 퀘스트가 없어요.", "No completed quests yet."))
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("When ARCA finishes something, the result and source stay here.")
+            Text(L("ARCA가 무언가를 끝내면 결과와 출처가 여기 남아요.",
+                   "When ARCA finishes something, the result and source stay here."))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -192,14 +194,14 @@ struct TaskListView: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.white)
                         HStack(spacing: 3) {
-                            Text("source: \(task.sourceRaw) ·")
+                            Text(L("출처: \(task.sourceRaw) ·", "source: \(task.sourceRaw) ·"))
                             Text(task.updatedAt, style: .relative)
                         }
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Reopen") {
+                    Button(L("다시 열기", "Reopen")) {
                         task.state = .open
                         task.touch()
                         try? context.save()
@@ -217,7 +219,8 @@ struct TaskListView: View {
                         .textSelection(.enabled)
                         .lineLimit(8)
                 } else {
-                    Text("Marked complete manually. No ARCA result log was attached.")
+                    Text(L("직접 완료로 표시하셨어요. ARCA 실행 기록은 없어요.",
+                           "Marked complete manually. No ARCA result log was attached."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -231,7 +234,7 @@ struct TaskListView: View {
                     try? context.save()
                     RelaySync.shared.scheduleSync()
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(L("삭제", "Delete"), systemImage: "trash")
                 }
             }
         }
@@ -241,10 +244,11 @@ struct TaskListView: View {
         VStack(spacing: 16) {
             Spacer()
             SpiritFace(mood: .idle, size: 90)
-            Text("No quests yet.")
+            Text(L("아직 퀘스트가 없어요.", "No quests yet."))
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text("Add one — anything I can do myself gets a Toss button.")
+            Text(L("하나 추가해 보세요 — 제가 직접 할 수 있는 일에는 Toss 버튼이 붙어요.",
+                   "Add one — anything I can do myself gets a Toss button."))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -314,10 +318,10 @@ private struct QuestRow: View {
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive, action: delete) {
-                Label("Delete", systemImage: "trash")
+                Label(L("삭제", "Delete"), systemImage: "trash")
             }
             Button(action: complete) {
-                Label("Complete", systemImage: "checkmark")
+                Label(L("완료", "Complete"), systemImage: "checkmark")
             }
             .tint(.green)
         }
@@ -329,7 +333,7 @@ private struct QuestRow: View {
             HStack(spacing: 6) {
                     ArcaFace(mood: .working, size: 20, halo: false)
                         .frame(width: 22, height: 22)
-                    Text("ARCA is on it…")
+                    Text(L("ARCA가 처리 중이에요…", "ARCA is on it…"))
                         .font(.caption)
                         .foregroundStyle(ArcaSkins.current.hi)
                 }
@@ -368,7 +372,7 @@ private struct QuestRow: View {
         } else if task.actionKind == .manual {
             Image(systemName: "person.fill")
                 .foregroundStyle(.secondary)
-                .help("This one needs you")
+                .help(L("이건 직접 하셔야 해요", "This one needs you"))
         }
     }
 

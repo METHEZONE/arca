@@ -13,7 +13,7 @@ public enum AIUsageLog {
     }
 
     public static func append(provider: String, model: String, source: String, inputTokens: Int, outputTokens: Int) {
-        let record: [String: Any] = [
+        write([
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "provider": provider,
             "model": model,
@@ -21,7 +21,32 @@ public enum AIUsageLog {
             "inputTokens": inputTokens,
             "outputTokens": outputTokens,
             "totalTokens": inputTokens + outputTokens,
-        ]
+        ])
+    }
+
+    /// Audio sent for transcription, which providers bill by duration rather
+    /// than by tokens.
+    ///
+    /// Without this, the transcription half of a recording's cost left no trace
+    /// anywhere — the log showed only the summarization call, so "what does an
+    /// hour of meeting cost?" had no answer on the machine that spent the money.
+    /// Token counts stay zero because none were used; readers that total tokens
+    /// are unaffected, and `audioSeconds` is there for anyone pricing minutes.
+    public static func appendAudio(provider: String, model: String, source: String, seconds: Double) {
+        guard seconds.isFinite, seconds > 0 else { return }
+        write([
+            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "provider": provider,
+            "model": model,
+            "source": source,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "audioSeconds": (seconds * 100).rounded() / 100,
+        ])
+    }
+
+    private static func write(_ record: [String: Any]) {
         guard JSONSerialization.isValidJSONObject(record),
               let data = try? JSONSerialization.data(withJSONObject: record),
               let line = String(data: data, encoding: .utf8)

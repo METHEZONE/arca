@@ -12,6 +12,7 @@ struct DashboardView: View {
     let agent: NotchAgent
     @State private var zone = AppServices.shared.zone
     @State private var relay = RelaySync.shared
+    @State private var vitals = VitalsEngine.shared
     @State private var usageSnapshot = AIUsageSnapshot.loading
 
     var body: some View {
@@ -48,6 +49,7 @@ struct DashboardView: View {
             Text("ARCA")
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
             Spacer()
+            focusPill
             recordButton
             ZoneToggle(zone: zone)
             Button {
@@ -59,7 +61,7 @@ struct DashboardView: View {
                     .background(.white.opacity(0.12), in: Circle())
             }
             .buttonStyle(.arcaPress)
-            .help("Open the ARCA app")
+            .help(L("ARCA 앱 열기", "Open the ARCA app"))
         }
         .padding(.vertical, 10)
     }
@@ -70,14 +72,15 @@ struct DashboardView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "mic.fill")
-                Text("Record")
+                Text(L("녹음", "Record"))
                     .font(.caption.weight(.semibold))
             }
             .padding(.horizontal, 12).padding(.vertical, 6)
             .background(ArcaTheme.recording.opacity(0.9), in: Capsule())
         }
         .buttonStyle(.arcaPress)
-        .help("Start recording — live transcript, speakers separated")
+        .help(L("녹음 시작 — 실시간 기록, 화자 분리",
+                "Start recording — live transcript, speakers separated"))
     }
 
     private var miniEyes: some View {
@@ -85,12 +88,43 @@ struct DashboardView: View {
             .frame(width: 24, height: 24)
     }
 
+    /// The body read, one glance from the notch. The number the Mac shows was
+    /// measured on the iPhone and arrived through the relay — macOS has no
+    /// HealthKit of its own, so an empty ring here means the phone hasn't synced
+    /// yet, not that the user is at zero.
+    private var focusPill: some View {
+        HStack(spacing: 5) {
+            FocusRing(score: vitals.ringScore, isLive: vitals.ringIsLive,
+                      lineWidth: 3, trackOpacity: 0.16)
+                .frame(width: 16, height: 16)
+            Text(vitals.ringScore.map(String.init) ?? "—")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(vitals.ringScore == nil ? .white.opacity(0.45) : .white)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(.white.opacity(0.10), in: Capsule())
+        .help(vitalsTooltip)
+    }
+
+    private var vitalsTooltip: String {
+        guard vitals.ringScore != nil else {
+            return L("아직 측정된 컨디션이 없어요 — 아이폰 ARCA에서 건강 권한을 허용하면 여기에 들어옵니다.",
+                     "No reading yet — allow Health access in ARCA on your iPhone and it shows up here.")
+        }
+        var line = vitals.ringLabel
+        if let next = vitals.nextFocusWindow() {
+            line += L(" · 다음 골든타임 \(next.label)", " · Next focus window \(next.label)")
+        }
+        return line
+    }
+
     /// iPhone↔Mac relay health — a broken token or dead network used to fail
     /// in total silence while the devices quietly drifted apart.
     @ViewBuilder private var syncHealth: some View {
         if let error = relay.lastError {
             Label {
-                Text("Sync failing — \(error)")
+                Text(L("동기화 실패 — \(error)", "Sync failing — \(error)"))
                     .lineLimit(1)
                     .truncationMode(.tail)
             } icon: {
@@ -102,7 +136,9 @@ struct DashboardView: View {
             .help(error)
         } else if let at = relay.lastSyncAt {
             Label {
-                Text("Synced \(at, style: .relative) ago")
+                // Split so the relative date keeps its live-updating Text style
+                // while both languages get their own word order.
+                Text("\(L("동기화", "Synced")) \(at, style: .relative)\(L(" 전", " ago"))")
             } icon: {
                 Image(systemName: "arrow.triangle.2.circlepath")
             }
@@ -120,7 +156,7 @@ private struct AIUsageMeter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Label("AI Usage", systemImage: "gauge.medium")
+                Label(L("AI 사용량", "AI Usage"), systemImage: "gauge.medium")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.82))
                 Spacer()
@@ -192,17 +228,18 @@ private struct AIUsageSnapshot {
 
     static let loading = AIUsageSnapshot(
         items: [
-            AIUsageItem(id: "loading-codex", name: "Codex", connectionLabel: "checking", weeklyLabel: "7d usage ...", remainingLabel: "quota pending", tint: .white.opacity(0.45)),
-            AIUsageItem(id: "loading-claude", name: "Claude", connectionLabel: "checking", weeklyLabel: "7d usage ...", remainingLabel: "balance pending", tint: .white.opacity(0.45)),
+            AIUsageItem(id: "loading-codex", name: "Codex", connectionLabel: L("확인 중", "checking"), weeklyLabel: L("7일 사용량 ...", "7d usage ..."), remainingLabel: L("한도 확인 중", "quota pending"), tint: .white.opacity(0.45)),
+            AIUsageItem(id: "loading-claude", name: "Claude", connectionLabel: L("확인 중", "checking"), weeklyLabel: L("7일 사용량 ...", "7d usage ..."), remainingLabel: L("잔액 확인 중", "balance pending"), tint: .white.opacity(0.45)),
         ],
         updatedAt: nil
     )
 
     var updatedLabel: String {
-        guard let updatedAt else { return "refreshing" }
+        guard let updatedAt else { return L("새로고침 중", "refreshing") }
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
-        return "updated \(formatter.string(from: updatedAt))"
+        return L("\(formatter.string(from: updatedAt)) 업데이트",
+                 "updated \(formatter.string(from: updatedAt))")
     }
 
     static func load() async -> AIUsageSnapshot {
@@ -213,25 +250,31 @@ private struct AIUsageSnapshot {
                 AIUsageItem(
                     id: "codex",
                     name: "Codex",
-                    connectionLabel: codex.isAuthenticated ? "auth" : "no auth",
-                    weeklyLabel: codex.weeklyTokens > 0 ? "\(Self.compact(codex.weeklyTokens)) tok / 7d" : "no local tokens / 7d",
-                    remainingLabel: "remaining hidden by auth",
+                    connectionLabel: codex.isAuthenticated ? L("인증됨", "auth") : L("인증 없음", "no auth"),
+                    weeklyLabel: codex.weeklyTokens > 0
+                        ? L("\(Self.compact(codex.weeklyTokens)) 토큰 / 7일", "\(Self.compact(codex.weeklyTokens)) tok / 7d")
+                        : L("로컬 기록 없음 / 7일", "no local tokens / 7d"),
+                    remainingLabel: L("남은 한도는 비공개", "remaining hidden by auth"),
                     tint: codex.isAuthenticated ? ArcaTheme.idle : .white.opacity(0.35)
                 ),
                 AIUsageItem(
                     id: "claude",
                     name: "Claude",
-                    connectionLabel: apiUsage.hasAnthropicKey ? "API key" : "no key",
-                    weeklyLabel: apiUsage.anthropicTokens > 0 ? "\(Self.compact(apiUsage.anthropicTokens)) tok / 7d" : "no ARCA log / 7d",
-                    remainingLabel: "billing balance needs API",
+                    connectionLabel: apiUsage.hasAnthropicKey ? L("API 키", "API key") : L("키 없음", "no key"),
+                    weeklyLabel: apiUsage.anthropicTokens > 0
+                        ? L("\(Self.compact(apiUsage.anthropicTokens)) 토큰 / 7일", "\(Self.compact(apiUsage.anthropicTokens)) tok / 7d")
+                        : L("ARCA 기록 없음 / 7일", "no ARCA log / 7d"),
+                    remainingLabel: L("잔액은 API 연결 필요", "billing balance needs API"),
                     tint: apiUsage.hasAnthropicKey ? .orange : .white.opacity(0.35)
                 ),
                 AIUsageItem(
                     id: "openai",
                     name: "OpenAI",
-                    connectionLabel: apiUsage.hasOpenAIKey ? "API key" : "no key",
-                    weeklyLabel: apiUsage.openAITokens > 0 ? "\(Self.compact(apiUsage.openAITokens)) tok / 7d" : "no ARCA log / 7d",
-                    remainingLabel: "billing balance needs API",
+                    connectionLabel: apiUsage.hasOpenAIKey ? L("API 키", "API key") : L("키 없음", "no key"),
+                    weeklyLabel: apiUsage.openAITokens > 0
+                        ? L("\(Self.compact(apiUsage.openAITokens)) 토큰 / 7일", "\(Self.compact(apiUsage.openAITokens)) tok / 7d")
+                        : L("ARCA 기록 없음 / 7일", "no ARCA log / 7d"),
+                    remainingLabel: L("잔액은 API 연결 필요", "billing balance needs API"),
                     tint: apiUsage.hasOpenAIKey ? .green : .white.opacity(0.35)
                 ),
             ],
@@ -374,13 +417,13 @@ private struct ChatLogColumn: View {
             BriefingCard(compact: true)
                 .padding(.top, 6)
             HStack {
-                Label("Chat", systemImage: "bubble.left.and.text.bubble.right")
+                Label(L("대화", "Chat"), systemImage: "bubble.left.and.text.bubble.right")
                     .font(.caption).foregroundStyle(.white.opacity(0.6))
                 Spacer()
                 Button {
                     agent.startBlankChat()
                 } label: {
-                    Label("New chat", systemImage: "plus.bubble")
+                    Label(L("새 대화", "New chat"), systemImage: "plus.bubble")
                         .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.arcaPress)
@@ -403,7 +446,8 @@ private struct ChatLogColumn: View {
             }
             .overlay {
                 if log.isEmpty {
-                    Text("No conversations yet.\nDrag a screenshot onto the notch,\nor start a new chat.")
+                    Text(L("아직 대화가 없어요.\n스크린샷을 노치에 끌어다 놓거나,\n새 대화를 시작해 보세요.",
+                           "No conversations yet.\nDrag a screenshot onto the notch,\nor start a new chat."))
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white.opacity(0.4))
@@ -445,7 +489,7 @@ private struct ZoneToggle: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: zone.isActive ? "moon.stars.fill" : "moon.stars")
-                Text(zone.isActive ? "End ZONE" : "ZONE")
+                Text(zone.isActive ? L("ZONE 종료", "End ZONE") : "ZONE")
                     .font(.caption.weight(.semibold))
             }
             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -453,7 +497,9 @@ private struct ZoneToggle: View {
                         in: Capsule())
         }
         .buttonStyle(.arcaPress)
-        .help(zone.isActive ? "End focus mode and get the report" : "Start focus mode — ARCA guards interruptions")
+        .help(zone.isActive
+              ? L("포커스 모드를 끝내고 리포트 받기", "End focus mode and get the report")
+              : L("포커스 모드 시작 — 방해는 ARCA가 막아요", "Start focus mode — ARCA guards interruptions"))
     }
 }
 #endif

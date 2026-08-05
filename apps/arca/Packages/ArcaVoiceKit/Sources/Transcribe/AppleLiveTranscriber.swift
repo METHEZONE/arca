@@ -8,7 +8,16 @@ import ArcaVoiceCore
 /// the UI animates that stabilization. Models are OS-managed; the first use of a
 /// locale may download an asset.
 public final class AppleLiveTranscriber: LiveTranscriber {
-    public init() {}
+    /// Words the recognizer should expect — attendee names, product terms.
+    ///
+    /// Set at construction rather than passed per call because `LiveTranscriber`
+    /// takes no hints: the caller knows who is in the room before the first
+    /// buffer arrives, which is exactly when this has to be decided.
+    private let vocabulary: [String]
+
+    public init(vocabulary: [String] = []) {
+        self.vocabulary = vocabulary
+    }
 
     public static func isLocaleSupported(_ locale: Locale) async -> Bool {
         let supported = await SpeechTranscriber.supportedLocales
@@ -30,6 +39,9 @@ public final class AppleLiveTranscriber: LiveTranscriber {
                     try await Self.ensureModel(for: transcriber, locale: locale)
 
                     let analyzer = SpeechAnalyzer(modules: [transcriber])
+                    // Names the user entered before the meeting, so they are
+                    // spelled right in the transcript scrolling past them.
+                    try await AppleFileTranscriber.applyVocabulary(self.vocabulary, to: analyzer)
                     guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
                         compatibleWith: [transcriber]) else {
                         throw TranscribeError.noCompatibleAudioFormat
@@ -80,7 +92,8 @@ public final class AppleLiveTranscriber: LiveTranscriber {
         }
     }
 
-    private static func timeRange(of text: AttributedString) -> (TimeInterval, TimeInterval) {
+    /// Shared with the file-based transcriber in this module.
+    static func timeRange(of text: AttributedString) -> (TimeInterval, TimeInterval) {
         var start = TimeInterval.greatestFiniteMagnitude
         var end: TimeInterval = 0
         for run in text.runs {
@@ -93,7 +106,8 @@ public final class AppleLiveTranscriber: LiveTranscriber {
         return (start, end)
     }
 
-    private static func ensureModel(for transcriber: SpeechTranscriber, locale: Locale) async throws {
+    /// Shared with the file-based transcriber in this module.
+    static func ensureModel(for transcriber: SpeechTranscriber, locale: Locale) async throws {
         if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
             try await request.downloadAndInstall()
         }

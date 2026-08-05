@@ -41,6 +41,8 @@ targets:
         NSSupportsLiveActivities: true
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSHealthShareUsageDescription: ARCA reads your sleep, heart rate, HRV, and activity so it can tell you when you focus best and when to rest. It stays on your devices.
+        NSHealthUpdateUsageDescription: ARCA saves the meals you tell it about, and the minutes you spend in a focus measurement, to Apple Health.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice
             CFBundleURLSchemes: [arca]
@@ -107,6 +109,40 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS[sdk=macosx*]: ArcaVoice/Support/ArcaVoice-macOS.entitlements
 
+  # ARCA↔ARCA 통화 품질 측정용 독립 앱. 본편과 완전 분리 — 통화 품질은 실제
+  # 전파 위에서 두 대로 며칠 재봐야 알 수 있고, 그게 본편 릴리스 상태에 묶여선
+  # 안 된다. 미디어 스택 전체는 ArcaVoiceKit의 Calling 모듈에 있으므로, 숫자가
+  # 납득되면 화면만 본편으로 옮기면 된다. docs/calling.md 참고.
+  ARCA-CallLab:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - path: CallLab
+    dependencies:
+      - package: ArcaVoiceKit
+        product: ArcaVoiceKit
+    info:
+      path: CallLab/Support/Info.plist
+      properties:
+        CFBundleDisplayName: CallLab
+        NSMicrophoneUsageDescription: CallLab places test calls, so it needs the microphone.
+        # 통화 중 화면을 내려도 오디오가 끊기지 않아야 한다.
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        LSMinimumSystemVersion: "26.0"
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_NAME: CallLab
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.calllab
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        ENABLE_HARDENED_RUNTIME: true
+        SWIFT_STRICT_CONCURRENCY: complete
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS[sdk=macosx*]: CallLab/Support/CallLab-macOS.entitlements
+
   ArcaVoiceWidgets:
     type: app-extension
     platform: iOS
@@ -128,7 +164,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: Q85V836Q45
         GENERATE_INFOPLIST_FILE: false
-        CODE_SIGN_ENTITLEMENTS: ArcaVoice/Support/ArcaVoice-iOS.entitlements
+        # Its own file, not the app's — the widget shares the App Group but must
+        # not inherit the app's HealthKit capability it has no use for.
+        CODE_SIGN_ENTITLEMENTS: ArcaVoiceWidgets/ArcaVoiceWidgets.entitlements
 
   ArcaVoiceShare:
     type: app-extension
@@ -172,6 +210,11 @@ targets:
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.thezone.arca.voice
         NSMicrophoneUsageDescription: ARCA records voice notes from your wrist.
+        NSHealthShareUsageDescription: ARCA reads your heart rate while you measure a focus session, so it can tell you how deep you actually got.
+        NSHealthUpdateUsageDescription: ARCA saves each focus measurement to Apple Health as mindful minutes.
+        # Lets the deep-measure session keep collecting heart rate with the wrist
+        # down. Only active while a measurement the user started is running.
+        WKBackgroundModes: [workout-processing]
     settings:
       base:
         SWIFT_VERSION: "6.0"
@@ -182,3 +225,4 @@ targets:
         SWIFT_STRICT_CONCURRENCY: complete
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: ArcaVoiceWatch/ArcaVoiceWatch.entitlements

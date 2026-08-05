@@ -3,30 +3,10 @@ import SwiftUI
 import SwiftData
 import ArcaVoiceKit
 
-enum CompanionHomeMode: String, CaseIterable, Identifiable {
-    case home, memory, day, wiki, library
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .home: return "홈"
-        case .memory: return "메모리"
-        case .day: return "하루"
-        case .wiki: return "위키"
-        case .library: return "라이브러리"
-        }
-    }
-
-    var symbol: String {
-        switch self {
-        case .home: return "sparkles"
-        case .memory: return "point.3.connected.trianglepath.dotted"
-        case .day: return "sun.horizon"
-        case .wiki: return "book.closed"
-        case .library: return "waveform"
-        }
-    }
-}
+/// Section titles and symbols now come from `ArcaSection`, shared with the
+/// iPhone, so the two apps can't drift into calling the same thing by different
+/// names again.
+typealias CompanionHomeMode = ArcaSection
 
 enum CompanionHomeViewModel {
     static func ownerDisplayName(_ raw: String) -> String {
@@ -39,10 +19,10 @@ enum CompanionHomeViewModel {
         let hour = Calendar.current.component(.hour, from: date)
         let timeWord: String
         switch hour {
-        case 5..<11: timeWord = "좋은 아침이에요"
-        case 11..<17: timeWord = "좋은 오후예요"
-        case 17..<22: timeWord = "좋은 저녁이에요"
-        default: timeWord = "고요한 밤이에요"
+        case 5..<11: timeWord = L("좋은 아침이에요", "Good morning")
+        case 11..<17: timeWord = L("좋은 오후예요", "Good afternoon")
+        case 17..<22: timeWord = L("좋은 저녁이에요", "Good evening")
+        default: timeWord = L("고요한 밤이에요", "Quiet night")
         }
         return "\(timeWord), \(ownerDisplayName(ownerName))"
     }
@@ -55,9 +35,12 @@ enum CompanionHomeViewModel {
 
     static func fallbackRemark(dayCount: Int, memoryCount: Int) -> String {
         let variants = [
-            "우리가 함께한 지 D+\(dayCount)일째예요. 기억 \(memoryCount)개를 모았어요.",
-            "D+\(dayCount), 당신의 조각 \(memoryCount)개를 품고 있어요.",
-            "처음 만난 날부터 \(memoryCount)개의 기억이 쌓였어요.",
+            L("우리가 함께한 지 D+\(dayCount)일째예요. 기억 \(memoryCount)개를 모았어요.",
+              "Day D+\(dayCount) together. I've gathered \(memoryCount) memories."),
+            L("D+\(dayCount), 당신의 조각 \(memoryCount)개를 품고 있어요.",
+              "D+\(dayCount) — I'm holding \(memoryCount) pieces of you."),
+            L("처음 만난 날부터 \(memoryCount)개의 기억이 쌓였어요.",
+              "\(memoryCount) memories have piled up since the day we met."),
         ]
         return variants[abs(dayCount + memoryCount) % variants.count]
     }
@@ -65,6 +48,7 @@ enum CompanionHomeViewModel {
 
 struct CompanionHomeView: View {
     @State private var services = AppServices.shared
+    @State private var vitals = VitalsEngine.shared
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \RecordingSession.createdAt, order: .reverse) private var sessions: [RecordingSession]
     @Query(sort: \MemoryFact.createdAt, order: .reverse) private var facts: [MemoryFact]
@@ -142,19 +126,19 @@ struct CompanionHomeView: View {
             SkinsView()
                 .frame(minWidth: 520, minHeight: 520)
         }
-        .alert("새 프로젝트", isPresented: Binding(
+        .alert(L("새 프로젝트", "New project"), isPresented: Binding(
             get: { projectDialogConversationId != nil },
             set: { if !$0 { projectDialogConversationId = nil } }
         )) {
-            TextField("프로젝트 이름", text: $newProjectName)
-            Button("지정") {
+            TextField(L("프로젝트 이름", "Project name"), text: $newProjectName)
+            Button(L("지정", "Assign")) {
                 if let id = projectDialogConversationId {
                     assignProject(newProjectName, to: id)
                 }
                 projectDialogConversationId = nil
                 newProjectName = ""
             }
-            Button("취소", role: .cancel) {
+            Button(L("취소", "Cancel"), role: .cancel) {
                 projectDialogConversationId = nil
                 newProjectName = ""
             }
@@ -183,7 +167,7 @@ struct CompanionHomeView: View {
             Button {
                 withAnimation(.spring(duration: 0.25)) { showRightRail.toggle() }
             } label: {
-                Label("Right rail", systemImage: "sidebar.right")
+                Label(L("오른쪽 레일", "Right rail"), systemImage: "sidebar.right")
             }
         }
         // 녹음은 핵심 기능 — 어떤 모드에서도 ⌘N 한 번에 시작된다.
@@ -191,7 +175,7 @@ struct CompanionHomeView: View {
             Button {
                 startNewRecording()
             } label: {
-                Label("New Recording", systemImage: "mic.badge.plus")
+                Label(L("새 녹음", "New Recording"), systemImage: "mic.badge.plus")
             }
             .keyboardShortcut("n", modifiers: .command)
         }
@@ -222,21 +206,24 @@ struct CompanionHomeView: View {
             .padding(.horizontal, 16)
 
             VStack(spacing: 4) {
-                ForEach(CompanionHomeMode.allCases) { item in
+                ForEach(ArcaSection.macSidebar) { item in
                     sidebarButton(mode: item)
                 }
             }
             .padding(.horizontal, 10)
 
+            DevicePresenceBar()
+                .padding(.horizontal, 16)
+
             HStack {
-                Text("채팅")
+                Text(L("채팅", "Chats"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.white.opacity(0.45))
                 Spacer()
                 Button {
                     startEmptyChat()
                 } label: {
-                    Label("새 채팅", systemImage: "plus")
+                    Label(L("새 채팅", "New chat"), systemImage: "plus")
                         .labelStyle(.titleAndIcon)
                         .font(.caption.weight(.semibold))
                 }
@@ -252,7 +239,7 @@ struct CompanionHomeView: View {
             Button {
                 showSettings = true
             } label: {
-                Label("Settings", systemImage: "gearshape")
+                Label(L("설정", "Settings"), systemImage: "gearshape")
                     .font(.system(.callout, design: .rounded, weight: .semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 12)
@@ -315,7 +302,8 @@ struct CompanionHomeView: View {
                 Text(conversation.title)
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .lineLimit(1)
-                Text("\(conversation.count)턴 · \(conversation.lastAt.formatted(date: .omitted, time: .shortened))")
+                Text(L("\(conversation.count)턴 · \(conversation.lastAt.formatted(date: .omitted, time: .shortened))",
+                       "\(conversation.count) turns · \(conversation.lastAt.formatted(date: .omitted, time: .shortened))"))
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.38))
             }
@@ -326,17 +314,17 @@ struct CompanionHomeView: View {
         }
         .buttonStyle(.arcaPress)
         .contextMenu {
-            Menu("프로젝트 지정") {
+            Menu(L("프로젝트 지정", "Assign project")) {
                 ForEach(projectNames, id: \.self) { project in
                     Button(project) { assignProject(project, to: conversation.id) }
                 }
                 Divider()
-                Button("새 프로젝트…") {
+                Button(L("새 프로젝트…", "New project…")) {
                     newProjectName = ""
                     projectDialogConversationId = conversation.id
                 }
             }
-            Button("삭제", role: .destructive) {
+            Button(L("삭제", "Delete"), role: .destructive) {
                 deleteConversation(conversation.id)
             }
         }
@@ -352,6 +340,12 @@ struct CompanionHomeView: View {
             } else {
                 homeHero
             }
+        case .condition:
+            VitalsView()
+        case .tasks:
+            // Todos live in the permanent right-hand rail on the Mac; this only
+            // fires if the sidebar list ever grows to include the section.
+            CompanionTodoRail()
         case .memory:
             memoryPane
         case .day:
@@ -384,12 +378,14 @@ struct CompanionHomeView: View {
                     .frame(width: 210, height: 210)
             }
             .buttonStyle(.arcaPress)
-            .help("ARCA를 누르면 바로 녹음이 시작돼요")
+            .help(L("ARCA를 누르면 바로 녹음이 시작돼요", "Tap ARCA and recording starts right away"))
 
             VStack(spacing: 8) {
                 Text(CompanionHomeViewModel.greeting(ownerName: services.ownerName))
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                Text(remark.text.isEmpty ? "오늘도 당신의 기억을 지키고 있어요." : remark.text)
+                Text(remark.text.isEmpty
+                     ? L("오늘도 당신의 기억을 지키고 있어요.", "I'm keeping your memories safe today too.")
+                     : remark.text)
                     .font(.system(.headline, design: .rounded, weight: .medium))
                     .foregroundStyle(.white.opacity(0.72))
             }
@@ -400,9 +396,17 @@ struct CompanionHomeView: View {
 
             recordCTA
             statsRow
+
+            // Same two cards the iPhone home shows, from the same data.
+            HStack(alignment: .top, spacing: ArcaSpacing.md) {
+                MorningMomentCard { mode = .condition }
+                RecoveredTimeCard()
+            }
+            .frame(maxWidth: 760)
+
             recentHighlights
             Spacer(minLength: 18)
-            CompanionDraftComposer(placeholder: "ARCA에게 말 걸기…") { text in
+            CompanionDraftComposer(placeholder: L("ARCA에게 말 걸기…", "Talk to ARCA…")) { text in
                 startNewConversation(text: text)
             }
             .padding(.horizontal, 34)
@@ -422,7 +426,9 @@ struct CompanionHomeView: View {
                 mode = .library
             }
         } label: {
-            Label(coordinator.phase == .idle ? "녹음 시작" : "녹음 중 — 열기",
+            Label(coordinator.phase == .idle
+                    ? L("녹음 시작", "Start recording")
+                    : L("녹음 중 — 열기", "Recording — open it"),
                   systemImage: coordinator.phase == .idle ? "mic.fill" : "waveform")
                 .font(.system(.headline, design: .rounded, weight: .bold))
                 .padding(.horizontal, 26)
@@ -440,13 +446,24 @@ struct CompanionHomeView: View {
         let earliest = CompanionHomeViewModel.earliestDate(sessions: sessions, facts: facts, chatEntries: chatLog)
         let dayCount = CompanionHomeLogic.dayCount(since: earliest)
         return HStack(spacing: 10) {
-            statChip("함께한 지 D+\(dayCount)일", systemImage: "calendar.badge.clock")
-            statChip("기억 \(facts.count)개", systemImage: "brain.head.profile")
-            statChip("세션 \(sessions.count)개", systemImage: "waveform")
+            statChip(L("함께한 지 D+\(dayCount)일", "D+\(dayCount) together"),
+                     systemImage: "calendar.badge.clock")
+            statChip(L("기억 \(facts.count)개", "\(facts.count) memories"),
+                     systemImage: "brain.head.profile")
+            statChip(L("세션 \(sessions.count)개", "\(sessions.count) sessions"),
+                     systemImage: "waveform")
+            Button {
+                withAnimation(.spring(duration: 0.18)) { mode = .condition }
+            } label: {
+                statChip(vitals.ringScore.map { L("몰입 \($0)", "Focus \($0)") }
+                         ?? L("컨디션", "Condition"),
+                         systemImage: "bolt.heart")
+            }
+            .buttonStyle(.arcaPress)
             Button {
                 showSkins = true
             } label: {
-                statChip("스킨", systemImage: "sparkles")
+                statChip(L("스킨", "Skins"), systemImage: "sparkles")
             }
             .buttonStyle(.arcaPress)
         }
@@ -488,7 +505,7 @@ struct CompanionHomeView: View {
 
     private var memoryPane: some View {
         VStack(spacing: 12) {
-            TextField("기억 검색…", text: $memorySearch)
+            TextField(L("기억 검색…", "Search memories…"), text: $memorySearch)
                 .textFieldStyle(.plain)
                 .font(.system(.callout, design: .rounded))
                 .padding(.horizontal, 14)
@@ -502,10 +519,11 @@ struct CompanionHomeView: View {
 
     private var projectGroups: [(name: String, conversations: [ConversationSummary])] {
         let summaries = conversations
-        let grouped = Dictionary(grouping: summaries) { $0.projectName ?? "일반" }
+        let ungrouped = L("일반", "General")
+        let grouped = Dictionary(grouping: summaries) { $0.projectName ?? ungrouped }
         return grouped.keys.sorted { lhs, rhs in
-            if lhs == "일반" { return false }
-            if rhs == "일반" { return true }
+            if lhs == ungrouped { return false }
+            if rhs == ungrouped { return true }
             return lhs.localizedCompare(rhs) == .orderedAscending
         }.map { key in
             (key, grouped[key]?.sorted { $0.lastAt > $1.lastAt } ?? [])
@@ -601,7 +619,7 @@ private struct CompanionChatThread: View {
         VStack(spacing: 0) {
             HStack {
                 Button(action: onBack) {
-                    Label("홈으로", systemImage: "chevron.left")
+                    Label(L("홈으로", "Back home"), systemImage: "chevron.left")
                         .font(.system(.callout, design: .rounded, weight: .semibold))
                 }
                 .buttonStyle(.arcaPress)
@@ -677,7 +695,7 @@ private struct CompanionChatInput: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TextField("메시지 입력…", text: $text, axis: .vertical)
+            TextField(L("메시지 입력…", "Type a message…"), text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(.body, design: .rounded))
                 .lineLimit(1...4)
@@ -718,7 +736,7 @@ private struct CompanionDraftComposer: View {
                 .background(.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 18))
                 .onSubmit(send)
             Button(action: send) {
-                Label("Send", systemImage: "arrow.up.circle.fill")
+                Label(L("보내기", "Send"), systemImage: "arrow.up.circle.fill")
                     .labelStyle(.iconOnly)
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .white.opacity(0.24) : ArcaSkins.current.hi)
@@ -762,9 +780,10 @@ private struct CompanionLibraryView: View {
                     SessionDetailView(session: selectedSession)
                 } else {
                     ContentUnavailableView(
-                        "Select a recording or start a new one",
+                        L("녹음을 고르거나 새로 시작하세요", "Select a recording or start a new one"),
                         systemImage: "waveform.badge.mic",
-                        description: Text("Press ⌘N to start recording right away.")
+                        description: Text(L("⌘N을 누르면 바로 녹음이 시작돼요.",
+                                            "Press ⌘N to start recording right away."))
                     )
                 }
             }

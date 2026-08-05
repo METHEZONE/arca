@@ -26,8 +26,8 @@ struct RecordView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .alert("Recording error", isPresented: .constant(coordinator.errorMessage != nil)) {
-            Button("OK") { coordinator.errorMessage = nil }
+        .alert(L("녹음 오류", "Recording error"), isPresented: .constant(coordinator.errorMessage != nil)) {
+            Button(L("확인", "OK")) { coordinator.errorMessage = nil }
         } message: {
             Text(coordinator.errorMessage ?? "")
         }
@@ -37,7 +37,7 @@ struct RecordView: View {
         VStack(spacing: 28) {
             Spacer()
             recordButton
-            Text("Tap to start recording")
+            Text(L("눌러서 녹음을 시작하세요", "Tap to start recording"))
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
@@ -46,7 +46,9 @@ struct RecordView: View {
                 get: { coordinator.includeSystemAudio },
                 set: { coordinator.includeSystemAudio = $0 }
             )) {
-                Label("Also capture the other person's audio (video calls)", systemImage: "speaker.wave.2.fill")
+                Label(L("상대방 오디오도 함께 녹음 (영상 통화)",
+                        "Also capture the other person's audio (video calls)"),
+                      systemImage: "speaker.wave.2.fill")
             }
             .toggleStyle(.checkbox)
             .padding(.top, 8)
@@ -90,7 +92,12 @@ struct RecordView: View {
                         pulseOpacity = 0.3
                     }
                 }
-                .onDisappear { pulseOpacity = 1.0 }
+                // Re-animated with a finite curve, not assigned: a plain
+                // assignment inherits the repeatForever and the loop survives
+                // the view that started it.
+                .onDisappear {
+                    withAnimation(.easeOut(duration: 0.2)) { pulseOpacity = 1.0 }
+                }
 
             if let startedAt = coordinator.startedAt {
                 Text(startedAt, style: .timer)
@@ -113,7 +120,9 @@ struct RecordView: View {
                     }
                 }
             } label: {
-                Label(coordinator.phase == .stopping ? "Finishing up…" : "Stop recording",
+                Label(coordinator.phase == .stopping
+                        ? L("마무리하고 있어요…", "Finishing up…")
+                        : L("녹음 종료", "Stop recording"),
                       systemImage: "stop.circle.fill")
                     .font(.headline)
             }
@@ -150,7 +159,7 @@ struct RecordView: View {
     private var notesEditor: some View {
         @Bindable var coordinator = coordinator
         return VStack(alignment: .leading, spacing: 8) {
-            Label("Rough notes", systemImage: "square.and.pencil")
+            Label(L("메모", "Rough notes"), systemImage: "square.and.pencil")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding([.top, .horizontal])

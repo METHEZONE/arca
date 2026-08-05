@@ -61,7 +61,8 @@ struct ContextView: View {
             if item.kind == .image, let url = SharedInbox.imageURL(for: item) {
                 thumbnail = UIImage(contentsOfFile: url.path)
             }
-            RecordingActivityController.shared.note("Reading what you shared…", for: 45)
+            RecordingActivityController.shared.note(
+                L("공유하신 내용 읽고 있어요…", "Reading what you shared…"), for: 45)
             await engine.analyze(item: item)
         }
         .onChange(of: engine.isAnalyzing) { wasAnalyzing, nowAnalyzing in
@@ -91,13 +92,16 @@ struct ContextView: View {
         log(role: "user", text: "📎 \(kindCaption)" + (item.text.map { ": \($0.prefix(200))" } ?? ""),
             imageData: jpeg)
         if let error = engine.error {
-            log(role: "assistant", text: "Couldn't read this: \(error)")
-            RecordingActivityController.shared.note("Couldn't read that share", for: 8)
+            log(role: "assistant", text: L("이건 읽지 못했어요: \(error)", "Couldn't read this: \(error)"))
+            RecordingActivityController.shared.note(
+                L("공유하신 걸 읽지 못했어요", "Couldn't read that share"), for: 8)
         } else {
             log(role: "assistant", text: engine.summary)
             let count = engine.suggestions.count
             RecordingActivityController.shared.note(
-                count > 0 ? "\(count) action\(count == 1 ? "" : "s") ready" : "Read it — open ARCA",
+                count > 0
+                    ? L("액션 \(count)개 준비됐어요", "\(count) action\(count == 1 ? "" : "s") ready")
+                    : L("다 읽었어요 — ARCA를 열어보세요", "Read it — open ARCA"),
                 for: 20)
         }
     }
@@ -108,7 +112,7 @@ struct ContextView: View {
         HStack(spacing: 14) {
             ArcaFace(mood: engine.isAnalyzing ? .thinking : .happy, size: 64, halo: false)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Here's what I see")
+                Text(L("제가 본 건 이거예요", "Here's what I see"))
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(.white)
                 Text(kindCaption)
@@ -121,9 +125,9 @@ struct ContextView: View {
 
     private var kindCaption: String {
         switch item.kind {
-        case .image: return "Shared screenshot"
-        case .url: return "Shared link"
-        case .text: return "Shared text"
+        case .image: return L("공유한 스크린샷", "Shared screenshot")
+        case .url: return L("공유한 링크", "Shared link")
+        case .text: return L("공유한 텍스트", "Shared text")
         }
     }
 
@@ -136,7 +140,7 @@ struct ContextView: View {
         } else if engine.isAnalyzing && engine.summary.isEmpty {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small).tint(.white)
-                Text("Reading the screen…")
+                Text(L("화면을 읽고 있어요…", "Reading the screen…"))
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -166,7 +170,8 @@ struct ContextView: View {
     private var instructionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                TextField("Anything else I should know or do?", text: $instructionText, axis: .vertical)
+                TextField(L("더 알아야 할 것, 해드릴 일이 있나요?", "Anything else I should know or do?"),
+                          text: $instructionText, axis: .vertical)
                     .lineLimit(1...3)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
@@ -182,7 +187,7 @@ struct ContextView: View {
             if isAnsweringDirect {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small).tint(.white)
-                    Text("Thinking…").font(.caption).foregroundStyle(.white.opacity(0.6))
+                    Text(L("생각하고 있어요…", "Thinking…")).font(.caption).foregroundStyle(.white.opacity(0.6))
                 }
             } else if let directReply {
                 Text(directReply)
@@ -202,13 +207,13 @@ struct ContextView: View {
             Button {
                 onOpenChat(item)
             } label: {
-                Label("Open full chat", systemImage: "bubble.left.and.text.bubble.right")
+                Label(L("전체 대화 열기", "Open full chat"), systemImage: "bubble.left.and.text.bubble.right")
                     .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.bordered)
             .tint(.white)
             Spacer()
-            Button("Done", action: onDone)
+            Button(L("완료", "Done"), action: onDone)
                 .buttonStyle(.borderedProminent)
                 .tint(Self.ember)
         }

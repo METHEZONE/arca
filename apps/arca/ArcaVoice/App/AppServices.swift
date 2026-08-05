@@ -27,7 +27,10 @@ final class AppServices {
     @ObservationIgnored private var screenshotWatcher: ScreenshotWatcher?
     @ObservationIgnored private let hotkeyMonitor = HotkeyMonitor()
     @ObservationIgnored private var zoneReportWindow: NSWindow?
+    @ObservationIgnored private var participantPrepWindow: NSWindow?
     #endif
+    /// Shared by the pre-recording sheet on both platforms.
+    let participantPrep = ParticipantPrep()
 
     var mainContext: ModelContext? { container?.mainContext }
 
@@ -35,9 +38,33 @@ final class AppServices {
         UserDefaults.standard.string(forKey: "ownerName") ?? "Me"
     }
 
+    /// The name ARCA addresses the user by. Lives here rather than in a
+    /// Mac-only view model so both apps greet them identically.
+    var ownerDisplayName: String {
+        let trimmed = ownerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "Me" else { return "민성님" }
+        return trimmed.hasSuffix("님") ? trimmed : "\(trimmed)님"
+    }
+
     func configure(container: ModelContainer) {
         self.container = container
         RelaySync.shared.configure(container: container)
+        // Body + focus tracking. Starts read-only and battery-free: on iOS it
+        // queries what the Watch already wrote to Apple Health, on macOS it only
+        // profiles the app-switch timeline. It never prompts for Health access
+        // on its own — that's asked for in Settings, or during onboarding.
+        VitalsEngine.shared.configure()
+        // Opt-in and off by default, so this only ever re-arms an alarm the user
+        // asked for. It also self-disables if the notification prompt is denied.
+        Task { await MorningNotifier.reschedule() }
+        // Both platforms: a recording whose cloud pass didn't land keeps its
+        // on-device transcript and gets retried when the network returns. This
+        // used to be a Mac-only, launch-only sweep, so a phone recording that
+        // failed to upload stayed un-summarized until the app was force-quit.
+        PassRetryScheduler.shared.start(
+            container: container,
+            ownerName: { [weak self] in self?.ownerName ?? "Me" },
+            languageHints: { TranscriptionPrefs.languageHints })
         #if os(iOS)
         // Dynamic Island buttons post this; LiveActivityIntents run in-process.
         NotificationCenter.default.addObserver(
@@ -68,9 +95,6 @@ final class AppServices {
             }
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
-            FinalPassRunner.retryFailed(context: container.mainContext,
-                                        ownerName: self.ownerName,
-                                        languageHints: TranscriptionPrefs.languageHints)
 
             self.meetingDetector.onDetect = { [weak self] meeting in
                 self?.notch.offerMeeting(label: meeting.label)
@@ -108,6 +132,13 @@ final class AppServices {
             if ProcessInfo.processInfo.environment["ARCA_NETTEST"] != nil {
                 Task { await Self.networkSelfTest() }
             }
+            // Headless repair: ARCA_RECOVER=free|paid rebuilds every transcript
+            // whose audio survived. Same code path as the library button, just
+            // reachable without a click so a recovery can be run and watched
+            // from a terminal.
+            if let mode = ProcessInfo.processInfo.environment["ARCA_RECOVER"] {
+                self.runHeadlessRecovery(mode: mode, container: container)
+            }
             if ProcessInfo.processInfo.environment["ARCA_SELFTEST_DASHBOARD"] != nil {
                 self.notch.hoverOpen()
             }
@@ -119,6 +150,88 @@ final class AppServices {
     }
 
     #if os(macOS)
+    // MARK: - Pre-recording participants
+
+    /// Asks who's in the meeting, then starts recording.
+    ///
+    /// Its own window rather than something in the notch panel: that panel is a
+    /// `.nonactivatingPanel` so it never steals focus from the meeting the user
+    /// is joining — which also means a text field inside it would never get key
+    /// focus, and this screen is mostly a text field.
+    func presentParticipantPrep(meetingApp: String?, label: String?) {
+        participantPrep.reset()
+        let start: @MainActor () -> Void = { [weak self] in
+            guard let self else { return }
+            let planned = self.participantPrep.participants
+            self.participantPrepWindow?.close()
+            self.startRecording(meetingApp: meetingApp, participants: planned)
+        }
+        let cancel: @MainActor () -> Void = { [weak self] in
+            self?.participantPrepWindow?.close()
+        }
+
+        let view = ParticipantPrepView(
+            prep: participantPrep, meetingLabel: label,
+            ownerName: ownerName, onStart: start, onCancel: cancel)
+        let window = NSWindow(contentViewController: NSHostingController(rootView: view))
+        window.title = L("참석자", "Participants")
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.participantPrepWindow = nil }
+        }
+        participantPrepWindow = window
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // MARK: - Headless recovery
+
+    /// Rebuilds missing transcripts and reports progress to the trace log.
+    ///
+    /// Exists so a repair can be driven from a terminal and watched to
+    /// completion — a rebuild of hours of audio is not something to start from a
+    /// button and hope about, and the local engine gives no network activity to
+    /// watch for.
+    private func runHeadlessRecovery(mode: String, container: ModelContainer) {
+        let engine: TranscriptionEngine = mode.lowercased() == "paid" ? .cloudDiarized : .localFree
+        let context = container.mainContext
+        let targets = FinalPassRunner.recoverable(context: context)
+        let minutes = Int(FinalPassRunner.billableAudioSeconds(targets) / 60)
+        DebugTrace.log("recover: engine=\(engine.rawValue) sessions=\(targets.count) audio=\(minutes)min")
+        for record in targets {
+            DebugTrace.log("recover: queued \(record.directoryName.prefix(8)) \(Int(record.duration))s \(record.title)")
+        }
+        let started = FinalPassRunner.recoverAll(
+            context: context, ownerName: ownerName,
+            languageHints: TranscriptionPrefs.languageHints, engine: engine)
+        DebugTrace.log("recover: started \(started)")
+
+        // Poll rather than await: each rebuild is its own detached task, and the
+        // point of this hook is a log line per completion.
+        Task { @MainActor in
+            var remaining = started
+            while remaining > 0 {
+                try? await Task.sleep(for: .seconds(10))
+                let left = FinalPassRunner.recoverable(context: context)
+                if left.count != remaining {
+                    let done = targets.filter { !left.contains($0) }
+                    for record in done {
+                        DebugTrace.log("recover: DONE \(record.directoryName.prefix(8)) segments=\(record.segments.count) title=\(record.title)")
+                    }
+                    remaining = left.count
+                    DebugTrace.log("recover: remaining \(remaining)")
+                }
+            }
+            DebugTrace.log("recover: ALL DONE")
+        }
+    }
+
     // MARK: - ZONE report window
 
     /// Presents/dismisses the end-of-ZONE report window off `zone.showReport`.
@@ -207,13 +320,31 @@ final class AppServices {
     }
     #endif
 
-    func startRecording(meetingApp: String? = nil) {
+    func startRecording(meetingApp: String? = nil,
+                        participants: [MeetingParticipant] = []) {
         Task { @MainActor in
+            // Set before `start` — the live transcriber is built inside it and
+            // takes the names as expected vocabulary.
+            coordinator.plannedParticipants = participants
             await coordinator.start(
                 locale: TranscriptionPrefs.liveLocale,
                 languageHints: TranscriptionPrefs.languageHints,
                 meetingApp: meetingApp)
+            reportRecordingState()
         }
+    }
+
+    /// Mirrors recording state into the device heartbeat so the other device can
+    /// show it. Reads the coordinator rather than assuming, because a start can
+    /// fail and a heartbeat claiming "recording" would then be a lie.
+    private func reportRecordingState() {
+        #if os(macOS)
+        let zoneStartedAt = zone.isActive ? zone.startedAt : nil
+        #else
+        let zoneStartedAt: Date? = nil
+        #endif
+        DevicePresence.reportActivity(zoneStartedAt: zoneStartedAt,
+                                      isRecording: coordinator.phase != .idle)
     }
 
     func stopRecording() {
@@ -233,6 +364,7 @@ final class AppServices {
                 sessionToOpen = saved
             }
             watchdog.cancel()
+            reportRecordingState()
         }
     }
 }

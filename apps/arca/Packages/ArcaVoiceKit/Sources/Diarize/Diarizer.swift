@@ -32,6 +32,23 @@ public enum TranscriptMerger {
             }
         }
         turns.sort { $0.start < $1.start }
+
+        // Give the remote keys a readable name. Without this the raw key is
+        // what everything downstream falls back to — and on the on-device
+        // engine, which emits no diarization at all, that key is the literal
+        // string "systemAudio:S1". It was being shown in the transcript and
+        // handed to the summarizer as a person's name.
+        let remoteKeys = turns
+            .filter { $0.channel != .microphone }
+            .map(\.speakerKey)
+        var seen: [String] = []
+        for key in remoteKeys where !seen.contains(key) { seen.append(key) }
+        for (index, key) in seen.enumerated() where names[key] == nil {
+            // One remote voice needs no number; several are worth telling apart
+            // even before anyone puts real names to them.
+            names[key] = seen.count == 1 ? "Other" : "Speaker \(index + 1)"
+        }
+
         return AttributedTranscript(turns: turns, speakerNames: names)
     }
 }

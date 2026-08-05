@@ -54,6 +54,17 @@ struct ConnectorsView: View {
                         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                 }
 
+                // First, not buried: this is the connector people go looking for
+                // by name, and it's the only one that describes their own body.
+                Section {
+                    AppleHealthConnectorRow()
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                } header: {
+                    Text(L("몸", "Body"))
+                }
+
                 Section {
                     batchConnectHeader
                         .listRowBackground(Color.clear)
@@ -78,7 +89,9 @@ struct ConnectorsView: View {
                         .swipeActions(edge: .trailing) {
                             if hub.accounts[connector.slug] != nil {
                                 Button(action: { pullOne(connector) }) {
-                                    Label(connector.slug == "SLACK" ? "Slack 대화 가져오기" : "가져오기",
+                                    Label(connector.slug == "SLACK"
+                                            ? L("Slack 대화 가져오기", "Import Slack threads")
+                                            : L("가져오기", "Import"),
                                           systemImage: "arrow.down.circle")
                                 }
                                 .tint(ConnectorPalette.ember)
@@ -86,7 +99,7 @@ struct ConnectorsView: View {
                         }
                     }
                 } header: {
-                    Text("Composio 커넥터")
+                    Text(L("Composio 커넥터", "Composio connectors"))
                 }
 
                 Section {
@@ -114,11 +127,12 @@ struct ConnectorsView: View {
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                     #endif
                 } header: {
-                    Text("기타 커넥터")
+                    Text(L("기타 커넥터", "Other connectors"))
                 }
 
                 Section {
-                    Text("Composio 계정으로 OAuth 커넥터를 관리합니다. 연결된 항목은 ARCA 메모리로 컨텍스트를 가져올 수 있습니다.")
+                    Text(L("Composio 계정으로 OAuth 커넥터를 관리합니다. 연결된 항목은 ARCA 메모리로 컨텍스트를 가져올 수 있습니다.",
+                           "Manage OAuth connectors through your Composio account. Anything connected can pull context into ARCA's memory."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .listRowBackground(Color.clear)
@@ -128,7 +142,7 @@ struct ConnectorsView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea())
-            .navigationTitle("커넥터")
+            .navigationTitle(L("커넥터", "Connectors"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -152,7 +166,8 @@ struct ConnectorsView: View {
 
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("ARCA가 이미 알고 있어야 할 컨텍스트를 연결합니다.")
+            Text(L("ARCA가 이미 알고 있어야 할 컨텍스트를 연결합니다.",
+                   "Connect the context ARCA should already have."))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
@@ -164,7 +179,7 @@ struct ConnectorsView: View {
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
                     }
-                    Text(isSyncing ? "동기화 중…" : "컨텍스트 동기화")
+                    Text(isSyncing ? L("동기화 중…", "Syncing…") : L("컨텍스트 동기화", "Sync context"))
                 }
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.black)
@@ -180,7 +195,8 @@ struct ConnectorsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Text("\(hub.accounts.count)개 연결됨 · 가져온 항목은 메모리 사실로 저장됩니다")
+            Text(L("\(hub.accounts.count)개 연결됨 · 가져온 항목은 메모리 사실로 저장됩니다",
+                   "\(hub.accounts.count) connected · what comes in is saved as memory facts"))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             if let error = connectError ?? hub.lastError {
@@ -199,7 +215,7 @@ struct ConnectorsView: View {
                 HStack(spacing: 8) {
                     Image(systemName: allDisconnectedSelected ? "checkmark.square.fill" : "square")
                         .foregroundStyle(allDisconnectedSelected ? ConnectorPalette.green : .secondary)
-                    Text("모두 선택")
+                    Text(L("모두 선택", "Select all"))
                         .foregroundStyle(.white)
                 }
                 .font(.subheadline.weight(.semibold))
@@ -216,7 +232,8 @@ struct ConnectorsView: View {
                     } else {
                         Image(systemName: "link.badge.plus")
                     }
-                    Text("선택 항목 연결 (\(selectedDisconnectedSlugs.count))")
+                    Text(L("선택 항목 연결 (\(selectedDisconnectedSlugs.count))",
+                           "Connect selected (\(selectedDisconnectedSlugs.count))"))
                 }
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.black)
@@ -327,7 +344,9 @@ struct ConnectorsView: View {
         let remaining = targets.filter { hub.accounts[$0] == nil }
         pendingConnectionSlugs.subtract(remaining)
         if !remaining.isEmpty {
-            connectError = "연결 대기 시간이 초과되었습니다: \(remaining.map(displayName(for:)).joined(separator: ", "))"
+            let names = remaining.map(displayName(for:)).joined(separator: ", ")
+            connectError = L("연결 대기 시간이 초과되었습니다: \(names)",
+                             "Timed out waiting to connect: \(names)")
         }
     }
 
@@ -349,7 +368,7 @@ struct ConnectorsView: View {
                     to: URL(fileURLWithPath: obsidianVaultPath, isDirectory: true),
                     context: modelContext
                 )
-                obsidianExportResult = "\(count)개 파일 내보냄"
+                obsidianExportResult = L("\(count)개 파일 내보냄", "\(count) files exported")
             } catch {
                 obsidianExportResult = error.localizedDescription
             }
@@ -367,7 +386,8 @@ struct ConnectorsView: View {
                     from: URL(fileURLWithPath: obsidianVaultPath, isDirectory: true),
                     context: modelContext
                 )
-                obsidianExportResult = "\(result.imported)개 가져옴 · \(result.skipped)개 건너뜀"
+                obsidianExportResult = L("\(result.imported)개 가져옴 · \(result.skipped)개 건너뜀",
+                                         "\(result.imported) imported · \(result.skipped) skipped")
             } catch {
                 obsidianExportResult = error.localizedDescription
             }
@@ -392,7 +412,8 @@ struct ConnectorsView: View {
                     modelContext.insert(MemoryFact(text: text, kind: "fact", source: "membase"))
                 }
                 try? modelContext.save()
-                membaseResult = "\(dedupe.newTexts.count)개 가져옴 (중복 \(dedupe.skippedCount)개 건너뜀)"
+                membaseResult = L("\(dedupe.newTexts.count)개 가져옴 (중복 \(dedupe.skippedCount)개 건너뜀)",
+                                  "\(dedupe.newTexts.count) imported (\(dedupe.skippedCount) duplicates skipped)")
             } catch {
                 membaseResult = error.localizedDescription
             }
@@ -490,7 +511,9 @@ private struct ConnectorRow: View {
                         } else {
                             Image(systemName: "arrow.down.circle")
                         }
-                        Text(connector.slug == "SLACK" ? "Slack 대화 가져오기" : "가져오기")
+                        Text(connector.slug == "SLACK"
+                             ? L("Slack 대화 가져오기", "Import Slack threads")
+                             : L("가져오기", "Import"))
                     }
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.secondary)
@@ -498,7 +521,7 @@ private struct ConnectorRow: View {
                 .buttonStyle(.arcaPress)
                 .disabled(isPulling)
 
-                pill(text: "연결됨", filled: true)
+                pill(text: L("연결됨", "Connected"), filled: true)
             } else if isPending {
                 ProgressView()
                     .controlSize(.small)
@@ -508,7 +531,7 @@ private struct ConnectorRow: View {
                         ProgressView().controlSize(.mini)
                             .padding(.horizontal, 12)
                     } else {
-                        pill(text: "연결", filled: false)
+                        pill(text: L("연결", "Connect"), filled: false)
                     }
                 }
                 .buttonStyle(.arcaPress)
@@ -537,12 +560,191 @@ private struct ConnectorRow: View {
     private var statusText: String {
         if isConnected {
             if let accountId {
-                return "연결됨 ✓ · \(String(accountId.suffix(8)))"
+                let tail = String(accountId.suffix(8))
+                return L("연결됨 ✓ · \(tail)", "Connected ✓ · \(tail)")
             }
-            return "연결됨 ✓"
+            return L("연결됨 ✓", "Connected ✓")
         }
-        if isPending { return "연결 대기 중…" }
-        return "미연결"
+        if isPending { return L("연결 대기 중…", "Waiting to connect…") }
+        return L("미연결", "Not connected")
+    }
+}
+
+/// Apple Health, as a connector.
+///
+/// It lives here because this is where people look for "what is ARCA plugged
+/// into" — having the Health permission reachable only from Settings and from
+/// inside the 컨디션 screen meant the answer to "did I connect my Apple Health?"
+/// was invisible in the one place it was asked.
+///
+/// The Mac row is deliberately *not* a connect button. HealthKit does not exist
+/// on macOS, so a button there could only ever fail; instead the Mac states that
+/// plainly and reports what the phone has sent.
+private struct AppleHealthConnectorRow: View {
+    @State private var vitals = VitalsEngine.shared
+    @State private var isWorking = false
+
+    var body: some View {
+        LocalConnectorCard(
+            symbol: "heart.text.square.fill",
+            title: L("Apple 건강", "Apple Health"),
+            status: statusText,
+            statusColor: statusColor,
+            resultText: vitals.statusMessage
+        ) {
+            actions
+        } detail: {
+            detail
+        }
+        .task { await vitals.refresh() }
+    }
+
+    private var statusText: String {
+        switch vitals.healthLink {
+        case .unavailableHere: return L("이 기기에서는 읽을 수 없음", "Can't be read on this device")
+        case .notAsked: return L("미연결", "Not connected")
+        case .askedNoData: return L("연결됨 · 데이터 대기 중", "Connected · waiting for data")
+        case .measuring: return L("연결됨 ✓", "Connected ✓")
+        case .relayed(let device, _):
+            return device == "iphone"
+                ? L("아이폰이 측정 중", "Your iPhone is measuring")
+                : L("\(device)가 측정 중", "\(device) is measuring")
+        case .awaitingPhone: return L("아이폰 연결 대기", "Waiting for your iPhone")
+        }
+    }
+
+    private var statusColor: Color {
+        switch vitals.healthLink {
+        case .measuring, .relayed: return ConnectorPalette.green
+        case .askedNoData: return ConnectorPalette.ember
+        case .notAsked, .awaitingPhone, .unavailableHere: return .secondary
+        }
+    }
+
+    @ViewBuilder private var detail: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let summary = vitals.healthDataSummary {
+                Text(summary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(L("수면 · HRV · 안정심박 · 활동",
+                       "Sleep · HRV · resting heart rate · activity"))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
+
+            switch vitals.healthLink {
+            case .measuring(let at):
+                // Branched rather than run through `L(...)`: `\(date, style:)` is a
+                // LocalizedStringKey interpolation, and routing it through a plain
+                // String would lose the self-updating relative time.
+                (ArcaLanguage.isKorean
+                    ? Text("마지막 측정 \(at, style: .relative) 전 · 이 기기에서 읽음")
+                    : Text("Last read \(at, style: .relative) ago · on this device"))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary.opacity(0.8))
+            case .relayed(_, let at):
+                (ArcaLanguage.isKorean
+                    ? Text("아이폰에서 \(at, style: .relative) 전에 도착 · 맥에는 Apple 건강이 없어 아이폰이 측정해서 보냅니다")
+                    : Text("Arrived from your iPhone \(at, style: .relative) ago · macOS has no Apple Health, so your iPhone measures and sends it here"))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
+            case .awaitingPhone:
+                Text(L("맥에는 Apple 건강이 없습니다. 아이폰 ARCA에서 연결하면 결과가 이 맥으로 들어옵니다.",
+                       "macOS has no Apple Health. Connect it in ARCA on your iPhone and the results land on this Mac."))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
+            case .notAsked:
+                Text(L("연결하면 몰입 준비도·수면·스트레스를 계산합니다. 애플워치가 이미 기록한 값을 읽을 뿐이라 배터리를 쓰지 않습니다.",
+                       "Connect it and ARCA works out your readiness, sleep and stress. It only reads what your Apple Watch already recorded, so it costs no battery."))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
+            case .askedNoData:
+                Text(L("권한은 받았는데 아직 읽힌 값이 없어요. 건강 앱 → 공유 → 앱에서 ARCA 항목이 켜져 있는지 확인해 주세요.",
+                       "Permission is granted, but nothing has come through yet. Check that ARCA is switched on in Health → Sharing → Apps."))
+                    .font(.caption2)
+                    .foregroundStyle(.orange.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
+            case .unavailableHere:
+                EmptyView()
+            }
+        }
+    }
+
+    @ViewBuilder private var actions: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            #if os(iOS)
+            if case .notAsked = vitals.healthLink {
+                Button {
+                    Task {
+                        isWorking = true
+                        await vitals.requestPermission()
+                        isWorking = false
+                    }
+                } label: {
+                    if isWorking {
+                        ProgressView().controlSize(.mini).padding(.horizontal, 12)
+                    } else {
+                        Text(L("연결", "Connect"))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(ConnectorPalette.ember)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Capsule().strokeBorder(ConnectorPalette.ember, lineWidth: 1.5))
+                    }
+                }
+                .buttonStyle(.arcaPress)
+                .disabled(isWorking)
+            } else {
+                Button {
+                    Task {
+                        isWorking = true
+                        await vitals.refresh(force: true)
+                        isWorking = false
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        if isWorking || vitals.isRefreshing {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "arrow.down.circle")
+                        }
+                        Text(L("지금 읽기", "Read now"))
+                    }
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.arcaPress)
+                .disabled(isWorking || vitals.isRefreshing)
+            }
+            #else
+            Button {
+                Task {
+                    isWorking = true
+                    await RelaySync.shared.syncNow()
+                    await vitals.refresh(force: true)
+                    isWorking = false
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    if isWorking {
+                        ProgressView().controlSize(.mini)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                    }
+                    Text(L("지금 동기화", "Sync now"))
+                }
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.arcaPress)
+            .disabled(isWorking)
+            #endif
+        }
     }
 }
 
@@ -565,13 +767,14 @@ private struct ObsidianConnectorRow: View {
         LocalConnectorCard(
             symbol: "shippingbox.fill",
             title: "Obsidian",
-            status: isConnected ? "연결됨" : "미연결",
+            status: isConnected ? L("연결됨", "Connected") : L("미연결", "Not connected"),
             statusColor: isConnected ? ConnectorPalette.green : .secondary,
             resultText: resultText
         ) {
             VStack(alignment: .trailing, spacing: 8) {
                 Button(action: onChooseFolder) {
-                    Label(isConnected ? "볼트 변경" : "볼트 선택", systemImage: "folder")
+                    Label(isConnected ? L("볼트 변경", "Change vault") : L("볼트 선택", "Choose vault"),
+                          systemImage: "folder")
                 }
                 .buttonStyle(.arcaPress)
                 .font(.caption.weight(.bold))
@@ -584,7 +787,7 @@ private struct ObsidianConnectorRow: View {
                         } else {
                             Image(systemName: "square.and.arrow.up")
                         }
-                        Text("메모리 내보내기")
+                        Text(L("메모리 내보내기", "Export memory"))
                     }
                 }
                 .buttonStyle(.arcaPress)
@@ -600,7 +803,7 @@ private struct ObsidianConnectorRow: View {
                         } else {
                             Image(systemName: "arrow.down.doc")
                         }
-                        Text("받아오기")
+                        Text(L("받아오기", "Import"))
                     }
                 }
                 .buttonStyle(.arcaPress)
@@ -630,7 +833,7 @@ private struct MembaseConnectorRow: View {
         LocalConnectorCard(
             symbol: "brain.head.profile",
             title: "membase",
-            status: "읽기 전용",
+            status: L("읽기 전용", "Read-only"),
             statusColor: .secondary,
             resultText: resultText
         ) {
@@ -641,7 +844,7 @@ private struct MembaseConnectorRow: View {
                     } else {
                         Image(systemName: "arrow.down.doc")
                     }
-                    Text("메모리 가져오기")
+                    Text(L("메모리 가져오기", "Import memory"))
                 }
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.secondary)

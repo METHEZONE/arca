@@ -1,5 +1,6 @@
 #if os(macOS)
 import SwiftUI
+import ArcaVoiceKit
 
 /// The end-of-ZONE report. Left/top: what ARCA handled while you were focused.
 /// Then, one at a time, the items that still need you — presented as
@@ -9,6 +10,7 @@ struct ZoneReportView: View {
     @Bindable var zone: ZoneEngine
     @Environment(\.dismiss) private var dismiss
     @State private var index = 0
+    @State private var vitals = VitalsEngine.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -33,11 +35,60 @@ struct ZoneReportView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 Image(systemName: "moon.stars.fill").foregroundStyle(ArcaTheme.idle)
-                Text("ZONE Report").font(.title2.weight(.bold))
+                Text(L("ZONE 리포트", "ZONE Report")).font(.title2.weight(.bold))
             }
             if let started = zone.startedAt {
-                Text("In focus since \(started, style: .time)")
+                (ArcaLanguage.isKorean
+                    ? Text("\(started, style: .time)부터 몰입 중")
+                    : Text("In focus since \(started, style: .time)"))
                     .font(.subheadline).foregroundStyle(.secondary)
+            }
+            zoneMetric
+            bodyLine
+        }
+    }
+
+    /// ZONE time recovered, and how many interruptions ARCA absorbed so it could
+    /// be recovered. This is the product's core metric and the thing the Pro tier
+    /// already sells; it belongs above any physiological number, because the
+    /// promise is "you got 52 minutes back", not "your HRV was 44ms".
+    @ViewBuilder private var zoneMetric: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "hourglass")
+                .font(.caption).foregroundStyle(ArcaTheme.idle)
+            Text("ZONE \(VitalsFormat.hoursMinutes(max(1, zone.lastSessionMinutes)))")
+                .font(.subheadline.weight(.semibold))
+            Text(L("· ARCA가 흡수한 방해 \(zone.handled.count)건",
+                   zone.handled.count == 1
+                       ? "· ARCA absorbed 1 interruption"
+                       : "· ARCA absorbed \(zone.handled.count) interruptions"))
+                .font(.caption).foregroundStyle(.secondary)
+            if !zone.attention.isEmpty {
+                Text(L("· 당신 판단이 필요한 것 \(zone.attention.count)건",
+                       zone.attention.count == 1
+                           ? "· 1 item needs your call"
+                           : "· \(zone.attention.count) items need your call"))
+                    .font(.caption).foregroundStyle(.orange.opacity(0.9))
+            }
+        }
+    }
+
+    /// What the user's body was doing while they focused. The session itself is
+    /// now evidence for the focus profile, so closing the loop here — "you were
+    /// at 78, and this hour is one of your strong ones" — is what turns the
+    /// report from a log into something that changes tomorrow's schedule.
+    @ViewBuilder private var bodyLine: some View {
+        if let score = vitals.ringScore {
+            HStack(spacing: 6) {
+                FocusRing(score: score, isLive: false, lineWidth: 2.5, trackOpacity: 0.15)
+                    .frame(width: 13, height: 13)
+                Text(L("몰입 준비도 \(score) · \(vitals.ringLabel)",
+                       "Readiness \(score) · \(vitals.ringLabel)"))
+                    .font(.caption).foregroundStyle(.secondary)
+                if let next = vitals.nextFocusWindow() {
+                    Text(L("· 다음 골든타임 \(next.label)", "· Next golden hour \(next.label)"))
+                        .font(.caption).foregroundStyle(.secondary.opacity(0.7))
+                }
             }
         }
     }
@@ -45,10 +96,12 @@ struct ZoneReportView: View {
     // What ARCA handled — the "I took care of these" side.
     private var handledSummary: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("ARCA handled (\(zone.handled.count))", systemImage: "checkmark.seal.fill")
+            Label(L("ARCA가 처리한 것 (\(zone.handled.count))", "ARCA handled (\(zone.handled.count))"),
+                  systemImage: "checkmark.seal.fill")
                 .font(.headline).foregroundStyle(.green)
             if zone.handled.isEmpty {
-                Text("Nothing needed auto-handling.").font(.callout).foregroundStyle(.secondary)
+                Text(L("자동으로 처리할 건 없었어요.", "Nothing needed auto-handling."))
+                    .font(.callout).foregroundStyle(.secondary)
             } else {
                 ForEach(zone.handled) { item in
                     HStack(alignment: .top, spacing: 8) {
@@ -70,7 +123,7 @@ struct ZoneReportView: View {
     private func questCard(_ item: ZoneEngine.AttentionItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Needs your response")
+                Text(L("당신 답이 필요해요", "Needs your response"))
                     .font(.headline).foregroundStyle(.orange)
                 Spacer()
                 Text("\(index + 1) / \(zone.attention.count)")
@@ -95,7 +148,7 @@ struct ZoneReportView: View {
                                 HStack(spacing: 6) {
                                     Text(choice.label).font(.callout.weight(.semibold))
                                     if choice.isRecommended {
-                                        Text("Recommended").font(.caption2.weight(.bold))
+                                        Text(L("추천", "Recommended")).font(.caption2.weight(.bold))
                                             .padding(.horizontal, 6).padding(.vertical, 1)
                                             .background(ArcaTheme.idle, in: Capsule())
                                             .foregroundStyle(.white)
@@ -112,7 +165,7 @@ struct ZoneReportView: View {
                     }
                     .buttonStyle(.arcaPress)
                 }
-                Button("I'll look later") { advance() }
+                Button(L("나중에 볼게요", "I'll look later")) { advance() }
                     .buttonStyle(.arcaPress)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -128,8 +181,9 @@ struct ZoneReportView: View {
             handledSummary
             VStack(spacing: 6) {
                 Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(ArcaTheme.idle)
-                Text("Everything that needed a response is cleared.").font(.headline)
-                Text("Good flow. Feel free to get back to focusing.")
+                Text(L("답이 필요한 건 다 정리됐어요.", "Everything that needed a response is cleared."))
+                    .font(.headline)
+                Text(L("흐름 좋아요. 이어서 몰입하세요.", "Good flow. Feel free to get back to focusing."))
                     .font(.callout).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -140,11 +194,11 @@ struct ZoneReportView: View {
     private var footer: some View {
         HStack {
             if !zone.attention.isEmpty && index < zone.attention.count {
-                Button("View handled items") { index = zone.attention.count }
+                Button(L("처리된 것 보기", "View handled items")) { index = zone.attention.count }
                     .buttonStyle(.arcaPress).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Button("Close") { zone.showReport = false; dismiss() }
+            Button(L("닫기", "Close")) { zone.showReport = false; dismiss() }
                 .buttonStyle(.borderedProminent)
         }
     }

@@ -5,6 +5,7 @@ import ArcaVoiceKit
 @main
 struct ArcaVoiceApp: App {
     let container: ModelContainer
+    @State private var language = ArcaLanguage.shared
 
     init() {
         do {
@@ -50,6 +51,10 @@ struct ArcaVoiceApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // Copy is resolved at render time, so switching language has to
+                // rebuild the tree. Keyed on a counter that only changes when the
+                // user actually picks a different language — never on launch.
+                .id(language.generation)
         }
         .modelContainer(container)
     }

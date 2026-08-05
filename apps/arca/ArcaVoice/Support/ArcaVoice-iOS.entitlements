@@ -6,5 +6,10 @@
 	<array>
 		<string>group.com.thezone.arca.voice</string>
 	</array>
+	<!-- Body + focus tracking. Only the app itself asks for this; the widget and
+	     share extensions deliberately keep their own entitlements without it, so
+	     they don't demand a capability they never use. -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
 </dict>
 </plist>

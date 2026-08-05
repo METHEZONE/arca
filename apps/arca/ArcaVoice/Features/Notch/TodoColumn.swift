@@ -28,7 +28,7 @@ struct TodoColumn: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Tasks", systemImage: "checklist")
+                Label(L("할 일", "Tasks"), systemImage: "checklist")
                     .font(.caption).foregroundStyle(.white.opacity(0.6))
                 Spacer()
                 Text(level.label)
@@ -52,7 +52,11 @@ struct TodoColumn: View {
                             withAnimation(.spring(duration: 0.25)) { showSuggestions.toggle() }
                         } label: {
                             HStack {
-                                Label("ARCA 제안 \(suggestions.count)", systemImage: "sparkles")
+                                Label(L("ARCA 제안 \(suggestions.count)",
+                                        suggestions.count == 1
+                                            ? "1 ARCA suggestion"
+                                            : "\(suggestions.count) ARCA suggestions"),
+                                      systemImage: "sparkles")
                                 Spacer()
                                 Image(systemName: showSuggestions ? "chevron.down" : "chevron.right")
                             }
@@ -73,7 +77,8 @@ struct TodoColumn: View {
             }
             .overlay {
                 if tasks.isEmpty && proposals.isEmpty && completed.isEmpty {
-                    Text("Add a task —\nanything ARCA can handle itself\ngets a Toss button.")
+                    Text(L("할 일을 적어보세요 —\nARCA가 혼자 할 수 있는 일엔\nToss 버튼이 붙어요.",
+                           "Add a task —\nanything ARCA can handle itself\ngets a Toss button."))
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white.opacity(0.4))
@@ -85,7 +90,7 @@ struct TodoColumn: View {
 
     private var addBar: some View {
         HStack(spacing: 6) {
-            TextField("Add a task…", text: $draft)
+            TextField(L("할 일 추가…", "Add a task…"), text: $draft)
                 .textFieldStyle(.plain)
                 .font(.caption)
                 .padding(.horizontal, 10).padding(.vertical, 7)
@@ -113,7 +118,7 @@ struct TodoColumn: View {
 
     private var completedSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("Completed", systemImage: "checkmark.seal.fill")
+            Label(L("완료", "Completed"), systemImage: "checkmark.seal.fill")
                 .font(.caption2.weight(.bold))
                 .foregroundStyle(.green)
             ForEach(completed.prefix(3)) { task in
@@ -208,7 +213,8 @@ struct TodoTaskRow: View {
                     }
                     .buttonStyle(.arcaPress)
                     .transition(.opacity.combined(with: .scale(scale: 0.92)))
-                    .help("Delete — won't be tossed, won't come back")
+                    .help(L("삭제 — 맡기지도 않고, 다시 돌아오지도 않아요",
+                            "Delete — won't be tossed, won't come back"))
                 }
                 tossButton
             }
@@ -226,14 +232,14 @@ struct TodoTaskRow: View {
             HStack(spacing: 6) {
                 ArcaFace(mood: .working, size: 18, halo: false)
                     .frame(width: 20, height: 20)
-                Text("ARCA is on it…").font(.caption2)
+                Text(L("ARCA가 하고 있어요…", "ARCA is on it…")).font(.caption2)
                     .foregroundStyle(ArcaSkins.current.hi)
             }
         case .done where task.resultMarkdown != nil:
             Text(task.resultMarkdown ?? "").font(.caption2)
                 .foregroundStyle(.white.opacity(0.6)).lineLimit(3)
         case .failed:
-            Text(task.resultMarkdown ?? "Failed").font(.caption2).foregroundStyle(.orange)
+            Text(task.resultMarkdown ?? L("실패", "Failed")).font(.caption2).foregroundStyle(.orange)
         default:
             EmptyView()
         }
@@ -251,12 +257,13 @@ struct TodoTaskRow: View {
                     .foregroundStyle(.white)
             }
             .buttonStyle(.arcaPress)
-            .help("ARCA can run this: \(task.autonomyRationale)")
+            .help(L("ARCA가 대신 할 수 있어요: \(task.autonomyRationale)",
+                    "ARCA can run this: \(task.autonomyRationale)"))
         } else if task.actionKind == .manual && task.state == .open && !task.autonomyRationale.isEmpty {
             Image(systemName: "person.fill")
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.35))
-                .help("This one needs you")
+                .help(L("이건 직접 하셔야 해요", "This one needs you"))
         }
     }
 }

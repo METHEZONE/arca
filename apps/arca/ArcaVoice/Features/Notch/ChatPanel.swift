@@ -77,7 +77,7 @@ struct ChatPanel: View {
                 .foregroundStyle(.white.opacity(0.85))
                 .lineLimit(2)
             Spacer()
-            Button("Run in browser") { chat.runProposedBrowserTask() }
+            Button(L("브라우저에서 실행", "Run in browser")) { chat.runProposedBrowserTask() }
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
                 .controlSize(.small)
@@ -89,7 +89,7 @@ struct ChatPanel: View {
 
     private var inputBar: some View {
         HStack(spacing: 8) {
-            TextField("Ask ARCA…", text: $chat.draftText, axis: .vertical)
+            TextField(L("ARCA에게 물어보기…", "Ask ARCA…"), text: $chat.draftText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...4)
                 .padding(.horizontal, 12)

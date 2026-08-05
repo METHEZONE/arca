@@ -8,7 +8,7 @@ struct OnboardingView: View {
     var onDone: () -> Void
 
     @State private var page = 0
-    private let pageCount = 3
+    private let pageCount = 4
 
     var body: some View {
         ZStack {
@@ -20,8 +20,14 @@ struct OnboardingView: View {
                     .tag(0)
                 ShareAnythingPage(action: advance)
                     .tag(1)
-                DynamicIslandPage(action: onDone)
+                // The Health ask sits here, after ARCA has explained itself and
+                // before the closing page. A permission prompt with a reason
+                // attached gets granted; the same prompt fired cold gets denied
+                // once and then lives in Settings forever.
+                FocusBodyPage(action: advance)
                     .tag(2)
+                DynamicIslandPage(action: onDone)
+                    .tag(3)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -195,7 +201,102 @@ private struct InstructionStep: View {
     }
 }
 
-// MARK: - Page 3
+// MARK: - Page 3 — the body
+
+private struct FocusBodyPage: View {
+    let action: () -> Void
+
+    @State private var vitals = VitalsEngine.shared
+    @State private var isRequesting = false
+
+    private var isConnected: Bool {
+        switch vitals.healthLink {
+        case .measuring, .askedNoData: return true
+        default: return false
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer(minLength: 10)
+
+            // Teaches the ring here, so it's already familiar on the Home screen.
+            ZStack {
+                FocusRing(score: isConnected ? 74 : nil, isLive: false,
+                          lineWidth: 8, trackOpacity: 0.08)
+                    .frame(width: 186, height: 186)
+                SpiritFace(mood: isConnected ? .happy : .idle, size: 140)
+            }
+
+            VStack(spacing: 10) {
+                Text("I can tell when you're sharpest")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                Text("Your Watch already logs your sleep, HRV and heart rate. Let me read it and I'll tell you when to do the hard thing — and when to stop.")
+                    .font(.body)
+                    .foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                BodyBullet(symbol: "battery.100", text: "Costs no battery — I read what your Watch already wrote.")
+                BodyBullet(symbol: "lock.fill", text: "Stays on your devices. Nothing goes to a server of ours.")
+                BodyBullet(symbol: "hand.raised.fill", text: "No score until I've watched you for a few days. I won't guess.")
+            }
+            .padding(.horizontal, 34)
+
+            Spacer()
+
+            if isConnected {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(ArcaTheme.pixel)
+                    Text("Apple Health connected")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                OnboardingCTA(title: "Continue", action: action)
+            } else {
+                OnboardingCTA(title: isRequesting ? "Opening Health…" : "Connect Apple Health") {
+                    guard !isRequesting else { return }
+                    isRequesting = true
+                    Task {
+                        await vitals.requestPermission()
+                        isRequesting = false
+                        action()
+                    }
+                }
+                Button("Not now", action: action)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+        }
+        .padding(.bottom, 54)
+        .padding(.top, 40)
+    }
+}
+
+private struct BodyBullet: View {
+    let symbol: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.caption)
+                .foregroundStyle(ArcaTheme.pixel)
+                .frame(width: 20)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.82))
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+// MARK: - Page 4
 
 private struct DynamicIslandPage: View {
     let action: () -> Void

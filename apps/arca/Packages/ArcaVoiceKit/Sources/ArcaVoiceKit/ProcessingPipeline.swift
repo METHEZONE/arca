@@ -11,6 +11,35 @@ public struct ProcessingPipeline: Sendable {
     public struct Output: Sendable {
         public let transcript: AttributedTranscript
         public let notes: MeetingNotes?
+        /// Set when the pass finished cleanly but produced no turns. The caller
+        /// needs this to tell "nothing was said" from "the transcript is gone",
+        /// because those two demand opposite handling: one is a fact about the
+        /// recording, the other must never overwrite what's already stored.
+        public let emptyReason: EmptyReason?
+
+        public init(transcript: AttributedTranscript,
+                    notes: MeetingNotes?,
+                    emptyReason: EmptyReason? = nil) {
+            self.transcript = transcript
+            self.notes = notes
+            self.emptyReason = emptyReason
+        }
+    }
+
+    /// Why a successful pass came back with nothing.
+    public enum EmptyReason: Sendable, Equatable {
+        /// Every file was too small to hold audio — the capture itself is empty.
+        case noAudioCaptured
+        /// Transcription ran over real audio and found no speech.
+        case noSpeechFound
+    }
+
+    /// One channel's result, so the merge step can tell a silent channel from a
+    /// broken one instead of collapsing both into an empty array.
+    private enum ChannelOutcome: Sendable {
+        case turns(CaptureChannel, [SpeakerTurn])
+        case noAudio(CaptureChannel)
+        case failed(String)
     }
 
     private let finalTranscriber: any FinalTranscriber
@@ -30,41 +59,57 @@ public struct ProcessingPipeline: Sendable {
         // One dead channel (empty mic file, corrupt tap) must not sink the
         // whole pass — transcribe per channel, keep what succeeds, and only
         // fail if EVERY channel failed.
-        var channelErrors: [String] = []
-        let channelTurns = await withTaskGroup(
-            of: Result<(CaptureChannel, [SpeakerTurn]), Error>.self
-        ) { group in
+        let outcomes = await withTaskGroup(of: ChannelOutcome.self) { group in
             for (channel, url) in files {
                 let transcriber = finalTranscriber
                 group.addTask {
                     // A header-only file means the channel never captured.
                     let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-                    guard size > 4096 else {
-                        return .success((channel, []))
-                    }
+                    guard size > 4096 else { return .noAudio(channel) }
                     do {
                         let transcript = try await transcriber.transcribe(
                             fileURL: url, channel: channel, hints: hints)
-                        return .success((channel, Self.turns(from: transcript, channel: channel)))
+                        return .turns(channel, Self.turns(from: transcript, channel: channel))
                     } catch {
-                        return .failure(error)
+                        return .failed(error.localizedDescription)
                     }
                 }
             }
-            var result: [CaptureChannel: [SpeakerTurn]] = [:]
-            for await outcome in group {
-                switch outcome {
-                case .success(let (channel, turns)): result[channel] = turns
-                case .failure(let error): channelErrors.append(error.localizedDescription)
-                }
-            }
-            return result
+            var all: [ChannelOutcome] = []
+            for await outcome in group { all.append(outcome) }
+            return all
         }
-        if channelTurns.isEmpty, let firstError = channelErrors.first {
+
+        var channelTurns: [CaptureChannel: [SpeakerTurn]] = [:]
+        var channelErrors: [String] = []
+        var transcribedChannels = 0
+        for outcome in outcomes {
+            switch outcome {
+            case .turns(let channel, let turns):
+                transcribedChannels += 1
+                channelTurns[channel] = turns
+            case .noAudio:
+                break
+            case .failed(let message):
+                channelErrors.append(message)
+            }
+        }
+
+        // Test for produced *turns*, not for dictionary entries. A channel that
+        // transcribed to nothing still occupies a key, so checking the dictionary
+        // made a total failure look like a success with an empty transcript —
+        // which is how a recording's text got thrown away downstream.
+        let producedTurns = channelTurns.values.contains { !$0.isEmpty }
+        if !producedTurns, let firstError = channelErrors.first {
             throw PipelineError.allChannelsFailed(firstError)
         }
 
         let merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
+
+        guard producedTurns else {
+            return Output(transcript: merged, notes: nil,
+                          emptyReason: transcribedChannels == 0 ? .noAudioCaptured : .noSpeechFound)
+        }
 
         var notes: MeetingNotes?
         if let summarizer, !merged.turns.isEmpty {

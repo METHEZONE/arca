@@ -30,7 +30,7 @@ struct ChatTabView: View {
                     Button {
                         startNewChat()
                     } label: {
-                        Label("New chat", systemImage: "plus.bubble")
+                        Label(L("새 대화", "New chat"), systemImage: "plus.bubble")
                     }
                 }
             }
@@ -73,17 +73,17 @@ struct ChatTabView: View {
         }
         // Voice failures used to be swallowed — the mic button just did
         // nothing. Permission denials land here with a way to fix them.
-        .alert("Voice needs a little help", isPresented: Binding(
+        .alert(L("음성 기능에 도움이 조금 필요해요", "Voice needs a little help"), isPresented: Binding(
             get: { voice.error != nil },
             set: { if !$0 { voice.error = nil } }
         )) {
-            Button("Open Settings") {
+            Button(L("설정 열기", "Open Settings")) {
                 voice.error = nil
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
             }
-            Button("OK", role: .cancel) { voice.error = nil }
+            Button(L("확인", "OK"), role: .cancel) { voice.error = nil }
         } message: {
             Text(voice.error ?? "")
         }
@@ -97,7 +97,7 @@ struct ChatTabView: View {
                 ?? last.text
             return ConversationSummary(
                 id: id,
-                title: title.isEmpty ? "Untitled chat" : String(title.prefix(48)),
+                title: title.isEmpty ? L("제목 없는 대화", "Untitled chat") : String(title.prefix(48)),
                 lastAt: last.createdAt,
                 count: entries.count
             )
@@ -123,7 +123,8 @@ struct ChatTabView: View {
                                     .font(.caption.weight(.semibold))
                                     .lineLimit(1)
                                 HStack(spacing: 3) {
-                                    Text("\(conversation.count) turns ·")
+                                    Text(L("\(conversation.count)턴 ·",
+                                           conversation.count == 1 ? "1 turn ·" : "\(conversation.count) turns ·"))
                                     Text(conversation.lastAt, style: .relative)
                                 }
                                 .font(.caption2)
@@ -167,7 +168,7 @@ struct ChatTabView: View {
     private var listeningBar: some View {
         HStack(spacing: 10) {
             ArcaFace(mood: .listening, size: 34, halo: false)
-            Text(voice.liveTranscript.isEmpty ? "Listening…" : voice.liveTranscript)
+            Text(voice.liveTranscript.isEmpty ? L("듣고 있어요…", "Listening…") : voice.liveTranscript)
                 .font(.subheadline)
                 .foregroundStyle(voice.liveTranscript.isEmpty ? .secondary : .primary)
                 .lineLimit(2)
@@ -218,9 +219,10 @@ struct ChatTabView: View {
             .overlay {
                 if chat.messages.isEmpty && activeLog.isEmpty {
                     ContentUnavailableView(
-                        "Talk to ARCA",
+                        L("ARCA와 대화해 보세요", "Talk to ARCA"),
                         systemImage: "bubble.left.and.text.bubble.right",
-                        description: Text("Ask anything — ARCA remembers what matters.")
+                        description: Text(L("무엇이든 물어보세요 — 중요한 건 ARCA가 기억해요.",
+                                            "Ask anything — ARCA remembers what matters."))
                     )
                 }
             }
@@ -243,7 +245,7 @@ struct ChatTabView: View {
                     .foregroundStyle(voice.isListening ? ArcaFace.ember : Color.secondary)
                     .symbolEffect(.pulse, isActive: voice.isListening)
             }
-            TextField("Ask ARCA…", text: $chat.draftText, axis: .vertical)
+            TextField(L("ARCA에게 물어보세요…", "Ask ARCA…"), text: $chat.draftText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...4)
                 .padding(.horizontal, 14)

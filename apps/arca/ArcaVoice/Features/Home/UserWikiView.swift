@@ -1,8 +1,11 @@
-#if os(macOS)
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
 
+/// Cross-platform on purpose. Nothing here is Mac-specific — the memories and
+/// sessions it reads already sync between devices, so gating it to macOS meant
+/// the iPhone was missing a section for no reason other than where it happened
+/// to be written first.
 struct UserWikiView: View {
     let ownerName: String
     let facts: [MemoryFact]
@@ -50,13 +53,14 @@ struct UserWikiView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 5) {
-                Text("\(ownerName) 위키")
+                Text(L("\(ownerName) 위키", "\(ownerName)'s Wiki"))
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                Text("ARCA가 기록한 당신의 이야기")
+                Text(L("ARCA가 기록한 당신의 이야기", "Your story, as ARCA remembers it"))
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.white.opacity(0.55))
                 if let generatedDate {
-                    Text("마지막 생성 \(generatedDate.formatted(date: .abbreviated, time: .shortened))")
+                    Text(L("마지막 생성 \(generatedDate.formatted(date: .abbreviated, time: .shortened))",
+                           "Last generated \(generatedDate.formatted(date: .abbreviated, time: .shortened))"))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.38))
                 }
@@ -65,7 +69,7 @@ struct UserWikiView: View {
             Button {
                 generate()
             } label: {
-                Label(markdown.isEmpty ? "생성" : "다시 생성", systemImage: "sparkles")
+                Label(markdown.isEmpty ? L("생성", "Generate") : L("다시 생성", "Regenerate"), systemImage: "sparkles")
                     .font(.system(.callout, design: .rounded, weight: .semibold))
                     .padding(.horizontal, 13)
                     .padding(.vertical, 8)
@@ -81,7 +85,10 @@ struct UserWikiView: View {
         VStack(spacing: 16) {
             Spacer()
             ArcaFace(mood: isGenerating ? .thinking : .idle, size: 118, halo: true)
-            Text(isGenerating ? "당신의 이야기를 엮는 중이에요…" : "아직 위키가 없어요. ARCA가 당신에 대해 알게 된 것들로 첫 페이지를 만들어볼까요?")
+            Text(isGenerating
+                 ? L("당신의 이야기를 엮는 중이에요…", "Weaving your story together…")
+                 : L("아직 위키가 없어요. ARCA가 당신에 대해 알게 된 것들로 첫 페이지를 만들어볼까요?",
+                     "No wiki yet. Want ARCA to write the first page from what it knows about you?"))
                 .font(.system(.title3, design: .rounded, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.84))
                 .multilineTextAlignment(.center)
@@ -89,7 +96,7 @@ struct UserWikiView: View {
             Button {
                 generate()
             } label: {
-                Label("생성", systemImage: "book.closed.fill")
+                Label(L("생성", "Generate"), systemImage: "book.closed.fill")
                     .font(.system(.callout, design: .rounded, weight: .bold))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 9)
@@ -105,7 +112,8 @@ struct UserWikiView: View {
     private func generate() {
         guard !isGenerating else { return }
         guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
-            errorText = "Anthropic 키를 Settings에 추가하면 위키를 생성할 수 있어요."
+            errorText = L("Anthropic 키를 Settings에 추가하면 위키를 생성할 수 있어요.",
+                          "Add your Anthropic key in Settings to generate your wiki.")
             return
         }
         isGenerating = true
@@ -139,4 +147,18 @@ struct UserWikiView: View {
         generatedAt = UserDefaults.standard.double(forKey: AccountDefaults.key("userWikiGeneratedAt"))
     }
 }
-#endif
+
+/// Self-contained 위키 screen — fetches its own inputs so any surface can push it
+/// without threading queries through. The Mac companion already has the facts and
+/// sessions in hand and feeds `UserWikiView` directly.
+struct UserWikiScreen: View {
+    @Query(sort: \MemoryFact.createdAt, order: .reverse) private var facts: [MemoryFact]
+    @Query(sort: \RecordingSession.createdAt, order: .reverse) private var sessions: [RecordingSession]
+
+    var body: some View {
+        UserWikiView(ownerName: AppServices.shared.ownerDisplayName,
+                     facts: facts,
+                     sessions: sessions)
+            .background(ArcaTheme.spiritNight.ignoresSafeArea())
+    }
+}

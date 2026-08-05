@@ -33,10 +33,69 @@ final class PhoneWatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         ])
     }
 
+    /// Pushes the wrist a compact read on the body.
+    ///
+    /// `updateApplicationContext` rather than a queued transfer: this is "latest
+    /// state", and a new value should replace the old one instead of stacking up
+    /// behind it. App Groups don't span iPhone and Watch, so the widget snapshot
+    /// the phone writes locally is invisible over here — it has to be sent.
+    func sendVitalsSummary(ringScore: Int?, isLive: Bool, label: String,
+                           nextWindowLabel: String?, sleepMinutes: Int?) {
+        guard WCSession.isSupported(),
+              WCSession.default.activationState == .activated else { return }
+        var context: [String: Any] = ["type": "vitals", "isLive": isLive, "label": label]
+        if let ringScore { context["ringScore"] = ringScore }
+        if let nextWindowLabel { context["nextWindow"] = nextWindowLabel }
+        if let sleepMinutes { context["sleepMinutes"] = sleepMinutes }
+        try? WCSession.default.updateApplicationContext(context)
+    }
+
+    /// Asks the Watch to run a focus measurement.
+    ///
+    /// Returns false when the Watch app isn't reachable — WatchConnectivity
+    /// cannot launch it, so the honest move is to report that and let the UI tell
+    /// the user to open ARCA on their wrist, rather than spin a progress
+    /// indicator on a request nothing will ever answer.
+    func requestDeepMeasure(seconds: Int) -> Bool {
+        guard WCSession.isSupported(),
+              WCSession.default.activationState == .activated,
+              WCSession.default.isReachable else { return false }
+        WCSession.default.sendMessage(
+            ["type": "startDeepMeasure", "seconds": seconds],
+            replyHandler: nil,
+            errorHandler: { error in
+                Task { @MainActor in
+                    VitalsEngine.shared.failMeasuring(
+                        "애플워치에 요청을 보내지 못했어요: \(error.localizedDescription)")
+                }
+            })
+        return true
+    }
+
     // MARK: WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState,
                  error: Error?) {}
+
+    /// Results coming back from the wrist. Values are pulled out here so only
+    /// `Sendable` primitives cross to the main actor.
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        guard (userInfo["type"] as? String) == "deepMeasure",
+              let startedAt = (userInfo["startedAt"] as? Double).map(Date.init(timeIntervalSince1970:)),
+              let meanHR = userInfo["meanHR"] as? Double,
+              let minHR = userInfo["minHR"] as? Double,
+              let maxHR = userInfo["maxHR"] as? Double else { return }
+        let seconds = (userInfo["seconds"] as? Int) ?? 0
+        let hrvSDNN = userInfo["hrvSDNN"] as? Double
+        let beatIntervalSD = userInfo["beatIntervalSD"] as? Double
+
+        Task { @MainActor in
+            VitalsEngine.shared.recordDeepMeasure(
+                startedAt: startedAt, seconds: seconds,
+                meanHR: meanHR, minHR: minHR, maxHR: maxHR,
+                hrvSDNN: hrvSDNN, beatIntervalSD: beatIntervalSD)
+        }
+    }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}
 

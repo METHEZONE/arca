@@ -4,3 +4,4 @@
 @_exported import Diarize
 @_exported import Intelligence
 @_exported import Store
+@_exported import Vitals

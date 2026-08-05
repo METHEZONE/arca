@@ -62,10 +62,15 @@ final class NotchAgent {
     }
 
     func acceptMeeting() {
-        let meetingApp = AppServices.shared.meetingDetector.pending?.meetingApp
+        let pending = AppServices.shared.meetingDetector.pending
+        let meetingApp = pending?.meetingApp
         AppServices.shared.meetingDetector.accept()
         set(.idle)
-        AppServices.shared.startRecording(meetingApp: meetingApp)
+        // Ask who's here first. Only for detected meetings — a voice memo or a
+        // hotkey capture still starts on the first click, because a prompt in
+        // front of those is pure friction.
+        AppServices.shared.presentParticipantPrep(
+            meetingApp: meetingApp, label: pending?.label)
     }
 
     func dismissMeeting() {

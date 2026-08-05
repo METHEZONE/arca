@@ -134,6 +134,9 @@ final class ChatSession {
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         let history = messages
         var memoryBlock = MemoryPrompt.systemBlock(facts: memoryFacts())
+        // Today's measured body rides every turn, so "지금 컨디션 어때?" is answered
+        // from Apple Health instead of guessed at. Empty when nothing's measured.
+        memoryBlock += VitalsEngine.shared.chatContextBlock()
         if let contextBlock {
             memoryBlock = "\n\n" + contextBlock + memoryBlock
         }
@@ -167,6 +170,11 @@ final class ChatSession {
                 // the user's trust level, otherwise queue a one-tap approval.
                 if let email = ClaudeChat.emailDraft(in: raw) {
                     await handleEmailAction(email)
+                }
+                // Food is zero-risk and purely additive — logging it needs no
+                // gate. The user already told us what they ate.
+                if let meal = ClaudeChat.mealDraft(in: raw) {
+                    await logMeal(meal)
                 }
             } catch {
                 appendAssistant(UserFacingError.message(for: error))
@@ -209,6 +217,24 @@ final class ChatSession {
             try? context.save()
             appendAssistant("✉️ 초안을 준비했어요 — \(draft.to), \"\(draft.subject)\". 투두 레일의 답장 대기에서 한 번에 승인하면 발송돼요. (자율도를 '루틴 처리+발송'으로 올리면 바로 보냅니다.)")
         }
+    }
+
+    /// Records a `[MEAL: …]` the model estimated.
+    ///
+    /// The reply already stated the estimate, so nothing is echoed on the happy
+    /// path — a second "기록했어요" line under the model's own sentence is noise.
+    /// Only the cases where the user's mental model would otherwise be wrong get
+    /// a line: the Mac can't reach Apple Health at all, and a failed write needs
+    /// to be admitted rather than silently retried.
+    private func logMeal(_ draft: MealActionDraft) async {
+        guard let entry = await VitalsEngine.shared.logMeal(draft) else { return }
+        #if os(macOS)
+        appendAssistant("🍽 기록했어요 — 애플 건강에는 아이폰이 다음 동기화에 반영합니다.")
+        #else
+        if !entry.writtenToHealth {
+            appendAssistant("⚠️ 애플 건강에 바로 쓰지 못했어요 — ARCA에는 저장됐고, 다음 동기화에서 다시 시도합니다.")
+        }
+        #endif
     }
 
     /// Executes a `[CALENDAR: …]` action the model emitted and reports the

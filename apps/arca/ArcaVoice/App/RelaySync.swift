@@ -36,6 +36,10 @@ final class RelaySync {
                     await AmbientOps.shared.autoBriefIfDue(context: context)
                     TodoTriage.sweepIfDue(context: context)
                     await ObsidianAutoImport.runIfDue(context: context)
+                    // Exports anything the phone or watch recorded (their own
+                    // export path is macOS-only, so it never ran for them), then
+                    // writes the evening day note once past the digest hour.
+                    await NightlyDigest.shared.runIfDue(context: context)
                 }
                 try? await Task.sleep(for: .seconds(60))
             }
@@ -72,6 +76,9 @@ final class RelaySync {
                 }
             }
             await syncSessions(relay: relay, context: context)
+            await syncChats(relay: relay, context: context)
+            await syncVitals(relay: relay)
+            await DevicePresenceRelay.sync(relay: relay)
             lastSyncAt = .now
             lastError = nil
             #if os(macOS)
@@ -145,6 +152,88 @@ final class RelaySync {
 
         defaults.set(pulledShas, forKey: "relaySessionShas")
         defaults.set(pushedHashes, forKey: "relaySessionPushedHashes")
+    }
+
+    // MARK: - Chats (one file per conversation)
+
+    /// Keeps conversations on every device.
+    ///
+    /// Bounded on purpose: only conversations touched in the last `chatWindowDays`
+    /// are pushed, and only the most recent ones are kept in the working set. A
+    /// year of chat history through a git-backed relay would grow without limit,
+    /// and nobody scrolls back that far on the other device anyway.
+    private func syncChats(relay: GitHubRelay, context: ModelContext) async {
+        let defaults = UserDefaults.standard
+        var pulledShas = (defaults.dictionary(forKey: "relayChatShas") as? [String: String]) ?? [:]
+        var pushedPrints = (defaults.dictionary(forKey: "relayChatPrints") as? [String: String]) ?? [:]
+
+        guard let listing = try? await relay.listDirectory(path: "chats") else { return }
+        var remoteShaByName: [String: String] = [:]
+        for entry in listing { remoteShaByName[entry.name] = entry.sha }
+
+        let allEntries = (try? context.fetch(FetchDescriptor<ChatLogEntry>())) ?? []
+        var byConversation = Dictionary(grouping: allEntries, by: \.conversationId)
+
+        // Pull: merge remote conversations we haven't seen at this revision.
+        var pulledTurns = 0
+        for entry in listing where pulledShas[entry.name] != entry.sha {
+            guard let remote = try? await relay.pull(ChatWire.self, path: "chats/\(entry.name)"),
+                  let wire = remote.value else { continue }
+            let existing = byConversation[wire.conversationId] ?? []
+            let added = wire.merge(into: existing, context: context)
+            pulledTurns += added
+            pulledShas[entry.name] = entry.sha
+        }
+        if pulledTurns > 0 {
+            try? context.save()
+            byConversation = Dictionary(
+                grouping: (try? context.fetch(FetchDescriptor<ChatLogEntry>())) ?? [],
+                by: \.conversationId)
+        }
+
+        // Push: recent conversations whose turn list actually changed.
+        let cutoff = Date.now.addingTimeInterval(-Double(Self.chatWindowDays) * 86_400)
+        let recent = byConversation
+            .filter { _, entries in (entries.map(\.createdAt).max() ?? .distantPast) >= cutoff }
+            .sorted { ($0.value.map(\.createdAt).max() ?? .distantPast)
+                > ($1.value.map(\.createdAt).max() ?? .distantPast) }
+            .prefix(Self.chatConversationLimit)
+
+        for (conversationId, entries) in recent {
+            guard !entries.isEmpty else { continue }
+            let wire = ChatWire(conversationId: conversationId, entries: entries)
+            let filename = "\(conversationId).json"
+            guard pushedPrints[filename] != wire.fingerprint else { continue }
+            do {
+                let newSha = try await relay.push(wire, path: "chats/\(filename)",
+                                                  sha: remoteShaByName[filename],
+                                                  message: "chat sync from \(Self.deviceName)")
+                pushedPrints[filename] = wire.fingerprint
+                pulledShas[filename] = newSha
+            } catch {
+                continue
+            }
+        }
+
+        defaults.set(pulledShas, forKey: "relayChatShas")
+        defaults.set(pushedPrints, forKey: "relayChatPrints")
+    }
+
+    private static let chatWindowDays = 30
+    private static let chatConversationLimit = 60
+
+    // MARK: - Vitals (body + focus, one file per day)
+
+    /// The Mac has no HealthKit, so the only way it can show the user's body is
+    /// through this relay — and the only way a meal spoken to the Mac reaches
+    /// Apple Health is for the phone to pick it up here.
+    private func syncVitals(relay: GitHubRelay) async {
+        let engine = VitalsEngine.shared
+        guard engine.isEnabled else { return }
+        let changed = await VitalsRelay.sync(relay: relay,
+                                             share: engine.shareToRelay,
+                                             deviceName: Self.deviceName)
+        if changed { engine.reloadAfterRelay() }
     }
 
     /// Applies remote wires onto local records (per-uid: keep whichever side

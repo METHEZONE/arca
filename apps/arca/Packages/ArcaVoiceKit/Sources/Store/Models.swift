@@ -29,7 +29,20 @@ public final class RecordingSession {
     /// Folder name under the app's sessions directory holding this session's audio.
     public var directoryName: String
     public var processingError: String?
+    /// True while the high-quality cloud pass still owes this recording a
+    /// transcript — no key yet, the upload failed, the app quit mid-pass.
+    /// Retry state lives here instead of being sniffed out of the wording of
+    /// `processingError`, so rewording a message can never quietly strip a
+    /// recording of its retry. A pass that ran to completion clears this even
+    /// when it found nothing, so a genuinely silent recording is left alone
+    /// rather than re-uploaded forever.
+    public var qualityPassPending: Bool = false
     public var meetingApp: String?
+    /// Who was expected in the room, captured before recording started.
+    /// Stored as a JSON blob like the note's decisions and action items — a
+    /// separate `@Model` would buy relational queries nobody makes and cost a
+    /// migration.
+    public var participantsJSON: Data?
     /// Last local mutation — relay merge is last-writer-wins.
     public var updatedAt: Date = Date.now
 
@@ -45,6 +58,14 @@ public final class RecordingSession {
     public var source: SessionSource {
         get { SessionSource(rawValue: sourceRaw) ?? .voiceMemo }
         set { sourceRaw = newValue.rawValue }
+    }
+
+    public var participants: [MeetingParticipant] {
+        get {
+            participantsJSON
+                .flatMap { try? JSONDecoder().decode([MeetingParticipant].self, from: $0) } ?? []
+        }
+        set { participantsJSON = newValue.isEmpty ? nil : try? JSONEncoder().encode(newValue) }
     }
 
     public init(title: String, source: SessionSource, directoryName: String = UUID().uuidString, createdAt: Date = .now) {

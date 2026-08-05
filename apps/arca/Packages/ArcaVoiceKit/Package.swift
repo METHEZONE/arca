@@ -19,12 +19,15 @@ let package = Package(
         .target(name: "Transcribe", dependencies: ["ArcaVoiceCore"]),
         .target(name: "Diarize", dependencies: ["ArcaVoiceCore"]),
         .target(name: "Store", dependencies: ["ArcaVoiceCore"]),
-        .target(name: "Intelligence", dependencies: ["ArcaVoiceCore", "Store"]),
+        // Body + focus domain: pure scoring and profiling, no HealthKit, so it
+        // compiles and unit-tests on the Mac where HealthKit doesn't exist.
+        .target(name: "Vitals", dependencies: ["ArcaVoiceCore"]),
+        .target(name: "Intelligence", dependencies: ["ArcaVoiceCore", "Store", "Vitals"]),
         .target(
             name: "ArcaVoiceKit",
-            dependencies: ["ArcaVoiceCore", "Capture", "Calling", "Transcribe", "Diarize", "Intelligence", "Store"]
+            dependencies: ["ArcaVoiceCore", "Capture", "Calling", "Transcribe", "Diarize", "Intelligence", "Store", "Vitals"]
         ),
         .testTarget(name: "ArcaVoiceKitTests",
-                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Calling"]),
+                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling"]),
     ]
 )

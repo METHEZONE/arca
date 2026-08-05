@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import ArcaVoiceKit
 
 /// The living map: an Obsidian-graph-like view of the user's memories and
 /// session notes, connected by shared keywords, with AI-discovered
@@ -341,7 +342,8 @@ struct BrainView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles")
-                    Text(engine.isWeaving ? "Weaving…" : "Weave insights")
+                    Text(engine.isWeaving ? L("엮는 중…", "Weaving…")
+                                          : L("인사이트 엮기", "Weave insights"))
                         .font(.caption.weight(.semibold))
                 }
                 .padding(.horizontal, 14)
@@ -369,7 +371,10 @@ struct BrainView: View {
                     pulseOn = true
                 }
             } else {
-                pulseOn = false
+                // A bare assignment inherits the repeatForever above and the
+                // pulse never actually stops — it has to be re-animated with a
+                // finite curve to retire the loop.
+                withAnimation(.easeOut(duration: 0.3)) { pulseOn = false }
             }
         }
         .onChange(of: engine.lastError) { _, newValue in
@@ -383,17 +388,20 @@ struct BrainView: View {
 
     private var brainStatus: some View {
         HStack(spacing: 8) {
-            Label("\(engine.nodes.count) memories", systemImage: "brain.head.profile")
+            Label(L("기억 \(engine.nodes.count)개",
+                    engine.nodes.count == 1 ? "1 memory" : "\(engine.nodes.count) memories"),
+                  systemImage: "brain.head.profile")
             Text("·")
                 .foregroundStyle(.white.opacity(0.35))
-            Text("\(engine.edges.count) links")
+            Text(L("연결 \(engine.edges.count)개",
+                   engine.edges.count == 1 ? "1 link" : "\(engine.edges.count) links"))
             Button {
                 engine.load(context: context)
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
             .buttonStyle(.arcaPress)
-            .help("Reload Memory Brain")
+            .help(L("메모리 브레인 새로고침", "Reload Memory Brain"))
         }
         .font(.caption.weight(.semibold))
         .foregroundStyle(.white.opacity(0.72))
@@ -446,9 +454,9 @@ struct BrainView: View {
     private func kindBadge(_ kind: BrainEngine.NodeKind) -> some View {
         let label: String
         switch kind {
-        case .memory: label = "Memory"
-        case .session: label = "Session"
-        case .insight: label = "Insight"
+        case .memory: label = L("기억", "Memory")
+        case .session: label = L("세션", "Session")
+        case .insight: label = L("인사이트", "Insight")
         }
         let tint: Color = kind == .memory ? .white : ember
         return Text(label)
@@ -465,7 +473,8 @@ struct BrainView: View {
             Image(systemName: "circle.hexagongrid")
                 .font(.system(size: 34))
                 .foregroundStyle(.white.opacity(0.25))
-            Text("Your brain is empty — record, chat, connect. Memories will appear here.")
+            Text(L("브레인이 아직 비어 있어요 — 녹음하고, 대화하고, 연결해 보세요. 기억이 여기에 쌓여요.",
+                   "Your brain is empty — record, chat, connect. Memories will appear here."))
                 .font(.callout)
                 .foregroundStyle(.white.opacity(0.45))
                 .multilineTextAlignment(.center)
@@ -473,7 +482,7 @@ struct BrainView: View {
             Button {
                 engine.load(context: context)
             } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
+                Label(L("새로고침", "Refresh"), systemImage: "arrow.clockwise")
                     .font(.caption.weight(.semibold))
             }
             .buttonStyle(.arcaPress)

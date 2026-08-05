@@ -47,6 +47,27 @@ public enum CalendarOverlapScorer {
             }?
             .0
     }
+
+    /// The meeting a recording starting *now* most likely belongs to.
+    ///
+    /// Distinct from `bestEvent`, which maximizes overlap with a window and is
+    /// right for attributing a finished recording. At the moment someone presses
+    /// record, the all-day event they're nominally inside would win on overlap
+    /// while the 2pm call they're actually joining hasn't technically started —
+    /// so this prefers whatever is running now, shortest first, and otherwise
+    /// looks a little way ahead.
+    public static func currentOrNext(in events: [CalendarEventInfo],
+                                     at now: Date,
+                                     lookahead: TimeInterval = 15 * 60) -> CalendarEventInfo? {
+        let running = events.filter { $0.start <= now && $0.end > now }
+        if let tightest = running.min(by: {
+            ($0.end.timeIntervalSince($0.start)) < ($1.end.timeIntervalSince($1.start))
+        }) { return tightest }
+
+        return events
+            .filter { $0.start > now && $0.start.timeIntervalSince(now) <= lookahead }
+            .min { $0.start < $1.start }
+    }
 }
 
 /// Reads Google Calendar events through the Composio connection in

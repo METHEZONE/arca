@@ -1,4 +1,5 @@
 import SwiftUI
+import ArcaVoiceKit
 
 /// The skin locker — same ARCA, different coats. Tap to wear one, or hit
 /// Roll and let fate pick (it never lands on what you're already wearing).
@@ -32,7 +33,9 @@ struct SkinsView: View {
                 Button {
                     roll()
                 } label: {
-                    Label(rolling ? "Rolling…" : "Roll the dice", systemImage: "dice.fill")
+                    Label(rolling ? L("돌리는 중…", "Rolling…")
+                                  : L("주사위 굴리기", "Roll the dice"),
+                          systemImage: "dice.fill")
                         .font(.headline)
                         .padding(.horizontal, 22).padding(.vertical, 10)
                         .background(ArcaSkins.current.mid, in: Capsule())
@@ -58,7 +61,7 @@ struct SkinsView: View {
             .padding(.vertical, 18)
         }
         .background(Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea())
-        .navigationTitle("Skins")
+        .navigationTitle(L("스킨", "Skins"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -104,7 +107,7 @@ private struct SkinCard: View {
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1)
-                Text(isWorn ? "WEARING" : "WEAR")
+                Text(isWorn ? L("착용 중", "WEARING") : L("착용하기", "WEAR"))
                     .font(.caption2.weight(.heavy))
                     .padding(.horizontal, 10).padding(.vertical, 3)
                     .background(isWorn ? AnyShapeStyle(skin.mid) : AnyShapeStyle(.white.opacity(0.1)),

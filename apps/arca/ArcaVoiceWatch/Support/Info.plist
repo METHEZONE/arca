@@ -20,10 +20,18 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ARCA reads your heart rate while you measure a focus session, so it can tell you how deep you actually got.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ARCA saves each focus measurement to Apple Health as mindful minutes.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ARCA records voice notes from your wrist.</string>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKBackgroundModes</key>
+	<array>
+		<string>workout-processing</string>
+	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>com.thezone.arca.voice</string>
 </dict>

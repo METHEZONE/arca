@@ -40,10 +40,11 @@ enum TodoTriage {
             to: calendar.startOfDay(for: due)
         ).day ?? 0
         switch days {
-        case ..<0: return ("\(-days)일 지남", .orange)
-        case 0: return ("오늘", ArcaSkins.current.hi)
-        case 1: return ("내일", ArcaSkins.current.hi)
-        default: return ("D-\(days)", .secondary)
+        case ..<0:
+            return (L("\(-days)일 지남", -days == 1 ? "1 day overdue" : "\(-days) days overdue"), .orange)
+        case 0: return (L("오늘", "Today"), ArcaSkins.current.hi)
+        case 1: return (L("내일", "Tomorrow"), ArcaSkins.current.hi)
+        default: return (L("D-\(days)", "in \(days) days"), .secondary)
         }
     }
 
@@ -76,14 +77,16 @@ enum TodoTriage {
             // the same broken deploy) — keep the newest only.
             let key = normalizedTitle(task.title)
             if seenTitles[key] != nil {
-                retire(task, reason: "중복 제안이라 자동 정리했어요")
+                retire(task, reason: L("중복 제안이라 자동 정리했어요",
+                                       "Cleaned up automatically — a duplicate suggestion"))
                 retired += 1
                 continue
             }
             seenTitles[key] = task
 
             if now.timeIntervalSince(task.updatedAt) > staleAfter {
-                retire(task, reason: "3일간 손대지 않아 자동 정리했어요 — 필요하면 다시 맡겨 주세요")
+                retire(task, reason: L("3일간 손대지 않아 자동 정리했어요 — 필요하면 다시 맡겨 주세요",
+                                       "Cleaned up automatically after three untouched days — hand it back to me any time"))
                 retired += 1
             }
         }

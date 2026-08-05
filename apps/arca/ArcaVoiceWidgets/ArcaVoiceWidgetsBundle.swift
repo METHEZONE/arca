@@ -5,5 +5,6 @@ import WidgetKit
 struct ArcaVoiceWidgetsBundle: WidgetBundle {
     var body: some Widget {
         RecordingLiveActivity()
+        VitalsWidget()
     }
 }

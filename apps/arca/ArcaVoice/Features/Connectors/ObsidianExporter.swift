@@ -30,11 +30,25 @@ enum ObsidianExporter {
 
         let arcaDirectory = vaultURL.appendingPathComponent("ARCA", isDirectory: true)
         try FileManager.default.createDirectory(at: arcaDirectory, withIntermediateDirectories: true)
-        let fileName = "\(dayString(from: session.createdAt)) \(slugify(session.title)).md"
-        let url = arcaDirectory.appendingPathComponent(fileName)
-        try sessionMarkdown(for: session, note: note, summary: summary)
+        let content = noteContent(for: session, note: note, summary: summary)
+        let url = arcaDirectory.appendingPathComponent(MeetingNoteMarkdown.fileName(for: content))
+        try MeetingNoteMarkdown.vaultNote(content)
             .write(to: url, atomically: true, encoding: .utf8)
         return url
+    }
+
+    /// The vault note, the clipboard and the nightly digest all render from this
+    /// one description, so they can't drift into three different documents.
+    static func noteContent(for session: RecordingSession,
+                            note: SessionNote,
+                            summary: String) -> MeetingNoteMarkdown.Content {
+        MeetingNoteMarkdown.Content(
+            title: session.title,
+            date: session.createdAt,
+            summary: summary,
+            decisions: MeetingNoteMarkdown.decodeDecisions(from: note.decisionsJSON),
+            actionItems: MeetingNoteMarkdown.decodeActionItems(from: note.actionItemsJSON),
+            durationSeconds: session.duration)
     }
 
     static func exportAll(to vaultURL: URL, context: ModelContext) throws -> Int {
@@ -84,79 +98,8 @@ enum ObsidianExporter {
         return lines.joined(separator: "\n")
     }
 
-    private static func sessionMarkdown(for session: RecordingSession,
-                                        note: SessionNote,
-                                        summary: String) -> String {
-        let decisions = decodeDecisions(from: note.decisionsJSON)
-        let actionItems = decodeActionItems(from: note.actionItemsJSON)
-        var lines: [String] = [
-            "---",
-            "date: \(isoString(from: session.createdAt))",
-            "source: arca",
-            "type: meeting",
-            "---",
-            "",
-            "# \(session.title)",
-            "",
-            "## 요약",
-            summary,
-            "",
-        ]
-
-        if !decisions.isEmpty {
-            lines.append("## 결정사항")
-            lines.append(contentsOf: decisions.map { "- \($0)" })
-            lines.append("")
-        }
-
-        if !actionItems.isEmpty {
-            lines.append("## 액션 아이템")
-            lines.append(contentsOf: actionItems.map { "- \($0)" })
-            lines.append("")
-        }
-
-        return lines.joined(separator: "\n")
-    }
-
-    private static func decodeDecisions(from data: Data?) -> [String] {
-        guard let data,
-              let decisions = try? JSONDecoder().decode([String].self, from: data) else {
-            return []
-        }
-        return decisions
-    }
-
-    private static func decodeActionItems(from data: Data?) -> [String] {
-        guard let data,
-              let items = try? JSONDecoder().decode([MeetingNotes.ActionItem].self, from: data) else {
-            return []
-        }
-        return items.map { item in
-            if let assignee = item.assigneeName, !assignee.isEmpty {
-                return "\(item.text) (@\(assignee))"
-            }
-            return item.text
-        }
-    }
-
-    private static func slugify(_ title: String) -> String {
-        let cleaned = title
-            .lowercased()
-            .replacingOccurrences(of: #"[^a-z0-9가-힣ㄱ-ㅎㅏ-ㅣ]+"#, with: "-", options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        return cleaned.isEmpty ? "untitled" : cleaned
-    }
-
     private static func dayString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-
-    private static func isoString(from date: Date) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter.string(from: date)
+        MeetingNoteMarkdown.dayString(from: date)
     }
 }
 

@@ -49,7 +49,7 @@ struct MeetingChatSheet: View {
             ArcaFace(mood: .idle, size: 26, halo: false, alive: false)
                 .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Chat about this meeting")
+                Text(L("이 회의에 대해 대화", "Chat about this meeting"))
                     .font(.headline)
                 Text(session.title)
                     .font(.caption)
@@ -98,9 +98,10 @@ struct MeetingChatSheet: View {
             .overlay {
                 if chat.messages.isEmpty {
                     ContentUnavailableView(
-                        "이 회의에 대해 물어보세요",
+                        L("이 회의에 대해 물어보세요", "Ask me about this meeting"),
                         systemImage: "bubble.left.and.text.bubble.right",
-                        description: Text("요약·결정사항·액션아이템·전사 전체를 알고 있어요.\n\"홍혜수님이 뭐라고 했지?\", \"팔로업 이메일 초안 써줘\" 같은 것들.")
+                        description: Text(L("요약·결정사항·액션아이템·전사 전체를 알고 있어요.\n\"홍혜수님이 뭐라고 했지?\", \"팔로업 이메일 초안 써줘\" 같은 것들.",
+                                            "I know the summary, the decisions, the action items, and the whole transcript.\nThings like \"What did Hyesoo say?\" or \"Draft the follow-up email.\""))
                     )
                 }
             }
@@ -109,7 +110,8 @@ struct MeetingChatSheet: View {
 
     private var inputBar: some View {
         HStack(spacing: 8) {
-            TextField("이 회의에 대해 물어보기…", text: $chat.draftText, axis: .vertical)
+            TextField(L("이 회의에 대해 물어보기…", "Ask about this meeting…"),
+                      text: $chat.draftText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...4)
                 .padding(.horizontal, 12)

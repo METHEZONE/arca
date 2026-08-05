@@ -47,14 +47,15 @@ struct ActionItemsCard: View {
             ))
         }
         if !unassigned.isEmpty {
-            groups.append(ActionItemGroup(name: "미지정", kind: .unassigned, entries: unassigned))
+            groups.append(ActionItemGroup(name: L("미지정", "Unassigned"),
+                                          kind: .unassigned, entries: unassigned))
         }
         return groups
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Action Items", systemImage: "flag.fill")
+            Label(L("액션 아이템", "Action Items"), systemImage: "flag.fill")
                 .font(.headline)
 
             ForEach(groupedItems) { group in
@@ -104,11 +105,11 @@ struct ActionItemsCard: View {
     private func ownerPrompt(entries: [ActionItemEntry]) -> some View {
         let pending = entries.filter { $0.item.todoTaskUID == nil }
         return HStack(spacing: 8) {
-            Text("데드라인과 투두를 추가할까요?")
+            Text(L("데드라인과 투두를 추가할까요?", "Want deadlines and to-dos for these?"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer(minLength: 8)
-            Button("모두 추가") {
+            Button(L("모두 추가", "Add all")) {
                 for entry in pending {
                     linkItem(at: entry.index)
                 }
@@ -127,7 +128,7 @@ struct ActionItemsCard: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: "flag.fill")
                     .font(.caption)
-                    .foregroundStyle(color(for: item.assigneeName ?? "미지정"))
+                    .foregroundStyle(color(for: item.assigneeName ?? L("미지정", "Unassigned")))
                     .frame(width: 14)
                 Text(item.text)
                     .font(.body)
@@ -137,7 +138,7 @@ struct ActionItemsCard: View {
                     dueChip(due)
                 }
                 if isOwner(item.assigneeName), item.todoTaskUID == nil {
-                    Button("추가") {
+                    Button(L("추가", "Add")) {
                         linkItem(at: entry.index)
                     }
                     .font(.caption)
@@ -151,11 +152,11 @@ struct ActionItemsCard: View {
                 }
                 .buttonStyle(.arcaPress)
                 .foregroundStyle(.tertiary)
-                .accessibilityLabel("Edit action item")
+                .accessibilityLabel(L("액션 아이템 편집", "Edit action item"))
             }
 
             if item.todoTaskUID != nil {
-                Label("투두 등록됨", systemImage: "checkmark.circle.fill")
+                Label(L("투두 등록됨", "Added to your to-dos"), systemImage: "checkmark.circle.fill")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -220,7 +221,8 @@ struct ActionItemsCard: View {
                     let eventID = try await createCalendarEvent(title: item.text, due: due, description: detail)
                     next[index].calendarEventID = eventID
                 } catch {
-                    calendarErrors[index] = "캘린더 등록 실패: \(error.localizedDescription)"
+                    calendarErrors[index] = L("캘린더 등록 실패: \(error.localizedDescription)",
+                                              "Couldn't add it to your calendar: \(error.localizedDescription)")
                 }
             }
 
@@ -240,9 +242,10 @@ struct ActionItemsCard: View {
     }
 
     private func taskDetail(for item: MeetingNotes.ActionItem) -> String {
-        var detail = "회의: \(session.title)"
+        var detail = L("회의: \(session.title)", "Meeting: \(session.title)")
         if let due = item.due {
-            detail += "\n마감: \(due.formatted(date: .abbreviated, time: .omitted))"
+            let formatted = due.formatted(date: .abbreviated, time: .omitted)
+            detail += L("\n마감: \(formatted)", "\nDue: \(formatted)")
         }
         return detail
     }
@@ -309,20 +312,20 @@ private struct ActionItemEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("Action item", text: $draft.text, axis: .vertical)
+            TextField(L("액션 아이템", "Action item"), text: $draft.text, axis: .vertical)
                 .textFieldStyle(.roundedBorder)
-            Toggle("Due date", isOn: $draft.hasDue)
+            Toggle(L("마감일", "Due date"), isOn: $draft.hasDue)
             if draft.hasDue {
-                DatePicker("Date", selection: $draft.due, displayedComponents: .date)
+                DatePicker(L("날짜", "Date"), selection: $draft.due, displayedComponents: .date)
                     .datePickerStyle(.compact)
             }
-            TextField("Assignee", text: $draft.assigneeName)
+            TextField(L("담당자", "Assignee"), text: $draft.assigneeName)
                 .textFieldStyle(.roundedBorder)
 
             HStack {
                 Spacer()
-                Button("Cancel", action: onCancel)
-                Button("Save") { onSave(draft) }
+                Button(L("취소", "Cancel"), action: onCancel)
+                Button(L("저장", "Save")) { onSave(draft) }
                     .keyboardShortcut(.defaultAction)
                     .disabled(draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }

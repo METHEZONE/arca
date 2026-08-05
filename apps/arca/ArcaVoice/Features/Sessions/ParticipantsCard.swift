@@ -37,7 +37,7 @@ struct ParticipantsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                Label("Participants", systemImage: "person.2.fill")
+                Label(L("참가자", "Participants"), systemImage: "person.2.fill")
                     .font(.headline)
                 Spacer()
                 Button {
@@ -47,14 +47,15 @@ struct ParticipantsCard: View {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Label("캘린더에서 참석자 가져오기", systemImage: "calendar.badge.person.crop")
+                        Label(L("캘린더에서 참석자 가져오기", "Pull attendees from your calendar"),
+                              systemImage: "calendar.badge.person.crop")
                     }
                 }
                 .disabled(isFetching)
             }
 
             if participants.isEmpty {
-                Text("No speakers yet")
+                Text(L("아직 화자가 없어요", "No speakers yet"))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             } else {
@@ -166,18 +167,21 @@ struct ParticipantsCard: View {
         Task { @MainActor in
             defer { isFetching = false }
             guard let reader = ComposioCalendarReader.fromArcaConfig() else {
-                calendarError = "Google Calendar 연결이 설정되어 있지 않습니다."
+                calendarError = L("Google Calendar 연결이 설정되어 있지 않습니다.",
+                                  "Google Calendar isn't connected yet.")
                 return
             }
             do {
                 let events = try await reader.eventsOverlapping(start: sessionStart, end: sessionEnd)
                 guard let best = CalendarOverlapScorer.bestEvent(overlapping: events, start: sessionStart, end: sessionEnd) else {
-                    calendarError = "겹치는 캘린더 일정을 찾지 못했습니다."
+                    calendarError = L("겹치는 캘린더 일정을 찾지 못했습니다.",
+                                      "Couldn't find a calendar event overlapping this recording.")
                     return
                 }
                 suggestedEvent = best
                 if best.attendees.isEmpty {
-                    calendarError = "선택된 일정에 참석자 이메일이 없습니다."
+                    calendarError = L("선택된 일정에 참석자 이메일이 없습니다.",
+                                      "That event has no attendee emails.")
                 }
             } catch {
                 calendarError = error.localizedDescription
@@ -212,29 +216,29 @@ struct SpeakerAssignmentPopover: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("화자 지정")
+            Text(L("화자 지정", "Assign speaker"))
                 .font(.headline)
 
             if case .suggestion = request.mode {
-                Picker("연결할 화자", selection: Binding(
+                Picker(L("연결할 화자", "Link to speaker"), selection: Binding(
                     get: { request.selectedSpeakerName ?? "" },
                     set: { request.selectedSpeakerName = $0.isEmpty ? nil : $0 }
                 )) {
-                    Text("참가자만 추가").tag("")
+                    Text(L("참가자만 추가", "Add as participant only")).tag("")
                     ForEach(speakerNames, id: \.self) { name in
                         Text(name).tag(name)
                     }
                 }
             }
 
-            TextField("이름", text: $request.name)
+            TextField(L("이름", "Name"), text: $request.name)
                 .textFieldStyle(.roundedBorder)
-            TextField("이메일", text: $request.email)
+            TextField(L("이메일", "Email"), text: $request.email)
                 .textFieldStyle(.roundedBorder)
             HStack {
                 Spacer()
-                Button("Cancel", action: onCancel)
-                Button("저장") { onSave(request) }
+                Button(L("취소", "Cancel"), action: onCancel)
+                Button(L("저장", "Save")) { onSave(request) }
                     .keyboardShortcut(.defaultAction)
                     .disabled(request.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }

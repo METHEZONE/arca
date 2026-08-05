@@ -338,7 +338,20 @@ final class DayLogEngine {
         return seconds > 180
     }
 
-    private static func dayDirectory(for date: Date) -> URL {
+    /// The raw app-switch evidence for the last `days` days — what the focus
+    /// profile is built from. `nonisolated` because it only reads files, so the
+    /// vitals engine can pull it off the main actor.
+    nonisolated static func timelineEntries(daysBack days: Int, now: Date = .now,
+                                            calendar: Calendar = .current) -> [DayLogTimelineEntry] {
+        let today = calendar.startOfDay(for: now)
+        return (0..<max(1, days)).reversed().flatMap { offset -> [DayLogTimelineEntry] in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return [] }
+            let url = dayDirectory(for: date).appendingPathComponent("timeline.jsonl")
+            return readTimelineEntries(from: url)
+        }
+    }
+
+    nonisolated private static func dayDirectory(for date: Date) -> URL {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         return support

@@ -35,6 +35,17 @@ public struct ClaudeChat: Sendable {
     text with \\n newlines. One short line above the tag saying what you're sending. ARCA \
     will send it directly or queue it for one-tap approval depending on the user's autonomy \
     setting — never say you can't send email. Don't use that tag otherwise.
+
+    When the user mentions eating something — even in passing ("점심 먹었어 김치찌개", "just had \
+    a protein shake") — log it without asking. Estimate the calories and macros from a typical \
+    portion of that dish, say the estimate in one short line in the user's language so they can \
+    correct it, and end the reply with `[MEAL: {"label":"김치찌개","calories":520,\
+    "proteinGrams":22,"carbsGrams":48,"fatGrams":24,"at":"2026-07-27T12:30","note":"..."}]`. \
+    Only "label" and "calories" are required; omit macros you can't reasonably estimate, and \
+    omit "at" unless they said when (bare "HH:MM" is fine). Never ask for permission to log \
+    food and never ask them to weigh it — an estimate they can correct beats an interrogation. \
+    If they give a correction, emit a new tag with the corrected numbers. Don't use that tag \
+    otherwise.
     """
 
     private let extraSystem: String
@@ -129,14 +140,35 @@ public struct ClaudeChat: Sendable {
     }
 
     /// The reply text with every action tag (`[BROWSER: …]`, `[CALENDAR: …]`,
-    /// `[EMAIL: …]`) stripped for display.
+    /// `[EMAIL: …]`, `[MEAL: …]`) stripped for display.
     public static func stripActionTags(_ reply: String) -> String {
         stripBrowserTag(reply)
             .replacingOccurrences(of: #"\[CALENDAR:\s*\{.*\}\s*\]"#, with: "",
                                   options: [.regularExpression])
             .replacingOccurrences(of: #"\[EMAIL:\s*\{.*\}\s*\]"#, with: "",
                                   options: [.regularExpression])
+            .replacingOccurrences(of: #"\[MEAL:\s*\{.*\}\s*\]"#, with: "",
+                                  options: [.regularExpression])
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Extracts a `[MEAL: {...}]` food log the model wants recorded, if any.
+    public static func mealDraft(in reply: String) -> MealActionDraft? {
+        guard let json = firstTagPayload(named: "MEAL", in: reply),
+              let data = json.data(using: .utf8),
+              let draft = try? JSONDecoder().decode(MealActionDraft.self, from: data),
+              draft.isUsable else { return nil }
+        return draft
+    }
+
+    /// Pulls the `{…}` body out of a `[NAME: {…}]` action tag.
+    static func firstTagPayload(named name: String, in reply: String) -> String? {
+        guard let range = reply.range(of: #"\["# + name + #":\s*(\{.*\})\s*\]"#,
+                                      options: .regularExpression) else { return nil }
+        let match = String(reply[range])
+        guard let open = match.firstIndex(of: "{"),
+              let close = match.lastIndex(of: "}") else { return nil }
+        return String(match[open...close])
     }
 
     /// Extracts an `[EMAIL: {...}]` send the model wants executed, if any.

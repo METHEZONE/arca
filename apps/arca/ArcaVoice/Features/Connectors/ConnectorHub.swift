@@ -37,13 +37,16 @@ enum ConnectorError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Composio isn't set up on this device yet."
+            return L("이 기기에는 아직 Composio가 설정되지 않았어요.", "Composio isn't set up on this device yet.")
         case .unknownConnector(let slug):
-            return "Unknown connector: \(slug)"
+            return L("알 수 없는 커넥터: \(slug)", "Unknown connector: \(slug)")
         case .noAuthConfig(let name):
-            return "Create an auth config for \(name) in the Composio dashboard first."
+            return L("Composio 대시보드에서 \(name) 인증 설정을 먼저 만들어 주세요.",
+                     "Create an auth config for \(name) in the Composio dashboard first.")
         case .http(let status, let message):
-            return status > 0 ? "Composio request failed (\(status)): \(message)" : message
+            return status > 0
+                ? L("Composio 요청이 실패했어요 (\(status)): \(message)", "Composio request failed (\(status)): \(message)")
+                : message
         }
     }
 }
@@ -98,6 +101,12 @@ final class ConnectorHub {
         return (id?.isEmpty ?? true) ? nil : id
     }
 
+    /// Whether connecting is even possible on this device. Surfaced so the UI can
+    /// say "no key" out loud instead of showing Connect buttons that quietly fail.
+    var isConfigured: Bool {
+        (apiKey?.isEmpty == false) && userId != nil
+    }
+
     private static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -136,7 +145,8 @@ final class ConnectorHub {
             accounts = mapped
             lastError = nil
         } catch {
-            lastError = "Couldn't load connectors: \(error.localizedDescription)"
+            lastError = L("커넥터를 불러오지 못했어요: \(error.localizedDescription)",
+                          "Couldn't load connectors: \(error.localizedDescription)")
         }
     }
 
@@ -171,7 +181,7 @@ final class ConnectorHub {
         try Self.checkOK(response, data: data)
         let link = try Self.decoder.decode(LinkResponse.self, from: data)
         guard let url = URL(string: link.redirectUrl) else {
-            throw ConnectorError.http(0, "Composio returned an invalid connect link.")
+            throw ConnectorError.http(0, L("Composio가 잘못된 연결 링크를 보냈어요.", "Composio returned an invalid connect link."))
         }
         return url
     }
@@ -202,7 +212,7 @@ final class ConnectorHub {
     func pullAllIntoMemory(context: ModelContext) async {
         let connected = Self.catalog.filter { accounts[$0.slug] != nil }
         guard !connected.isEmpty else {
-            lastPullSummary = "No connected sources to pull from yet."
+            lastPullSummary = L("아직 가져올 연결된 소스가 없어요.", "No connected sources to pull from yet.")
             return
         }
 
@@ -215,14 +225,16 @@ final class ConnectorHub {
                 let added = Self.insertNewFacts(items, info: info, into: context, seen: &seen)
                 if added > 0 { counts.append((info.shortName, added)) }
             } catch {
-                lastError = "Pull failed for \(info.displayName): \(error.localizedDescription)"
+                lastError = L("\(info.displayName) 가져오기에 실패했어요: \(error.localizedDescription)",
+                              "Pull failed for \(info.displayName): \(error.localizedDescription)")
             }
         }
         try? context.save()
 
         lastPullSummary = counts.isEmpty
-            ? "Nothing new to pull."
-            : "Pulled " + counts.map { "\($0.count) \($0.name)" }.joined(separator: " · ") + " items"
+            ? L("새로 가져올 항목이 없어요.", "Nothing new to pull.")
+            : L("\(counts.map { "\($0.count) \($0.name)" }.joined(separator: " · ")) 항목을 가져왔어요",
+                "Pulled " + counts.map { "\($0.count) \($0.name)" }.joined(separator: " · ") + " items")
     }
 
     /// Pulls a single connected toolkit into memory — backs the per-row
@@ -235,9 +247,13 @@ final class ConnectorHub {
             let items = try await pull(from: toolkit)
             let added = Self.insertNewFacts(items, info: info, into: context, seen: &seen)
             try? context.save()
-            lastPullSummary = added > 0 ? "Pulled \(added) \(info.shortName) items" : "Nothing new from \(info.shortName)."
+            lastPullSummary = added > 0
+                ? L("\(info.shortName) 항목 \(added)개를 가져왔어요",
+                    added == 1 ? "Pulled 1 \(info.shortName) item" : "Pulled \(added) \(info.shortName) items")
+                : L("\(info.shortName)에서 새로 가져올 항목이 없어요.", "Nothing new from \(info.shortName).")
         } catch {
-            lastError = "Pull failed for \(info.displayName): \(error.localizedDescription)"
+            lastError = L("\(info.displayName) 가져오기에 실패했어요: \(error.localizedDescription)",
+                          "Pull failed for \(info.displayName): \(error.localizedDescription)")
         }
     }
 
@@ -361,10 +377,12 @@ final class ConnectorHub {
         let (data, response) = try await uploadBody(URLSession.shared, for: request, body: payload)
         try Self.checkOK(response, data: data)
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw ConnectorError.http(0, "\(slug) returned a malformed response.")
+            throw ConnectorError.http(0, L("\(slug) 응답 형식이 올바르지 않아요.", "\(slug) returned a malformed response."))
         }
         if let successful = json["successful"] as? Bool, successful == false {
-            let message = ((json["error"] as? [String: Any])?["message"] as? String) ?? (json["error"] as? String) ?? "tool error"
+            let message = ((json["error"] as? [String: Any])?["message"] as? String)
+                ?? (json["error"] as? String)
+                ?? L("도구 오류", "tool error")
             throw ConnectorError.http(0, "\(slug): \(message)")
         }
         return (json["data"] as? [String: Any]) ?? [:]

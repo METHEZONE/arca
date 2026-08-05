@@ -41,6 +41,10 @@
 	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>ARCA adds events you approve from captured screens.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ARCA reads your sleep, heart rate, HRV, and activity so it can tell you when you focus best and when to rest. It stays on your devices.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ARCA saves the meals you tell it about, and the minutes you spend in a focus measurement, to Apple Health.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ARCA records your meetings and voice notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

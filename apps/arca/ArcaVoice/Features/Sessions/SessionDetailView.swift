@@ -50,7 +50,19 @@ struct SessionDetailView: View {
         var output = names.map {
             SessionParticipant(name: $0, email: emails[$0.lowercased()], isSegmentSpeaker: true)
         }
-        let existingKeys = Set(output.map(\.id))
+        // People named before the recording started. They belong on the card
+        // even when nothing attributed a line to them — on the on-device engine
+        // nothing ever will, and "who was in this meeting" is worth keeping
+        // regardless of who the transcript managed to label.
+        var existingKeys = Set(output.map(\.id))
+        for planned in session.participants {
+            let participant = SessionParticipant(
+                name: planned.name, email: planned.email, isSegmentSpeaker: false)
+            if !existingKeys.contains(participant.id) {
+                output.append(participant)
+                existingKeys.insert(participant.id)
+            }
+        }
         for attendee in participantOnlyAttendees {
             let name = attendee.displayName ?? attendee.email
             let participant = SessionParticipant(name: name, email: attendee.email, isSegmentSpeaker: false)
@@ -101,7 +113,8 @@ struct SessionDetailView: View {
                 }
 
                 if session.state == .processing {
-                    ProgressView("High-quality transcription & speaker separation in progress…")
+                    ProgressView(L("고품질 전사와 화자 분리를 진행하고 있어요…",
+                                   "High-quality transcription & speaker separation in progress…"))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
                 }
@@ -130,18 +143,43 @@ struct SessionDetailView: View {
         }
         .navigationTitle(session.title)
         .toolbar {
+            // First in the toolbar because it's the most common thing anyone wants
+            // to do with a finished note: put it somewhere else.
+            ToolbarItem {
+                CopyButton(text: { SessionClipboardText.markdown(for: session) },
+                           title: L("회의록 복사", "Copy notes"))
+            }
+            ToolbarItem {
+                Menu {
+                    Button {
+                        ArcaClipboard.copy(SessionClipboardText.markdown(for: session))
+                    } label: {
+                        Label(L("회의록 (마크다운)", "Notes (markdown)"), systemImage: "doc.on.doc")
+                    }
+                    .disabled(meetingNotes == nil)
+                    Button {
+                        ArcaClipboard.copy(SessionClipboardText.transcript(for: session))
+                    } label: {
+                        Label(L("전사 전체", "Full transcript"), systemImage: "text.alignleft")
+                    }
+                    .disabled(session.segments.isEmpty)
+                } label: {
+                    Label(L("복사 옵션", "Copy options"), systemImage: "ellipsis.circle")
+                }
+            }
             ToolbarItem {
                 Button {
                     showingMeetingChat = true
                 } label: {
-                    Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                    Label(L("이 회의록에 대해 대화", "Chat about this"),
+                          systemImage: "bubble.left.and.text.bubble.right")
                 }
             }
             ToolbarItem {
                 Button {
                     showingEmailSheet = true
                 } label: {
-                    Label("회의록 보내기", systemImage: "envelope")
+                    Label(L("회의록 보내기", "Email the minutes"), systemImage: "envelope")
                 }
                 .disabled(meetingNotes == nil)
             }
@@ -172,7 +210,8 @@ struct SessionDetailView: View {
             Text(Duration.seconds(session.duration).formatted(.time(pattern: .minuteSecond)))
                 .monospacedDigit()
             if session.source == .macMeeting {
-                Label(session.meetingApp.map { "Video call · \($0)" } ?? "Video call",
+                Label(session.meetingApp.map { L("영상 통화 · \($0)", "Video call · \($0)") }
+                        ?? L("영상 통화", "Video call"),
                       systemImage: "video.fill")
                     .font(.caption)
                     .padding(.horizontal, 8)
@@ -183,7 +222,8 @@ struct SessionDetailView: View {
             Button {
                 showingMeetingChat = true
             } label: {
-                Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                Label(L("이 회의록에 대해 대화", "Chat about this"),
+                      systemImage: "bubble.left.and.text.bubble.right")
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -191,7 +231,7 @@ struct SessionDetailView: View {
                     .foregroundStyle(ArcaFace.ember)
             }
             .buttonStyle(.arcaPress)
-            .help("이 회의록에 대해 ARCA와 대화")
+            .help(L("이 회의록에 대해 ARCA와 대화", "Talk to ARCA about this meeting"))
         }
         .font(.subheadline)
         .foregroundStyle(.secondary)
@@ -202,17 +242,20 @@ struct SessionDetailView: View {
         if let note = session.note {
             VStack(alignment: .leading, spacing: 12) {
                 if let enhanced = note.enhancedMarkdown, !enhanced.isEmpty {
-                    NoteCard(title: "My Notes (finalized)", icon: "sparkles", markdown: enhanced)
+                    NoteCard(title: L("내 노트 (정리 완료)", "My Notes (finalized)"),
+                             icon: "sparkles", markdown: enhanced)
                 } else if !note.roughMarkdown.isEmpty {
-                    NoteCard(title: "My Notes", icon: "square.and.pencil", markdown: note.roughMarkdown)
+                    NoteCard(title: L("내 노트", "My Notes"),
+                             icon: "square.and.pencil", markdown: note.roughMarkdown)
                 }
                 if let summary = note.summaryMarkdown, !summary.isEmpty {
-                    NoteCard(title: "Meeting Summary", icon: "doc.text.fill", markdown: summary)
+                    NoteCard(title: L("회의 요약", "Meeting Summary"),
+                             icon: "doc.text.fill", markdown: summary)
                 }
                 if let data = note.decisionsJSON,
                    let decisions = try? JSONDecoder().decode([String].self, from: data),
                    !decisions.isEmpty {
-                    NoteCard(title: "Decisions", icon: "checkmark.seal.fill",
+                    NoteCard(title: L("결정사항", "Decisions"), icon: "checkmark.seal.fill",
                              markdown: decisions.map { "• \($0)" }.joined(separator: "\n"))
                 }
                 if let data = note.actionItemsJSON,
@@ -230,7 +273,7 @@ struct SessionDetailView: View {
     private func transcriptSection(model: TranscriptModel) -> some View {
         if !model.segments.isEmpty {
             LazyVStack(alignment: .leading, spacing: 14) {
-                Label("Transcript", systemImage: "waveform")
+                Label(L("전사", "Transcript"), systemImage: "waveform")
                     .font(.headline)
 
                 ForEach(model.segments, id: \.persistentModelID) { segment in
@@ -244,8 +287,47 @@ struct SessionDetailView: View {
                 }
             }
         } else if session.state == .ready {
-            ContentUnavailableView("Transcript is empty", systemImage: "waveform.slash")
+            // An empty transcript has two very different causes and the user
+            // deserves to know which one they're looking at: the recording had
+            // nothing in it, or the pass still owes it a transcript. The second
+            // one is recoverable, so it gets a button instead of a shrug.
+            if session.qualityPassPending || FinalPassRunner.hasRecoverableAudio(session) {
+                ContentUnavailableView {
+                    Label(L("전사가 아직 안 왔어요", "Transcript hasn't arrived yet"),
+                          systemImage: "arrow.trianglehead.2.clockwise")
+                } description: {
+                    Text(L("오디오는 이 기기에 그대로 있어요. 연결되면 자동으로 다시 시도하고, 지금 바로 시켜도 돼요.",
+                           "The audio is still on this device. ARCA retries automatically once it can reach the network — or start it now."))
+                        + Text(verbatim: "\n")
+                        + Text(recoveryCostHint)
+                } actions: {
+                    Button(L("지금 다시 시도", "Retry now")) {
+                        FinalPassRunner.retry(
+                            record: session,
+                            ownerName: AppServices.shared.ownerName,
+                            languageHints: TranscriptionPrefs.languageHints)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else {
+                ContentUnavailableView(L("전사 내용이 없어요", "Transcript is empty"),
+                                       systemImage: "waveform.slash")
+            }
         }
+    }
+
+    /// How much audio a rebuild would send, shown before the button is pressed.
+    ///
+    /// Channels are summed rather than showing the meeting's wall-clock length,
+    /// because transcription is billed per channel: a 50-minute call with mic and
+    /// system audio is 100 minutes of billable audio, and quoting 50 would
+    /// understate the cost by half.
+    private var recoveryCostHint: String {
+        let seconds = FinalPassRunner.billableAudioSeconds([session])
+        guard seconds > 0 else { return "" }
+        let minutes = max(1, Int((seconds / 60).rounded()))
+        return L("다시 전사할 오디오 약 \(minutes)분 — 채널 합산, 과금 기준이에요.",
+                 "About \(minutes) min of audio to re-transcribe — channels summed, which is what gets billed.")
     }
 
     private func displayName(for segment: StoredSegment) -> String {
@@ -386,7 +468,7 @@ private struct TranscriptRow: View {
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(.tertiary)
                     if !segment.isFinal {
-                        Text("Live")
+                        Text(L("실시간", "Live"))
                             .font(.caption2)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
@@ -432,7 +514,8 @@ private struct EmailMinutesSheet: View {
         let fallback = fallbackRecipient.trimmingCharacters(in: .whitespacesAndNewlines)
         if !fallback.isEmpty,
            !options.contains(where: { $0.email.caseInsensitiveCompare(fallback) == .orderedSame }) {
-            options.append(EmailRecipientOption(name: "Summary Email", email: fallback, isFallback: true))
+            options.append(EmailRecipientOption(name: L("요약 수신 이메일", "Summary Email"),
+                                               email: fallback, isFallback: true))
         }
         self.options = options
         _selected = State(initialValue: Set(options.map(\.email)))
@@ -441,14 +524,15 @@ private struct EmailMinutesSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("회의록 보내기", systemImage: "envelope.fill")
+                Label(L("회의록 보내기", "Email the minutes"), systemImage: "envelope.fill")
                     .font(.headline)
                 Spacer()
-                Button("Close") { dismiss() }
+                Button(L("닫기", "Close")) { dismiss() }
             }
 
             if options.isEmpty {
-                Text("이메일이 있는 참가자가 없습니다. 아래에 직접 추가할 수 있습니다.")
+                Text(L("이메일이 있는 참가자가 없습니다. 아래에 직접 추가할 수 있습니다.",
+                       "No participants have an email yet. You can add one below."))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             } else {
@@ -466,7 +550,7 @@ private struct EmailMinutesSheet: View {
                                 Text(option.email)
                                     .foregroundStyle(.secondary)
                                 if option.isFallback {
-                                    Text("fallback")
+                                    Text(L("기본", "fallback"))
                                         .font(.caption2)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
@@ -478,7 +562,8 @@ private struct EmailMinutesSheet: View {
                 }
             }
 
-            TextField("추가 이메일 (comma-separated)", text: $extraEmails)
+            TextField(L("추가 이메일 (comma-separated)", "Extra emails (comma-separated)"),
+                      text: $extraEmails)
                 .textFieldStyle(.roundedBorder)
 
             if !results.isEmpty {
@@ -508,7 +593,7 @@ private struct EmailMinutesSheet: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { dismiss() }
+                Button(L("취소", "Cancel")) { dismiss() }
                     .disabled(isSending)
                 Button {
                     send()
@@ -517,7 +602,7 @@ private struct EmailMinutesSheet: View {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Text("보내기")
+                        Text(L("보내기", "Send"))
                     }
                 }
                 .keyboardShortcut(.defaultAction)
@@ -539,7 +624,7 @@ private struct EmailMinutesSheet: View {
         errorMessage = nil
         results = []
         guard let sender = ComposioEmailSender.fromArcaConfig() else {
-            errorMessage = "Gmail 연결이 설정되어 있지 않습니다."
+            errorMessage = L("Gmail 연결이 설정되어 있지 않습니다.", "Gmail isn't connected yet.")
             return
         }
         isSending = true

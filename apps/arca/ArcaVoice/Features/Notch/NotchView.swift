@@ -145,14 +145,36 @@ struct NotchView: View {
         // from churning the window's Auto Layout (which crashed AppKit).
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task { await blinkLoop() }
-        .onChange(of: surface == .recording) { _, recording in
-            if recording, !reduceMotion {
-                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                    breathing = true
-                }
-            } else {
-                withAnimation(.easeOut(duration: 0.3)) { breathing = false }
-            }
+        .onAppear { syncBreathing() }
+        .onChange(of: surface) { _, _ in syncBreathing() }
+        .onChange(of: reduceMotion) { _, _ in syncBreathing() }
+    }
+
+    /// The single place continuous motion on the band is started or stopped.
+    ///
+    /// Two things went wrong when this logic was split across the view. The
+    /// `.working` state — which only means "a background task is running", i.e.
+    /// most of a working day — started a `repeatForever` loop on the menu-bar
+    /// band, the one surface that is on screen every waking second. And nothing
+    /// ever stopped it: leaving `.working` re-ran a `.task(id:)` whose body only
+    /// `guard`ed and returned, so the loop outlived its cause and kept
+    /// re-rasterizing the band's shadows at display refresh rate for the rest of
+    /// the process. macOS logged that as ~52% CPU sustained for three minutes
+    /// with ARCA not even frontmost, on battery.
+    ///
+    /// Same rule `SpiritFace.syncMotion()` already follows: long-lived states
+    /// stay still and read through color and shape instead. Only recording —
+    /// short, deliberate, and started by the user a second ago — breathes.
+    private func syncBreathing() {
+        guard surface == .recording, !reduceMotion else {
+            // Re-animating with a *non-repeating* curve is what actually retires
+            // a repeatForever loop. Assigning the value alone inherits the
+            // running animation and keeps the loop alive.
+            withAnimation(.easeOut(duration: 0.3)) { breathing = false }
+            return
+        }
+        withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+            breathing = true
         }
     }
 
@@ -232,7 +254,7 @@ struct NotchView: View {
             .background(.black.opacity(0.85), in: Capsule())
             .padding(.leading, 6)
         case .stopping:
-            Text("Wrapping up…")
+            Text(L("마무리 중…", "Wrapping up…"))
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.9))
                 .padding(.horizontal, 8).padding(.vertical, 3)
@@ -270,10 +292,10 @@ struct NotchView: View {
             HStack(spacing: 10) {
                 miniFace(happy: false)
                 Spacer()
-                chipButton("Record", icon: "mic.fill", prominent: true) {
+                chipButton(L("녹음", "Record"), icon: "mic.fill", prominent: true) {
                     agent.startRecordingFromMenu()
                 }
-                chipButton("Open app", icon: "rectangle.on.rectangle") {
+                chipButton(L("앱 열기", "Open app"), icon: "rectangle.on.rectangle") {
                     agent.openApp()
                 }
             }
@@ -284,11 +306,11 @@ struct NotchView: View {
                 miniFace(happy: true)
                     .scaleEffect(breathing ? 1.1 : 1.0)
                 if surface == .stopping {
-                    Text("Wrapping up…")
+                    Text(L("마무리 중…", "Wrapping up…"))
                         .font(.system(.callout, design: .rounded, weight: .semibold))
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Listening")
+                    Text(L("듣고 있어요", "Listening"))
                         .font(.system(.callout, design: .rounded, weight: .semibold))
                         .foregroundStyle(.green)
                         .opacity(breathing ? 0.6 : 1.0)
@@ -317,23 +339,25 @@ struct NotchView: View {
         case .meetingPrompt(let label):
             promptRow(
                 icon: "waveform.badge.mic", tint: .blue,
-                title: "Looks like \(label) just started",
-                subtitle: "Start transcribing? Both sides are captured separately.",
-                acceptTitle: "Transcribe", onAccept: { agent.acceptMeeting() },
+                title: L("\(label) 시작한 것 같아요", "Looks like \(label) just started"),
+                subtitle: L("기록을 시작할까요? 양쪽 목소리를 따로 담아요.",
+                            "Start transcribing? Both sides are captured separately."),
+                acceptTitle: L("기록하기", "Transcribe"), onAccept: { agent.acceptMeeting() },
                 onDismiss: { agent.dismissMeeting() })
 
         case .screenshotPrompt(let url):
             promptRow(
                 icon: "camera.viewfinder", tint: .orange,
-                title: "New screenshot",
-                subtitle: "Want me to read it and draft an action plan?",
-                acceptTitle: "Read it", onAccept: { agent.acceptScreenshot(url) },
+                title: L("새 스크린샷", "New screenshot"),
+                subtitle: L("제가 읽고 실행 계획을 만들어 드릴까요?",
+                            "Want me to read it and draft an action plan?"),
+                acceptTitle: L("읽어보기", "Read it"), onAccept: { agent.acceptScreenshot(url) },
                 onDismiss: { agent.dismissScreenshot() })
 
         case .readingCapture:
             HStack(spacing: 12) {
                 ProgressView().controlSize(.small).tint(.white)
-                Text("Reading…")
+                Text(L("읽고 있어요…", "Reading…"))
                     .font(.system(.callout, design: .rounded, weight: .medium))
                     .foregroundStyle(.white.opacity(0.9))
                 Spacer()
@@ -344,8 +368,8 @@ struct NotchView: View {
             promptRow(
                 icon: "sparkles", tint: .green,
                 title: offer,
-                subtitle: "Action plan saved.",
-                acceptTitle: "Open", onAccept: { agent.openPlan() },
+                subtitle: L("실행 계획을 저장했어요.", "Action plan saved."),
+                acceptTitle: L("열기", "Open"), onAccept: { agent.openPlan() },
                 onDismiss: { agent.dismissScreenshot() })
 
         case .celebrate(let title):
@@ -355,7 +379,7 @@ struct NotchView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(ArcaSkins.current.hi)
                     .symbolEffect(.bounce, options: .repeat(2))
-                Text("Done — \(title)")
+                Text(L("완료 — \(title)", "Done — \(title)"))
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.95))
                     .lineLimit(1)
@@ -385,7 +409,7 @@ struct NotchView: View {
                         VStack(spacing: 4) {
                             Image(systemName: "photo.badge.plus")
                                 .font(.title2)
-                            Text("Drop the shot here")
+                            Text(L("여기에 놓아주세요", "Drop the shot here"))
                                 .font(.caption)
                         }
                         .foregroundStyle(.white.opacity(0.85))
@@ -443,12 +467,15 @@ struct NotchView: View {
                         .scaleEffect(y: -1)
                         .shadow(color: ArcaFace.zoneViolet.opacity(0.9), radius: 3)
                 case .working:
-                    // Determined squint in the skin's color — hard at work.
+                    // Determined squint in the skin's color — hard at work. The
+                    // glow is a fixed radius on purpose: "working" lasts hours,
+                    // and animating a shadow radius on an always-visible surface
+                    // is what the CPU reports were pointing at. Shape and color
+                    // carry the state; motion doesn't have to.
                     DomeEye()
                         .fill(skin.hi)
                         .frame(width: 10, height: 6)
-                        .shadow(color: skin.mid.opacity(0.9),
-                                radius: breathing ? 3.5 : 1.5)
+                        .shadow(color: skin.mid.opacity(0.9), radius: 3)
                 case .plain:
                     DomeEye()
                         .fill(eyeFill)
@@ -463,12 +490,6 @@ struct NotchView: View {
                 y: -3 + agent.pointerLook.y * 1.8)
         .animation(.easeOut(duration: 0.5), value: agent.pointerLook)
         .frame(height: geometry.hasNotch ? 22 : 30)
-        .task(id: state == .working) {
-            guard state == .working, !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
-                breathing = true
-            }
-        }
     }
 
     private func miniFace(happy: Bool) -> some View {
@@ -508,7 +529,7 @@ struct NotchView: View {
                     .lineLimit(1)
             }
             Spacer()
-            chipButton("Later", icon: nil) { onDismiss() }
+            chipButton(L("나중에", "Later"), icon: nil) { onDismiss() }
             chipButton(acceptTitle, icon: nil, prominent: true) { onAccept() }
         }
         .padding(.horizontal, 16)

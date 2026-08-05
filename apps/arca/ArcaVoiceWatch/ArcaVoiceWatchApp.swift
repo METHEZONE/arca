@@ -4,6 +4,7 @@ import SwiftUI
 struct ArcaVoiceWatchApp: App {
     init() {
         WatchSync.shared.activate()
+        WatchSync.shared.loadLatestVitals()
     }
 
     var body: some Scene {
@@ -11,6 +12,7 @@ struct ArcaVoiceWatchApp: App {
             NavigationStack {
                 TabView {
                     FaceRecordView()
+                    DeepMeasureView()
                     SummaryListView()
                 }
                 .tabViewStyle(.verticalPage)

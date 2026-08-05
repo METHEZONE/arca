@@ -33,7 +33,7 @@ struct CompanionTodoRail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("투두", systemImage: "checklist")
+                Label(L("투두", "To-dos"), systemImage: "checklist")
                     .font(.system(.headline, design: .rounded, weight: .bold))
                 Spacer()
                 Text(level.label)
@@ -47,7 +47,7 @@ struct CompanionTodoRail: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     if humanTasks.isEmpty {
-                        emptyLine("확인할 일이 없어요 ✨")
+                        emptyLine(L("확인할 일이 없어요 ✨", "Nothing needs you right now ✨"))
                     } else {
                         ForEach(humanTasks) { task in
                             TodoTaskRow(task: task, level: level)
@@ -73,7 +73,11 @@ struct CompanionTodoRail: View {
                     withAnimation(.spring(duration: 0.25)) { showSuggestions.toggle() }
                 } label: {
                     HStack {
-                        Label("ARCA 제안 \(suggestions.count)", systemImage: "sparkles")
+                        Label(L("ARCA 제안 \(suggestions.count)",
+                                suggestions.count == 1
+                                    ? "1 ARCA suggestion"
+                                    : "\(suggestions.count) ARCA suggestions"),
+                              systemImage: "sparkles")
                         Spacer()
                         Image(systemName: showSuggestions ? "chevron.down" : "chevron.right")
                     }
@@ -93,7 +97,7 @@ struct CompanionTodoRail: View {
 
     private var quickAdd: some View {
         HStack(spacing: 8) {
-            TextField("빠르게 맡길 일…", text: $draft)
+            TextField(L("빠르게 맡길 일…", "Something to hand off…"), text: $draft)
                 .textFieldStyle(.plain)
                 .font(.system(.callout, design: .rounded))
                 .padding(.horizontal, 12)
@@ -116,7 +120,7 @@ struct CompanionTodoRail: View {
                 withAnimation(.spring(duration: 0.25)) { showProcessed.toggle() }
             } label: {
                 HStack {
-                    Label("자동 처리됨", systemImage: "checkmark.seal.fill")
+                    Label(L("자동 처리됨", "Handled for you"), systemImage: "checkmark.seal.fill")
                     Spacer()
                     Image(systemName: showProcessed ? "chevron.down" : "chevron.right")
                 }
@@ -127,11 +131,12 @@ struct CompanionTodoRail: View {
 
             if showProcessed {
                 if processed.isEmpty {
-                    emptyLine("아직 자동 처리 내역이 없어요.")
+                    emptyLine(L("아직 자동 처리 내역이 없어요.", "Nothing handled for you yet."))
                 } else {
                     ForEach(processed) { task in
                         DisclosureGroup {
-                            Text(task.resultMarkdown ?? "결과 내용이 비어 있어요.")
+                            Text(task.resultMarkdown ?? L("결과 내용이 비어 있어요.",
+                                                          "The result came back empty."))
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.68))
                                 .textSelection(.enabled)
@@ -159,11 +164,11 @@ struct CompanionTodoRail: View {
 
     private var proposalsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("답장 대기", systemImage: "bubble.left.and.text.bubble.right")
+            Label(L("답장 대기", "Replies waiting"), systemImage: "bubble.left.and.text.bubble.right")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(ArcaSkins.current.hi)
             if proposals.isEmpty {
-                emptyLine("승인을 기다리는 답장이 없어요.")
+                emptyLine(L("승인을 기다리는 답장이 없어요.", "No replies waiting on your approval."))
             } else {
                 ForEach(proposals) { proposal in
                     ReplyApprovalRow(proposal: proposal)

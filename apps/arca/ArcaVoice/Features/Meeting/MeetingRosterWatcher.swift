@@ -115,14 +115,24 @@ final class MeetingRosterWatcher {
     }
 
     private func captureOnce() async {
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else { return }
-        guard let (data, mediaType) = await ScreenGrab.meetingWindowJPEG() else { return }
         let stamp = Date()
+        guard let roster = await Self.readRosterNow() else { return }
+        snapshots.append(RosterSnapshot(capturedAt: stamp, roster: roster))
+    }
+
+    /// One look at the meeting window, right now.
+    ///
+    /// Split out of the watch loop so the pre-recording sheet can offer "pull
+    /// from the meeting screen" before there is a recording to watch — same
+    /// screenshot, same reader, no duplicated prompt.
+    static func readRosterNow() async -> MeetingRoster? {
+        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else { return nil }
+        guard let (data, mediaType) = await ScreenGrab.meetingWindowJPEG() else { return nil }
         guard let roster = try? await MeetingRosterReader(apiKey: apiKey)
             .read(imageData: data, mediaType: mediaType),
-            !roster.participants.isEmpty || roster.activeSpeaker != nil else { return }
-        snapshots.append(RosterSnapshot(capturedAt: stamp, roster: roster))
+            !roster.participants.isEmpty || roster.activeSpeaker != nil else { return nil }
         DebugTrace.log("roster: \(roster.participants.joined(separator: ", ")) active=\(roster.activeSpeaker ?? "-")")
+        return roster
     }
 }
 #endif

@@ -39,6 +39,10 @@ final class ZoneEngine {
     private(set) var startedAt: Date?
     private(set) var handled: [HandledItem] = []
     private(set) var attention: [AttentionItem] = []
+    /// How long the session the report is about actually ran. Captured at stop
+    /// rather than computed in the view, so the figure doesn't keep climbing
+    /// while the report window sits open on screen.
+    private(set) var lastSessionMinutes = 0
     /// When set, the end-of-zone report sheet is shown.
     var showReport = false
 
@@ -59,6 +63,8 @@ final class ZoneEngine {
         processedIDs = []
         FocusMode.setDoNotDisturb(true)
         AppServices.shared.notch.zoneChanged(true)
+        // So the iPhone can say "맥에서 ZONE 42분째" rather than looking idle.
+        DevicePresence.reportActivity(zoneStartedAt: startedAt, isRecording: false)
 
         pollTask = Task { @MainActor in
             while isActive && !Task.isCancelled {
@@ -75,7 +81,28 @@ final class ZoneEngine {
         pollTask = nil
         FocusMode.setDoNotDisturb(false)
         AppServices.shared.notch.zoneChanged(false)
+        DevicePresence.reportActivity(zoneStartedAt: nil, isRecording: false)
+        if let startedAt {
+            lastSessionMinutes = max(0, Int(Date.now.timeIntervalSince(startedAt) / 60))
+        }
+        recordFocusEvidence()
         showReport = true
+    }
+
+    /// Files the finished session with the vitals engine.
+    ///
+    /// This is the best focus evidence ARCA ever gets: the user declared the
+    /// intent, and the two counts are precisely the "was the human the
+    /// bottleneck" signal — `handled` is what ARCA absorbed, `attention` is what
+    /// broke through anyway.
+    private func recordFocusEvidence() {
+        guard let startedAt else { return }
+        VitalsEngine.shared.recordFocusSession(FocusSession(
+            startedAt: startedAt,
+            endedAt: .now,
+            source: "zone",
+            handledCount: handled.count,
+            interruptedCount: attention.count))
     }
 
     /// One polling pass: pull recent inbound items, classify, auto-handle or queue.
@@ -101,7 +128,9 @@ final class ZoneEngine {
             } catch {
                 attention.append(AttentionItem(
                     title: item.title, context: item.body,
-                    choices: [Choice(label: "Later", explanation: "Skip for now", isRecommended: false, executionPlan: nil)]))
+                    choices: [Choice(label: L("나중에", "Later"),
+                                     explanation: L("지금은 넘어갈게요", "Skip for now"),
+                                     isRecommended: false, executionPlan: nil)]))
             }
         }
     }
@@ -150,13 +179,15 @@ final class ZoneEngine {
               let tu = content.first(where: { ($0["type"] as? String) == "tool_use" }),
               let input = tu["input"] as? [String: Any],
               let raw = input["choices"] as? [[String: Any]] else {
-            return [Choice(label: "I'll check it myself", explanation: "Open the original and handle it directly", isRecommended: true, executionPlan: nil)]
+            return [Choice(label: L("직접 확인할게요", "I'll check it myself"),
+                           explanation: L("원본을 열어 직접 처리해요", "Open the original and handle it directly"),
+                           isRecommended: true, executionPlan: nil)]
         }
         return raw.map { d in
             let canDo = (d["arcaCanDo"] as? Bool) ?? false
             let plan = (d["executionPlan"] as? String) ?? ""
             return Choice(
-                label: (d["label"] as? String) ?? "Choice",
+                label: (d["label"] as? String) ?? L("선택", "Choice"),
                 explanation: (d["explanation"] as? String) ?? "",
                 isRecommended: (d["isRecommended"] as? Bool) ?? false,
                 executionPlan: (canDo && !plan.isEmpty) ? plan : nil)
@@ -167,26 +198,35 @@ final class ZoneEngine {
     /// data so the window/quest-card UI can be verified without live sources.
     func seedDemoReport() {
         startedAt = .now.addingTimeInterval(-52 * 60)
+        lastSessionMinutes = 52
         handled = [
-            HandledItem(summary: "📧 3 newsletters", action: "Promotional, no need to read — cleared them out"),
-            HandledItem(summary: "📧 Meeting notes share request — PM Kim", action: "Prepared a draft summary of the last meeting"),
+            HandledItem(summary: L("📧 뉴스레터 3건", "📧 3 newsletters"),
+                        action: L("홍보 메일이라 읽지 않아도 돼서 정리했어요", "Promotional, no need to read — cleared them out")),
+            HandledItem(summary: L("📧 회의록 공유 요청 — 김 PM", "📧 Meeting notes share request — PM Kim"),
+                        action: L("지난 회의 요약 초안을 준비해뒀어요", "Prepared a draft summary of the last meeting")),
         ]
         attention = [
             AttentionItem(
-                title: "📧 Contract review request — Legal team",
-                context: "Review ZER01NE sprint contract v3 and reply by Friday",
+                title: L("📧 계약서 검토 요청 — 법무팀", "📧 Contract review request — Legal team"),
+                context: L("ZER01NE 스프린트 계약서 v3 검토 후 금요일까지 회신", "Review ZER01NE sprint contract v3 and reply by Friday"),
                 choices: [
-                    Choice(label: "Delegate a draft reply", explanation: "ARCA will summarize the review points and prepare a draft reply",
+                    Choice(label: L("답장 초안 맡기기", "Delegate a draft reply"),
+                           explanation: L("ARCA가 검토 포인트를 정리하고 답장 초안을 준비해요", "ARCA will summarize the review points and prepare a draft reply"),
                            isRecommended: true, executionPlan: "Draft a reply with a summary of key contract clauses and a list of questions"),
-                    Choice(label: "I'll check it myself", explanation: "Open the original and handle it directly", isRecommended: false, executionPlan: nil),
+                    Choice(label: L("직접 확인할게요", "I'll check it myself"),
+                           explanation: L("원본을 열어 직접 처리해요", "Open the original and handle it directly"),
+                           isRecommended: false, executionPlan: nil),
                 ]),
             AttentionItem(
-                title: "📅 Tomorrow's 10am meeting — reschedule request",
-                context: "The other party asked if 11am works instead",
+                title: L("📅 내일 오전 10시 회의 — 시간 변경 요청", "📅 Tomorrow's 10am meeting — reschedule request"),
+                context: L("상대방이 오전 11시로 옮겨도 되는지 물어왔어요", "The other party asked if 11am works instead"),
                 choices: [
-                    Choice(label: "Move to 11am", explanation: "ARCA will move the calendar event and send the acceptance reply",
+                    Choice(label: L("오전 11시로 옮기기", "Move to 11am"),
+                           explanation: L("ARCA가 캘린더 일정을 옮기고 수락 답장을 보내요", "ARCA will move the calendar event and send the acceptance reply"),
                            isRecommended: true, executionPlan: "Move the calendar event to 11am and send an acceptance reply"),
-                    Choice(label: "I'll check it myself", explanation: "Open the original and handle it directly", isRecommended: false, executionPlan: nil),
+                    Choice(label: L("직접 확인할게요", "I'll check it myself"),
+                           explanation: L("원본을 열어 직접 처리해요", "Open the original and handle it directly"),
+                           isRecommended: false, executionPlan: nil),
                 ]),
         ]
         showReport = true
@@ -198,7 +238,8 @@ final class ZoneEngine {
         guard let plan = choice.executionPlan, let container else { return }
         // Log it as a running task ARCA is handling.
         let task = TodoTask(title: item.title, detail: plan, actionKind: .broad,
-                            autonomyRationale: "Approved from the ZONE report", source: "zone")
+                            autonomyRationale: L("ZONE 리포트에서 승인했어요", "Approved from the ZONE report"),
+                            source: "zone")
         container.mainContext.insert(task)
         try? container.mainContext.save()
         TaskEngine.shared.toss(task)

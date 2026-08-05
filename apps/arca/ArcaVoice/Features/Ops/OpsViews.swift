@@ -14,7 +14,7 @@ struct BriefingCard: View {
                 ArcaFace(mood: ops.isBriefing ? .thinking : .idle,
                          size: 22, halo: false)
                     .frame(width: 24, height: 24)
-                Text("Today")
+                Text(L("오늘", "Today"))
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                 Spacer()
                 if let generated = ops.briefing?.generatedAt {
@@ -25,7 +25,8 @@ struct BriefingCard: View {
                 Button {
                     Task { await ops.generateBriefing(context: context) }
                 } label: {
-                    Label(ops.briefing == nil ? "Brief me" : "Refresh",
+                    Label(ops.briefing == nil ? L("브리핑 받기", "Brief me")
+                                             : L("새로고침", "Refresh"),
                           systemImage: "sparkles")
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10).padding(.vertical, 5)
@@ -40,14 +41,15 @@ struct BriefingCard: View {
                 HStack(spacing: 8) {
                     ArcaFace(mood: .working, size: 18, halo: false)
                         .frame(width: 20, height: 20)
-                    Text("Reading your day…")
+                    Text(L("하루를 살펴보고 있어요…", "Reading your day…"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             } else if let briefing = ops.briefing {
                 briefingBody(briefing)
             } else {
-                Text("Calendar, open quests, today's sessions — one tap and I'll lay out your day.")
+                Text(L("캘린더, 남은 할 일, 오늘의 세션 — 한 번만 누르면 하루를 정리해 드릴게요.",
+                       "Calendar, open quests, today's sessions — one tap and I'll lay out your day."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -66,14 +68,14 @@ struct BriefingCard: View {
     @ViewBuilder
     private func briefingBody(_ briefing: AmbientOps.Briefing) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            section("Do", items: briefing.today, symbol: "flag.fill",
+            section(L("할 일", "Do"), items: briefing.today, symbol: "flag.fill",
                     tint: ArcaSkins.current.mid)
             if !briefing.asks.isEmpty {
-                section("Ask", items: briefing.asks, symbol: "person.2.fill",
+                section(L("부탁할 일", "Ask"), items: briefing.asks, symbol: "person.2.fill",
                         tint: .blue)
             }
             if !briefing.done.isEmpty {
-                section("Done", items: briefing.done, symbol: "checkmark.seal.fill",
+                section(L("끝난 일", "Done"), items: briefing.done, symbol: "checkmark.seal.fill",
                         tint: .green)
             }
         }
@@ -110,8 +112,9 @@ struct ReplyApprovalRow: View {
                     .font(.caption)
                     .foregroundStyle(ArcaSkins.current.mid)
                 Text(proposal.sourceRaw == "gmail"
-                     ? "\(proposal.channel)에게 이메일?"
-                     : "Reply to \(proposal.author.isEmpty ? "Slack" : proposal.author)?")
+                     ? L("\(proposal.channel)에게 이메일?", "Email \(proposal.channel)?")
+                     : L("\(proposal.author.isEmpty ? "Slack" : proposal.author)에게 답장?",
+                         "Reply to \(proposal.author.isEmpty ? "Slack" : proposal.author)?"))
                     .font(.caption.weight(.bold))
                     .lineLimit(1)
                 Spacer()
@@ -128,7 +131,7 @@ struct ReplyApprovalRow: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-            TextField("Draft", text: $proposal.draft, axis: .vertical)
+            TextField(L("초안", "Draft"), text: $proposal.draft, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.caption)
                 .lineLimit(1...4)
@@ -137,7 +140,7 @@ struct ReplyApprovalRow: View {
                             in: RoundedRectangle(cornerRadius: 8))
             HStack(spacing: 8) {
                 Spacer()
-                Button("Skip") {
+                Button(L("건너뛰기", "Skip")) {
                     AmbientOps.shared.skip(proposal, context: context)
                 }
                 .buttonStyle(.arcaPress)
@@ -158,7 +161,7 @@ struct ReplyApprovalRow: View {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 9, weight: .bold))
                         }
-                        Text("Approve & send")
+                        Text(L("승인하고 보내기", "Approve & send"))
                             .font(.caption.weight(.bold))
                     }
                     .padding(.horizontal, 10).padding(.vertical, 5)

@@ -41,12 +41,20 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
         let fileSize = try Self.fileSize(of: fileURL)
         let duration = (try? await AVURLAsset(url: fileURL).load(.duration).seconds) ?? 0
 
+        let transcript: Transcript
         if duration > Self.maxChunkSeconds || fileSize > Self.maxUploadBytes {
-            return try await transcribeChunked(
+            transcript = try await transcribeChunked(
                 fileURL: fileURL, channel: channel, hints: hints,
                 duration: duration, fileSize: fileSize)
+        } else {
+            transcript = try await transcribeSingle(fileURL: fileURL, channel: channel, hints: hints)
         }
-        return try await transcribeSingle(fileURL: fileURL, channel: channel, hints: hints)
+        // Logged once per channel with the whole duration, not per chunk —
+        // chunking is our workaround for the model's length cap, and billing
+        // follows the audio, so counting chunks would inflate the total.
+        AIUsageLog.appendAudio(provider: "openai", model: model,
+                               source: "transcribe-\(channel.rawValue)", seconds: duration)
+        return transcript
     }
 
     private func transcribeSingle(fileURL: URL, channel: CaptureChannel, hints: TranscriptHints) async throws -> Transcript {
