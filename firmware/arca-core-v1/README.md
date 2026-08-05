@@ -350,6 +350,19 @@ unsigned dylib. Two tools work around it:
 ./build-vendored.sh --flash   # build + flash
 ```
 
+Flashing has one more wall on top of that. The sandbox also denies serial line
+control, and while `tcsetattr`/`tcflush` are safe to no-op on a USB-CDC endpoint,
+`ioctl(TIOCMBIS/TIOCMBIC)` is not: on the ESP32-S3's native USB-Serial-JTAG those
+lines are exactly how esptool drives the chip into ROM download mode. Blocked,
+esptool reaches the port, sends its sync frames and gets silence, because the
+application is still running.
+
+`tools/esptool_sandboxed.py` neutralises everything that is safe to neutralise,
+which is enough to flash a board that is *already* in download mode. This board
+has no RESET button (PWR goes through the AXP2101), so getting it there by hand
+means: **unplug USB-C, hold BOOT, plug USB-C back in, release BOOT** — then flash
+with `--before no_reset --after no_reset` and power-cycle to run the new app.
+
 Two gotchas this uncovered, both encoded in the scripts:
 
 - the registry's standalone `usb` component does not compile against IDF 5.5 and
