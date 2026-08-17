@@ -23,13 +23,23 @@ public enum ArcaConfig {
     /// Overridable per install via the `arcaCloudBaseURL` default or a
     /// `BundledKeys.plist` entry, so a staging deploy or a laptop can be used
     /// without a rebuild.
+    ///
+    /// This is the real production URL for the `arca` Vercel project (confirmed via
+    /// `vercel project ls`; package.json name is also `arca`). As of this writing
+    /// `app/api/arca/*` hasn't been redeployed since these routes were added, so a
+    /// fresh deploy is required before the crash pipeline actually responds — every
+    /// caller must still treat an unreachable/404 host as a non-event. That matters
+    /// most for the crash pipeline, whose two halves both go through here —
+    /// `CrashDiagnosticsReporter` POSTs to `api/arca/crash` from the phone, and the
+    /// Mac's `CrashNoteSync` GETs from it to write the report into Obsidian — and
+    /// both silently no-op when this host isn't serving those routes yet.
     public static var cloudBaseURL: URL {
         let configured = UserDefaults.standard.string(forKey: "arcaCloudBaseURL")?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if let configured, !configured.isEmpty, let url = URL(string: configured) {
             return url
         }
-        return URL(string: "https://arca-the-zone-bio.vercel.app")!
+        return URL(string: "https://arca-nine.vercel.app")!
     }
 
     /// `cloudBaseURL` + a route path, e.g. `cloudEndpoint("api/arca/crash")`.

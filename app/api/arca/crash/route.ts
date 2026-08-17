@@ -1,4 +1,4 @@
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -75,6 +75,72 @@ export async function POST(request: NextRequest) {
   ]);
 
   return NextResponse.json({ accepted: reports.length, stored: { file, slack } });
+}
+
+/** A poll must never hand back the whole history in one response. */
+const MAX_GET_REPORTS = 50;
+
+/**
+ * Drain side of the same inbox, for the Mac app.
+ *
+ * The crash happens on the iPhone; the place Min actually reads dev notes is the
+ * Obsidian vault on his Mac's local disk, which a serverless function cannot
+ * write to. So this endpoint is the hand-off point: the phone POSTs here, and
+ * the macOS app polls `GET ?since=<last-seen ISO>` and writes each new report
+ * into the vault itself (see `CrashNoteSync` in the app).
+ *
+ * `since` is compared against the envelope's own `at` (server receive time),
+ * strictly greater-than, so a poller that stores the newest `at` it saw never
+ * sees the same report twice. Missing/unparseable `since` means "everything on
+ * file", which is the right answer for a first poll.
+ *
+ * Reads the same JSONL the POST handler appends to — and inherits its
+ * ephemerality on Vercel: after a cold start the file is empty and this
+ * correctly returns nothing rather than erroring.
+ */
+export async function GET(request: NextRequest) {
+  const sinceParam = request.nextUrl.searchParams.get("since");
+  const sinceMs = sinceParam ? Date.parse(sinceParam) : Number.NaN;
+  const since = Number.isNaN(sinceMs) ? null : sinceMs;
+
+  let text: string;
+  try {
+    text = await readFile(join(crashDir(), "reports.jsonl"), "utf-8");
+  } catch {
+    return NextResponse.json({ reports: [] });
+  }
+
+  const out: Record<string, unknown>[] = [];
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    let record: { at?: unknown; installId?: unknown; deviceId?: unknown; reports?: unknown };
+    try {
+      record = JSON.parse(line) as typeof record;
+    } catch {
+      continue;
+    }
+    const at = typeof record.at === "string" ? record.at : undefined;
+    if (since !== null) {
+      const atMs = at ? Date.parse(at) : Number.NaN;
+      if (Number.isNaN(atMs) || atMs <= since) continue;
+    }
+    if (!Array.isArray(record.reports)) continue;
+    for (const report of record.reports) {
+      out.push({
+        at,
+        installId: typeof record.installId === "string" ? record.installId : undefined,
+        deviceId: typeof record.deviceId === "string" ? record.deviceId : undefined,
+        ...(typeof report === "object" && report !== null
+          ? (report as Record<string, unknown>)
+          : {}),
+      });
+    }
+  }
+
+  // Newest last would make the client hunt for the cursor; newest first with a
+  // cap means a long-idle Mac gets the reports that still matter.
+  out.reverse();
+  return NextResponse.json({ reports: out.slice(0, MAX_GET_REPORTS) });
 }
 
 /** The one-line version: enough to triage from a log or a phone notification. */

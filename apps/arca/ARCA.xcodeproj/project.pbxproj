@@ -42,6 +42,7 @@
 		3EC4A0508B690429C9911FC2 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		3F912A22A9BE2C7452C08199 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		AF5948222E065A2D25BFFF3A /* NotionDBAutoSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4A579E9854DBA5F2CE9BB /* NotionDBAutoSync.swift */; };
+		B1C7D40E5A2F48B39E10CC71 /* CrashNoteSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3A1B26C4E42A7B8551E30 /* CrashNoteSync.swift */; };
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
@@ -154,6 +155,7 @@
 		C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		C28F915E28669660B31E54B5 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		0805FDF80668C0920F6A4C3F /* NotionDBAutoSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4A579E9854DBA5F2CE9BB /* NotionDBAutoSync.swift */; };
+		C3A81F6D7B2049E0A6D4B119 /* CrashNoteSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3A1B26C4E42A7B8551E30 /* CrashNoteSync.swift */; };
 		C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78A32E703ECAAC127268AFC /* FaceRecordView.swift */; };
 		C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
@@ -343,6 +345,7 @@
 		F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingChatSheet.swift; sourceTree = "<group>"; };
 		FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianAutoImport.swift; sourceTree = "<group>"; };
 		EAB4A579E9854DBA5F2CE9BB /* NotionDBAutoSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotionDBAutoSync.swift; sourceTree = "<group>"; };
+		D9F3A1B26C4E42A7B8551E30 /* CrashNoteSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashNoteSync.swift; sourceTree = "<group>"; };
 		FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiritFace.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -702,6 +705,7 @@
 				C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */,
 				FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */,
 				EAB4A579E9854DBA5F2CE9BB /* NotionDBAutoSync.swift */,
+				D9F3A1B26C4E42A7B8551E30 /* CrashNoteSync.swift */,
 				C47D3EC43CFA5109F60636F4 /* ObsidianExporter.swift */,
 				8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */,
 			);
@@ -947,6 +951,7 @@
 				D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */,
 				3F912A22A9BE2C7452C08199 /* ObsidianAutoImport.swift in Sources */,
 				AF5948222E065A2D25BFFF3A /* NotionDBAutoSync.swift in Sources */,
+				B1C7D40E5A2F48B39E10CC71 /* CrashNoteSync.swift in Sources */,
 				B0B352F5C777C6A583690650 /* ObsidianExporter.swift in Sources */,
 				B39038945742E00A8AC54CDF /* ObsidianImporter.swift in Sources */,
 				5C55D8DF3537DBCD2FD09B02 /* OnboardingView.swift in Sources */,
@@ -1042,6 +1047,7 @@
 				8E0CC13FCAF29F7CFB1A48C2 /* NotchWindowController.swift in Sources */,
 				C28F915E28669660B31E54B5 /* ObsidianAutoImport.swift in Sources */,
 				0805FDF80668C0920F6A4C3F /* NotionDBAutoSync.swift in Sources */,
+				C3A81F6D7B2049E0A6D4B119 /* CrashNoteSync.swift in Sources */,
 				F2DB196BE9E7EB724781D972 /* ObsidianExporter.swift in Sources */,
 				782EFC269E0629B7DCECAF4E /* ObsidianImporter.swift in Sources */,
 				A9B49BBFEFE96460C3890046 /* OnboardingView.swift in Sources */,

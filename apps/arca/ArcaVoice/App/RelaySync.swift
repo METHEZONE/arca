@@ -29,14 +29,16 @@ final class RelaySync {
         loopTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
                 await self?.syncNow()
-                // Ambient ops, todo triage, and the Obsidian pull all ride the
-                // same heartbeat (each throttles itself internally).
+                // Ambient ops, todo triage, and the Obsidian pull/push all ride
+                // the same heartbeat (each throttles itself internally).
                 if let context = self?.container?.mainContext {
                     await AmbientOps.shared.harvest(context: context)
                     await AmbientOps.shared.autoBriefIfDue(context: context)
                     TodoTriage.sweepIfDue(context: context)
                     await ObsidianAutoImport.runIfDue(context: context)
                 }
+                // Crashes from the phone can only reach the vault via the Mac.
+                await CrashNoteSync.runIfDue()
                 try? await Task.sleep(for: .seconds(60))
             }
         }

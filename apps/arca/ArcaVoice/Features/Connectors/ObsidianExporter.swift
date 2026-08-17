@@ -37,6 +37,22 @@ enum ObsidianExporter {
         return url
     }
 
+    /// Writes a standalone ARCA-authored note into the vault's `ARCA/` folder —
+    /// the same folder session exports land in, so everything ARCA puts in the
+    /// vault stays in one place (and stays excluded from the note-matching scan
+    /// below). For notes that aren't meetings, e.g. crash reports.
+    @discardableResult
+    static func writeNote(fileName: String, markdown: String, to vaultURL: URL) throws -> URL {
+        guard FileManager.default.directoryExists(at: vaultURL) else {
+            throw ObsidianExportError.missingVault
+        }
+        let arcaDirectory = vaultURL.appendingPathComponent("ARCA", isDirectory: true)
+        try FileManager.default.createDirectory(at: arcaDirectory, withIntermediateDirectories: true)
+        let url = arcaDirectory.appendingPathComponent(fileName)
+        try markdown.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
     static func exportAll(to vaultURL: URL, context: ModelContext) throws -> Int {
         guard FileManager.default.directoryExists(at: vaultURL) else {
             throw ObsidianExportError.missingVault
