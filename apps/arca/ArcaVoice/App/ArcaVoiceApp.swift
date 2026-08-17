@@ -35,6 +35,10 @@ struct ArcaVoiceApp: App {
 
         // Personal build: keys ship in the bundle so every device just works.
         ArcaConfig.importBundledKeysIfNeeded()
+        // Subscribe before anything else can crash. Diagnostics from the
+        // previous run arrive shortly after this — MetricKit never reports at
+        // crash time, only on a later launch.
+        CrashDiagnosticsReporter.start()
         CaptureTrace.sink = { DebugTrace.log("capture: \($0)") }
         #if os(macOS)
         // The ~/.arca staging file still wins on the Mac (rotate keys there).
@@ -50,6 +54,7 @@ struct ArcaVoiceApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .tint(ArcaFace.ember)
         }
         .modelContainer(container)
     }

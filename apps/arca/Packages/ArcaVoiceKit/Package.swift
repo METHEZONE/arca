@@ -21,6 +21,10 @@ let package = Package(
             name: "ArcaVoiceKit",
             dependencies: ["ArcaVoiceCore", "Capture", "Transcribe", "Diarize", "Intelligence", "Store"]
         ),
-        .testTarget(name: "ArcaVoiceKitTests", dependencies: ["ArcaVoiceKit", "ArcaVoiceCore"]),
+        // Intelligence is listed directly so tests can reach its internals with
+        // `@testable import Intelligence` — the re-export through ArcaVoiceKit
+        // only carries the public surface.
+        .testTarget(name: "ArcaVoiceKitTests",
+                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Intelligence"]),
     ]
 )

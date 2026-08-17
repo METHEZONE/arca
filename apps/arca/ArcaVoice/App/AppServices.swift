@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// Process-wide services. The recording coordinator lives here (not in a view)
 /// because on macOS the notch agent must drive recordings with no window open.
@@ -52,6 +55,18 @@ final class AppServices {
                 }
             }
         }
+
+        // Healing a failed quality pass used to be macOS-only, so on iPhone a
+        // pass that died (dead key, network drop, backgrounded upload) stayed
+        // dead forever while the audio sat on disk. Retry at launch and again
+        // whenever the app comes forward — the phone is rarely relaunched, and
+        // returning to it is the natural moment to finish what was interrupted.
+        Task { @MainActor in self.retryFailedFinalPasses() }
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.retryFailedFinalPasses() }
+        }
         #endif
         #if os(macOS)
         DebugTrace.install()
@@ -68,9 +83,7 @@ final class AppServices {
             }
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
-            FinalPassRunner.retryFailed(context: container.mainContext,
-                                        ownerName: self.ownerName,
-                                        languageHints: TranscriptionPrefs.languageHints)
+            self.retryFailedFinalPasses()
 
             self.meetingDetector.onDetect = { [weak self] meeting in
                 self?.notch.offerMeeting(label: meeting.label)
@@ -142,7 +155,7 @@ final class AppServices {
 
     private func presentZoneReport() {
         if zoneReportWindow == nil {
-            let hosting = NSHostingController(rootView: ZoneReportView(zone: zone))
+            let hosting = NSHostingController(rootView: ZoneReportView(zone: zone).tint(ArcaFace.ember))
             let window = NSWindow(contentViewController: hosting)
             window.title = "ZONE Report"
             window.styleMask = [.titled, .closable, .fullSizeContentView]
@@ -206,6 +219,16 @@ final class AppServices {
         await hit("POST-small-anthropic", small)
     }
     #endif
+
+    /// Re-runs the quality pass for sessions whose last attempt failed. Safe to
+    /// call repeatedly: a session already being retried has no error left on
+    /// it, so it is not picked up twice.
+    func retryFailedFinalPasses() {
+        guard let mainContext else { return }
+        FinalPassRunner.retryFailed(context: mainContext,
+                                    ownerName: ownerName,
+                                    languageHints: TranscriptionPrefs.languageHints)
+    }
 
     func startRecording(meetingApp: String? = nil) {
         Task { @MainActor in

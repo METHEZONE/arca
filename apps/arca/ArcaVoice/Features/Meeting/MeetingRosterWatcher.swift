@@ -22,6 +22,16 @@ enum RosterNameMapper {
     /// remote participant.
     static func renames(snapshots: [RosterSnapshot], startedAt: Date,
                         remoteTurns: [TurnRef], ownerName: String) -> [String: String] {
+        // A single remote key covering a call with several people means the
+        // transcript is not diarized (whisper returns no speaker labels), so
+        // the whole other side arrived as one voice. Voting would hand all of
+        // it to whoever spoke most — everyone's words in one person's mouth.
+        // Better an honest "Other" than a confident wrong name.
+        if Set(remoteTurns.map(\.key)).count == 1,
+           participantNames(in: snapshots, ownerName: ownerName).count > 1 {
+            return [:]
+        }
+
         var votes: [String: [String: Int]] = [:]
         for snapshot in snapshots {
             guard let active = snapshot.roster.activeSpeaker?

@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 import ArcaVoiceKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// Runs the background quality pass for a stored session (used by both live
 /// recordings and Watch transfers), then optionally auto-sends the summary email.
@@ -23,6 +26,15 @@ enum FinalPassRunner {
         }
 
         Task { @MainActor in
+            #if os(iOS)
+            // The pass is a multi-minute upload. iOS suspends an app seconds
+            // after it leaves the foreground, and a suspended upload doesn't
+            // resume — it dies, and the session stays failed. The grace period
+            // is not unlimited, but it is the difference between "finished
+            // while the phone was in a pocket" and "never".
+            let grace = BackgroundGrace()
+            defer { grace.end() }
+            #endif
             do {
                 // Names read off the meeting screen double as vocabulary hints
                 // so transcription spells them right.
@@ -33,6 +45,20 @@ enum FinalPassRunner {
                     ownerName: ownerName,
                     hints: TranscriptHints(vocabulary: rosterNames, languageCodes: languageHints),
                     userNotes: (userNotes?.isEmpty == false) ? userNotes : nil)
+
+                // A pass that came back with nothing must never delete what the
+                // live transcript already captured — that turned one failed
+                // transcription into permanent data loss. Keep the live text,
+                // record a retryable error, and stop here.
+                guard !output.transcript.turns.isEmpty else {
+                    record.state = .ready
+                    record.processingError = "High-quality pass failed: transcription returned no speech, so the live transcript was kept. Audio is intact — it will retry on the next launch."
+                    try? record.modelContext?.save()
+                    DebugTrace.log("final pass: empty transcript for \(record.directoryName), live segments kept")
+                    SummaryNotifier.processingFailed(
+                        record: record, message: "전사 결과가 비어 있어 라이브 전사를 유지했습니다.")
+                    return
+                }
 
                 // The final pass replaces live segments wholesale.
                 record.segments.removeAll()
@@ -78,7 +104,15 @@ enum FinalPassRunner {
                     }
                 }
                 record.state = .ready
-                record.processingError = nil
+                // A channel that threw while another carried the pass leaves the
+                // meeting half-transcribed. Say so rather than presenting it as
+                // complete, and keep the retry prefix so the next launch redoes it.
+                if output.channelErrors.isEmpty {
+                    record.processingError = nil
+                } else {
+                    record.processingError = "High-quality pass failed on a channel: \(output.channelErrors.joined(separator: " · ")). Part of this meeting may be missing."
+                    DebugTrace.log("final pass: partial channel failure — \(output.channelErrors.joined(separator: " | "))")
+                }
                 try record.modelContext?.save()
 
                 if let notes = output.notes {
@@ -86,6 +120,11 @@ enum FinalPassRunner {
                     sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)
                     autoExportToObsidianIfEnabled(record: record)
+                    await autoRememberMeetingIfEnabled(record: record, notes: notes)
+                    #if os(macOS)
+                    await NotionDBAutoSync.runIfEnabled(
+                        record: record, transcript: output.transcript, notes: notes)
+                    #endif
                 }
             } catch {
                 record.state = .ready
@@ -121,6 +160,29 @@ enum FinalPassRunner {
         }
     }
 
+    #if os(iOS)
+    /// Holds an iOS background-task assertion for as long as one final pass is
+    /// running. One instance per pass, so concurrent retries don't cancel each
+    /// other's assertion.
+    @MainActor
+    final class BackgroundGrace {
+        private var id: UIBackgroundTaskIdentifier = .invalid
+
+        init() {
+            id = UIApplication.shared.beginBackgroundTask(withName: "ARCA final pass") { [weak self] in
+                Task { @MainActor in self?.end() }
+            }
+        }
+
+        /// Idempotent — the expiration handler and the caller both call it.
+        func end() {
+            guard id != .invalid else { return }
+            UIApplication.shared.endBackgroundTask(id)
+            id = .invalid
+        }
+    }
+    #endif
+
     /// iOS only — a recording that came from the Watch reports its summary
     /// back to the Watch, closing the wrist loop.
     private static func sendToWatchIfWatchMemo(record: RecordingSession, notes: MeetingNotes) {
@@ -155,7 +217,52 @@ enum FinalPassRunner {
         #endif
     }
 
-    /// macOS only — writes the completed meeting note to the linked Obsidian vault.
+    /// Distills the meeting into durable memory — the same fact-extraction
+    /// `ChatSession.endConversation()` already runs when a chat closes, just
+    /// never wired to meetings. Every session used to leave zero trace in
+    /// long-term memory once its note was written (measured: 91 finished
+    /// meetings, 0 memory facts from any of them) — chat had no way to recall
+    /// what happened in a meeting, only what was said directly to it. Runs on
+    /// both platforms, unlike the Obsidian export below, because remembering
+    /// is core behavior, not a macOS-only integration.
+    private static func autoRememberMeetingIfEnabled(record: RecordingSession, notes: MeetingNotes) async {
+        guard let key = KeychainStore.get(.anthropic), !key.isEmpty else { return }
+        guard let context = record.modelContext else { return }
+
+        var lines = ["Meeting: \(notes.title)", "", notes.summaryMarkdown]
+        if !notes.decisions.isEmpty {
+            lines.append("")
+            lines.append("Decisions:")
+            lines.append(contentsOf: notes.decisions.map { "- \($0)" })
+        }
+        if !notes.actionItems.isEmpty {
+            lines.append("")
+            lines.append("Action items:")
+            lines.append(contentsOf: notes.actionItems.map { item in
+                item.assigneeName.map { "- \(item.text) (\($0))" } ?? "- \(item.text)"
+            })
+        }
+        // Built from the note, not the raw transcript — already compact, so
+        // this never hits MemoryExtractor's 6000-character truncation the way
+        // a two-hour transcript would.
+        let meetingRecord = lines.joined(separator: "\n")
+
+        let known = (try? context.fetch(FetchDescriptor<MemoryFact>()))?.map(\.text) ?? []
+        let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
+        guard let extracted = try? await MemoryExtractor(apiKey: key, model: model)
+            .extract(fromConversation: meetingRecord, knownFacts: known),
+              !extracted.isEmpty else { return }
+        for memory in extracted {
+            context.insert(MemoryFact(text: memory.text, kind: memory.kind, source: "meeting"))
+        }
+        try? context.save()
+    }
+
+    /// macOS only — writes the completed meeting note to the linked Obsidian
+    /// vault. Prefers attaching to whatever note the user was taking during
+    /// the meeting (matched by time window, no model call) over creating a
+    /// separate ARCA-only file, so the two records of one meeting end up in
+    /// one place.
     private static func autoExportToObsidianIfEnabled(record: RecordingSession) {
         #if os(macOS)
         let defaults = UserDefaults.standard
@@ -168,7 +275,7 @@ enum FinalPassRunner {
 
         do {
             let expanded = (path as NSString).expandingTildeInPath
-            _ = try ObsidianExporter.exportSession(record, to: URL(fileURLWithPath: expanded))
+            _ = try ObsidianExporter.exportSessionMatchingNote(record, to: URL(fileURLWithPath: expanded))
         } catch {
             DebugTrace.log("obsidian auto-export failed: \(error.localizedDescription)")
         }

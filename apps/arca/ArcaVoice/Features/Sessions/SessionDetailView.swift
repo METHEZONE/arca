@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
 
 struct SessionDetailView: View {
     let session: RecordingSession
@@ -10,6 +15,10 @@ struct SessionDetailView: View {
     @State private var participantOnlyAttendees: [CalendarAttendeeInfo] = []
     @State private var showingEmailSheet = false
     @State private var showingMeetingChat = false
+    @State private var exportCache = TranscriptExportCache()
+    #if os(macOS)
+    @State private var isSyncingNotion = false
+    #endif
 
     /// Everything the screen derives from the segment list, computed in ONE
     /// pass. These used to be separate computed vars that each re-sorted and
@@ -134,7 +143,7 @@ struct SessionDetailView: View {
                 Button {
                     showingMeetingChat = true
                 } label: {
-                    Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                    Label("이 회의와 대화", systemImage: "bubble.left.and.text.bubble.right")
                 }
             }
             ToolbarItem {
@@ -145,6 +154,47 @@ struct SessionDetailView: View {
                 }
                 .disabled(meetingNotes == nil)
             }
+            ToolbarItem {
+                Menu {
+                    Button {
+                        copyTranscript()
+                    } label: {
+                        Label("전사 복사", systemImage: "doc.on.doc")
+                    }
+                    if let files = exportCache.files(for: session) {
+                        ShareLink(item: files.markdown) {
+                            Label("Markdown으로 내보내기 (.md)", systemImage: "doc.richtext")
+                        }
+                        ShareLink(item: files.plainText) {
+                            Label("텍스트로 내보내기 (.txt)", systemImage: "doc.plaintext")
+                        }
+                    }
+                } label: {
+                    Label("전사 공유", systemImage: "square.and.arrow.up")
+                }
+                .disabled(session.segments.isEmpty)
+                .help("전사 내용을 복사하거나 파일로 내보내기")
+            }
+            #if os(macOS)
+            // Also runs automatically after the quality pass when 커넥터's
+            // auto-update is on; this is the backfill path for meetings recorded
+            // before the database was linked.
+            ToolbarItem {
+                Button {
+                    guard !isSyncingNotion else { return }
+                    isSyncingNotion = true
+                    Task {
+                        defer { isSyncingNotion = false }
+                        await NotionDBAutoSync.runManually(record: session)
+                    }
+                } label: {
+                    Label("노션 DB 업데이트", systemImage: "tablecells")
+                }
+                .disabled(meetingNotes == nil || isSyncingNotion
+                          || NotionDBAutoSync.databaseReference == nil)
+                .help("이 회의 내용을 연결된 Notion 데이터베이스의 해당 행에 반영")
+            }
+            #endif
         }
         .sheet(isPresented: $showingMeetingChat) {
             MeetingChatSheet(session: session)
@@ -172,18 +222,19 @@ struct SessionDetailView: View {
             Text(Duration.seconds(session.duration).formatted(.time(pattern: .minuteSecond)))
                 .monospacedDigit()
             if session.source == .macMeeting {
-                Label(session.meetingApp.map { "Video call · \($0)" } ?? "Video call",
+                Label(session.meetingApp.map { "화상회의 · \($0)" } ?? "화상회의",
                       systemImage: "video.fill")
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(.blue.opacity(0.12), in: Capsule())
+                    .background(ArcaFace.ember.opacity(0.12), in: Capsule())
+                    .foregroundStyle(ArcaFace.ember)
             }
             Spacer()
             Button {
                 showingMeetingChat = true
             } label: {
-                Label("Chat about this", systemImage: "bubble.left.and.text.bubble.right")
+                Label("이 회의와 대화", systemImage: "bubble.left.and.text.bubble.right")
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -202,17 +253,17 @@ struct SessionDetailView: View {
         if let note = session.note {
             VStack(alignment: .leading, spacing: 12) {
                 if let enhanced = note.enhancedMarkdown, !enhanced.isEmpty {
-                    NoteCard(title: "My Notes (finalized)", icon: "sparkles", markdown: enhanced)
+                    NoteCard(title: "내 메모 (정리됨)", icon: "sparkles", markdown: enhanced)
                 } else if !note.roughMarkdown.isEmpty {
-                    NoteCard(title: "My Notes", icon: "square.and.pencil", markdown: note.roughMarkdown)
+                    NoteCard(title: "내 메모", icon: "square.and.pencil", markdown: note.roughMarkdown)
                 }
                 if let summary = note.summaryMarkdown, !summary.isEmpty {
-                    NoteCard(title: "Meeting Summary", icon: "doc.text.fill", markdown: summary)
+                    NoteCard(title: "회의 요약", icon: "doc.text.fill", markdown: summary)
                 }
                 if let data = note.decisionsJSON,
                    let decisions = try? JSONDecoder().decode([String].self, from: data),
                    !decisions.isEmpty {
-                    NoteCard(title: "Decisions", icon: "checkmark.seal.fill",
+                    NoteCard(title: "결정사항", icon: "checkmark.seal.fill",
                              markdown: decisions.map { "• \($0)" }.joined(separator: "\n"))
                 }
                 if let data = note.actionItemsJSON,
@@ -224,32 +275,47 @@ struct SessionDetailView: View {
         }
     }
 
-    /// Rows render lazily — a two-hour meeting has 1000+ segments, and
-    /// building them all eagerly is what used to freeze the screen on open.
+    /// Rows are emitted straight into the screen's single `LazyVStack` — no
+    /// container of their own.
+    ///
+    /// They used to sit in a second, nested `LazyVStack`, which is not lazy:
+    /// the outer stack has to size its child, so the inner one builds every
+    /// row at once. A long meeting whose quality pass failed falls back to the
+    /// raw live segments — thousands of them — and building all of those on the
+    /// main thread while opening the session is what the watchdog was killing.
+    /// Flat, only the visible rows are built.
     @ViewBuilder
     private func transcriptSection(model: TranscriptModel) -> some View {
         if !model.segments.isEmpty {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                Label("Transcript", systemImage: "waveform")
-                    .font(.headline)
+            Label("전사", systemImage: "waveform")
+                .font(.headline)
 
-                ForEach(model.segments, id: \.persistentModelID) { segment in
-                    TranscriptRow(
-                        segment: segment,
-                        color: model.colorsByKey[segment.speakerKey ?? segment.channelRaw] ?? .secondary,
-                        email: model.emailsByName[displayName(for: segment).lowercased()],
-                        speakerNames: model.speakerNames,
-                        onSaveSpeaker: saveSpeaker(oldName:newName:email:)
-                    )
-                }
+            ForEach(model.segments, id: \.persistentModelID) { segment in
+                TranscriptRow(
+                    segment: segment,
+                    color: model.colorsByKey[segment.speakerKey ?? segment.channelRaw] ?? .secondary,
+                    email: model.emailsByName[displayName(for: segment).lowercased()],
+                    speakerNames: model.speakerNames,
+                    onSaveSpeaker: saveSpeaker(oldName:newName:email:)
+                )
             }
         } else if session.state == .ready {
-            ContentUnavailableView("Transcript is empty", systemImage: "waveform.slash")
+            ContentUnavailableView("전사 내용이 없어요", systemImage: "waveform.slash")
         }
     }
 
     private func displayName(for segment: StoredSegment) -> String {
         segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
+    }
+
+    private func copyTranscript() {
+        let text = session.transcriptPlainText()
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #elseif os(iOS)
+        UIPasteboard.general.string = text
+        #endif
     }
 
     private func saveSpeaker(oldName: String, newName: String, email: String?) {
@@ -309,6 +375,34 @@ struct SessionDetailView: View {
         }
         session.touch()
         try? modelContext.save()
+    }
+}
+
+/// `ShareLink` needs a URL up front and `Menu` builds its content whenever the
+/// view body runs, so the temp files are written once per transcript version
+/// instead of on every redraw — a two-hour meeting is a few hundred KB.
+@MainActor
+private final class TranscriptExportCache {
+    private var key: String?
+    private var cached: (markdown: URL, plainText: URL)?
+
+    func files(for session: RecordingSession) -> (markdown: URL, plainText: URL)? {
+        let currentKey = "\(session.title)|\(session.segments.count)|\(session.updatedAt.timeIntervalSince1970)"
+        if currentKey == key, let cached { return cached }
+
+        let directory = FileManager.default.temporaryDirectory
+        let stem = session.transcriptFileStem
+        let markdown = directory.appendingPathComponent("\(stem).md")
+        let plainText = directory.appendingPathComponent("\(stem).txt")
+        do {
+            try session.transcriptMarkdown().write(to: markdown, atomically: true, encoding: .utf8)
+            try session.transcriptPlainText().write(to: plainText, atomically: true, encoding: .utf8)
+        } catch {
+            return nil
+        }
+        key = currentKey
+        cached = (markdown, plainText)
+        return cached
     }
 }
 
@@ -386,7 +480,7 @@ private struct TranscriptRow: View {
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(.tertiary)
                     if !segment.isFinal {
-                        Text("Live")
+                        Text("실시간")
                             .font(.caption2)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
@@ -432,7 +526,7 @@ private struct EmailMinutesSheet: View {
         let fallback = fallbackRecipient.trimmingCharacters(in: .whitespacesAndNewlines)
         if !fallback.isEmpty,
            !options.contains(where: { $0.email.caseInsensitiveCompare(fallback) == .orderedSame }) {
-            options.append(EmailRecipientOption(name: "Summary Email", email: fallback, isFallback: true))
+            options.append(EmailRecipientOption(name: "요약 메일", email: fallback, isFallback: true))
         }
         self.options = options
         _selected = State(initialValue: Set(options.map(\.email)))
@@ -444,7 +538,7 @@ private struct EmailMinutesSheet: View {
                 Label("회의록 보내기", systemImage: "envelope.fill")
                     .font(.headline)
                 Spacer()
-                Button("Close") { dismiss() }
+                Button("닫기") { dismiss() }
             }
 
             if options.isEmpty {
@@ -466,7 +560,7 @@ private struct EmailMinutesSheet: View {
                                 Text(option.email)
                                     .foregroundStyle(.secondary)
                                 if option.isFallback {
-                                    Text("fallback")
+                                    Text("기본")
                                         .font(.caption2)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
@@ -478,7 +572,7 @@ private struct EmailMinutesSheet: View {
                 }
             }
 
-            TextField("추가 이메일 (comma-separated)", text: $extraEmails)
+            TextField("추가 이메일 (쉼표로 구분)", text: $extraEmails)
                 .textFieldStyle(.roundedBorder)
 
             if !results.isEmpty {
@@ -508,7 +602,7 @@ private struct EmailMinutesSheet: View {
 
             HStack {
                 Spacer()
-                Button("Cancel") { dismiss() }
+                Button("취소") { dismiss() }
                     .disabled(isSending)
                 Button {
                     send()

@@ -61,37 +61,53 @@ import ArcaVoiceKit
         #expect(message == "Bad Gateway")
     }
 
-    @Test func multipartBodySetsDiarizeFields() throws {
-        let body = OpenAIDiarizedTranscriber.multipartBody(
+    @Test func multipartFileStreamsAudioWithWhisperFields() throws {
+        let audio = FileManager.default.temporaryDirectory
+            .appendingPathComponent("arca-test-\(UUID().uuidString).wav")
+        try Data([0x01, 0x02, 0x03]).write(to: audio)
+        defer { try? FileManager.default.removeItem(at: audio) }
+
+        let bodyFile = try OpenAIDiarizedTranscriber.writeMultipartFile(
             boundary: "BND",
-            fileName: "mic.wav",
-            audioData: Data([0x01, 0x02, 0x03]),
-            model: "gpt-4o-transcribe-diarize",
-            languageHint: "ko"
+            audioURL: audio,
+            model: "whisper-1",
+            language: "ko",
+            prompt: "민성, ARCA"
         )
+        defer { try? FileManager.default.removeItem(at: bodyFile) }
+
+        let body = try Data(contentsOf: bodyFile)
         let text = String(decoding: body, as: UTF8.self)
         #expect(text.contains("name=\"model\""))
-        #expect(text.contains("gpt-4o-transcribe-diarize"))
+        #expect(text.contains("whisper-1"))
         #expect(text.contains("name=\"response_format\""))
-        #expect(text.contains("diarized_json"))
-        #expect(text.contains("name=\"chunking_strategy\""))
-        #expect(text.contains("auto"))
+        #expect(text.contains("verbose_json"))
+        // Sampling is what makes whisper loop on quiet passages.
+        #expect(text.contains("name=\"temperature\""))
         #expect(text.contains("name=\"language\""))
-        #expect(text.contains("filename=\"mic.wav\""))
+        #expect(text.contains("name=\"prompt\""))
+        #expect(text.contains("민성, ARCA"))
+        #expect(text.contains("filename=\"\(audio.lastPathComponent)\""))
         #expect(text.contains("Content-Type: audio/wav"))
         #expect(text.contains("--BND--"))
+        #expect(body.contains(Data([0x01, 0x02, 0x03])))
     }
 
-    @Test func multipartBodyOmitsLanguageWhenNil() throws {
-        let body = OpenAIDiarizedTranscriber.multipartBody(
-            boundary: "BND",
-            fileName: "mic.wav",
-            audioData: Data(),
-            model: "gpt-4o-transcribe-diarize",
-            languageHint: nil
-        )
-        let text = String(decoding: body, as: UTF8.self)
-        #expect(!text.contains("name=\"language\""))
+    /// Whisper without a language guesses, and on Korean room audio it guesses
+    /// English and then hallucinates. There must always be a hint.
+    @Test func languageAlwaysResolvesEvenWithNoHint() {
+        #expect(OpenAIDiarizedTranscriber.resolvedLanguage(
+            TranscriptHints(languageCodes: [])) == "ko")
+        #expect(OpenAIDiarizedTranscriber.resolvedLanguage(
+            TranscriptHints(languageCodes: ["en"])) == "en")
+        #expect(OpenAIDiarizedTranscriber.resolvedLanguage(
+            TranscriptHints(languageCodes: [" "])) == "ko")
+    }
+
+    @Test func promptHintCarriesVocabularyOrNothing() {
+        #expect(OpenAIDiarizedTranscriber.promptHint(TranscriptHints()) == nil)
+        #expect(OpenAIDiarizedTranscriber.promptHint(
+            TranscriptHints(vocabulary: ["민성", " ", "ARCA"])) == "민성, ARCA")
     }
 }
 
