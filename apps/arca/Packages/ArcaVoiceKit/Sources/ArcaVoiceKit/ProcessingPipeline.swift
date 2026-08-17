@@ -11,6 +11,17 @@ public struct ProcessingPipeline: Sendable {
     public struct Output: Sendable {
         public let transcript: AttributedTranscript
         public let notes: MeetingNotes?
+        /// Channels that threw while the pass still produced a usable transcript.
+        /// Non-empty means the meeting is only partly transcribed — the caller
+        /// surfaces this instead of presenting a half transcript as complete.
+        public let channelErrors: [String]
+
+        public init(transcript: AttributedTranscript, notes: MeetingNotes?,
+                    channelErrors: [String] = []) {
+            self.transcript = transcript
+            self.notes = notes
+            self.channelErrors = channelErrors
+        }
     }
 
     private let finalTranscriber: any FinalTranscriber
@@ -60,7 +71,13 @@ public struct ProcessingPipeline: Sendable {
             }
             return result
         }
-        if channelTurns.isEmpty, let firstError = channelErrors.first {
+        // A channel that FAILED is not the same as one that was simply silent.
+        // Keying on `channelTurns.isEmpty` conflated them: a dead-quiet system
+        // tap returned `.success((.systemAudio, []))`, which made the dictionary
+        // non-empty and swallowed a genuine mic failure — the caller then wiped
+        // the live transcript and stored nothing, with no error to retry from.
+        let usableTurns = channelTurns.values.contains { !$0.isEmpty }
+        if !usableTurns, let firstError = channelErrors.first {
             throw PipelineError.allChannelsFailed(firstError)
         }
 
@@ -71,7 +88,7 @@ public struct ProcessingPipeline: Sendable {
             let style: NoteStyle = (userNotes?.isEmpty == false) ? .enhancedNotes : .meetingSummary
             notes = try await summarizer.summarize(merged, userNotes: userNotes, style: style)
         }
-        return Output(transcript: merged, notes: notes)
+        return Output(transcript: merged, notes: notes, channelErrors: channelErrors)
     }
 
     /// Groups consecutive same-speaker segments into readable turns.

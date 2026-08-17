@@ -24,11 +24,16 @@ public final class MemoryFact {
 
 public enum MemoryPrompt {
     /// Renders memory facts as a system-prompt block (empty string when none).
+    ///
+    /// 40 was measured against nothing — Sonnet 5 runs a 1M-token context, and
+    /// a couple hundred short facts costs a few thousand tokens, negligible.
+    /// The real fix for "too much history" is relevance ranking, not a tiny
+    /// cap; this is the cheap intermediate step until that's worth building.
     public static func systemBlock(facts: [MemoryFact]) -> String {
         guard !facts.isEmpty else { return "" }
         let lines = facts
             .sorted { $0.createdAt > $1.createdAt }
-            .prefix(40)
+            .prefix(200)
             .map { "- \($0.text)" }
             .joined(separator: "\n")
         return """
