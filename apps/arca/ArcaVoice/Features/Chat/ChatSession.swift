@@ -178,6 +178,10 @@ final class ChatSession {
     private func appendAssistant(_ text: String) {
         messages.append(ChatMessage(role: .assistant, parts: [.text(text)]))
         persist(role: "assistant", text: text)
+        // Chat is the only thing the trial balance pays for — recording and
+        // transcription are unlimited. Billed on the reply rather than the
+        // send, so a request that failed before reaching the model is free.
+        TrialCredit.consumeChatMessage()
     }
 
     /// Executes or queues an `[EMAIL: …]` action, gated by declared action

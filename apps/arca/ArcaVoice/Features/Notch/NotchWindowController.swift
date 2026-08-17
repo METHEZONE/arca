@@ -61,6 +61,7 @@ final class NotchWindowController {
         // scene, so nothing injects it for us.
         let root = NotchView(agent: agent, coordinator: coordinator, geometry: geometry)
             .modelContainer(container)
+            .tint(ArcaFace.ember)
         let hosting = FirstMouseHostingView(rootView: root)
         hosting.sizingOptions = []
         hosting.translatesAutoresizingMaskIntoConstraints = true

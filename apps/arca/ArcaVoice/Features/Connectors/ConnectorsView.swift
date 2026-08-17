@@ -29,6 +29,14 @@ struct ConnectorsView: View {
     #if os(macOS)
     @State private var isImportingMembase = false
     @State private var membaseResult: String?
+    @State private var notionDatabaseRef = ""
+    @State private var notionAutoSync = false
+    @State private var notionResult: String?
+    @State private var isCheckingNotion = false
+    #endif
+    #if os(iOS)
+    @State private var healthState = HealthConnectState.unknown
+    @State private var healthSummary: String?
     #endif
 
     private var disconnectedConnectors: [ConnectorInfo] {
@@ -64,6 +72,7 @@ struct ConnectorsView: View {
                         ConnectorRow(
                             connector: connector,
                             accountId: hub.accounts[connector.slug],
+                            identity: hub.identities[connector.slug],
                             isSelected: selectedSlugs.contains(connector.slug),
                             isPending: pendingConnectionSlugs.contains(connector.slug) && hub.accounts[connector.slug] == nil,
                             isConnecting: connectingSlug == connector.slug,
@@ -103,11 +112,35 @@ struct ConnectorsView: View {
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
 
+                    #if os(iOS)
+                    HealthConnectorRow(
+                        state: healthState,
+                        summary: healthSummary,
+                        onConnect: connectHealth
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    #endif
+
                     #if os(macOS)
                     MembaseConnectorRow(
                         isImporting: isImportingMembase,
                         resultText: membaseResult,
                         onImport: importFromMembase
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+
+                    NotionDBConnectorRow(
+                        databaseRef: $notionDatabaseRef,
+                        autoSync: $notionAutoSync,
+                        isChecking: isCheckingNotion,
+                        resultText: notionResult,
+                        onCommitReference: saveNotionDatabaseRef,
+                        onToggleAutoSync: saveNotionAutoSync,
+                        onCheck: checkNotionDatabase
                     )
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -128,6 +161,16 @@ struct ConnectorsView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea())
+            // This screen is deliberately dark; without forcing the scheme the
+            // shared nav-bar chrome still follows system light mode, giving the
+            // washed-out light bar sitting on top of a black body.
+            .preferredColorScheme(.dark)
+            #if os(macOS)
+            // NavigationLink destinations don't inherit SettingsView's own
+            // .frame — without this, the List reports no intrinsic size and
+            // the whole sheet collapses to just the nav bar on push.
+            .frame(minWidth: 440, minHeight: 500)
+            #endif
             .navigationTitle("커넥터")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -136,6 +179,9 @@ struct ConnectorsView: View {
             .task {
                 loadScopedSettings()
                 setDefaultObsidianVaultIfNeeded()
+                #if os(iOS)
+                await refreshHealth()
+                #endif
                 await refreshAndPrune()
             }
             .fileImporter(isPresented: $showingVaultPicker, allowedContentTypes: [.folder]) { result in
@@ -400,6 +446,46 @@ struct ConnectorsView: View {
     }
     #endif
 
+    #if os(iOS)
+    /// Prompts for Health access, then immediately reads today back. The read
+    /// is the only way to know whether access actually worked — HealthKit
+    /// reports authorization for reads as "not determined" forever, so asking
+    /// the API is useless and asking the data is the test.
+    private func connectHealth() {
+        Task {
+            _ = await HealthVitals.shared.requestAccess()
+            await refreshHealth()
+        }
+    }
+
+    private func refreshHealth() async {
+        guard HealthVitals.isSupported else {
+            healthState = .unavailable
+            return
+        }
+        guard await HealthVitals.shared.hasBeenAsked() else {
+            healthState = .notConnected
+            return
+        }
+        let today = await HealthVitals.shared.vitals(for: .now)
+        if today.isEmpty {
+            // Fall back to the week — a phone-only user often has nothing for
+            // today yet but plenty from earlier, and calling that "no data"
+            // would be wrong.
+            let week = await HealthVitals.shared.recent(days: 7)
+            if let latest = week.last {
+                healthSummary = "연결됨 ✓ · \(latest.summaryLine)"
+                healthState = .connected
+            } else {
+                healthState = .noData
+            }
+        } else {
+            healthSummary = "연결됨 ✓ · \(today.summaryLine)"
+            healthState = .connected
+        }
+    }
+    #endif
+
     private func setDefaultObsidianVaultIfNeeded() {
         guard AccountStore.isDefault(AccountStore.currentAccountId()),
               obsidianVaultPath.isEmpty else { return }
@@ -413,7 +499,58 @@ struct ConnectorsView: View {
 
     private func loadScopedSettings() {
         obsidianVaultPath = AccountDefaults.string("obsidianVaultPath") ?? ""
+        #if os(macOS)
+        notionDatabaseRef = NotionDBAutoSync.databaseReference ?? ""
+        notionAutoSync = NotionDBAutoSync.isEnabled
+        #endif
     }
+
+    #if os(macOS)
+    private func saveNotionDatabaseRef() {
+        let trimmed = notionDatabaseRef.trimmingCharacters(in: .whitespacesAndNewlines)
+        AccountDefaults.set(trimmed, for: NotionDBAutoSync.databaseKey)
+        notionResult = nil
+        // Turning sync on without a database would fail silently after every
+        // meeting, so clearing the field turns it back off.
+        if trimmed.isEmpty, notionAutoSync {
+            notionAutoSync = false
+            saveNotionAutoSync()
+        }
+    }
+
+    private func saveNotionAutoSync() {
+        UserDefaults.standard.set(notionAutoSync, forKey: NotionDBAutoSync.enabledKey)
+    }
+
+    /// Validates the whole chain before a meeting depends on it: token present,
+    /// id parseable, database actually shared with the integration. Reports the
+    /// columns ARCA can fill, since a column missing from that list is the usual
+    /// reason a cell never gets written.
+    private func checkNotionDatabase() {
+        guard !isCheckingNotion else { return }
+        isCheckingNotion = true
+        notionResult = nil
+        Task {
+            defer { isCheckingNotion = false }
+            guard let client = NotionDBClient.fromArcaConfig() else {
+                notionResult = "~/.arca/connections.json 에 notionToken 이 없어요"
+                return
+            }
+            do {
+                let id = try NotionDBClient.databaseId(from: notionDatabaseRef)
+                let schema = try await client.fetchSchema(databaseId: id)
+                let names = schema.properties.map(\.name).joined(separator: ", ")
+                var lines = ["\(schema.title.isEmpty ? "DB" : schema.title) · 채울 수 있는 칸: \(names)"]
+                if !schema.skippedProperties.isEmpty {
+                    lines.append("쓸 수 없는 칸(수식·롤업 등): \(schema.skippedProperties.joined(separator: ", "))")
+                }
+                notionResult = lines.joined(separator: "\n")
+            } catch {
+                notionResult = error.localizedDescription
+            }
+        }
+    }
+    #endif
 
     private func displayName(for slug: String) -> String {
         ConnectorHub.catalog.first(where: { $0.slug == slug })?.displayName ?? slug
@@ -438,6 +575,9 @@ enum ConnectorPalette {
 private struct ConnectorRow: View {
     let connector: ConnectorInfo
     let accountId: String?
+    /// Which account this is — an email, a workspace name — resolved from the
+    /// toolkit itself. Nil while it's still being fetched.
+    let identity: String?
     let isSelected: Bool
     let isPending: Bool
     let isConnecting: Bool
@@ -466,9 +606,11 @@ private struct ConnectorRow: View {
             }
 
             Image(systemName: connector.symbol)
-                .font(.system(size: 17))
-                .foregroundStyle(isConnected ? ConnectorPalette.green : .secondary)
-                .frame(width: 26)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(connector.brandColor, in: RoundedRectangle(cornerRadius: 9))
+                .opacity(isConnected ? 1 : 0.55)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(connector.displayName)
@@ -536,10 +678,12 @@ private struct ConnectorRow: View {
 
     private var statusText: String {
         if isConnected {
-            if let accountId {
-                return "연결됨 ✓ · \(String(accountId.suffix(8)))"
+            // The account id fragment told the user nothing about which account
+            // was linked. Show the real identity when the toolkit reports it.
+            if let identity, !identity.isEmpty {
+                return "연결됨 ✓ · \(identity)"
             }
-            return "연결됨 ✓"
+            return "연결됨 ✓ · 계정 확인 중…"
         }
         if isPending { return "연결 대기 중…" }
         return "미연결"
@@ -620,7 +764,76 @@ private struct ObsidianConnectorRow: View {
     }
 }
 
+#if os(iOS)
+/// Where the Apple Health connection stands.
+///
+/// HealthKit never reports a read denial — an app that was refused simply
+/// reads nothing back. So "asked but empty" and "refused" are the same state
+/// from here, and the copy has to cover both without accusing the user of
+/// either.
+enum HealthConnectState {
+    case unknown        // haven't checked yet
+    case unavailable    // iPad/simulator without Health
+    case notConnected
+    case connected      // asked, and today's read returned something
+    case noData         // asked, but nothing came back
+}
+
+private struct HealthConnectorRow: View {
+    let state: HealthConnectState
+    let summary: String?
+    let onConnect: () -> Void
+
+    private var isOn: Bool { state == .connected || state == .noData }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: isOn ? "checkmark.circle.fill" : "heart.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(isOn ? ConnectorPalette.green : ConnectorPalette.ember)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("애플 건강")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                Text(statusText)
+                    .font(.caption2)
+                    .foregroundStyle(isOn ? ConnectorPalette.green : .secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 8)
+
+            if state == .notConnected || state == .unknown {
+                Button("연결", action: onConnect)
+                    .font(.caption.weight(.semibold))
+                    .buttonStyle(.borderedProminent)
+                    .tint(ConnectorPalette.ember)
+                    .controlSize(.small)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var statusText: String {
+        switch state {
+        case .unknown: return "확인 중…"
+        case .unavailable: return "이 기기에서는 건강 데이터를 쓸 수 없어요"
+        case .notConnected: return "수면·HRV·안정 심박을 읽어 기록과 함께 보여드려요"
+        case .connected: return summary ?? "연결됨 ✓"
+        case .noData:
+            return "연결됨 ✓ · 아직 읽어올 데이터가 없어요 (건강 앱에서 ARCA 권한을 확인해 주세요)"
+        }
+    }
+}
+#endif
+
 #if os(macOS)
+
+
 private struct MembaseConnectorRow: View {
     let isImporting: Bool
     let resultText: String?
@@ -650,6 +863,73 @@ private struct MembaseConnectorRow: View {
             .disabled(isImporting)
         } detail: {
             EmptyView()
+        }
+    }
+}
+#endif
+
+#if os(macOS)
+/// Points ARCA at one Notion database and shows whether the whole chain works.
+///
+/// "연결 확인" exists because three separate things have to be true before a
+/// meeting can update a row — token in ~/.arca/connections.json, a parseable
+/// database id, and the database actually shared with the integration in Notion —
+/// and all three fail the same silent way after the fact.
+private struct NotionDBConnectorRow: View {
+    @Binding var databaseRef: String
+    @Binding var autoSync: Bool
+    let isChecking: Bool
+    let resultText: String?
+    let onCommitReference: () -> Void
+    let onToggleAutoSync: () -> Void
+    let onCheck: () -> Void
+
+    private var isConfigured: Bool {
+        !databaseRef.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        LocalConnectorCard(
+            symbol: "tablecells.fill",
+            title: "Notion DB",
+            status: isConfigured ? (autoSync ? "자동 업데이트 켜짐" : "연결됨 · 자동 꺼짐") : "미설정",
+            statusColor: isConfigured ? (autoSync ? ConnectorPalette.green : .secondary) : .secondary,
+            resultText: resultText
+        ) {
+            VStack(alignment: .trailing, spacing: 8) {
+                Toggle("회의 후 자동 업데이트", isOn: $autoSync)
+                    .toggleStyle(.switch)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .disabled(!isConfigured)
+                    .onChange(of: autoSync) { _, _ in onToggleAutoSync() }
+
+                Button(action: onCheck) {
+                    HStack(spacing: 6) {
+                        if isChecking {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "checkmark.seal")
+                        }
+                        Text("연결 확인")
+                    }
+                }
+                .buttonStyle(.arcaPress)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(ConnectorPalette.ember)
+                .opacity(isConfigured ? 1 : 0.5)
+                .disabled(!isConfigured || isChecking)
+            }
+        } detail: {
+            // Saved on every edit, not just on Enter — a pasted URL the user
+            // clicks away from must not be lost.
+            TextField("Notion 데이터베이스 주소 붙여넣기", text: $databaseRef)
+                .textFieldStyle(.plain)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .onSubmit(onCommitReference)
+                .onChange(of: databaseRef) { _, _ in onCommitReference() }
+                .frame(maxWidth: 260)
         }
     }
 }

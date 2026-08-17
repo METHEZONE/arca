@@ -663,7 +663,7 @@ private struct CompanionBubble: View {
                 .textSelection(.enabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(isUser ? ArcaTheme.idle.opacity(0.88) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                .background(isUser ? ArcaFace.ember.opacity(0.88) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
             if !isUser { Spacer(minLength: 80) }
         }
         .padding(.horizontal, 28)

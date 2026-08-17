@@ -49,7 +49,7 @@ struct MeetingChatSheet: View {
             ArcaFace(mood: .idle, size: 26, halo: false, alive: false)
                 .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Chat about this meeting")
+                Text("이 회의와 대화")
                     .font(.headline)
                 Text(session.title)
                     .font(.caption)
@@ -143,7 +143,7 @@ private struct MeetingChatBubble: View {
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 .foregroundStyle(isUser ? .white : .primary)
                 .background(
-                    isUser ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.quaternary),
+                    isUser ? AnyShapeStyle(ArcaFace.ember) : AnyShapeStyle(.quaternary),
                     in: RoundedRectangle(cornerRadius: 14))
                 .textSelection(.enabled)
             if !isUser { Spacer(minLength: 40) }

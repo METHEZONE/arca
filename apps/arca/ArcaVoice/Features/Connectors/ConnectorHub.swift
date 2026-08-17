@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import ArcaVoiceKit
 
 /// One normalized item pulled from a connected source — a recent email,
@@ -24,6 +25,10 @@ struct ConnectorInfo: Identifiable {
     let shortName: String
     let symbol: String
     let toolkitSlug: String
+    /// The chip color behind the icon — real logos aren't bundled, so each
+    /// service gets its own brand-recognizable color block instead of the
+    /// same flat gray square for every row.
+    let brandColor: Color
 
     var id: String { slug }
 }
@@ -67,36 +72,48 @@ enum ConnectorError: LocalizedError {
 final class ConnectorHub {
     static let catalog: [ConnectorInfo] = [
         ConnectorInfo(slug: "GMAIL", displayName: "Gmail", shortName: "Gmail",
-                     symbol: "envelope.fill", toolkitSlug: "gmail"),
+                     symbol: "envelope.fill", toolkitSlug: "gmail",
+                     brandColor: Color(red: 0.92, green: 0.26, blue: 0.21)),
         ConnectorInfo(slug: "GOOGLECALENDAR", displayName: "Google Calendar", shortName: "Calendar",
-                     symbol: "calendar", toolkitSlug: "googlecalendar"),
+                     symbol: "calendar", toolkitSlug: "googlecalendar",
+                     brandColor: Color(red: 0.26, green: 0.52, blue: 0.96)),
         ConnectorInfo(slug: "GOOGLEDRIVE", displayName: "Google Drive", shortName: "Drive",
-                     symbol: "doc.fill", toolkitSlug: "googledrive"),
+                     symbol: "doc.fill", toolkitSlug: "googledrive",
+                     brandColor: Color(red: 0.06, green: 0.62, blue: 0.35)),
         ConnectorInfo(slug: "SLACK", displayName: "Slack", shortName: "Slack",
-                     symbol: "number", toolkitSlug: "slack"),
+                     symbol: "number", toolkitSlug: "slack",
+                     brandColor: Color(red: 0.46, green: 0.20, blue: 0.44)),
         ConnectorInfo(slug: "NOTION", displayName: "Notion", shortName: "Notion",
-                     symbol: "note.text", toolkitSlug: "notion"),
+                     symbol: "note.text", toolkitSlug: "notion",
+                     brandColor: Color(white: 0.16)),
         ConnectorInfo(slug: "GITHUB", displayName: "GitHub", shortName: "GitHub",
-                     symbol: "chevron.left.forwardslash.chevron.right", toolkitSlug: "github"),
+                     symbol: "chevron.left.forwardslash.chevron.right", toolkitSlug: "github",
+                     brandColor: Color(white: 0.12)),
         ConnectorInfo(slug: "LINEAR", displayName: "Linear", shortName: "Linear",
-                     symbol: "checklist", toolkitSlug: "linear"),
+                     symbol: "checklist", toolkitSlug: "linear",
+                     brandColor: Color(red: 0.37, green: 0.42, blue: 0.82)),
         ConnectorInfo(slug: "TODOIST", displayName: "Todoist", shortName: "Todoist",
-                     symbol: "checkmark.circle.fill", toolkitSlug: "todoist"),
+                     symbol: "checkmark.circle.fill", toolkitSlug: "todoist",
+                     brandColor: Color(red: 0.89, green: 0.26, blue: 0.20)),
     ]
 
     /// Catalog slug ("GMAIL") -> connected_account_id ("ca_...") for every
     /// toolkit this user currently has an ACTIVE connection to.
     private(set) var accounts: [String: String] = [:]
+    /// Catalog slug -> which account it is, in human terms ("me@thezonebio.com",
+    /// "THE ZONE BIO"). The connected_accounts payload carries only an opaque
+    /// `ca_…` id and an internal `word_id`, so the identity has to be asked of
+    /// each toolkit itself. Absent until `refreshIdentities()` resolves it.
+    private(set) var identities: [String: String] = [:]
     private(set) var lastError: String?
     private(set) var lastPullSummary: String = ""
 
     private let base = URL(string: "https://backend.composio.dev/api/v3")!
 
     private var apiKey: String? { KeychainStore.get(.composio) }
-    private var userId: String? {
-        let id = AccountDefaults.string("composioUserId")
-        return (id?.isEmpty ?? true) ? nil : id
-    }
+    /// Never nil: a fresh install mints its own Composio user id rather than
+    /// falling back to whatever was baked into the build.
+    private var userId: String? { ArcaConfig.composioUserId() }
 
     private static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
@@ -134,9 +151,74 @@ final class ConnectorHub {
                 mapped[info.slug] = item.id
             }
             accounts = mapped
+            identities = identities.filter { mapped[$0.key] != nil }
             lastError = nil
+            await refreshIdentities()
         } catch {
             lastError = "Couldn't load connectors: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Identity
+
+    /// Asks each connected toolkit who it is signed in as, so the Connectors
+    /// screen can say "me@thezonebio.com" instead of a `ca_…` fragment. Best
+    /// effort and non-fatal: a toolkit that can't answer simply stays unlabeled,
+    /// and one slow toolkit must not hold up the others.
+    func refreshIdentities() async {
+        guard let apiKey, let userId else { return }
+        let connected = accounts
+        let resolved = await withTaskGroup(of: (String, String?).self) { group in
+            for (slug, account) in connected {
+                group.addTask { [weak self] in
+                    guard let self else { return (slug, nil) }
+                    let label = try? await self.identity(
+                        for: slug, account: account, userId: userId, apiKey: apiKey)
+                    return (slug, label)
+                }
+            }
+            var found: [String: String] = [:]
+            for await (slug, label) in group {
+                if let label, !label.isEmpty { found[slug] = label }
+            }
+            return found
+        }
+        identities = resolved
+    }
+
+    private func identity(for toolkit: String, account: String,
+                          userId: String, apiKey: String) async throws -> String? {
+        switch toolkit {
+        case "GMAIL":
+            // GMAIL_GET_PROFILE nests its payload under `response_data`.
+            let data = try await executeTool("GMAIL_GET_PROFILE", account: account,
+                                             userId: userId, apiKey: apiKey, arguments: [:])
+            let profile = (data["response_data"] as? [String: Any]) ?? data
+            return profile["emailAddress"] as? String
+
+        case "GOOGLEDRIVE":
+            // `user` is only returned when explicitly requested.
+            let data = try await executeTool("GOOGLEDRIVE_GET_ABOUT", account: account,
+                                             userId: userId, apiKey: apiKey,
+                                             arguments: ["fields": "user"])
+            guard let user = data["user"] as? [String: Any] else { return nil }
+            return (user["emailAddress"] as? String) ?? (user["displayName"] as? String)
+
+        case "SLACK":
+            let data = try await executeTool("SLACK_FETCH_TEAM_INFO", account: account,
+                                             userId: userId, apiKey: apiKey, arguments: [:])
+            guard let team = data["team"] as? [String: Any] else { return nil }
+            return (team["name"] as? String) ?? (team["domain"] as? String)
+
+        case "GOOGLECALENDAR":
+            let data = try await executeTool("GOOGLECALENDAR_LIST_CALENDARS", account: account,
+                                             userId: userId, apiKey: apiKey, arguments: [:])
+            guard let calendars = data["calendars"] as? [[String: Any]] else { return nil }
+            let primary = calendars.first { $0["primary"] as? Bool == true } ?? calendars.first
+            return primary?["id"] as? String
+
+        default:
+            return nil
         }
     }
 

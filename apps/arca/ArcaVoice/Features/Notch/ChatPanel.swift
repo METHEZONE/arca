@@ -77,7 +77,7 @@ struct ChatPanel: View {
                 .foregroundStyle(.white.opacity(0.85))
                 .lineLimit(2)
             Spacer()
-            Button("Run in browser") { chat.runProposedBrowserTask() }
+            Button("브라우저에서 실행") { chat.runProposedBrowserTask() }
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
                 .controlSize(.small)
@@ -89,7 +89,7 @@ struct ChatPanel: View {
 
     private var inputBar: some View {
         HStack(spacing: 8) {
-            TextField("Ask ARCA…", text: $chat.draftText, axis: .vertical)
+            TextField("ARCA에게 물어보기…", text: $chat.draftText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...4)
                 .padding(.horizontal, 12)
@@ -103,7 +103,7 @@ struct ChatPanel: View {
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 24))
-                    .foregroundStyle(chat.draftText.isEmpty ? .white.opacity(0.3) : ArcaTheme.idle)
+                    .foregroundStyle(chat.draftText.isEmpty ? .white.opacity(0.3) : ArcaFace.ember)
             }
             .buttonStyle(.arcaPress)
             .disabled(chat.draftText.isEmpty || chat.isThinking)
@@ -150,7 +150,7 @@ private struct MessageBubble: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .background(
-                                isUser ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.white.opacity(0.1)),
+                                isUser ? AnyShapeStyle(ArcaFace.ember) : AnyShapeStyle(.white.opacity(0.1)),
                                 in: RoundedRectangle(cornerRadius: 14)
                             )
                     }

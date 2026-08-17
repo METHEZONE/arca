@@ -403,7 +403,7 @@ private struct ChatLogColumn: View {
             }
             .overlay {
                 if log.isEmpty {
-                    Text("No conversations yet.\nDrag a screenshot onto the notch,\nor start a new chat.")
+                    Text("아직 대화가 없어요.\n노치에 스크린샷을 끌어다 놓거나,\n새 대화를 시작해보세요.")
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white.opacity(0.4))
@@ -426,7 +426,7 @@ private struct LogRow: View {
                 .foregroundStyle(isUser ? .white : .white.opacity(0.85))
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(
-                    isUser ? AnyShapeStyle(ArcaTheme.idle.opacity(0.85)) : AnyShapeStyle(.white.opacity(0.08)),
+                    isUser ? AnyShapeStyle(ArcaFace.ember.opacity(0.85)) : AnyShapeStyle(.white.opacity(0.08)),
                     in: RoundedRectangle(cornerRadius: 10))
                 .frame(maxWidth: 300, alignment: isUser ? .trailing : .leading)
             if !isUser { Spacer(minLength: 30) }
