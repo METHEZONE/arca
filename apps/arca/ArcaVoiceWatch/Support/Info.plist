@@ -22,8 +22,25 @@
 	<string>1</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ARCA records voice notes from your wrist.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<!-- Primary mechanism: an audio session started in the foreground
+		     keeps running after the app backgrounds, so lowering your wrist
+		     no longer kills the recording. -->
+		<string>audio</string>
+	</array>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKBackgroundModes</key>
+	<array>
+		<!-- Grants WKExtendedRuntimeSession (see WatchRuntimeGuard) so the
+		     process isn't suspended while recording. watchOS offers no
+		     generic "keep recording" session type; mindfulness is the longest
+		     non-workout window (1 hour) and avoids fabricating a HealthKit
+		     workout. Semantic stretch for a meeting recorder — pending
+		     product/App Review sign-off. -->
+		<string>mindfulness</string>
+	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>com.thezone.arca.voice</string>
 </dict>
