@@ -41,6 +41,14 @@ final class AppServices {
     func configure(container: ModelContainer) {
         self.container = container
         RelaySync.shared.configure(container: container)
+
+        // Capture can die in a way it cannot recover from (the mic never comes
+        // back after an interruption). Close the recording out with what was
+        // captured instead of leaving the surface counting time over dead audio.
+        coordinator.onCaptureLost = { [weak self] in
+            Task { @MainActor in self?.stopRecording() }
+        }
+
         #if os(iOS)
         // Dynamic Island buttons post this; LiveActivityIntents run in-process.
         NotificationCenter.default.addObserver(
@@ -61,7 +69,10 @@ final class AppServices {
         // dead forever while the audio sat on disk. Retry at launch and again
         // whenever the app comes forward — the phone is rarely relaunched, and
         // returning to it is the natural moment to finish what was interrupted.
-        Task { @MainActor in self.retryFailedFinalPasses() }
+        Task { @MainActor in
+            self.recoverOrphanedRecordings()
+            self.retryFailedFinalPasses()
+        }
         NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -84,6 +95,7 @@ final class AppServices {
             }
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
+            self.recoverOrphanedRecordings()
             self.retryFailedFinalPasses()
             Task { @MainActor in await self.backfillDetailedSummaries() }
 
@@ -222,9 +234,25 @@ final class AppServices {
     }
     #endif
 
-    /// Re-runs the quality pass for sessions whose last attempt failed. Safe to
-    /// call repeatedly: a session already being retried has no error left on
-    /// it, so it is not picked up twice.
+    /// Adopts recordings the app lost track of — audio on disk with no row, and
+    /// rows left in `.recording` by a kill — into the processing queue, so the
+    /// retry sweep below can finish them. Runs before the sweep, at launch only:
+    /// mid-session there is nothing new to find.
+    func recoverOrphanedRecordings() {
+        guard let mainContext else { return }
+        let report = OrphanRecovery.run(context: mainContext,
+                                        activeDirectoryName: coordinator.activeDirectoryName)
+        guard !report.isEmpty else { return }
+        DebugTrace.log("orphan recovery: adopted \(report.adopted), revived \(report.revived)")
+        #if os(macOS)
+        let total = report.adopted + report.revived
+        notch.showNotice("중단된 녹음 \(total)건을 찾아 다시 처리하고 있어요", seconds: 8)
+        #endif
+    }
+
+    /// Re-runs the quality pass for sessions whose last attempt failed or never
+    /// finished. Safe to call repeatedly: a pass already running holds its
+    /// session in `FinalPassRunner.inFlight`, so it is not started twice.
     func retryFailedFinalPasses() {
         guard let mainContext else { return }
         FinalPassRunner.retryFailed(context: mainContext,
@@ -263,7 +291,15 @@ final class AppServices {
 
     func startRecording(meetingApp: String? = nil) {
         Task { @MainActor in
+            guard let mainContext else {
+                // Without a store the recording could not be persisted at all,
+                // and an unpersisted recording is the data loss this whole path
+                // exists to prevent. Say so instead of recording into the void.
+                coordinator.errorMessage = "ARCA가 저장소를 열 수 없어 녹음을 시작하지 않았습니다. 앱을 다시 시작해 주세요."
+                return
+            }
             await coordinator.start(
+                modelContext: mainContext,
                 locale: TranscriptionPrefs.liveLocale,
                 languageHints: TranscriptionPrefs.languageHints,
                 meetingApp: meetingApp)

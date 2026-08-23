@@ -35,11 +35,37 @@ enum EngineFactory {
         }
     }
 
-    static func processingPipeline() -> ProcessingPipeline? {
-        guard let openAIKey = KeychainStore.get(.openAI), !openAIKey.isEmpty else { return nil }
-        return ProcessingPipeline(
-            finalTranscriber: OpenAIDiarizedTranscriber(apiKey: openAIKey),
-            summarizer: summarizer()
-        )
+    /// The final-pass pipeline.
+    ///
+    /// Transcription is a chain, not a single provider: the cloud pass first,
+    /// then Apple's on-device recognizer over the saved file. Before that chain
+    /// existed, `OpenAIDiarizedTranscriber` was the only implementation, so a
+    /// dead key or an outage meant no transcript and — because the pipeline threw
+    /// before summarization — no notes either.
+    ///
+    /// - Parameter includeOnDeviceFallback: pass `false` when the caller already
+    ///   holds a usable live transcript for this session. Re-running on-device
+    ///   recognition over audio that was already recognized in real time is pure
+    ///   duplicated work; promoting the stored segments is free. See
+    ///   `FinalPassRunner`, which makes that call per session.
+    static func processingPipeline(includeOnDeviceFallback: Bool = true) -> ProcessingPipeline? {
+        let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
+        let onDevice = { AppleFileTranscriber(locale: TranscriptionPrefs.liveLocale) }
+
+        let transcriber: any FinalTranscriber
+        switch (openAIKey, includeOnDeviceFallback) {
+        case let (key?, true):
+            transcriber = FallbackTranscriber(
+                primary: OpenAIDiarizedTranscriber(apiKey: key),
+                fallback: onDevice(),
+                log: { DebugTrace.log($0) })
+        case let (key?, false):
+            transcriber = OpenAIDiarizedTranscriber(apiKey: key)
+        case (nil, true):
+            transcriber = onDevice()
+        case (nil, false):
+            return nil
+        }
+        return ProcessingPipeline(finalTranscriber: transcriber, summarizer: summarizer())
     }
 }

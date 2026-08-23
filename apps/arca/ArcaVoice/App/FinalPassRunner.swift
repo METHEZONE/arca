@@ -9,6 +9,14 @@ import UIKit
 /// recordings and Watch transfers), then optionally auto-sends the summary email.
 @MainActor
 enum FinalPassRunner {
+    /// Sessions whose pass is running right now, keyed by directory name.
+    ///
+    /// The retry sweep now matches on state rather than on an error string, and
+    /// runs both at launch and on every `didBecomeActive` — without this, coming
+    /// back to the app during a long pass would start a second one over the same
+    /// audio and both would race to rewrite the transcript.
+    private static var inFlight: Set<String> = []
+
     static func run(
         record: RecordingSession,
         files: [CaptureChannel: URL],
@@ -18,20 +26,35 @@ enum FinalPassRunner {
         rosterSnapshots: [RosterSnapshot] = [],
         recordingStartedAt: Date? = nil
     ) {
-        guard let pipeline = EngineFactory.processingPipeline() else {
-            record.state = .ready
-            record.processingError = "No OpenAI API key, so only the live transcript was saved. Add a key in Settings to get high-quality diarized transcription."
-            try? record.modelContext?.save()
+        guard !inFlight.contains(record.directoryName) else {
+            DebugTrace.log("final pass: already running for \(record.directoryName), skipping")
             return
         }
 
+        // The live pass already ran Apple's on-device recognizer over this audio
+        // in real time and its output is in the store. If it covers the
+        // recording, decoding the file to run the same model again is pure
+        // duplicated work — promote the stored segments instead. Sessions with no
+        // live transcript at all (a Watch memo, an import, a session recovered
+        // after a kill) are exactly the ones that need the on-device file pass.
+        let liveFallback = SessionResummarizer.transcript(from: record)
+        let hasUsableLive = hasUsableLiveTranscript(record)
+
+        guard let pipeline = EngineFactory.processingPipeline(
+            includeOnDeviceFallback: !hasUsableLive) else {
+            summarizeLiveTranscriptOnly(record: record)
+            return
+        }
+
+        inFlight.insert(record.directoryName)
         Task { @MainActor in
+            defer { inFlight.remove(record.directoryName) }
             #if os(iOS)
-            // The pass is a multi-minute upload. iOS suspends an app seconds
-            // after it leaves the foreground, and a suspended upload doesn't
-            // resume — it dies, and the session stays failed. The grace period
-            // is not unlimited, but it is the difference between "finished
-            // while the phone was in a pocket" and "never".
+            // The uploads themselves now run on a background URLSession, which
+            // `nsurlsessiond` finishes out of process — that is what actually
+            // survives suspension. This assertion covers the in-process work
+            // around them (chunk export, decode, summarization) for the few
+            // seconds iOS still grants after the app leaves the foreground.
             let grace = BackgroundGrace()
             defer { grace.end() }
             #endif
@@ -44,7 +67,8 @@ enum FinalPassRunner {
                     files: files,
                     ownerName: ownerName,
                     hints: TranscriptHints(vocabulary: rosterNames, languageCodes: languageHints),
-                    userNotes: (userNotes?.isEmpty == false) ? userNotes : nil)
+                    userNotes: (userNotes?.isEmpty == false) ? userNotes : nil,
+                    liveFallback: liveFallback.turns.isEmpty ? nil : liveFallback)
 
                 // A pass that came back with nothing must never delete what the
                 // live transcript already captured — that turned one failed
@@ -60,19 +84,25 @@ enum FinalPassRunner {
                     return
                 }
 
-                // The final pass replaces live segments wholesale.
-                record.segments.removeAll()
-                for turn in output.transcript.turns {
-                    record.segments.append(StoredSegment(
-                        text: turn.text, start: turn.start, end: turn.end,
-                        channel: turn.channel,
-                        speakerKey: output.transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey,
-                        isFinal: true))
+                // The final pass replaces live segments wholesale — unless the
+                // transcript IS those live segments, promoted because nothing
+                // could transcribe the audio. Rewriting them from themselves
+                // would only relabel them as final, which they are not.
+                if output.transcriptSource == .finalPass {
+                    record.segments.removeAll()
+                    for turn in output.transcript.turns {
+                        record.segments.append(StoredSegment(
+                            text: turn.text, start: turn.start, end: turn.end,
+                            channel: turn.channel,
+                            speakerKey: output.transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey,
+                            isFinal: true))
+                    }
                 }
 
                 // Meet/Zoom roster → transcript names: rename diarized remote
                 // speakers to the names seen on their tiles.
-                if let startedAt = recordingStartedAt, !rosterSnapshots.isEmpty {
+                if output.transcriptSource == .finalPass,
+                   let startedAt = recordingStartedAt, !rosterSnapshots.isEmpty {
                     let remote = record.segments.filter {
                         $0.channelRaw != CaptureChannel.microphone.rawValue
                     }
@@ -107,12 +137,19 @@ enum FinalPassRunner {
                 // A channel that threw while another carried the pass leaves the
                 // meeting half-transcribed. Say so rather than presenting it as
                 // complete, and keep the retry prefix so the next launch redoes it.
-                if output.channelErrors.isEmpty {
+                switch (output.transcriptSource, output.channelErrors.isEmpty) {
+                case (.finalPass, true):
                     record.processingError = nil
-                } else {
+                case (.finalPass, false):
                     record.processingError = "High-quality pass failed on a channel: \(output.channelErrors.joined(separator: " · ")). Part of this meeting may be missing."
                     DebugTrace.log("final pass: partial channel failure — \(output.channelErrors.joined(separator: " | "))")
+                case (.liveSegments, _):
+                    // Notes were still written, off the live transcript. The
+                    // retry prefix stays so a working network heals it later.
+                    record.processingError = "High-quality pass failed: \(output.channelErrors.joined(separator: " · ")). 실시간 전사로 요약했고, 오디오는 그대로 있어 다음 실행에서 다시 시도해요."
+                    DebugTrace.log("final pass: fell back to stored live transcript for \(record.directoryName)")
                 }
+                record.touch()
                 try record.modelContext?.save()
 
                 if let notes = output.notes {
@@ -136,16 +173,21 @@ enum FinalPassRunner {
     }
 
     /// Re-runs the quality pass for sessions whose last attempt failed (dead
-    /// key, network, an old bug) — audio is still on disk, so a working key
-    /// on the next launch heals the library.
+    /// key, network, an old bug) or never finished at all — audio is still on
+    /// disk, so a working key on the next launch heals the library.
+    ///
+    /// Matching used to be error-string-only, which silently excluded the worst
+    /// case: a session killed mid-pass has no error text (the app died before it
+    /// could write one) and sat in `.processing` forever. See
+    /// `SessionRecovery.needsFinalPass`.
     static func retryFailed(context: ModelContext, ownerName: String,
                             languageHints: [String]) {
         let sessions = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
         for record in sessions {
-            guard let error = record.processingError,
-                  error.contains("High-quality pass failed")
-                      || error.contains("고품질 패스"),
-                  !record.audioAssets.isEmpty else { continue }
+            guard SessionRecovery.needsFinalPass(
+                state: record.state,
+                processingError: record.processingError,
+                hasAudio: !record.audioAssets.isEmpty) else { continue }
             var files: [CaptureChannel: URL] = [:]
             for asset in record.audioAssets {
                 let url = SessionPaths.resolve(relativePath: asset.relativePath)
@@ -160,10 +202,54 @@ enum FinalPassRunner {
         }
     }
 
+    /// Whether the stored live transcript is complete enough to stand in for a
+    /// failed final pass.
+    private static func hasUsableLiveTranscript(_ record: RecordingSession) -> Bool {
+        let texted = record.segments.filter {
+            !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return SessionRecovery.liveTranscriptCovers(
+            duration: record.duration,
+            lastSegmentEnd: texted.map(\.end).max() ?? 0,
+            hasText: !texted.isEmpty)
+    }
+
+    /// No transcription engine is available for this session, so summarize what
+    /// the live pass already wrote instead of leaving a bare transcript.
+    ///
+    /// An install with an Anthropic key but no OpenAI key used to get a
+    /// transcript and nothing else — the message told the user to add a key and
+    /// stopped there, even though the notes only ever needed the transcript.
+    private static func summarizeLiveTranscriptOnly(record: RecordingSession) {
+        record.state = .ready
+        let alreadySummarized = !(record.note?.summaryMarkdown ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard let summarizer = EngineFactory.summarizer(),
+              SessionResummarizer.canResummarize(record),
+              !alreadySummarized else {
+            record.processingError = "High-quality pass failed: no OpenAI API key, so only the live transcript was saved. Add a key in Settings for a high-quality diarized transcript."
+            try? record.modelContext?.save()
+            return
+        }
+        // Retryable prefix on purpose: adding a key later heals the session.
+        record.processingError = "High-quality pass failed: no OpenAI API key — summarized the live transcript instead. Add a key in Settings for a high-quality diarized transcript."
+        try? record.modelContext?.save()
+        Task { @MainActor in
+            do {
+                let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+                SummaryNotifier.summaryReady(record: record, notes: notes)
+            } catch {
+                DebugTrace.log("final pass: live-transcript summary failed — \(error)")
+            }
+        }
+    }
+
     #if os(iOS)
     /// Holds an iOS background-task assertion for as long as one final pass is
     /// running. One instance per pass, so concurrent retries don't cancel each
-    /// other's assertion.
+    /// other's assertion. Roughly 30 seconds of runtime — enough for the local
+    /// work, never enough for the uploads, which is why they moved to
+    /// `BackgroundUploader`.
     @MainActor
     final class BackgroundGrace {
         private var id: UIBackgroundTaskIdentifier = .invalid

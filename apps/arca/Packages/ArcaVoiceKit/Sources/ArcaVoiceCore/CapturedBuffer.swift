@@ -28,6 +28,14 @@ public func uploadFile(_ session: URLSession, for request: URLRequest, bodyFile:
     #if os(macOS)
     return try await CurlTransport.send(request: request, bodyFile: bodyFile)
     #else
+    // iOS suspends the app seconds after it leaves the foreground, and a
+    // suspended in-process upload dies rather than pausing. Route the default
+    // path through a background session, which `nsurlsessiond` finishes out of
+    // process. A caller that injected its own session (tests, or anything that
+    // deliberately wants an in-process transfer) keeps the direct path.
+    if session === URLSession.shared {
+        return try await BackgroundUploader.shared.upload(request, bodyFile: bodyFile)
+    }
     return try await session.upload(for: request, fromFile: bodyFile)
     #endif
 }

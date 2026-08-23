@@ -5,6 +5,10 @@ import ArcaVoiceCore
 public protocol CaptureSession: Sendable {
     /// Interleaved stream of buffers from all active channels.
     var buffers: AsyncStream<CapturedBuffer> { get }
+    /// Whether audio is really flowing. An interruption (call, Siri, route
+    /// change) reports here so the recording UI never shows a running timer over
+    /// dead audio. Finishes when the capture stops.
+    var health: AsyncStream<CaptureHealth> { get }
     func stop() async throws -> CaptureArtifacts
 }
 

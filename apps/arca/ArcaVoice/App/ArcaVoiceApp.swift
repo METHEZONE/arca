@@ -1,10 +1,16 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(iOS)
+import UIKit
+#endif
 
 @main
 struct ArcaVoiceApp: App {
     let container: ModelContainer
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(ArcaAppDelegate.self) private var appDelegate
+    #endif
 
     init() {
         do {
@@ -134,3 +140,36 @@ struct ArcaVoiceApp: App {
             .appendingPathComponent("arca.store")
     }
 }
+
+#if os(iOS)
+/// Exists for exactly one reason SwiftUI cannot express: a background
+/// `URLSession` reports completions it finished while the app was suspended (or
+/// after iOS relaunched the app to deliver them) through a UIApplicationDelegate
+/// callback. Without this, transcription uploads that finished in the background
+/// would never be acknowledged and iOS would stop granting the app background
+/// time for them.
+final class ArcaAppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     handleEventsForBackgroundURLSession identifier: String,
+                     completionHandler: @escaping () -> Void) {
+        guard identifier == BackgroundUploader.sessionIdentifier else {
+            completionHandler()
+            return
+        }
+        // Recreating the session with the same identifier is what lets iOS hand
+        // its finished tasks over.
+        BackgroundUploader.prepareForBackgroundLaunch()
+        // UIKit hands this over as a plain closure; the uploader calls it back on
+        // the main queue, which is where UIKit requires it.
+        nonisolated(unsafe) let completion = completionHandler
+        BackgroundUploader.shared.setLaunchCompletionHandler { completion() }
+        // A launch triggered this way is the natural moment to finish anything
+        // that was interrupted: the pass whose upload just landed is stranded in
+        // `.processing`, and the audio is still on disk.
+        Task { @MainActor in
+            AppServices.shared.recoverOrphanedRecordings()
+            AppServices.shared.retryFailedFinalPasses()
+        }
+    }
+}
+#endif

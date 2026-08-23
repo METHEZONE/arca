@@ -8,6 +8,16 @@ import Intelligence
 /// The post-recording quality pass: per-channel high-quality transcription
 /// (with diarization on the system channel), channel merge, then LLM notes.
 public struct ProcessingPipeline: Sendable {
+    /// Where the transcript in an `Output` actually came from.
+    public enum TranscriptSource: String, Sendable {
+        /// The final pass produced it — cloud, or the on-device file fallback.
+        case finalPass
+        /// Nothing could transcribe the audio, so the live on-device segments
+        /// already sitting in the store were promoted instead. The caller must
+        /// not overwrite its stored segments with these: they *are* them.
+        case liveSegments
+    }
+
     public struct Output: Sendable {
         public let transcript: AttributedTranscript
         public let notes: MeetingNotes?
@@ -15,12 +25,15 @@ public struct ProcessingPipeline: Sendable {
         /// Non-empty means the meeting is only partly transcribed — the caller
         /// surfaces this instead of presenting a half transcript as complete.
         public let channelErrors: [String]
+        public let transcriptSource: TranscriptSource
 
         public init(transcript: AttributedTranscript, notes: MeetingNotes?,
-                    channelErrors: [String] = []) {
+                    channelErrors: [String] = [],
+                    transcriptSource: TranscriptSource = .finalPass) {
             self.transcript = transcript
             self.notes = notes
             self.channelErrors = channelErrors
+            self.transcriptSource = transcriptSource
         }
     }
 
@@ -32,11 +45,16 @@ public struct ProcessingPipeline: Sendable {
         self.summarizer = summarizer
     }
 
+    /// - Parameter liveFallback: the transcript already reconstructed from the
+    ///   session's stored live segments, if it has any. Used only when nothing
+    ///   could transcribe the audio — a cloud outage then costs the user note
+    ///   quality, not the whole meeting.
     public func process(
         files: [CaptureChannel: URL],
         ownerName: String,
         hints: TranscriptHints = TranscriptHints(),
-        userNotes: String? = nil
+        userNotes: String? = nil,
+        liveFallback: AttributedTranscript? = nil
     ) async throws -> Output {
         // One dead channel (empty mic file, corrupt tap) must not sink the
         // whole pass — transcribe per channel, keep what succeeds, and only
@@ -77,18 +95,34 @@ public struct ProcessingPipeline: Sendable {
         // non-empty and swallowed a genuine mic failure — the caller then wiped
         // the live transcript and stored nothing, with no error to retry from.
         let usableTurns = channelTurns.values.contains { !$0.isEmpty }
-        if !usableTurns, let firstError = channelErrors.first {
-            throw PipelineError.allChannelsFailed(firstError)
-        }
 
-        let merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
+        // Failing shut here is what used to leave a session with no transcript
+        // AND no notes: the throw happened before summarization, so a cloud
+        // outage erased the meeting from the user's point of view even though
+        // the live pass had already written text into the store. If there is
+        // any transcript to work with — even the degraded live one — the pass
+        // continues and summarizes it.
+        var source = TranscriptSource.finalPass
+        var merged: AttributedTranscript
+        if usableTurns {
+            merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
+        } else if let liveFallback, !liveFallback.turns.isEmpty {
+            merged = liveFallback
+            source = .liveSegments
+        } else if let firstError = channelErrors.first {
+            throw PipelineError.allChannelsFailed(firstError)
+        } else {
+            // No errors and no speech: a genuinely silent recording.
+            merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
+        }
 
         var notes: MeetingNotes?
         if let summarizer, !merged.turns.isEmpty {
             let style: NoteStyle = (userNotes?.isEmpty == false) ? .enhancedNotes : .meetingSummary
             notes = try await summarizer.summarize(merged, userNotes: userNotes, style: style)
         }
-        return Output(transcript: merged, notes: notes, channelErrors: channelErrors)
+        return Output(transcript: merged, notes: notes,
+                      channelErrors: channelErrors, transcriptSource: source)
     }
 
     /// Groups consecutive same-speaker segments into readable turns.

@@ -41,6 +41,11 @@ targets:
         NSSupportsLiveActivities: true
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        # These were hand-added to Info.plist and missing here, so any
+        # `xcodegen generate` silently deleted them. Declared now so the
+        # generated plist matches what ships.
+        NSHealthShareUsageDescription: ARCA는 수면·HRV·안정 심박을 읽어, 그날 남긴 기록과 몸의 상태를 나란히 보여드립니다. 이 데이터는 기기에 남고 서버로 올라가지 않습니다.
+        NSHealthUpdateUsageDescription: ARCA가 기록한 마음챙김 세션을 애플 건강에 남깁니다.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice
             CFBundleURLSchemes: [arca]
@@ -89,6 +94,8 @@ targets:
         NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSHealthShareUsageDescription: ARCA는 수면·HRV·안정 심박을 읽어, 그날 남긴 기록과 몸의 상태를 나란히 보여드립니다. 이 데이터는 기기에 남고 서버로 올라가지 않습니다.
+        NSHealthUpdateUsageDescription: ARCA가 기록한 마음챙김 세션을 애플 건강에 남깁니다.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice.test
             CFBundleURLSchemes: [arca-test]
@@ -172,6 +179,15 @@ targets:
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.thezone.arca.voice
         NSMicrophoneUsageDescription: ARCA records voice notes from your wrist.
+        # Hand-added to ArcaVoiceWatch/Support/Info.plist and missing here, so a
+        # regenerate used to delete them and silently un-fix watch background
+        # recording. `audio` keeps a foreground-started session running after
+        # backgrounding; `mindfulness` is what grants WKExtendedRuntimeSession
+        # (see WatchRuntimeGuard) — the longest non-workout window watchOS
+        # offers, and a semantic stretch for a meeting recorder that is still
+        # pending product/App Review sign-off.
+        UIBackgroundModes: [audio]
+        WKBackgroundModes: [mindfulness]
     settings:
       base:
         SWIFT_VERSION: "6.0"
