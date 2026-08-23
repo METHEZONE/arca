@@ -16,6 +16,8 @@ struct SessionDetailView: View {
     @State private var showingEmailSheet = false
     @State private var showingMeetingChat = false
     @State private var exportCache = TranscriptExportCache()
+    @State private var isResummarizing = false
+    @State private var resummarizeError: String?
     #if os(macOS)
     @State private var isSyncingNotion = false
     #endif
@@ -154,6 +156,22 @@ struct SessionDetailView: View {
                 }
                 .disabled(meetingNotes == nil)
             }
+            // Re-runs only the summarizer over the transcript already on disk —
+            // no re-upload, no re-transcription. The escape hatch for a meeting
+            // whose notes were written by an older, shallower prompt.
+            ToolbarItem {
+                Button {
+                    resummarize()
+                } label: {
+                    if isResummarizing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label("다시 요약", systemImage: "arrow.clockwise.circle")
+                    }
+                }
+                .disabled(isResummarizing || session.segments.isEmpty)
+                .help("저장된 전사로 요약·결정사항·액션 아이템을 다시 만들기")
+            }
             ToolbarItem {
                 Menu {
                     Button {
@@ -198,6 +216,14 @@ struct SessionDetailView: View {
         }
         .sheet(isPresented: $showingMeetingChat) {
             MeetingChatSheet(session: session)
+        }
+        .alert("다시 요약하지 못했어요", isPresented: Binding(
+            get: { resummarizeError != nil },
+            set: { if !$0 { resummarizeError = nil } }
+        )) {
+            Button("확인") { resummarizeError = nil }
+        } message: {
+            Text(resummarizeError ?? "")
         }
         .sheet(isPresented: $showingEmailSheet) {
             if let notes = meetingNotes {
@@ -306,6 +332,23 @@ struct SessionDetailView: View {
 
     private func displayName(for segment: StoredSegment) -> String {
         segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
+    }
+
+    private func resummarize() {
+        guard !isResummarizing else { return }
+        guard let summarizer = EngineFactory.summarizer() else {
+            resummarizeError = "설정에서 Anthropic 또는 OpenAI 키를 추가해 주세요."
+            return
+        }
+        isResummarizing = true
+        Task { @MainActor in
+            defer { isResummarizing = false }
+            do {
+                _ = try await SessionResummarizer.resummarize(session, using: summarizer)
+            } catch {
+                resummarizeError = error.localizedDescription
+            }
+        }
     }
 
     private func copyTranscript() {

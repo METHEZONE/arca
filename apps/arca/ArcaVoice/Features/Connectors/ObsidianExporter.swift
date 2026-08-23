@@ -279,10 +279,14 @@ enum ObsidianExporter {
             return []
         }
         return items.map { item in
+            var line = item.text
             if let assignee = item.assigneeName, !assignee.isEmpty {
-                return "\(item.text) (@\(assignee))"
+                line += " (@\(assignee))"
             }
-            return item.text
+            // Always printed — a stated deadline that failed ISO parsing used to
+            // vanish here, and an unstated one left no trace either way.
+            line += " · 기한: \(item.dueDisplay)"
+            return line
         }
     }
 

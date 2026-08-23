@@ -14,7 +14,9 @@ public struct OpenAISummarizer: Summarizer {
         apiKey: String,
         model: String = "gpt-4o-mini",
         endpoint: URL = URL(string: "https://api.openai.com/v1/responses")!,
-        maxOutputTokens: Int = 4096,
+        // Matches ClaudeSummarizer: the detailed per-topic record does not fit
+        // in 4096 output tokens for a long meeting.
+        maxOutputTokens: Int = 16000,
         urlSession: URLSession = .shared
     ) {
         self.apiKey = apiKey
@@ -80,67 +82,36 @@ public struct OpenAISummarizer: Summarizer {
     }
 
     static func userPrompt(transcript: AttributedTranscript, userNotes: String?, style: NoteStyle) -> String {
+        // Mirrors ClaudeSummarizer's forced-tool schema; the two must stay in
+        // step because both decode into the same wire struct below.
         let schemaHint = """
         Return only a JSON object with:
         {
           "title": string,
           "summaryMarkdown": string,
-          "decisions": string[],
-          "actionItems": [{"text": string, "assigneeName": string|null, "due": "YYYY-MM-DD"|null}],
+          "topics": [{"title": string, "timeRange": string, "keyPoints": string[], "quotes": string[]}],
+          "decisions": [{"decision": string, "rationale": string, "decidedBy": string}],
+          "actionItems": [{"text": string, "assigneeName": string, "due": string}],
+          "openQuestions": string[],
           "enhancedNotesMarkdown": string|null
         }
+        `due` is an ISO date (YYYY-MM-DD) when a calendar date was stated, otherwise the deadline as it was said, otherwise "미정" — never null, never omitted.
         """
         return [ClaudeSummarizer.userPrompt(transcript: transcript, userNotes: userNotes, style: style), schemaHint]
             .joined(separator: "\n\n")
-    }
-
-    struct NotesJSON: Decodable {
-        struct ActionItem: Decodable {
-            var text: String
-            var assigneeName: String?
-            var due: String?
-        }
-        var title: String
-        var summaryMarkdown: String
-        var decisions: [String]?
-        var actionItems: [ActionItem]?
-        var enhancedNotesMarkdown: String?
     }
 
     static func parseNotes(from data: Data, style: NoteStyle, userNotes: String?) throws -> MeetingNotes {
         guard let text = try outputText(from: data), let jsonData = text.data(using: .utf8) else {
             throw OpenAISummarizerError.missingJSON
         }
-        let wire: NotesJSON
+        let wire: ClaudeSummarizer.NotesToolInput
         do {
-            wire = try JSONDecoder().decode(NotesJSON.self, from: jsonData)
+            wire = try JSONDecoder().decode(ClaudeSummarizer.NotesToolInput.self, from: jsonData)
         } catch {
             throw OpenAISummarizerError.decoding(error)
         }
-
-        let items = (wire.actionItems ?? []).map {
-            MeetingNotes.ActionItem(
-                text: $0.text,
-                assigneeName: $0.assigneeName?.isEmpty == true ? nil : $0.assigneeName,
-                due: ClaudeSummarizer.parseDate($0.due)
-            )
-        }
-
-        let enhanced: String?
-        if style == .enhancedNotes,
-           let userNotes, !userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            enhanced = wire.enhancedNotesMarkdown
-        } else {
-            enhanced = nil
-        }
-
-        return MeetingNotes(
-            title: wire.title,
-            summaryMarkdown: wire.summaryMarkdown,
-            decisions: wire.decisions ?? [],
-            actionItems: items,
-            enhancedNotesMarkdown: enhanced
-        )
+        return ClaudeSummarizer.notes(from: wire, style: style, userNotes: userNotes)
     }
 
     static func outputText(from data: Data) throws -> String? {

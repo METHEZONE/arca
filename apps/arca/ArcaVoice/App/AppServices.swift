@@ -67,6 +67,7 @@ final class AppServices {
         ) { [weak self] _ in
             Task { @MainActor in self?.retryFailedFinalPasses() }
         }
+        Task { @MainActor in await self.backfillDetailedSummaries() }
         #endif
         #if os(macOS)
         DebugTrace.install()
@@ -84,6 +85,7 @@ final class AppServices {
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
             self.retryFailedFinalPasses()
+            Task { @MainActor in await self.backfillDetailedSummaries() }
 
             self.meetingDetector.onDetect = { [weak self] meeting in
                 self?.notch.offerMeeting(label: meeting.label)
@@ -228,6 +230,35 @@ final class AppServices {
         FinalPassRunner.retryFailed(context: mainContext,
                                     ownerName: ownerName,
                                     languageHints: TranscriptionPrefs.languageHints)
+    }
+
+    /// Key for the one-shot sweep below. Bumping the version re-runs it once.
+    private static let detailedSummaryBackfillKey = "didBackfillDetailedSummaryV1"
+
+    /// Re-summarizes every stored meeting once, so notes written under the old
+    /// shallow prompt/schema get the detailed treatment without the user having
+    /// to open each meeting and ask.
+    ///
+    /// Runs at most once ever, and the flag is set *before* the sweep starts: a
+    /// crash or a force-quit halfway through must not restart it on the next
+    /// launch and re-bill the whole library. Anything it misses is still
+    /// reachable from 세션 상세 → "다시 요약".
+    func backfillDetailedSummaries() async {
+        guard let mainContext else { return }
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.detailedSummaryBackfillKey) else { return }
+        guard let summarizer = EngineFactory.summarizer() else { return }
+        defaults.set(true, forKey: Self.detailedSummaryBackfillKey)
+
+        let report = await SessionResummarizer.backfillDetailedSummaries(
+            context: mainContext,
+            summarizer: summarizer,
+            log: { DebugTrace.log($0) })
+        #if os(macOS)
+        if report.regenerated > 0 {
+            notch.showNotice("지난 회의 \(report.regenerated)건을 더 자세한 요약으로 다시 정리했어요", seconds: 6)
+        }
+        #endif
     }
 
     func startRecording(meetingApp: String? = nil) {
