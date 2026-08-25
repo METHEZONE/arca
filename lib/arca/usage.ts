@@ -1,22 +1,29 @@
 /**
- * Per-device usage records — the traction instrument.
+ * Usage records — the traction instrument, now durable.
  *
- * The beta's whole purpose is a number: of the people who installed ARCA, how
- * many actually use it, and how much. Every model call already passes through
- * this server, so the proxy log *is* that number — there is no separate
- * analytics pipeline to build.
+ * Every model call already passes through this server, so this log *is* the
+ * "how many people actually use it, how much" number. It used to be a
+ * single-line JSON console log because Vercel's filesystem is ephemeral and
+ * there was no database to lose it to; now there is one (see `lib/db`), and
+ * `record` writes into `usage_events` scoped by device/user/organization so
+ * quota checks (`lib/arca/quota.ts`) can query it.
  *
- * Storage is deliberately best-effort. Vercel's filesystem is ephemeral, so a
- * write here can be lost; that is fine for a usage counter and unacceptable for
- * a balance, which is why balances are not kept here. When durable storage
- * arrives (KV, Postgres), `record` is the single function to reimplement.
+ * Falls back to the old console-log behavior when `DATABASE_URL` isn't set,
+ * matching the rest of this repo's "works with zero keys, upgrades the
+ * moment a key is present" posture.
  */
+
+import { db } from "@/lib/db/client";
+import { usageEvents } from "@/lib/db/schema";
 
 export type UsageKind = "chat" | "transcribe";
 
 export interface UsageEvent {
   at: string;
-  deviceId: string;
+  deviceId?: string;
+  /** Set once a request is tenant-authenticated (Phase 2 session). */
+  userId?: string;
+  organizationId?: string;
   kind: UsageKind;
   /** Model that served it, for cost attribution. */
   model?: string;
@@ -32,17 +39,36 @@ export interface UsageEvent {
 /**
  * Records one event.
  *
- * Emitted as a single-line JSON log with a stable `arca.usage` prefix so it can
- * be grepped out of `vercel logs` today, before any database exists:
- *
- *     vercel logs --since 24h | grep arca.usage
+ * Still emitted as a single-line `arca.usage` JSON log first — cheap,
+ * synchronous with the request, and useful for `vercel logs` debugging even
+ * once the DB is the source of truth for quota/billing. A telemetry failure
+ * (including the DB write) must never take down the request that produced it.
  */
 export async function record(event: Omit<UsageEvent, "at">): Promise<void> {
   const full: UsageEvent = { at: new Date().toISOString(), ...event };
-  // A telemetry failure must never take down the request that produced it.
   try {
     console.log(`arca.usage ${JSON.stringify(full)}`);
   } catch {
     /* ignore */
+  }
+
+  const database = db();
+  if (!database) return;
+  try {
+    await database.insert(usageEvents).values({
+      at: new Date(full.at),
+      deviceId: full.deviceId,
+      userId: full.userId,
+      organizationId: full.organizationId,
+      kind: full.kind,
+      model: full.model,
+      inputTokens: full.inputTokens,
+      outputTokens: full.outputTokens,
+      audioSeconds: full.audioSeconds,
+      ok: full.ok,
+      error: full.error,
+    });
+  } catch (err) {
+    console.error("arca.usage.db_write_failed", err instanceof Error ? err.message : err);
   }
 }
