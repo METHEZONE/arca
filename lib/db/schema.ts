@@ -28,6 +28,9 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   plan: planEnum("plan").notNull().default("free"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Set by the weekly recap cron (Phase F) after a send — dedupes so a
+   *  re-run within the same week (retry, manual trigger) doesn't double-send. */
+  digestSentAt: timestamp("digest_sent_at", { withTimezone: true }),
 });
 
 export const users = pgTable("users", {
@@ -40,6 +43,9 @@ export const users = pgTable("users", {
    *  same row as a magic-link account with the matching verified email. */
   googleId: text("google_id").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Opts out of the weekly recap email (Phase F). Doesn't affect
+   *  transactional mail (magic links, device-link confirmations). */
+  digestOptOut: boolean("digest_opt_out").notNull().default(false),
 });
 
 /**
