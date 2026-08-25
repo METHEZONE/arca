@@ -16,7 +16,7 @@
 import { db } from "@/lib/db/client";
 import { usageEvents } from "@/lib/db/schema";
 
-export type UsageKind = "chat" | "transcribe";
+export type UsageKind = "chat" | "transcribe" | "delegate";
 
 export interface UsageEvent {
   at: string;

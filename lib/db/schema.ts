@@ -36,6 +36,9 @@ export const users = pgTable("users", {
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id),
+  /** Set once the account signs in with Google (Phase A) — attaches to the
+   *  same row as a magic-link account with the matching verified email. */
+  googleId: text("google_id").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -56,7 +59,7 @@ export const devices = pgTable("devices", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const usageKindEnum = pgEnum("usage_kind", ["chat", "transcribe"]);
+export const usageKindEnum = pgEnum("usage_kind", ["chat", "transcribe", "delegate"]);
 
 /** Durable replacement for the single-line JSON logs `usage.ts` used to emit. */
 export const usageEvents = pgTable(
