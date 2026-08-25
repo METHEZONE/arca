@@ -55,6 +55,7 @@ public struct MicOnlyCaptureEngine: AudioCaptureEngine {
 
     public func start(config: CaptureConfig) async throws -> any CaptureSession {
         guard await MicCapture.requestPermission() else {
+            CaptureTrace.log("mic-only start: mic permission denied")
             throw CaptureError.microphonePermissionDenied
         }
         try FileManager.default.createDirectory(at: config.outputDirectory, withIntermediateDirectories: true)

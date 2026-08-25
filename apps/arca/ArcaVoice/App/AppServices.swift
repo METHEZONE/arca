@@ -40,6 +40,13 @@ final class AppServices {
 
     func configure(container: ModelContainer) {
         self.container = container
+        // Was only wired under `#if os(macOS)` below, so every CaptureTrace.log
+        // call in the recording/mic path (permission, format, interruption,
+        // recovery — the exact detail needed to diagnose a start failure) was a
+        // silent no-op on iOS. Wire it here, unconditionally, before anything
+        // can record.
+        DebugTrace.install()
+        CaptureTrace.sink = { message in DebugTrace.log("capture: \(message)") }
         RelaySync.shared.configure(container: container)
 
         // Capture can die in a way it cannot recover from (the mic never comes
@@ -81,7 +88,6 @@ final class AppServices {
         Task { @MainActor in await self.backfillDetailedSummaries() }
         #endif
         #if os(macOS)
-        DebugTrace.install()
         zone.configure(container: container)
         dayLog.configure(container: container)
         #endif

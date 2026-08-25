@@ -47,12 +47,16 @@ final class MicCapture: @unchecked Sendable {
                onHealth: @escaping (CaptureHealth) -> Void = { _ in }) throws {
         self.onBuffer = onBuffer
         self.onHealth = onHealth
+        CaptureTrace.log("mic: start — permission granted")
         #if os(iOS)
         AudioSessionArbiter.claimForRecording()
+        CaptureTrace.log("mic: session claimed")
         do {
             try activateSession()
+            CaptureTrace.log("mic: session activated")
         } catch {
             AudioSessionArbiter.releaseRecording()
+            CaptureTrace.log("mic: session activation failed — \(error)")
             throw error
         }
         #endif
@@ -81,9 +85,27 @@ final class MicCapture: @unchecked Sendable {
             Thread.sleep(forTimeInterval: 0.25) // let CoreAudio settle the switch
         }
         #endif
-        let format = input.outputFormat(forBus: 0)
+        var format = input.outputFormat(forBus: 0)
+        #if os(iOS)
+        // Right after `setActive(true)` the route is not always settled yet —
+        // the hardware format can read 0Hz for a beat, especially on a cold
+        // start (first recording after granting mic permission, or right after
+        // a route change). macOS's Bluetooth-pin path already knows to give
+        // CoreAudio a moment (see `Thread.sleep` above); iOS needs the same
+        // grace instead of failing the whole recording on a transient read.
+        var settleAttempts = 0
+        while format.sampleRate == 0, settleAttempts < 5 {
+            settleAttempts += 1
+            Thread.sleep(forTimeInterval: 0.05)
+            format = input.outputFormat(forBus: 0)
+        }
+        if settleAttempts > 0 {
+            CaptureTrace.log("mic: input format settled after \(settleAttempts) retries")
+        }
+        #endif
         CaptureTrace.log("mic: input format \(format.sampleRate)Hz x\(format.channelCount)")
         guard format.sampleRate > 0 else {
+            CaptureTrace.log("mic: input format never settled — giving up")
             restoreDefaultInputIfNeeded()
             releaseSessionClaim()
             throw CaptureError.formatUnavailable
@@ -99,6 +121,7 @@ final class MicCapture: @unchecked Sendable {
         do {
             try startEngine()
         } catch {
+            CaptureTrace.log("mic: engine start failed — \(error)")
             restoreDefaultInputIfNeeded()
             releaseSessionClaim()
             throw error
@@ -106,6 +129,7 @@ final class MicCapture: @unchecked Sendable {
         isRunning = true
         report(.capturing)
         registerObservers()
+        CaptureTrace.log("mic: engine started — capturing")
     }
 
     // MARK: - Engine lifecycle
