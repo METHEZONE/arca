@@ -34,12 +34,18 @@ export async function resolveQuotaSubject(identity: Identity): Promise<QuotaSubj
   const database = db();
   let plan: Plan = "free";
   if (database) {
-    const [org] = await database
-      .select({ plan: organizations.plan })
-      .from(organizations)
-      .where(eq(organizations.id, identity.organizationId))
-      .limit(1);
-    if (org) plan = org.plan;
+    try {
+      const [org] = await database
+        .select({ plan: organizations.plan })
+        .from(organizations)
+        .where(eq(organizations.id, identity.organizationId))
+        .limit(1);
+      if (org) plan = org.plan;
+    } catch (err) {
+      // A transient DB error shouldn't crash the request — fall back to the
+      // most restrictive plan rather than silently trusting an unverified one.
+      console.error("arca.quota.resolve_subject_failed", err instanceof Error ? err.message : err);
+    }
   }
   return { scope: "organization", id: identity.organizationId, plan };
 }
@@ -61,22 +67,30 @@ export async function checkQuota(subject: QuotaSubject): Promise<QuotaDenial | n
       ? eq(usageEvents.organizationId, subject.id)
       : and(eq(usageEvents.deviceId, subject.id), sql`${usageEvents.organizationId} is null`);
 
-  const oneMinuteAgo = new Date(Date.now() - 60_000);
-  const [{ value: recentCount }] = await database
-    .select({ value: sql<number>`count(*)::int` })
-    .from(usageEvents)
-    .where(and(subjectFilter, gte(usageEvents.at, oneMinuteAgo)));
-  if (recentCount >= limits.requestsPerMinute) {
-    return { reason: "rate_limited", retryAfterSeconds: 60, limit: limits.requestsPerMinute };
-  }
+  // A query failure here (network blip, pool exhaustion) must not 500 every
+  // metered route — fail open, same posture as a missing DATABASE_URL above
+  // and as usage.ts's own degradation. The alternative (fail closed) would
+  // turn a transient DB hiccup into a beta-wide outage for one count(*).
+  try {
+    const oneMinuteAgo = new Date(Date.now() - 60_000);
+    const [{ value: recentCount }] = await database
+      .select({ value: sql<number>`count(*)::int` })
+      .from(usageEvents)
+      .where(and(subjectFilter, gte(usageEvents.at, oneMinuteAgo)));
+    if (recentCount >= limits.requestsPerMinute) {
+      return { reason: "rate_limited", retryAfterSeconds: 60, limit: limits.requestsPerMinute };
+    }
 
-  const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
-  const [{ value: monthCount }] = await database
-    .select({ value: sql<number>`count(*)::int` })
-    .from(usageEvents)
-    .where(and(subjectFilter, gte(usageEvents.at, startOfMonth)));
-  if (monthCount >= limits.monthlyRequests) {
-    return { reason: "quota_exceeded", limit: limits.monthlyRequests, plan: subject.plan };
+    const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+    const [{ value: monthCount }] = await database
+      .select({ value: sql<number>`count(*)::int` })
+      .from(usageEvents)
+      .where(and(subjectFilter, gte(usageEvents.at, startOfMonth)));
+    if (monthCount >= limits.monthlyRequests) {
+      return { reason: "quota_exceeded", limit: limits.monthlyRequests, plan: subject.plan };
+    }
+  } catch (err) {
+    console.error("arca.quota.check_failed", err instanceof Error ? err.message : err);
   }
 
   return null;
