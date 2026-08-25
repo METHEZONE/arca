@@ -1,5 +1,7 @@
 "use client";
 
+import { arcaBase } from "@/lib/arca/origin";
+
 /**
  * Gets or mints a browser device token for anonymous ARCA Cloud calls (the
  * public "arca it" widget on the marketing site) — the same device-token
@@ -19,7 +21,7 @@ export async function getDeviceToken(): Promise<string | null> {
   if (cached) return cached;
 
   try {
-    const res = await fetch("/api/arca/device", { method: "POST" });
+    const res = await fetch(`${arcaBase()}/api/arca/device`, { method: "POST" });
     if (!res.ok) return null;
     const { token } = (await res.json()) as { token?: string };
     if (!token) return null;
