@@ -198,6 +198,19 @@ public final class SessionNote {
     public var summaryMarkdown: String?
     public var decisionsJSON: Data?
     public var actionItemsJSON: Data?
+    /// Set once `autoRememberMeetingIfEnabled` has extracted memories for this
+    /// note. A partial-channel failure or a live-transcript fallback leaves
+    /// `processingError` set, which queues the session for a final-pass retry
+    /// on the next launch — without this guard, that retry re-extracts
+    /// memories from the same summary every time it reprocesses.
+    public var memoryExtractedAt: Date?
+    /// Set once the summary email has gone out for this note. Unlike the
+    /// Obsidian export (idempotent via an anchor comment) or the Notion sync
+    /// (updates an existing row), sending an email has no natural idempotency —
+    /// without this, a session that keeps retrying its final pass (a
+    /// permanently failing channel, say) re-sends the same summary email on
+    /// every app launch.
+    public var summaryEmailedAt: Date?
 
     public init(roughMarkdown: String = "") {
         self.roughMarkdown = roughMarkdown

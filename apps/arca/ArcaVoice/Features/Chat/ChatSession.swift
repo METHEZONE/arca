@@ -108,7 +108,7 @@ final class ChatSession {
         let transcript = messages
             .map { "\($0.role == .user ? "User" : "ARCA"): \($0.displayText)" }
             .joined(separator: "\n")
-        let known = memoryFacts().map(\.text)
+        let known = MemoryPrompt.knownFactsForDedup(memoryFacts())
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         Task { @MainActor in
             guard let extracted = try? await MemoryExtractor(apiKey: key, model: model)

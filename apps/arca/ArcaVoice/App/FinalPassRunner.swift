@@ -288,6 +288,7 @@ enum FinalPassRunner {
     /// macOS only — sends the summary through the ARCA Composio Gmail connection.
     private static func autoSendEmailIfEnabled(record: RecordingSession, notes: MeetingNotes) async {
         #if os(macOS)
+        guard record.note?.summaryEmailedAt == nil else { return }
         let defaults = UserDefaults.standard
         let enabled = defaults.object(forKey: "autoEmailSummary") as? Bool ?? true
         guard enabled else { return }
@@ -296,6 +297,8 @@ enum FinalPassRunner {
         do {
             try await sender.sendSummary(to: recipient, sessionTitle: record.title,
                                          notes: notes, date: record.createdAt)
+            record.note?.summaryEmailedAt = .now
+            try? record.modelContext?.save()
         } catch {
             record.processingError = error.localizedDescription
             try? record.modelContext?.save()
@@ -312,6 +315,12 @@ enum FinalPassRunner {
     /// both platforms, unlike the Obsidian export below, because remembering
     /// is core behavior, not a macOS-only integration.
     private static func autoRememberMeetingIfEnabled(record: RecordingSession, notes: MeetingNotes) async {
+        // A partial-channel failure or a live-transcript fallback keeps
+        // `processingError` set to a retryable string, so this session's final
+        // pass runs again on the next launch — without this guard, the same
+        // meeting's memories get re-extracted (and re-inserted, dedup being
+        // best-effort model judgment, not a hard constraint) every retry.
+        guard record.note?.memoryExtractedAt == nil else { return }
         guard let key = KeychainStore.get(.anthropic), !key.isEmpty else { return }
         guard let context = record.modelContext else { return }
 
@@ -333,11 +342,16 @@ enum FinalPassRunner {
         // a two-hour transcript would.
         let meetingRecord = lines.joined(separator: "\n")
 
-        let known = (try? context.fetch(FetchDescriptor<MemoryFact>()))?.map(\.text) ?? []
+        let known = MemoryPrompt.knownFactsForDedup(
+            (try? context.fetch(FetchDescriptor<MemoryFact>())) ?? [])
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
+        // A thrown error (bad key, network down) leaves memoryExtractedAt unset
+        // so a later retry tries again; a successful call — even one that
+        // extracted nothing new — marks it done so a retryable processing
+        // error doesn't re-call the API on every relaunch forever.
         guard let extracted = try? await MemoryExtractor(apiKey: key, model: model)
-            .extract(fromConversation: meetingRecord, knownFacts: known),
-              !extracted.isEmpty else { return }
+            .extract(fromConversation: meetingRecord, knownFacts: known) else { return }
+        record.note?.memoryExtractedAt = .now
         for memory in extracted {
             context.insert(MemoryFact(text: memory.text, kind: memory.kind, source: "meeting"))
         }
