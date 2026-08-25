@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
 import { resolveIdentity } from "@/lib/arca/identity";
+import { checkQuota, quotaDenialResponseBody, resolveQuotaSubject } from "@/lib/arca/quota";
 import { record } from "@/lib/arca/usage";
 import { anthropicKey } from "@/lib/config";
 
@@ -41,6 +42,12 @@ export async function POST(request: NextRequest) {
   const deviceId = identity.kind === "device" ? identity.deviceId : identity.deviceId ?? undefined;
   const organizationId = identity.kind === "tenant" ? identity.organizationId : undefined;
   const userId = identity.kind === "tenant" ? identity.userId : undefined;
+
+  const quotaSubject = await resolveQuotaSubject(identity);
+  const denial = await checkQuota(quotaSubject);
+  if (denial) {
+    return NextResponse.json(quotaDenialResponseBody(denial), { status: 429 });
+  }
 
   const key = anthropicKey();
   if (!key) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { resolveIdentity } from "@/lib/arca/identity";
+import { checkQuota, quotaDenialResponseBody, resolveQuotaSubject } from "@/lib/arca/quota";
 import { record } from "@/lib/arca/usage";
 import { openAiKey } from "@/lib/config";
 
@@ -14,10 +15,11 @@ const MAX_BYTES = 24 * 1024 * 1024;
 /**
  * Transcription proxy.
  *
- * Recording is unlimited and free in the beta, so this route meters but never
- * refuses. It exists for two reasons: the OpenAI key stays server-side, and
- * every clip that passes through becomes a usage record — which is how "time
- * spent with ARCA", the traction metric, gets counted at all.
+ * Meters against the caller's plan (Phase 4) — a signed-in tenant against
+ * their organization's monthly quota, an anonymous device against the free
+ * tier's. It exists for two reasons beyond that: the OpenAI key stays
+ * server-side, and every clip that passes through becomes a usage record —
+ * which is how "time spent with ARCA", the traction metric, gets counted at all.
  *
  * Chunking and loudness normalisation stay on the device. Vercel's runtime has
  * no ffmpeg, and the app already has AVFoundation, so the client sends
@@ -36,6 +38,12 @@ export async function POST(request: NextRequest) {
   const deviceId = identity.kind === "device" ? identity.deviceId : identity.deviceId ?? undefined;
   const organizationId = identity.kind === "tenant" ? identity.organizationId : undefined;
   const userId = identity.kind === "tenant" ? identity.userId : undefined;
+
+  const quotaSubject = await resolveQuotaSubject(identity);
+  const denial = await checkQuota(quotaSubject);
+  if (denial) {
+    return NextResponse.json(quotaDenialResponseBody(denial), { status: 429 });
+  }
 
   const key = openAiKey();
   if (!key) {
