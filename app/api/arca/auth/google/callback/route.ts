@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { exchangeGoogleCode, linkOrCreateGoogleUser } from "@/lib/arca/google";
 import { claimDevice } from "@/lib/arca/identity";
-import { issueSession, SESSION_COOKIE } from "@/lib/arca/session";
+import { issueSession, setSessionCookie } from "@/lib/arca/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,26 +53,27 @@ export async function GET(request: NextRequest) {
     return errorRedirect("google_exchange_failed");
   }
 
-  const linked = await linkOrCreateGoogleUser(identity);
+  // A DB blip in linking/session issuance must still land the user somewhere
+  // with a way forward, not a raw 500 — same guard as the magic-link callback.
+  try {
+    const linked = await linkOrCreateGoogleUser(identity);
 
-  if (deviceId) {
-    await claimDevice(deviceId, linked.userId, linked.organizationId);
+    if (deviceId) {
+      await claimDevice(deviceId, linked.userId, linked.organizationId);
+    }
+
+    const sessionToken = await issueSession({
+      userId: linked.userId,
+      organizationId: linked.organizationId,
+      email: linked.email,
+    });
+
+    const res = NextResponse.redirect(new URL(`${ONBOARDING}?step=device`, request.nextUrl.origin));
+    res.cookies.delete(STATE_COOKIE);
+    setSessionCookie(res, sessionToken);
+    return res;
+  } catch (err) {
+    console.error("arca.auth.google_callback_failed", err instanceof Error ? err.message : err);
+    return errorRedirect("server_error");
   }
-
-  const sessionToken = await issueSession({
-    userId: linked.userId,
-    organizationId: linked.organizationId,
-    email: linked.email,
-  });
-
-  const res = NextResponse.redirect(new URL(`${ONBOARDING}?step=device`, request.nextUrl.origin));
-  res.cookies.delete(STATE_COOKIE);
-  res.cookies.set(SESSION_COOKIE, sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-  return res;
 }

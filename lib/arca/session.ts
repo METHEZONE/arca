@@ -10,6 +10,7 @@
  */
 
 import { SignJWT, jwtVerify } from "jose";
+import type { NextResponse } from "next/server";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
@@ -35,6 +36,18 @@ function secretKey(): Uint8Array {
 
 export function hasSessionSecret(): boolean {
   return Boolean(process.env.ARCA_SESSION_SECRET?.trim());
+}
+
+/** Sets the httpOnly session cookie on a redirect response — the one place
+ *  both auth callbacks (magic-link, Google) hand off into a browser session. */
+export function setSessionCookie(res: NextResponse, token: string): void {
+  res.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS,
+  });
 }
 
 export async function issueSession(claims: SessionClaims): Promise<string> {

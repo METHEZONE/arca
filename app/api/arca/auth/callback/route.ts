@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { consumeMagicLink } from "@/lib/arca/magiclink";
 import { claimDevice } from "@/lib/arca/identity";
-import { issueSession, SESSION_COOKIE } from "@/lib/arca/session";
+import { issueSession, setSessionCookie } from "@/lib/arca/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,38 +25,35 @@ export async function GET(request: NextRequest) {
     return errorRedirect(request, "missing_token");
   }
 
-  const consumed = await consumeMagicLink(token);
-  if (!consumed) {
-    return errorRedirect(request, "invalid_link");
+  // A DB blip anywhere below must still land the user somewhere with a way
+  // forward, not a raw 500 — same guard as the Google callback.
+  try {
+    const consumed = await consumeMagicLink(token);
+    if (!consumed) {
+      return errorRedirect(request, "invalid_link");
+    }
+
+    if (consumed.deviceId) {
+      await claimDevice(consumed.deviceId, consumed.userId, consumed.organizationId);
+    }
+
+    const sessionToken = await issueSession({
+      userId: consumed.userId,
+      organizationId: consumed.organizationId,
+      email: consumed.email,
+    });
+
+    const res = NextResponse.redirect(new URL(`${ONBOARDING}?step=device`, request.nextUrl.origin));
+    setSessionCookie(res, sessionToken);
+    return res;
+  } catch (err) {
+    console.error("arca.auth.callback_failed", err instanceof Error ? err.message : err);
+    return errorRedirect(request, "server_error");
   }
-
-  if (consumed.deviceId) {
-    await claimDevice(consumed.deviceId, consumed.userId, consumed.organizationId);
-  }
-
-  const sessionToken = await issueSession({
-    userId: consumed.userId,
-    organizationId: consumed.organizationId,
-    email: consumed.email,
-  });
-
-  const res = NextResponse.redirect(new URL(`${ONBOARDING}?step=device`, request.nextUrl.origin));
-  setSessionCookie(res, sessionToken);
-  return res;
 }
 
 function errorRedirect(request: NextRequest, code: string) {
   return NextResponse.redirect(
     new URL(`${ONBOARDING}?step=signin&error=${code}`, request.nextUrl.origin),
   );
-}
-
-function setSessionCookie(res: NextResponse, token: string) {
-  res.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
 }
