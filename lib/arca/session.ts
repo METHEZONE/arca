@@ -13,6 +13,10 @@ import { SignJWT, jwtVerify } from "jose";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
+/** httpOnly cookie name the web onboarding flow signs in with — see the auth
+ *  callback routes, which are the only code that sets it. */
+export const SESSION_COOKIE = "arca_session";
+
 export interface SessionClaims {
   userId: string;
   organizationId: string;
@@ -59,10 +63,26 @@ export async function verifySession(
   }
 }
 
-/** Pulls a session out of `Authorization: Bearer …`. Falls through (returns
- *  null) for a device token — those are handled separately by the caller. */
+/** Pulls a session out of `Authorization: Bearer …` (the Swift app), falling
+ *  back to the `arca_session` cookie (the web onboarding flow — browser
+ *  fetches attach it automatically, no client-side token handling needed).
+ *  Falls through (returns null) for a device token — those are handled
+ *  separately by the caller. */
 export async function sessionFromRequest(request: Request): Promise<SessionClaims | null> {
   const bearer = request.headers.get("authorization");
-  if (!bearer?.toLowerCase().startsWith("bearer ")) return null;
-  return verifySession(bearer.slice(7).trim());
+  if (bearer?.toLowerCase().startsWith("bearer ")) {
+    return verifySession(bearer.slice(7).trim());
+  }
+  return verifySession(cookieValue(request, SESSION_COOKIE));
+}
+
+function cookieValue(request: Request, name: string): string | undefined {
+  const header = request.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
+  }
+  return undefined;
 }
