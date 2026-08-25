@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { deviceIdFromRequest } from "@/lib/arca/device";
+import { resolveIdentity } from "@/lib/arca/identity";
 import { record } from "@/lib/arca/usage";
 import { openAiKey } from "@/lib/config";
 
@@ -29,10 +29,13 @@ const MAX_BYTES = 24 * 1024 * 1024;
  * the same recordings. Diarization is not worth losing the transcript.
  */
 export async function POST(request: NextRequest) {
-  const deviceId = deviceIdFromRequest(request);
-  if (!deviceId) {
+  const identity = await resolveIdentity(request);
+  if (!identity) {
     return NextResponse.json({ error: "Unknown device." }, { status: 401 });
   }
+  const deviceId = identity.kind === "device" ? identity.deviceId : identity.deviceId ?? undefined;
+  const organizationId = identity.kind === "tenant" ? identity.organizationId : undefined;
+  const userId = identity.kind === "tenant" ? identity.userId : undefined;
 
   const key = openAiKey();
   if (!key) {
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const detail = (await response.text()).slice(0, 300);
       await record({
-        deviceId, kind: "transcribe", model, audioSeconds, ok: false,
+        deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
         error: `HTTP ${response.status}: ${detail}`,
       });
       return NextResponse.json({ error: detail }, { status: 502 });
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
       .filter((s) => s.text.length > 0);
 
     await record({
-      deviceId, kind: "transcribe", model,
+      deviceId, userId, organizationId, kind: "transcribe", model,
       audioSeconds: audioSeconds ?? payload.duration,
       ok: true,
     });
@@ -119,7 +122,7 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     await record({
-      deviceId, kind: "transcribe", model, audioSeconds, ok: false,
+      deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
       error: message.slice(0, 200),
     });
     return NextResponse.json({ error: message }, { status: 502 });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-import { deviceIdFromRequest } from "@/lib/arca/device";
+import { resolveIdentity } from "@/lib/arca/identity";
 import { record } from "@/lib/arca/usage";
 import { anthropicKey } from "@/lib/config";
 
@@ -34,10 +34,13 @@ interface ChatBody {
  * app update — is worth more than client flexibility.
  */
 export async function POST(request: NextRequest) {
-  const deviceId = deviceIdFromRequest(request);
-  if (!deviceId) {
+  const identity = await resolveIdentity(request);
+  if (!identity) {
     return NextResponse.json({ error: "Unknown device." }, { status: 401 });
   }
+  const deviceId = identity.kind === "device" ? identity.deviceId : identity.deviceId ?? undefined;
+  const organizationId = identity.kind === "tenant" ? identity.organizationId : undefined;
+  const userId = identity.kind === "tenant" ? identity.userId : undefined;
 
   const key = anthropicKey();
   if (!key) {
@@ -80,6 +83,8 @@ export async function POST(request: NextRequest) {
 
     await record({
       deviceId,
+      userId,
+      organizationId,
       kind: "chat",
       model: response.model,
       inputTokens: response.usage.input_tokens,
@@ -98,7 +103,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    await record({ deviceId, kind: "chat", model, ok: false, error: message.slice(0, 200) });
+    await record({
+      deviceId,
+      userId,
+      organizationId,
+      kind: "chat",
+      model,
+      ok: false,
+      error: message.slice(0, 200),
+    });
     // Provider errors are relayed as 502 — the request was fine, the upstream
     // wasn't, and the app should retry rather than treat it as its own bug.
     return NextResponse.json({ error: message }, { status: 502 });
