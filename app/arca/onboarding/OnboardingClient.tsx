@@ -355,7 +355,12 @@ function DoneStep() {
     <div className="onb-step onb-done">
       <h1>You&apos;re all set.</h1>
       <p className="onb-sub">Open ARCA and say &ldquo;arca it&rdquo; to try your first delegation.</p>
-      <a className="a-btn" href="arca://">
+      {/* `arca://linked`, not a bare `arca://`: the app routes on the URL's
+          host, so a scheme with nothing after it opens the app but tells it
+          nothing. This host is what makes the app re-check its link status the
+          moment the user comes back, instead of showing a stale 미연결 until
+          settings are reopened. */}
+      <a className="a-btn" href="arca://linked">
         Open ARCA
       </a>
       <a className="onb-skip-link" href="/download">

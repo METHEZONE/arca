@@ -107,6 +107,11 @@ struct RootView: View {
                 // The share extension just deep-linked us open — present the
                 // shared item's action sheet immediately.
                 presentPendingContextIfNeeded()
+            case "linked":
+                // Web onboarding finished and sent us back. Re-ask the backend
+                // who this device belongs to now, so 설정 shows 연결됨 without
+                // the user having to go looking for it.
+                NotificationCenter.default.post(name: .arcaCloudLinked, object: nil)
             default:
                 break
             }
@@ -122,6 +127,10 @@ struct RootView: View {
                     if coordinator.phase == .idle { services.startRecording() }
                 case "stop":
                     services.stopRecording()
+                case "linked":
+                    // Web onboarding finished and sent us back — see the iOS
+                    // branch above.
+                    NotificationCenter.default.post(name: .arcaCloudLinked, object: nil)
                 default:
                     break
                 }

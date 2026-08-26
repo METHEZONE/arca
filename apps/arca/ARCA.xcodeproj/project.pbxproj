@@ -29,6 +29,7 @@
 		2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82731CD2C6E93B4C80F2272C /* AppServices.swift */; };
 		268AF5FF924733CF8B709ABB /* CrashNoteSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914353E9DD58C9EB466CC22C /* CrashNoteSync.swift */; };
 		2A540D8A36A52CF650EF0A35 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
+		2AD9043B5E625172D3567A2B /* ArcaCloudSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1D09BE388A76F083A1E795 /* ArcaCloudSection.swift */; };
 		2B08901B1DE80BE8563B618B /* SummaryNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */; };
 		2B5A1A1CEECAF38614C97F59 /* CalendarEventCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */; };
 		3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
@@ -151,6 +152,7 @@
 		BB5CA82891A149C3948D205E /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69B74064D232506B6F096FF /* HotkeyMonitor.swift */; };
 		BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242AE25F7831562835F5E0F /* FocusMode.swift */; };
 		BE4EDB427340D146D1D8B592 /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
+		BE6F31DB848A6150B17383D9 /* ArcaCloudSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1D09BE388A76F083A1E795 /* ArcaCloudSection.swift */; };
 		BF2A76DC38BDCA8A705C7DFE /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
 		BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		C04F5A834923E8FC2A9F3FF0 /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
@@ -257,6 +259,7 @@
 		124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAgent.swift; sourceTree = "<group>"; };
 		16F2EB7A5B10040606E35425 /* ArcaTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaTheme.swift; sourceTree = "<group>"; };
 		17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArcaVoiceWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A1D09BE388A76F083A1E795 /* ArcaCloudSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaCloudSection.swift; sourceTree = "<group>"; };
 		1BE75340E0AD5143C9876E8A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		1CD9AE86205742C95B982086 /* ZoneReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoneReportView.swift; sourceTree = "<group>"; };
 		1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionPrefs.swift; sourceTree = "<group>"; };
@@ -577,6 +580,7 @@
 		7DB4A0DF141200BBFC44CDB7 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				1A1D09BE388A76F083A1E795 /* ArcaCloudSection.swift */,
 				EE3D17BAB77EB7A2054C849E /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -916,6 +920,7 @@
 				61963EE7F217ED4FBB78BC6F /* ActionItemsCard.swift in Sources */,
 				35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */,
 				BA2A47750E904DB8E7D8E69F /* AppServices.swift in Sources */,
+				BE6F31DB848A6150B17383D9 /* ArcaCloudSection.swift in Sources */,
 				AB46DD9B63F867D5DD5694F0 /* ArcaShortcuts.swift in Sources */,
 				AA28F03E1B9D53033B6D43DB /* ArcaSkin.swift in Sources */,
 				691BE8125B684F1717F806EC /* ArcaTheme.swift in Sources */,
@@ -1013,6 +1018,7 @@
 				A3C8A637CBF3D17816618F86 /* ActionItemsCard.swift in Sources */,
 				F336100BAB08C31DD593C25F /* AmbientOps.swift in Sources */,
 				2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */,
+				2AD9043B5E625172D3567A2B /* ArcaCloudSection.swift in Sources */,
 				69027D761CE5C84ACEDB8475 /* ArcaShortcuts.swift in Sources */,
 				61865228BC0D55E1A0C6FE63 /* ArcaSkin.swift in Sources */,
 				8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */,

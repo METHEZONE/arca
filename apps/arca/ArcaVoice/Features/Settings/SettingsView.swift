@@ -55,6 +55,8 @@ struct SettingsView: View {
                 Text("Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows.")
             }
 
+            ArcaCloudSection()
+
             Section("My Info") {
                 TextField("Your name (label for your speech in transcripts)", text: $ownerName)
                 Picker("Transcription language", selection: $localeID) {
