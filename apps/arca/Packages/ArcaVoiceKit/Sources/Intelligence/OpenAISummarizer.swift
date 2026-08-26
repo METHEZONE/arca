@@ -12,9 +12,9 @@ public struct OpenAISummarizer: Summarizer {
 
     public init(
         apiKey: String,
-        model: String = "gpt-4o-mini",
+        model: String = "gpt-5-mini",
         endpoint: URL = URL(string: "https://api.openai.com/v1/responses")!,
-        maxOutputTokens: Int = 4096,
+        maxOutputTokens: Int = 8192,
         urlSession: URLSession = .shared
     ) {
         self.apiKey = apiKey
@@ -34,7 +34,7 @@ public struct OpenAISummarizer: Summarizer {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "max_output_tokens": maxOutputTokens,
             "input": [
@@ -53,6 +53,12 @@ public struct OpenAISummarizer: Summarizer {
             ],
             "text": ["format": ["type": "json_object"]],
         ]
+        // Reasoning models spend the output budget on thinking before the JSON
+        // arrives — keep the effort down so notes stay cheap and fast. Older
+        // models reject the parameter, so gate it.
+        if model.hasPrefix("gpt-5") || model.hasPrefix("o") {
+            body["reasoning"] = ["effort": "low"]
+        }
 
         let payload: Data
         do {
@@ -84,9 +90,11 @@ public struct OpenAISummarizer: Summarizer {
         Return only a JSON object with:
         {
           "title": string,
-          "summaryMarkdown": string,
+          "tldr": string,
+          "sections": [{"heading": string, "bullets": string[]}],
           "decisions": string[],
           "actionItems": [{"text": string, "assigneeName": string|null, "due": "YYYY-MM-DD"|null}],
+          "openQuestions": string[],
           "enhancedNotesMarkdown": string|null
         }
         """
@@ -94,53 +102,16 @@ public struct OpenAISummarizer: Summarizer {
             .joined(separator: "\n\n")
     }
 
-    struct NotesJSON: Decodable {
-        struct ActionItem: Decodable {
-            var text: String
-            var assigneeName: String?
-            var due: String?
-        }
-        var title: String
-        var summaryMarkdown: String
-        var decisions: [String]?
-        var actionItems: [ActionItem]?
-        var enhancedNotesMarkdown: String?
-    }
-
     static func parseNotes(from data: Data, style: NoteStyle, userNotes: String?) throws -> MeetingNotes {
         guard let text = try outputText(from: data), let jsonData = text.data(using: .utf8) else {
             throw OpenAISummarizerError.missingJSON
         }
-        let wire: NotesJSON
+        // Same wire shape as the Anthropic tool input — one decoder, one report layout.
         do {
-            wire = try JSONDecoder().decode(NotesJSON.self, from: jsonData)
-        } catch {
+            return try ClaudeSummarizer.notes(fromWireData: jsonData, style: style, userNotes: userNotes)
+        } catch ClaudeSummarizerError.decoding(let error) {
             throw OpenAISummarizerError.decoding(error)
         }
-
-        let items = (wire.actionItems ?? []).map {
-            MeetingNotes.ActionItem(
-                text: $0.text,
-                assigneeName: $0.assigneeName?.isEmpty == true ? nil : $0.assigneeName,
-                due: ClaudeSummarizer.parseDate($0.due)
-            )
-        }
-
-        let enhanced: String?
-        if style == .enhancedNotes,
-           let userNotes, !userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            enhanced = wire.enhancedNotesMarkdown
-        } else {
-            enhanced = nil
-        }
-
-        return MeetingNotes(
-            title: wire.title,
-            summaryMarkdown: wire.summaryMarkdown,
-            decisions: wire.decisions ?? [],
-            actionItems: items,
-            enhancedNotesMarkdown: enhanced
-        )
     }
 
     static func outputText(from data: Data) throws -> String? {

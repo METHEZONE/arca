@@ -146,10 +146,22 @@ public struct ComposioEmailSender: Sendable {
                 .replacingOccurrences(of: "<", with: "&lt;")
                 .replacingOccurrences(of: ">", with: "&gt;")
         }
+        // The summarizer emits bold section headers and "- " bullets — escape-only
+        // conversion would mail literal asterisks and dashes.
         func paragraphs(_ markdown: String) -> String {
-            markdown.split(separator: "\n", omittingEmptySubsequences: true)
-                .map { "<p style=\"margin:4px 0\">\(escape(String($0)))</p>" }
-                .joined()
+            markdown.split(separator: "\n", omittingEmptySubsequences: true).map { rawLine in
+                let line = String(rawLine).trimmingCharacters(in: .whitespaces)
+                if line.hasPrefix("**"), line.hasSuffix("**"), line.count > 4 {
+                    let inner = String(line.dropFirst(2).dropLast(2))
+                    if !inner.contains("**") {
+                        return "<p style=\"margin:10px 0 2px\"><strong>\(escape(inner))</strong></p>"
+                    }
+                }
+                if line.hasPrefix("- ") || line.hasPrefix("• ") {
+                    return "<p style=\"margin:2px 0 2px 12px\">• \(escape(String(line.dropFirst(2))))</p>"
+                }
+                return "<p style=\"margin:4px 0\">\(escape(line))</p>"
+            }.joined()
         }
 
         var html = """

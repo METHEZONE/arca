@@ -403,13 +403,55 @@ private struct NoteCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(title, systemImage: icon)
                 .font(.headline)
-            Text(LocalizedStringKey(markdown))
-                .font(.body)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            MarkdownBlocks(markdown: markdown)
         }
         .padding(14)
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+/// `Text(LocalizedStringKey:)` parses inline markdown only — the summarizer's
+/// section headers and bullets would render as literal `**` and `-` characters.
+/// Split into lines and style the block-level pieces ourselves.
+private struct MarkdownBlocks: View {
+    let markdown: String
+
+    var body: some View {
+        let lines = markdown.components(separatedBy: "\n")
+        VStack(alignment: .leading, spacing: 5) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { index, raw in
+                let line = raw.trimmingCharacters(in: .whitespaces)
+                if line.isEmpty {
+                    Color.clear.frame(height: 2)
+                } else if let header = Self.headerText(line) {
+                    Text(header)
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.top, index == 0 ? 0 : 6)
+                } else if line.hasPrefix("- ") || line.hasPrefix("• ") {
+                    HStack(alignment: .top, spacing: 7) {
+                        Text("•").foregroundStyle(.tertiary)
+                        Text(LocalizedStringKey(String(line.dropFirst(2))))
+                    }
+                } else {
+                    Text(LocalizedStringKey(line))
+                }
+            }
+        }
+        .font(.body)
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// A line that is nothing but a bold span, or a `#` heading (legacy notes),
+    /// is a section header.
+    static func headerText(_ line: String) -> String? {
+        if line.hasPrefix("#") {
+            let stripped = line.drop { $0 == "#" }.trimmingCharacters(in: .whitespaces)
+            return stripped.isEmpty ? nil : stripped
+        }
+        guard line.hasPrefix("**"), line.hasSuffix("**"), line.count > 4 else { return nil }
+        let inner = String(line.dropFirst(2).dropLast(2))
+        return inner.contains("**") ? nil : inner
     }
 }
 

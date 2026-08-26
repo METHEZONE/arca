@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import ArcaVoiceKit
+@testable import Intelligence
 
 @Suite struct OpenAIDiarizedTranscriberTests {
     @Test func decodesDiarizedSegmentsWithSpeakerLabels() throws {
@@ -230,5 +231,65 @@ import ArcaVoiceKit
         #expect(ClaudeSummarizer.parseDate("") == nil)
         #expect(ClaudeSummarizer.parseDate(nil) == nil)
         #expect(ClaudeSummarizer.parseDate("someday") == nil)
+    }
+
+    @Test func composesStructuredReportIntoSummaryMarkdown() throws {
+        let input = """
+        {
+          "title": "미국 진출 전략: D2C 우선 결정",
+          "tldr": "커피 브랜드의 미국 진출 방향을 정리한 회의. D2C 우선으로 결정했다.",
+          "sections": [
+            {"heading": "미국 D2C 진출 채널", "bullets": ["민성: 아마존보다 자사몰 우선 — 마진 35% 확보 가능", "월 5천 달러 광고 예산으로 시작"]},
+            {"heading": "OEM 일정", "bullets": ["원액 9월 초 완제 예정"]}
+          ],
+          "decisions": ["미국 시장 우선 진출 — 국내 협상이 막혀 있어서"],
+          "actionItems": [{"text": "자사몰 런칭 견적 3곳 비교해 공유", "assigneeName": "민성", "due": "2026-09-01"}],
+          "openQuestions": ["물류(3PL) 파트너는 누구로 할지"]
+        }
+        """
+        let notes = try ClaudeSummarizer.parseNotes(
+            from: toolUseResponse(input: input), style: .meetingSummary, userNotes: nil
+        )
+
+        #expect(notes.summaryMarkdown.hasPrefix("커피 브랜드의"))
+        #expect(notes.summaryMarkdown.contains("**미국 D2C 진출 채널**\n- 민성: 아마존보다 자사몰 우선 — 마진 35% 확보 가능"))
+        #expect(notes.summaryMarkdown.contains("**미해결 질문**\n- 물류(3PL) 파트너는 누구로 할지"))
+        #expect(notes.decisions == ["미국 시장 우선 진출 — 국내 협상이 막혀 있어서"])
+        #expect(notes.actionItems.first?.due != nil)
+    }
+
+    @Test func composerFallsBackToLegacySummaryAndLabelsEnglishOpenQuestions() {
+        // A model that ignored the section structure still yields a summary.
+        let legacy = ClaudeSummarizer.composeSummaryMarkdown(
+            tldr: nil, sections: [], openQuestions: [], legacySummary: "  plain summary \n")
+        #expect(legacy == "plain summary")
+
+        let english = ClaudeSummarizer.composeSummaryMarkdown(
+            tldr: "A quick sync.", sections: [], openQuestions: ["Who owns logistics?"],
+            legacySummary: nil)
+        #expect(english.contains("**Open questions**"))
+        #expect(!english.contains("미해결"))
+    }
+
+    @Test func userPromptAnchorsTodayAndDuration() {
+        let transcript = AttributedTranscript(
+            turns: [SpeakerTurn(speakerKey: "owner", text: "시작", start: 0, end: 3_780, channel: .microphone)],
+            speakerNames: [:]
+        )
+        let today = ClaudeSummarizer.parseDate("2026-08-26")!
+        let prompt = ClaudeSummarizer.userPrompt(
+            transcript: transcript, userNotes: nil, style: .meetingSummary, today: today)
+        #expect(prompt.contains("Today's date: 2026-08-26"))
+        #expect(prompt.contains("about 63 minutes"))
+    }
+
+    @Test func toolSchemaRequiresTheStructuredReportFields() {
+        let tool = ClaudeSummarizer.toolDefinition(style: .meetingSummary)
+        let schema = tool["input_schema"] as? [String: Any]
+        let required = schema?["required"] as? [String] ?? []
+        for field in ["title", "tldr", "sections", "decisions", "actionItems", "openQuestions"] {
+            #expect(required.contains(field))
+        }
+        #expect(JSONSerialization.isValidJSONObject(tool))
     }
 }

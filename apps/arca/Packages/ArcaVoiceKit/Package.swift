@@ -28,6 +28,6 @@ let package = Package(
             dependencies: ["ArcaVoiceCore", "Capture", "Calling", "Transcribe", "Diarize", "Intelligence", "Store", "Vitals"]
         ),
         .testTarget(name: "ArcaVoiceKitTests",
-                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling"]),
+                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling", "Intelligence"]),
     ]
 )
