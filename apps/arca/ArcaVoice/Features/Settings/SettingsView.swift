@@ -1,5 +1,8 @@
 import SwiftUI
 import ArcaVoiceKit
+#if os(macOS)
+import AppKit
+#endif
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -19,6 +22,8 @@ struct SettingsView: View {
     @AppStorage("dayTrackerSnapshots") private var dayTrackerSnapshots = true
     @AppStorage("dayTrackerIntervalMin") private var dayTrackerIntervalMin = 5
     @AppStorage("dayTrackerDigestHour") private var dayTrackerDigestHour = 21
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(DocumentVault.defaultsKey) private var documentVaultPath = ""
     @State private var emailRecipient = "me@thezonebio.com"
     @State private var obsidianVaultPath = ""
     @State private var accounts: [ArcaAccount] = []
@@ -57,11 +62,17 @@ struct SettingsView: View {
 
             ArcaCloudSection()
 
-            Section("My Info") {
-                TextField("Your name (label for your speech in transcripts)", text: $ownerName)
-                Picker("Transcription language", selection: $localeID) {
-                    Text("Korean/English mixed (auto)").tag("auto")
-                    Text("Korean").tag("ko-KR")
+            Section(L("My Info", ko: "내 정보")) {
+                TextField(L("Your name (label for your speech in transcripts)",
+                            ko: "이름 (전사에서 내 발언 라벨)"), text: $ownerName)
+                Picker(L("Language", ko: "언어"), selection: $appLanguage) {
+                    Text(L("Match system", ko: "시스템 언어 따라가기")).tag("system")
+                    Text("한국어").tag("ko")
+                    Text("English").tag("en")
+                }
+                Picker(L("Transcription language", ko: "전사 언어"), selection: $localeID) {
+                    Text(L("Korean/English mixed (auto)", ko: "한/영 혼합 (자동)")).tag("auto")
+                    Text(L("Korean", ko: "한국어")).tag("ko-KR")
                     Text("English").tag("en-US")
                 }
             }
@@ -82,12 +93,37 @@ struct SettingsView: View {
             }
 
             Section {
-                Toggle("Ambient ops — inbox to tasks & reply drafts", isOn: $ambientHarvest)
-                TextField("Slack handles that ping me", text: $slackMentionHandles)
-                TextField("My Slack names to ignore", text: $slackSelfNames)
+                Toggle(L("Ambient ops — inbox to tasks & reply drafts",
+                         ko: "앰비언트 옵스 — 받은편지함을 할 일과 답장 초안으로"),
+                       isOn: $ambientHarvest)
+                TextField(L("Slack handles that ping me", ko: "나를 부르는 Slack 핸들"),
+                          text: $slackMentionHandles)
+                TextField(L("My Slack names to ignore", ko: "무시할 내 Slack 이름"),
+                          text: $slackSelfNames)
             } footer: {
-                Text("Comma-separated Slack handles/names. ARCA searches only likely pings or actionable asks, ignores messages from these self names, and drafts replies you approve before anything is sent.")
+                Text(L("Comma-separated Slack handles/names. ARCA searches only likely pings or actionable asks, ignores messages from these self names, and drafts replies you approve before anything is sent.",
+                       ko: "쉼표로 구분한 Slack 핸들/이름. ARCA는 나를 부르는 메시지와 실제 요청만 골라내고, 보내기 전에 항상 승인을 받아요."))
             }
+
+            #if os(macOS)
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Document vault", ko: "문서함"))
+                        Text(documentVaultDisplayPath)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    Spacer()
+                    Button(L("Choose…", ko: "폴더 선택…")) { pickDocumentVault() }
+                }
+            } footer: {
+                Text(L("A folder of official documents (business registration cert, bank copy, …). When an email asks for one, ARCA proposes a reply with the file attached — you approve before it sends.",
+                       ko: "사업자등록증, 통장사본 같은 공식 서류 폴더예요. 이메일로 서류를 요청받으면 ARCA가 파일을 첨부한 회신을 제안하고, 승인해야 발송돼요."))
+            }
+            #endif
 
             #if os(macOS)
             Section {
@@ -100,7 +136,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Picker("Autonomy level", selection: $autonomyRaw) {
+                Picker(L("Autonomy level", ko: "자율성 레벨"), selection: $autonomyRaw) {
                     ForEach(AutonomyLevel.allCases, id: \.rawValue) { level in
                         Text(level.label).tag(level.rawValue)
                     }
@@ -109,9 +145,10 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } header: {
-                Text("ARCA Autonomy")
+                Text(L("ARCA Autonomy", ko: "ARCA 자율성"))
             } footer: {
-                Text("Sets how far ARCA can act on its own for tasks and items that come in during ZONE. Anything that needs more than this level stays for you to handle directly, without a Toss button.")
+                Text(L("Sets how far ARCA can act on its own for tasks and items that come in during ZONE. Anything that needs more than this level stays for you to handle directly, without a Toss button.",
+                       ko: "ARCA가 어디까지 스스로 움직일지 정해요. 이 레벨을 넘는 일은 Toss 버튼 없이 직접 처리하도록 남겨둬요."))
             }
 
             Section {
@@ -250,6 +287,26 @@ struct SettingsView: View {
             Text("계정")
         }
     }
+
+    #if os(macOS)
+    private var documentVaultDisplayPath: String {
+        if let folder = DocumentVault.folderURL {
+            return folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")
+        }
+        return L("Not set — pick a folder", ko: "미설정 — 폴더를 선택하세요")
+    }
+
+    private func pickDocumentVault() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = L("Use this folder", ko: "이 폴더 사용")
+        if panel.runModal() == .OK, let url = panel.url {
+            documentVaultPath = url.path
+        }
+    }
+    #endif
 
     private func saveKeys() {
         if openAIKey.isEmpty {

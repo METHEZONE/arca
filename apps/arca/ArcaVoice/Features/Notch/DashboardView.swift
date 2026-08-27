@@ -13,6 +13,8 @@ struct DashboardView: View {
     @State private var zone = AppServices.shared.zone
     @State private var relay = RelaySync.shared
     @State private var usageSnapshot = AIUsageSnapshot.loading
+    // Unused in the body; forces a re-render when the app language changes.
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -70,7 +72,7 @@ struct DashboardView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "mic.fill")
-                Text("Record")
+                Text(L("Record", ko: "녹음"))
                     .font(.caption.weight(.semibold))
             }
             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -120,7 +122,7 @@ private struct AIUsageMeter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Label("AI Usage", systemImage: "gauge.medium")
+                Label(L("AI Usage", ko: "AI 사용량"), systemImage: "gauge.medium")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.82))
                 Spacer()
@@ -374,13 +376,13 @@ private struct ChatLogColumn: View {
             BriefingCard(compact: true)
                 .padding(.top, 6)
             HStack {
-                Label("Chat", systemImage: "bubble.left.and.text.bubble.right")
+                Label(L("Chat", ko: "대화"), systemImage: "bubble.left.and.text.bubble.right")
                     .font(.caption).foregroundStyle(.white.opacity(0.6))
                 Spacer()
                 Button {
                     agent.startBlankChat()
                 } label: {
-                    Label("New chat", systemImage: "plus.bubble")
+                    Label(L("New chat", ko: "새 대화"), systemImage: "plus.bubble")
                         .font(.caption.weight(.semibold))
                 }
                 .buttonStyle(.arcaPress)
