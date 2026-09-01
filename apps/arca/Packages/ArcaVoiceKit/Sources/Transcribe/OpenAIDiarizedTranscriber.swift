@@ -269,7 +269,73 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
                 speakerLabel: seg.speaker
             )
         }
-        return Transcript(channel: channel, segments: segments, languageCode: decoded.language)
+        return Transcript(channel: channel, segments: dropHallucinatedRepeats(segments), languageCode: decoded.language)
+    }
+
+    // MARK: - Hallucination filtering
+
+    /// Whisper-family models (this one included) hallucinate filler text on
+    /// silence or low-energy audio — a lull in the conversation comes back as
+    /// the same short phrase ("you", "감사합니다") repeated segment after
+    /// segment at regular intervals, or as one segment whose text is a single
+    /// phrase looping dozens of times. Neither pattern occurs in real speech,
+    /// so both get collapsed to a single instance rather than spammed verbatim
+    /// into the transcript and, from there, into the meeting summary.
+    static func dropHallucinatedRepeats(_ segments: [Transcript.Segment]) -> [Transcript.Segment] {
+        var result: [Transcript.Segment] = []
+        var run: [Transcript.Segment] = []
+
+        func flushRun() {
+            guard let first = run.first else { return }
+            if run.count >= 3 {
+                // Keep one copy, spanning the whole run's time — the silence
+                // happened, but there's no reason to say "you" nine times.
+                var collapsed = first
+                collapsed.end = run.last!.end
+                result.append(collapsed)
+            } else {
+                result.append(contentsOf: run)
+            }
+            run.removeAll()
+        }
+
+        for rawSegment in segments {
+            var segment = rawSegment
+            segment.text = collapseInternalRepeat(segment.text)
+            let normalized = segment.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let runNormalized = run.first?.text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            // Same speaker too — two different speakers trading the same short
+            // reply ("네" / "네") is a real exchange, not a hallucination loop.
+            if !normalized.isEmpty, normalized == runNormalized, segment.speakerLabel == run.first?.speakerLabel {
+                run.append(segment)
+            } else {
+                flushRun()
+                run = [segment]
+            }
+        }
+        flushRun()
+        return result
+    }
+
+    /// A single segment can itself be a hallucination loop — the same short
+    /// sentence repeated until the model's output budget runs out. Detect a
+    /// sentence that accounts for at least half the segment and occurs 4+
+    /// times, and collapse it to one copy.
+    static func collapseInternalRepeat(_ text: String) -> String {
+        let sentences = text
+            .split(whereSeparator: { ".!?。".contains($0) })
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard sentences.count >= 4 else { return text }
+
+        var counts: [String: Int] = [:]
+        for sentence in sentences { counts[sentence, default: 0] += 1 }
+        guard let (phrase, count) = counts.max(by: { $0.value < $1.value }),
+              count >= 4, count * 2 >= sentences.count else {
+            return text
+        }
+        return phrase.hasSuffix(".") || phrase.hasSuffix("!") || phrase.hasSuffix("?") || phrase.hasSuffix("。")
+            ? phrase : phrase + "."
     }
 
     // MARK: - Errors

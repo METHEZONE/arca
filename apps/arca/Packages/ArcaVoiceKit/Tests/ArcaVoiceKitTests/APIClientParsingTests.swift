@@ -50,6 +50,57 @@ import ArcaVoiceKit
         #expect(transcript.segments[0].speakerLabel == nil)
     }
 
+    @Test func collapsesRepeatedHallucinatedSegmentsIntoOne() throws {
+        // Silence on a channel makes this model hallucinate the same short
+        // filler word at regular intervals — four "you" segments 30s apart,
+        // exactly what showed up in a real transcript.
+        let json = """
+        {"segments": [
+          {"speaker": "S1", "start": 5088, "end": 5090, "text": "you"},
+          {"speaker": "S1", "start": 5118, "end": 5120, "text": "you"},
+          {"speaker": "S1", "start": 5148, "end": 5150, "text": "you"},
+          {"speaker": "S1", "start": 5178, "end": 5180, "text": "you"}
+        ]}
+        """
+        let transcript = try OpenAIDiarizedTranscriber.decodeTranscript(
+            from: Data(json.utf8), channel: .systemAudio
+        )
+        #expect(transcript.segments.count == 1)
+        #expect(transcript.segments[0].text == "you")
+        #expect(transcript.segments[0].start == 5088)
+        #expect(transcript.segments[0].end == 5180)
+    }
+
+    @Test func collapsesRepeatedPhraseWithinASingleSegment() throws {
+        let looped = String(repeating: "I don't know how to put it. ", count: 20).trimmingCharacters(in: .whitespaces)
+        let json = """
+        {"segments": [{"speaker": "Me", "start": 5191, "end": 5220, "text": "\(looped)"}]}
+        """
+        let transcript = try OpenAIDiarizedTranscriber.decodeTranscript(
+            from: Data(json.utf8), channel: .microphone
+        )
+        #expect(transcript.segments.count == 1)
+        #expect(transcript.segments[0].text == "I don't know how to put it.")
+    }
+
+    @Test func doesNotCollapseTwoRepeatsOrDifferentSpeakers() throws {
+        // Two in a row is an ordinary acknowledgment, not a hallucination loop.
+        let twice = #"{"segments": [{"speaker": "S1", "start": 0, "end": 1, "text": "네"}, {"speaker": "S1", "start": 1, "end": 2, "text": "네"}]}"#
+        let twiceTranscript = try OpenAIDiarizedTranscriber.decodeTranscript(from: Data(twice.utf8), channel: .systemAudio)
+        #expect(twiceTranscript.segments.count == 2)
+
+        // Three repeats but alternating speakers is a real back-and-forth.
+        let alternating = #"""
+        {"segments": [
+          {"speaker": "A", "start": 0, "end": 1, "text": "네"},
+          {"speaker": "B", "start": 1, "end": 2, "text": "네"},
+          {"speaker": "A", "start": 2, "end": 3, "text": "네"}
+        ]}
+        """#
+        let alternatingTranscript = try OpenAIDiarizedTranscriber.decodeTranscript(from: Data(alternating.utf8), channel: .systemAudio)
+        #expect(alternatingTranscript.segments.count == 3)
+    }
+
     @Test func extractsApiErrorMessage() {
         let json = #"{"error": {"message": "Invalid file format.", "type": "invalid_request_error"}}"#
         let message = OpenAIDiarizedTranscriber.apiErrorMessage(from: Data(json.utf8))
