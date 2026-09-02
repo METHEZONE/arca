@@ -634,9 +634,25 @@ struct SettingsView: View {
                 } label: {
                     Label(L("계정 추가…", "Add account…"), systemImage: "plus")
                 }
+                #if os(macOS)
+                Button {
+                    startAsNewUser()
+                } label: {
+                    Label(L("새 사용자로 시작 (온보딩 체험)", "Start as a new user (onboarding)"), systemImage: "sparkles")
+                }
+                #endif
             } label: {
                 Label(L("계정 선택", "Switch account"), systemImage: "person.crop.circle")
             }
+            #if os(macOS)
+            if accountNotice != nil {
+                Button {
+                    MacPermissionCoach.shared.relaunch()
+                } label: {
+                    Label(L("지금 다시 시작", "Restart now"), systemImage: "arrow.clockwise")
+                }
+            }
+            #endif
         } header: {
             Text(L("계정", "Account"))
         }
@@ -699,6 +715,18 @@ struct SettingsView: View {
         accountNotice = L("계정 전환은 ARCA를 다시 시작한 후 적용됩니다.",
                           "Switching accounts takes effect after you restart ARCA.")
     }
+
+    #if os(macOS)
+    /// A brand-new account with nothing in it, switched to and relaunched —
+    /// the owner's account (and everything in it) stays exactly where it is,
+    /// one menu pick away. This is how "log out and see the first run" works
+    /// in an app that has no server-side login.
+    private func startAsNewUser() {
+        let account = AccountStore.add(displayName: L("새 친구", "New friend"), email: nil)
+        AccountStore.switchTo(id: account.id)
+        MacPermissionCoach.shared.relaunch()
+    }
+    #endif
 
     private func loadScopedSettings() {
         emailRecipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"

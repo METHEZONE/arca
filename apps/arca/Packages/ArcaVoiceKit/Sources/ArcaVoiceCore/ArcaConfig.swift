@@ -89,7 +89,11 @@ public enum ArcaConfig {
         if let repo = dict["githubRepo"], !repo.isEmpty {
             defaults.set(repo, forKey: "relayRepo")
         }
-        if let userId = dict["composioUserId"], !userId.isEmpty {
+        // The bundled Composio user id is the owner's identity at Composio. A
+        // second account must not inherit it, or it would see (and act
+        // through) the owner's Gmail/Slack — it mints its own on first connect.
+        if let userId = dict["composioUserId"], !userId.isEmpty,
+           AccountStore.isDefault(AccountStore.currentAccountId()) {
             AccountDefaults.set(userId, for: "composioUserId")
         }
         defaults.set(digest, forKey: hashKey)

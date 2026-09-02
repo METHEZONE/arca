@@ -35,7 +35,7 @@ final class AppServices {
     var mainContext: ModelContext? { container?.mainContext }
 
     var ownerName: String {
-        UserDefaults.standard.string(forKey: "ownerName") ?? "Me"
+        AccountDefaults.string("ownerName") ?? UserDefaults.standard.string(forKey: "ownerName") ?? "Me"
     }
 
     /// The name ARCA addresses the user by. Lives here rather than in a

@@ -112,7 +112,7 @@ struct RootView: View {
             }
         }
         #else
-        CompanionHomeView()
+        MacOnboardingGate { CompanionHomeView() }
             // arca://record|stop (arca-test:// on the test app) — lets
             // Shortcuts/Raycast and the ARCA Test verification harness drive
             // the core loop without touching the UI.

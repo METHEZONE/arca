@@ -34,6 +34,7 @@
 		225496038B58E3099EB410B0 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
 		2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82731CD2C6E93B4C80F2272C /* AppServices.swift */; };
 		2493E4003B27898955F20AA9 /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
+		2546F0C2BA65F2C1A5D534FA /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
 		2A540D8A36A52CF650EF0A35 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		2A81322A19E2615CB0446F3C /* WatchDeepMeasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */; };
 		2B08901B1DE80BE8563B618B /* SummaryNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */; };
@@ -54,6 +55,7 @@
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
+		4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
 		4E959DE0AAF10547AFA64C6C /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		4EE2B9574DCB7996EE23DA2C /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		4FAA38A921A476952656A6C5 /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
@@ -80,6 +82,7 @@
 		614BA61001574075CF188904 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */; };
 		61865228BC0D55E1A0C6FE63 /* ArcaSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */; };
 		61963EE7F217ED4FBB78BC6F /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
+		619AEF1295DEC7DE4574355C /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
 		6210A8679715F8C495AA112F /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
@@ -106,6 +109,7 @@
 		75A2C962704E733B29979FAB /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		782EFC269E0629B7DCECAF4E /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
 		78AAA360D7EE64FF8DBDD87F /* VitalsRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113834A824878A4554AD2328 /* VitalsRelay.swift */; };
+		79100E3B9D8189CB91B099EC /* HatchOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */; };
 		7B5194BFEF0F620A717CA485 /* NightlyDigest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5544B905C9F4B84834415444 /* NightlyDigest.swift */; };
 		7BD8DE659AF6152FC713481B /* ImageDownscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141182B1EC364988D1301EE /* ImageDownscaler.swift */; };
 		80D20DE45431D7ED588D4175 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
@@ -180,6 +184,7 @@
 		BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242AE25F7831562835F5E0F /* FocusMode.swift */; };
 		BE4EDB427340D146D1D8B592 /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
 		BF2A76DC38BDCA8A705C7DFE /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
+		BF818A9846E5F0B873082247 /* HatchOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */; };
 		BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		C04F5A834923E8FC2A9F3FF0 /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
 		C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
@@ -208,6 +213,7 @@
 		E1F046C638824AC6BA10690D /* DevicePresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */; };
 		E4F94193460A48D6F66E8B29 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
 		E9443B99F4866E3EC3AA281E /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A507775C5099D33DEF92A0E /* ChatSession.swift */; };
+		EA53283BE0501CB2B4952970 /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
 		EF1E159AC864EFC90CC1242B /* BrainEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A2E73A6DB6F112E58F3F5A /* BrainEntry.swift */; };
 		F02C529E261CC98DF1C8B78C /* CodexBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488E853E67519340E1F4AD47 /* CodexBridge.swift */; };
 		F09589FD7D2836CCE2993B64 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
@@ -298,6 +304,7 @@
 		2295B2F2A54A71248802D0A1 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
 		251782279561DB97C74E91BD /* ArcaSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaSection.swift; sourceTree = "<group>"; };
 		25C0C6801229E35633259326 /* FocusRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusRing.swift; sourceTree = "<group>"; };
+		2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOnboardingGate.swift; sourceTree = "<group>"; };
 		289DDA43D652B1B04FDB7252 /* WatchSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSync.swift; sourceTree = "<group>"; };
 		2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaSkin.swift; sourceTree = "<group>"; };
 		2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
@@ -368,9 +375,11 @@
 		A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantsCard.swift; sourceTree = "<group>"; };
 		A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoColumn.swift; sourceTree = "<group>"; };
 		AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWikiView.swift; sourceTree = "<group>"; };
+		AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatchOnboardingView.swift; sourceTree = "<group>"; };
 		AD204029AF2329934E3322BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B9EE7FD61A7FCB124D824768 /* OpsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsViews.swift; sourceTree = "<group>"; };
 		BC278547B59354CA3624B45D /* ChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanel.swift; sourceTree = "<group>"; };
+		BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionGenesis.swift; sourceTree = "<group>"; };
 		C05EC8DE279C3EEDF20375A6 /* ARCA-Test.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ARCA-Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0DDCF20A4A4EA9B0B6B9FD0 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		C22048F7D139B6DD943BAB8A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -520,6 +529,9 @@
 		29BFEEA3681435CDA8DDAD48 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */,
+				AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */,
+				2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */,
 				66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */,
 				00A8BD7E8A8EFAE6C8B0A82C /* OnboardingView.swift */,
 			);
@@ -1070,6 +1082,7 @@
 				B87F97F2816E9F6FB638FC95 /* ChatSession.swift in Sources */,
 				D17554AFD89FA3DEBC8A4457 /* ChatTabView.swift in Sources */,
 				6F2B4BC3B8C9AE06BD479EDF /* CodexBridge.swift in Sources */,
+				619AEF1295DEC7DE4574355C /* CompanionGenesis.swift in Sources */,
 				BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */,
 				C04F5A834923E8FC2A9F3FF0 /* CompanionTodoRail.swift in Sources */,
 				6965A3490993EE5ABE7CEAC3 /* ConnectorHub.swift in Sources */,
@@ -1086,10 +1099,12 @@
 				84F6D3B732E8A92FAD17B0C0 /* FinalPassRunner.swift in Sources */,
 				BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */,
 				D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */,
+				BF818A9846E5F0B873082247 /* HatchOnboardingView.swift in Sources */,
 				2B6E9833A44618B9E564D671 /* HealthVitals.swift in Sources */,
 				1BB78D5658CB29EA71E55CA2 /* HomeView.swift in Sources */,
 				BB5CA82891A149C3948D205E /* HotkeyMonitor.swift in Sources */,
 				7BD8DE659AF6152FC713481B /* ImageDownscaler.swift in Sources */,
+				2546F0C2BA65F2C1A5D534FA /* MacOnboardingGate.swift in Sources */,
 				83533E48AC7218E00331343A /* MacPermissionCoach.swift in Sources */,
 				5707E27CAB2A58DBEDA6F9B5 /* MeetingChatSheet.swift in Sources */,
 				4EE2B9574DCB7996EE23DA2C /* MeetingDetector.swift in Sources */,
@@ -1181,6 +1196,7 @@
 				E9443B99F4866E3EC3AA281E /* ChatSession.swift in Sources */,
 				8F0DBA040CC02B982A6D7CB7 /* ChatTabView.swift in Sources */,
 				F02C529E261CC98DF1C8B78C /* CodexBridge.swift in Sources */,
+				EA53283BE0501CB2B4952970 /* CompanionGenesis.swift in Sources */,
 				51F5ABDDD0D37B9EAD7474E6 /* CompanionHomeView.swift in Sources */,
 				AA1C226D82EC62F2EFA4C898 /* CompanionTodoRail.swift in Sources */,
 				95D34F10E946443FB6E24BA0 /* ConnectorHub.swift in Sources */,
@@ -1197,10 +1213,12 @@
 				A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */,
 				B9FEC579970A8A7734D410F2 /* FocusMode.swift in Sources */,
 				04EDBCB9B2E22FD136ED4521 /* FocusRing.swift in Sources */,
+				79100E3B9D8189CB91B099EC /* HatchOnboardingView.swift in Sources */,
 				B35500F5B3E11A8AFF3C1B06 /* HealthVitals.swift in Sources */,
 				0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */,
 				21912877959F3E63A51EF6C0 /* HotkeyMonitor.swift in Sources */,
 				5A3B52C0E69C23F0A08D5095 /* ImageDownscaler.swift in Sources */,
+				4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */,
 				ACC5533AC8013A7FAB2D6F6D /* MacPermissionCoach.swift in Sources */,
 				73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */,
 				9D4E15F80647F2399BB43FC4 /* MeetingDetector.swift in Sources */,
