@@ -23,6 +23,9 @@ struct VitalsView: View {
                 if !vitals.isEnabled {
                     disabledCard
                 }
+                #if os(macOS)
+                phoneLinkCard
+                #endif
                 hero
                 statRow
                 RecoveredTimeCard()
@@ -545,6 +548,70 @@ struct VitalsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: ArcaRadius.md))
     }
+
+    #if os(macOS)
+    /// The Mac can't read Apple Health; the iPhone does and relays it. This
+    /// says, in one card, whether that link is alive and what to do if not —
+    /// instead of a dash with no explanation.
+    private var phoneLinkCard: some View {
+        let phone = DevicePresence.shared.peers.first { $0.device == "iphone" }
+        let phoneSeen = phone.map { Date.now.timeIntervalSince($0.lastSeenAt) < 30 * 60 } ?? false
+        let link = vitals.healthLink
+        let relayed: Date? = { if case .relayed(_, let at) = link { return at }; return nil }()
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: relayed != nil ? "heart.text.square.fill" : "iphone.and.arrow.forward")
+                    .font(.title3)
+                    .foregroundStyle(relayed != nil ? .green : ArcaFace.ember)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(relayed != nil ? L("Apple 건강 연결됨", "Apple Health connected")
+                                        : L("Apple 건강은 아이폰이 이어줘요", "Apple Health comes through your iPhone"))
+                        .font(.system(.headline, design: .rounded))
+                    if let relayed {
+                        Text(L("아이폰에서 마지막 측정 \(relayed.formatted(.relative(presentation: .named)))",
+                               "Last measurement from iPhone \(relayed.formatted(.relative(presentation: .named)))"))
+                            .font(.caption).foregroundStyle(.white.opacity(0.55))
+                    } else {
+                        Text(phoneSeen ? L("아이폰 ARCA는 연결돼 있지만 아직 건강 데이터를 보낸 적이 없어요.",
+                                           "Your iPhone's ARCA is connected but hasn't sent health data yet.")
+                                       : L("아이폰 ARCA가 아직 이 계정으로 연결되지 않았어요.",
+                                           "Your iPhone's ARCA hasn't connected to this account yet."))
+                            .font(.caption).foregroundStyle(.white.opacity(0.55))
+                    }
+                }
+                Spacer()
+            }
+            if relayed == nil {
+                VStack(alignment: .leading, spacing: 6) {
+                    stepRow(1, L("아이폰에 ARCA 설치 — TestFlight", "Install ARCA on iPhone — TestFlight"),
+                            done: phoneSeen, link: URL(string: "https://testflight.apple.com/join/U78MNCxj"))
+                    stepRow(2, L("아이폰 ARCA › 컨디션 › Apple 건강 연결 허용", "iPhone ARCA › Condition › allow Apple Health"), done: false, link: nil)
+                    stepRow(3, L("같은 계정으로 로그인돼 있는지 확인 (설정 › 계정)", "Make sure both devices use the same account (Settings › Account)"), done: false, link: nil)
+                }
+                Text(L("허용하면 수면·심박·HRV·걸음·운동이 60초 안에 여기로 들어와요.",
+                       "Once allowed, sleep, heart rate, HRV, steps and workouts land here within a minute."))
+                    .font(.caption2).foregroundStyle(.white.opacity(0.45))
+            }
+        }
+        .padding(ArcaSpacing.lg)
+        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: ArcaRadius.lg))
+        .overlay(RoundedRectangle(cornerRadius: ArcaRadius.lg).strokeBorder((relayed != nil ? Color.green : ArcaFace.ember).opacity(0.35)))
+    }
+
+    private func stepRow(_ n: Int, _ text: String, done: Bool, link: URL?) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: done ? "checkmark.circle.fill" : "\(n).circle")
+                .foregroundStyle(done ? .green : .white.opacity(0.6))
+            Text(text).font(.callout)
+            if let link {
+                Link(L("열기", "Open"), destination: link)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ArcaFace.ember)
+            }
+            Spacer()
+        }
+    }
+    #endif
 
     private var footnote: some View {
         Text(L("ARCA는 의료 기기가 아니고 진단을 하지 않아요. 여기 숫자는 애플 건강에 이미 있는 측정값과, 그걸로 계산한 지표입니다.",
