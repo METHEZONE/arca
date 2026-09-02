@@ -31,6 +31,7 @@ struct HatchOnboardingView: View {
     @State private var ownerName = ""
     @State private var xp = 0
     @State private var confettiStart: Date?
+    @State private var restored = false
 
     private let night = Color(red: 0.03, green: 0.05, blue: 0.09)
 
@@ -75,9 +76,76 @@ struct HatchOnboardingView: View {
             }
         }
         .animation(.spring(duration: 0.55, bounce: 0.18), value: scene)
-        .onAppear {
-            let stored = UserDefaults.standard.string(forKey: "ownerName") ?? ""
-            if stored != "Me" { ownerName = stored }
+        .onAppear(perform: restoreProgress)
+        .onChange(of: scene) { _, _ in saveProgress() }
+        .onChange(of: companionName) { _, _ in saveProgress() }
+        .onChange(of: ownerName) { _, _ in saveProgress() }
+        .onChange(of: xp) { _, _ in saveProgress() }
+    }
+
+    // MARK: - Progress (survives the "Quit & Reopen" that Screen Recording asks for)
+
+    /// Everything needed to land back on the same step after a relaunch. Kept
+    /// per account next to the finished companion, deleted on finish.
+    private struct Progress: Codable {
+        var scene: String
+        var pace: CompanionGenesis.Pace?
+        var tone: CompanionGenesis.Tone?
+        var focus: CompanionGenesis.Focus?
+        var salt: Int
+        var rerollsLeft: Int
+        var companionName: String
+        var ownerName: String
+        var xp: Int
+    }
+    private static let progressKey = "hatchProgress"
+
+    private func saveProgress() {
+        guard restored, scene != .done else { return }
+        let progress = Progress(scene: sceneName(scene), pace: pace, tone: tone, focus: focus, salt: salt,
+                                rerollsLeft: rerollsLeft, companionName: companionName, ownerName: ownerName, xp: xp)
+        if let data = try? JSONEncoder().encode(progress), let raw = String(data: data, encoding: .utf8) {
+            AccountDefaults.set(raw, for: Self.progressKey)
+        }
+    }
+
+    private func restoreProgress() {
+        defer { restored = true }
+        let storedOwner = UserDefaults.standard.string(forKey: "ownerName") ?? ""
+        if storedOwner != "Me" { ownerName = storedOwner }
+        guard let raw = AccountDefaults.string(Self.progressKey), let data = raw.data(using: .utf8),
+              let progress = try? JSONDecoder().decode(Progress.self, from: data) else { return }
+        pace = progress.pace; tone = progress.tone; focus = progress.focus
+        salt = progress.salt; rerollsLeft = progress.rerollsLeft
+        companionName = progress.companionName
+        if !progress.ownerName.isEmpty { ownerName = progress.ownerName }
+        xp = 0 // abilities re-check themselves on appear and re-award as they wake
+        if pace != nil, tone != nil, focus != nil {
+            spec = CompanionGenesis.generate(profile: profile, salt: salt)
+        }
+        switch progress.scene {
+        case "arrival": scene = .arrival
+        case "interview":
+            question = pace == nil ? 0 : (tone == nil ? 1 : 2)
+            scene = .interview
+        case "hatch", "reveal": scene = spec == nil ? .interview : .reveal
+        case "naming": scene = spec == nil ? .interview : .naming
+        case "powers": scene = spec == nil ? .interview : .powers
+        case "connect": scene = spec == nil ? .interview : .connect
+        default: scene = .arrival
+        }
+    }
+
+    private func sceneName(_ scene: Scene) -> String {
+        switch scene {
+        case .arrival: return "arrival"
+        case .interview: return "interview"
+        case .hatch: return "hatch"
+        case .reveal: return "reveal"
+        case .naming: return "naming"
+        case .powers: return "powers"
+        case .connect: return "connect"
+        case .done: return "done"
         }
     }
 
@@ -130,7 +198,7 @@ struct HatchOnboardingView: View {
                     questionBlock(L("일을 어떻게 처리하는 편이에요?", "How do you like work handled?")) {
                         ForEach(CompanionGenesis.Pace.allCases, id: \.self) { option in
                             ChoiceChip(title: option.label, symbol: option.symbol, selected: pace == option) {
-                                pace = option; advance()
+                                pace = option; saveProgress(); advance()
                             }
                         }
                     }
@@ -139,7 +207,7 @@ struct HatchOnboardingView: View {
                         ForEach(CompanionGenesis.Tone.allCases, id: \.self) { option in
                             ChoiceChip(title: option.label, subtitle: option.sample, symbol: "quote.bubble",
                                        selected: tone == option) {
-                                tone = option; advance()
+                                tone = option; saveProgress(); advance()
                             }
                         }
                     }
@@ -147,7 +215,7 @@ struct HatchOnboardingView: View {
                     questionBlock(L("가장 먼저 맡기고 싶은 건?", "What should it take off your plate first?")) {
                         ForEach(CompanionGenesis.Focus.allCases, id: \.self) { option in
                             ChoiceChip(title: option.label, symbol: option.symbol, selected: focus == option) {
-                                focus = option; advance()
+                                focus = option; saveProgress(); advance()
                             }
                         }
                     }
@@ -470,6 +538,7 @@ struct HatchOnboardingView: View {
             skinId: spec.skinId, seed: spec.seed, profile: profile, hatchedAt: .now
         ).save()
         ArcaSkins.select(skin)
+        AccountDefaults.set(nil, for: Self.progressKey)
         AccountDefaults.set(true, for: MacOnboarding.onboardedKey)
         onFinish()
     }

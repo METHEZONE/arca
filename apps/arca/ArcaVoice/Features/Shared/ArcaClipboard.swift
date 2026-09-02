@@ -12,14 +12,18 @@ import UIKit
 /// obviously wants to do with a finished meeting note — paste it into Slack, an
 /// email, a doc — was the one thing it couldn't do.
 enum ArcaClipboard {
-    static func copy(_ text: String) {
-        guard !text.isEmpty else { return }
+    /// Returns false when there was nothing to copy, so buttons can say so
+    /// instead of flashing a "Copied" that copied nothing.
+    @discardableResult
+    static func copy(_ text: String) -> Bool {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
         #if os(macOS)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
         #else
         UIPasteboard.general.string = text
         #endif
+        return true
     }
 }
 
@@ -33,23 +37,26 @@ struct CopyButton: View {
     let text: () -> String
     var title: String = L("복사", "Copy")
     var doneTitle: String = L("복사했어요", "Copied")
+    var emptyTitle: String = L("복사할 내용이 없어요", "Nothing to copy")
+    var symbolName: String = "doc.on.doc"
     var compact = false
 
     @State private var justCopied = false
+    @State private var wasEmpty = false
 
-    private var label: String { justCopied ? doneTitle : title }
-    private var symbol: String { justCopied ? "checkmark" : "doc.on.doc" }
+    private var label: String { wasEmpty ? emptyTitle : (justCopied ? doneTitle : title) }
+    private var symbol: String { wasEmpty ? "xmark.circle" : (justCopied ? "checkmark" : symbolName) }
 
     var body: some View {
         Button {
-            ArcaClipboard.copy(text())
+            let copied = ArcaClipboard.copy(text())
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
-            withAnimation(.spring(duration: 0.25)) { justCopied = true }
+            withAnimation(.spring(duration: 0.25)) { justCopied = copied; wasEmpty = !copied }
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(1.6))
-                withAnimation(.easeOut(duration: 0.2)) { justCopied = false }
+                withAnimation(.easeOut(duration: 0.2)) { justCopied = false; wasEmpty = false }
             }
         } label: {
             // Two branches rather than a ternary on `labelStyle`: the icon-only and
@@ -62,7 +69,7 @@ struct CopyButton: View {
                 }
             }
             .font(compact ? .caption : .callout.weight(.semibold))
-            .foregroundStyle(justCopied ? Color.green : Color.accentColor)
+            .foregroundStyle(wasEmpty ? Color.orange : (justCopied ? Color.green : Color.accentColor))
             .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(.arcaPress)
@@ -95,10 +102,12 @@ enum SessionClipboardText {
         let turns = session.segments
             .filter { !$0.text.trimmingCharacters(in: .whitespaces).isEmpty }
             .sorted { $0.start < $1.start }
-        guard !turns.isEmpty else { return session.title }
+        // Nothing transcribed yet → nothing to paste. A bare title on the
+        // clipboard just looked like the copy had failed.
+        guard !turns.isEmpty else { return "" }
         var lines = ["# \(session.title)", ""]
         for turn in turns {
-            let speaker = turn.speakerKey ?? L("발화자", "Speaker")
+            let speaker = turn.speakerKey ?? (turn.channelRaw == "microphone" ? L("나", "Me") : L("상대", "Other"))
             lines.append("**\(speaker)**: \(turn.text)")
         }
         return lines.joined(separator: "\n")

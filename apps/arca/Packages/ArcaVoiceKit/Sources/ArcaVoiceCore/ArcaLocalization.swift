@@ -47,9 +47,12 @@ public enum ArcaLanguageResolver {
 
     public static var isKorean: Bool { cachedIsKorean }
 
+    /// Korean is ARCA's first language: with nothing stored, a fresh install
+    /// speaks Korean even on an English-configured Mac. "Follow device" stays
+    /// available as an explicit choice in Settings.
     public static func stored() -> ArcaLanguageChoice {
         let raw = UserDefaults.standard.string(forKey: defaultsKey) ?? ""
-        return ArcaLanguageChoice(rawValue: raw) ?? .system
+        return ArcaLanguageChoice(rawValue: raw) ?? .korean
     }
 
     public static func apply(_ choice: ArcaLanguageChoice) {

@@ -771,13 +771,35 @@ private struct CompanionLibraryView: View {
                 .frame(width: 300)
             Divider()
             Group {
-                if showRecorder || coordinator.phase != .idle {
+                // A recording in progress no longer locks the pane: pick another
+                // note and its transcript opens, with a pill to jump back to the
+                // live recorder. The recorder shows when nothing else is chosen.
+                if showRecorder || (coordinator.phase != .idle && selectedSession == nil) {
                     RecordView { saved in
                         showRecorder = false
                         selectedSession = saved
                     }
                 } else if let selectedSession {
                     SessionDetailView(session: selectedSession)
+                        .overlay(alignment: .top) {
+                            if coordinator.phase != .idle {
+                                Button {
+                                    self.selectedSession = nil
+                                    showRecorder = true
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Circle().fill(ArcaTheme.recording).frame(width: 8, height: 8)
+                                        Text(L("녹음 진행 중 — 녹음 화면으로", "Recording — back to the live view"))
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .padding(.horizontal, 12).padding(.vertical, 7)
+                                    .background(.black.opacity(0.75), in: Capsule())
+                                    .overlay(Capsule().strokeBorder(ArcaTheme.recording.opacity(0.5)))
+                                }
+                                .buttonStyle(.arcaPress)
+                                .padding(.top, 10)
+                            }
+                        }
                 } else {
                     ContentUnavailableView(
                         L("녹음을 고르거나 새로 시작하세요", "Select a recording or start a new one"),
@@ -791,9 +813,7 @@ private struct CompanionLibraryView: View {
         }
         // 세션을 클릭하면 녹음 대기 화면이 아니라 그 세션의 전사가 보여야 한다.
         .onChange(of: selectedSession) { _, newValue in
-            if newValue != nil, coordinator.phase == .idle {
-                showRecorder = false
-            }
+            if newValue != nil { showRecorder = false }
         }
     }
 }

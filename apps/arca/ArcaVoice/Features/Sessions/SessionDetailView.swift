@@ -10,6 +10,9 @@ struct SessionDetailView: View {
     @State private var participantOnlyAttendees: [CalendarAttendeeInfo] = []
     @State private var showingEmailSheet = false
     @State private var showingMeetingChat = false
+    @State private var quickSend: QuickSendState = .idle
+
+    enum QuickSendState: Equatable { case idle, sending, sent, failed(String) }
 
     /// Everything the screen derives from the segment list, computed in ONE
     /// pass. These used to be separate computed vars that each re-sorted and
@@ -107,6 +110,7 @@ struct SessionDetailView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 header
+                actionRow
 
                 if !session.audioAssets.isEmpty || (session.source != .screenshot && session.source != .dayLog) {
                     SessionAudioBar(session: session)
@@ -142,48 +146,6 @@ struct SessionDetailView: View {
             .padding()
         }
         .navigationTitle(session.title)
-        .toolbar {
-            // First in the toolbar because it's the most common thing anyone wants
-            // to do with a finished note: put it somewhere else.
-            ToolbarItem {
-                CopyButton(text: { SessionClipboardText.markdown(for: session) },
-                           title: L("회의록 복사", "Copy notes"))
-            }
-            ToolbarItem {
-                Menu {
-                    Button {
-                        ArcaClipboard.copy(SessionClipboardText.markdown(for: session))
-                    } label: {
-                        Label(L("회의록 (마크다운)", "Notes (markdown)"), systemImage: "doc.on.doc")
-                    }
-                    .disabled(meetingNotes == nil)
-                    Button {
-                        ArcaClipboard.copy(SessionClipboardText.transcript(for: session))
-                    } label: {
-                        Label(L("전사 전체", "Full transcript"), systemImage: "text.alignleft")
-                    }
-                    .disabled(session.segments.isEmpty)
-                } label: {
-                    Label(L("복사 옵션", "Copy options"), systemImage: "ellipsis.circle")
-                }
-            }
-            ToolbarItem {
-                Button {
-                    showingMeetingChat = true
-                } label: {
-                    Label(L("이 회의록에 대해 대화", "Chat about this"),
-                          systemImage: "bubble.left.and.text.bubble.right")
-                }
-            }
-            ToolbarItem {
-                Button {
-                    showingEmailSheet = true
-                } label: {
-                    Label(L("회의록 보내기", "Email the minutes"), systemImage: "envelope")
-                }
-                .disabled(meetingNotes == nil)
-            }
-        }
         .sheet(isPresented: $showingMeetingChat) {
             MeetingChatSheet(session: session)
         }
@@ -219,22 +181,106 @@ struct SessionDetailView: View {
                     .background(.blue.opacity(0.12), in: Capsule())
             }
             Spacer()
-            Button {
-                showingMeetingChat = true
-            } label: {
-                Label(L("이 회의록에 대해 대화", "Chat about this"),
-                      systemImage: "bubble.left.and.text.bubble.right")
-                    .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+    }
+
+    /// Everything you do with a finished note, inside the note — copy it, copy
+    /// the words, send it in one tap, share it anywhere, or talk about it.
+    /// These used to sit in the window toolbar, where they read as global
+    /// controls and vanished whenever the note wasn't showing.
+    private var actionRow: some View {
+        HStack(spacing: 8) {
+            CopyButton(text: { SessionClipboardText.markdown(for: session) },
+                       title: L("회의록 복사", "Copy notes"))
+                .actionChip()
+            CopyButton(text: { SessionClipboardText.transcript(for: session) },
+                       title: L("전사 복사", "Copy transcript"), symbolName: "text.alignleft")
+                .actionChip()
+                .disabled(session.segments.isEmpty)
+
+            Button(action: sendNow) {
+                HStack(spacing: 6) {
+                    switch quickSend {
+                    case .sending: ProgressView().controlSize(.mini)
+                    case .sent: Image(systemName: "checkmark")
+                    case .failed: Image(systemName: "exclamationmark.triangle")
+                    case .idle: Image(systemName: "paperplane.fill")
+                    }
+                    Text(quickSendLabel)
+                }
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(quickSendTint, in: Capsule())
+            }
+            .buttonStyle(.arcaPress)
+            .disabled(meetingNotes == nil || quickSend == .sending)
+            .help(L("요약·결정·액션 아이템을 내 메일로 바로 보내요", "Email the summary, decisions and action items to yourself now"))
+
+            Button { showingEmailSheet = true } label: {
+                Label(L("받는 사람 골라 보내기", "Send to…"), systemImage: "envelope")
+            }
+            .actionChip()
+            .disabled(meetingNotes == nil)
+
+            #if os(macOS)
+            ShareChip(text: { SessionClipboardText.markdown(for: session) })
+            #endif
+
+            Spacer(minLength: 0)
+
+            Button { showingMeetingChat = true } label: {
+                Label(L("ARCA와 대화", "Chat about this"), systemImage: "bubble.left.and.text.bubble.right")
+                    .font(.callout.weight(.semibold))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(ArcaFace.ember.opacity(0.14), in: Capsule())
                     .foregroundStyle(ArcaFace.ember)
             }
             .buttonStyle(.arcaPress)
-            .help(L("이 회의록에 대해 ARCA와 대화", "Talk to ARCA about this meeting"))
         }
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+        .animation(.spring(duration: 0.3), value: quickSend)
+    }
+
+    private var quickSendLabel: String {
+        switch quickSend {
+        case .idle: return L("바로 보내기", "Send now")
+        case .sending: return L("보내는 중…", "Sending…")
+        case .sent: return L("보냈어요", "Sent")
+        case .failed: return L("실패", "Failed")
+        }
+    }
+
+    private var quickSendTint: Color {
+        switch quickSend {
+        case .sent: return .green
+        case .failed: return .orange
+        default: return ArcaFace.ember
+        }
+    }
+
+    /// One tap: the finished note to the owner's own inbox through the ARCA
+    /// Gmail connection — the same path the automatic post-meeting send uses.
+    private func sendNow() {
+        guard let notes = meetingNotes else { return }
+        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
+        guard let sender = ComposioEmailSender.fromArcaConfig(), !recipient.isEmpty else {
+            quickSend = .failed(L("Gmail 커넥터가 없어요", "No Gmail connector"))
+            return
+        }
+        quickSend = .sending
+        Task { @MainActor in
+            do {
+                try await sender.sendSummary(to: recipient, sessionTitle: session.title,
+                                             notes: notes, date: session.createdAt)
+                quickSend = .sent
+            } catch {
+                quickSend = .failed(error.localizedDescription)
+            }
+            try? await Task.sleep(for: .seconds(2.5))
+            quickSend = .idle
+        }
     }
 
     @ViewBuilder
@@ -331,7 +377,7 @@ struct SessionDetailView: View {
     }
 
     private func displayName(for segment: StoredSegment) -> String {
-        segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
+        segment.speakerKey ?? (segment.channelRaw == "microphone" ? L("나", "Me") : L("상대", "Other"))
     }
 
     private func saveSpeaker(oldName: String, newName: String, email: String?) {
@@ -466,7 +512,7 @@ private struct TranscriptRow: View {
     @State private var hoveringSpeaker = false
 
     private var speakerName: String {
-        segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
+        segment.speakerKey ?? (segment.channelRaw == "microphone" ? L("나", "Me") : L("상대", "Other"))
     }
 
     var body: some View {
@@ -686,3 +732,47 @@ private struct EmailRecipientOption: Identifiable {
     var email: String
     var isFallback: Bool
 }
+
+
+/// The compact pill every note action wears.
+private struct ActionChipModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.callout.weight(.semibold))
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(.white.opacity(0.08), in: Capsule())
+            .foregroundStyle(.white.opacity(0.9))
+            .buttonStyle(.arcaPress)
+    }
+}
+
+private extension View {
+    func actionChip() -> some View { modifier(ActionChipModifier()) }
+}
+
+#if os(macOS)
+/// The system share sheet (Messages, Mail, Notes, Slack if installed…) fed
+/// with the note's markdown — the "send this anywhere" button.
+private struct ShareChip: View {
+    let text: () -> String
+
+    var body: some View {
+        Button {
+            share()
+        } label: {
+            Label(L("공유", "Share"), systemImage: "square.and.arrow.up")
+        }
+        .actionChip()
+    }
+
+    private func share() {
+        let content = text()
+        guard !content.isEmpty, let window = NSApp.keyWindow, let view = window.contentView else { return }
+        let picker = NSSharingServicePicker(items: [content])
+        // Anchor near the pointer so the menu opens where the click happened.
+        let location = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        let rect = NSRect(x: location.x, y: location.y, width: 1, height: 1)
+        picker.show(relativeTo: rect, of: view, preferredEdge: .minY)
+    }
+}
+#endif
