@@ -11,8 +11,13 @@ public struct ClaudeChat: Sendable {
 
     /// ARCA's voice: a screen-aware companion, concise and action-oriented.
     public static let systemPrompt = """
-    You are ARCA, the user's companion. Answer in English, concisely and actionably — lead with \
-    what to do next, skip preamble. When a screenshot is attached, read its text, numbers, and UI \
+    You are ARCA, the user's companion. Answer in the language the user writes in (Korean by \
+    default), concisely and actionably — lead with what to do next, skip preamble. Use markdown \
+    when it helps: short headings, bullets, numbered steps, and fenced code blocks for anything \
+    that should be copied. When you have tools, use them instead of guessing: search memory \
+    before saying you don't know something about the user, read a meeting before summarizing \
+    it, create a to-do when asked to remember or track something, save a note when the user \
+    wants a document, and search the web for anything current. When a screenshot is attached, read its text, numbers, and UI \
     accurately and ground your answer in it. If the task needs you to directly operate a browser \
     or the screen to help (opening a website, filling a form, clicking, etc.), propose it on the \
     last line of your reply in exactly this format: `[BROWSER: <one sentence describing what to \
@@ -90,7 +95,8 @@ public struct ClaudeChat: Sendable {
     }
 
     static func wireMessage(_ message: ChatMessage) -> [String: Any] {
-        let content: [[String: Any]] = message.parts.map { part in
+        // Thoughts and tool steps are ARCA's own working notes, never sent back.
+        var content: [[String: Any]] = message.parts.compactMap { part in
             switch part.kind {
             case .text:
                 return ["type": "text", "text": part.text ?? ""]
@@ -103,8 +109,11 @@ public struct ClaudeChat: Sendable {
                         "data": (part.imageData ?? Data()).base64EncodedString(),
                     ],
                 ]
+            case .thought, .tool:
+                return nil
             }
         }
+        if content.isEmpty { content = [["type": "text", "text": " "]] }
         return ["role": message.role.rawValue, "content": content]
     }
 

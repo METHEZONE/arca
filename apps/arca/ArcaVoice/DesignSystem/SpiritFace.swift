@@ -1,4 +1,5 @@
 import SwiftUI
+import ArcaVoiceKit
 
 /// ARCA — the round spirit from the brand site (app/arca/page.tsx Spirit):
 /// a glossy gradient orb with side fins, a tilted horn, and cream dome eyes.
@@ -31,6 +32,26 @@ struct ArcaFace: View {
     /// Full emotional interactivity: `followsPointer` plus a squash-and-bounce
     /// grin on tap. Only for faces that are NOT already buttons.
     var interactive: Bool = false
+    /// Hero surfaces only: between glances ARCA also lives a little — snacks,
+    /// watches something, types, listens to music, stretches. Props are drawn
+    /// in front of the body; the caption is reported through `onActivity`.
+    var activities: Bool = false
+    var onActivity: ((Activity?) -> Void)? = nil
+
+    /// What ARCA is up to right now, for captions ("과자 먹는 중").
+    enum Activity: Equatable {
+        case snack, tv, code, music, stretch
+
+        var caption: String {
+            switch self {
+            case .snack: return L("간식 먹는 중", "Having a snack")
+            case .tv: return L("잠깐 TV 보는 중", "Watching a little TV")
+            case .code: return L("코드 두드리는 중", "Tapping out some code")
+            case .music: return L("음악 듣는 중", "Listening to music")
+            case .stretch: return L("스트레칭 중", "Stretching")
+            }
+        }
+    }
 
     /// One-off idle behaviors so ARCA never just sits there.
     private enum MicroAct: Equatable {
@@ -38,6 +59,7 @@ struct ArcaFace: View {
         case glance(CGFloat)   // -1 left … 1 right
         case happy
         case doze
+        case activity(Activity)
     }
 
     @State private var blink: CGFloat = 1.0
@@ -51,6 +73,9 @@ struct ArcaFace: View {
     @State private var squish: CGFloat = 1
     /// Pointer position over the face, normalized — overrides `look`.
     @State private var hoverLook: CGPoint?
+    /// Prop animation phase (0…1 looping) while an activity plays.
+    @State private var propPhase: CGFloat = 0
+    @State private var propBeat = false
 
     /// Reduced motion means fewer/gentler animations, not zero — the
     /// continuous bob/orbit/pulse loops and idle fidgeting (hops, floats)
@@ -147,6 +172,10 @@ struct ArcaFace: View {
             .scaleEffect(x: 2 - squish, y: squish, anchor: .bottom)
             .offset(y: (bob ? -1 : 1) * max(1.6, 2 * s) + hop)
             .rotationEffect(mood == .working ? .degrees(bob ? -2.2 : 2.2) : .degrees(tilt))
+
+            if case .activity(let activity) = act {
+                activityProps(activity, s: s)
+            }
 
             // ZONE: ARCA holds the shield, on guard duty.
             if mood == .zone {
@@ -287,6 +316,12 @@ struct ArcaFace: View {
             switch act {
             case .happy: return .arcs
             case .doze: return .dozeCrescent
+            case .activity(let activity):
+                switch activity {
+                case .code, .tv: return .squint       // concentrating
+                case .music, .snack: return .arcs     // content
+                case .stretch: return .dozeCrescent   // eyes closed, aaah
+                }
             default: return .dome
             }
         }
@@ -371,6 +406,13 @@ struct ArcaFace: View {
 
             let hour = Calendar.current.component(.hour, from: Date())
             let sleepy = hour >= 23 || hour < 7
+            // Hero surfaces with activities on: about a third of the time ARCA
+            // does something with its hands instead of just fidgeting.
+            if activities, Int.random(in: 0..<3) == 0 {
+                await perform(activity: [Activity.snack, .tv, .code, .music, .stretch].randomElement()!,
+                              sleepy: sleepy)
+                continue
+            }
             // A sleepy ARCA nods off far more often — it's 2am, let it yawn.
             let roll = (sleepy && Int.random(in: 0..<3) == 0) ? 4 : Int.random(in: 0..<9)
             switch roll {
@@ -424,6 +466,143 @@ struct ArcaFace: View {
                 }
                 try? await Task.sleep(for: .milliseconds(160))
                 withAnimation(.spring(duration: 0.35, bounce: 0.5)) { hop = 0 }
+            }
+        }
+    }
+
+    /// One activity, start to finish: prop appears, a few beats of motion,
+    /// prop leaves. Finite animations only — nothing runs forever.
+    private func perform(activity: Activity, sleepy: Bool) async {
+        act = .activity(activity)
+        onActivity?(activity)
+        let beats: Int
+        switch activity {
+        case .snack: beats = 4
+        case .tv: beats = sleepy ? 3 : 5
+        case .code: beats = 6
+        case .music: beats = 5
+        case .stretch: beats = 2
+        }
+        for _ in 0..<beats {
+            guard case .activity = act else { break }
+            switch activity {
+            case .snack:
+                // Lift the snack, bite (squish), settle.
+                withAnimation(.easeInOut(duration: 0.28)) { propPhase = 1 }
+                try? await Task.sleep(for: .milliseconds(300))
+                withAnimation(.spring(duration: 0.16, bounce: 0.5)) { squish = 0.92 }
+                try? await Task.sleep(for: .milliseconds(140))
+                withAnimation(.spring(duration: 0.3, bounce: 0.5)) { squish = 1; propPhase = 0 }
+                try? await Task.sleep(for: .milliseconds(520))
+            case .tv:
+                // Screen flickers; ARCA leans in, then back.
+                withAnimation(.easeInOut(duration: 0.5)) { propBeat.toggle(); tilt = propBeat ? 3 : -2 }
+                try? await Task.sleep(for: .milliseconds(900))
+            case .code:
+                // Typing bursts: quick key taps with a little shoulder bob.
+                for _ in 0..<4 {
+                    withAnimation(.easeOut(duration: 0.06)) { propBeat.toggle(); hop = -max(1, 1.5 * size / 100) }
+                    try? await Task.sleep(for: .milliseconds(70))
+                    withAnimation(.easeIn(duration: 0.08)) { hop = 0 }
+                    try? await Task.sleep(for: .milliseconds(60))
+                }
+                try? await Task.sleep(for: .milliseconds(320))
+            case .music:
+                // Head bob to the beat, fins swaying.
+                withAnimation(.easeInOut(duration: 0.42)) { propBeat.toggle(); tilt = propBeat ? 6 : -6; bob = propBeat }
+                try? await Task.sleep(for: .milliseconds(440))
+            case .stretch:
+                // Reach up tall, hold, relax.
+                withAnimation(.easeInOut(duration: 0.7)) { squish = 1.14; tilt = propBeat ? 4 : -4 }
+                try? await Task.sleep(for: .milliseconds(1100))
+                withAnimation(.spring(duration: 0.6, bounce: 0.35)) { squish = 1; tilt = 0 }
+                propBeat.toggle()
+                try? await Task.sleep(for: .milliseconds(700))
+            }
+        }
+        withAnimation(.spring(duration: 0.4, bounce: 0.3)) { tilt = 0; hop = 0; squish = 1; bob = false; propPhase = 0 }
+        if case .activity = act { act = .none }
+        onActivity?(nil)
+    }
+
+    /// The props: drawn in the body's coordinate space (100 units × s).
+    @ViewBuilder
+    private func activityProps(_ activity: Activity, s: CGFloat) -> some View {
+        switch activity {
+        case .snack:
+            // A cookie held in the left fin, lifted toward the mouth on each bite.
+            ZStack {
+                Circle().fill(Color(red: 0.87, green: 0.62, blue: 0.32)).frame(width: 16 * s, height: 16 * s)
+                ForEach(0..<4, id: \.self) { i in
+                    Circle().fill(Color(red: 0.35, green: 0.2, blue: 0.1)).frame(width: 3 * s, height: 3 * s)
+                        .offset(x: CGFloat([-3, 3, -1, 4][i]) * s, y: CGFloat([-3, -1, 4, 3][i]) * s)
+                }
+            }
+            .offset(x: -30 * s + propPhase * 14 * s, y: 18 * s - propPhase * 22 * s)
+            .rotationEffect(.degrees(Double(propPhase) * -20))
+        case .tv:
+            // A little TV on the floor in front, screen flickering between colours.
+            VStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 3 * s)
+                    .fill(propBeat ? Color(red: 0.38, green: 0.62, blue: 1) : Color(red: 1, green: 0.55, blue: 0.35))
+                    .frame(width: 28 * s, height: 19 * s)
+                    .overlay(RoundedRectangle(cornerRadius: 3 * s).strokeBorder(.black.opacity(0.7), lineWidth: 2 * s))
+                    .shadow(color: (propBeat ? Color.blue : Color.orange).opacity(0.6), radius: 6 * s)
+                Rectangle().fill(.black.opacity(0.7)).frame(width: 8 * s, height: 3 * s)
+            }
+            .offset(x: 0, y: 44 * s)
+        case .code:
+            // A laptop, keys lighting up, and glyphs popping off the keyboard.
+            ZStack {
+                VStack(spacing: 0) {
+                    RoundedRectangle(cornerRadius: 2 * s).fill(Color(red: 0.16, green: 0.17, blue: 0.22))
+                        .frame(width: 30 * s, height: 16 * s)
+                        .overlay(
+                            VStack(alignment: .leading, spacing: 1.5 * s) {
+                                ForEach(0..<3, id: \.self) { i in
+                                    RoundedRectangle(cornerRadius: 1).fill(Color(red: 0.4, green: 0.9, blue: 0.6).opacity(propBeat == (i % 2 == 0) ? 0.9 : 0.35))
+                                        .frame(width: CGFloat([16, 10, 20][i]) * s, height: 1.6 * s)
+                                }
+                            }
+                            .padding(3 * s), alignment: .topLeading)
+                    RoundedRectangle(cornerRadius: 1.5 * s).fill(Color(red: 0.55, green: 0.57, blue: 0.62))
+                        .frame(width: 34 * s, height: 3 * s)
+                }
+                Text(propBeat ? "{ }" : ";")
+                    .font(.system(size: max(6, 7 * s), weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color(red: 0.4, green: 0.9, blue: 0.6))
+                    .offset(x: 14 * s, y: -16 * s + (propBeat ? -3 * s : 0))
+                    .opacity(0.9)
+            }
+            .offset(y: 42 * s)
+        case .music:
+            // Headphones over the top, notes floating up and away.
+            ZStack {
+                Capsule().stroke(Color(red: 0.2, green: 0.2, blue: 0.28), lineWidth: 3 * s)
+                    .frame(width: 60 * s, height: 40 * s)
+                    .offset(y: -14 * s)
+                    .mask(Rectangle().frame(height: 22 * s).offset(y: -22 * s))
+                ForEach(0..<2, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 3 * s).fill(Color(red: 0.2, green: 0.2, blue: 0.28))
+                        .frame(width: 9 * s, height: 13 * s)
+                        .offset(x: (i == 0 ? -31 : 31) * s, y: -4 * s)
+                }
+                Text("♪").font(.system(size: max(8, 11 * s), weight: .bold))
+                    .foregroundStyle(skin.hi)
+                    .offset(x: 40 * s, y: (propBeat ? -46 : -34) * s)
+                    .opacity(propBeat ? 0.3 : 0.95)
+                Text("♫").font(.system(size: max(7, 9 * s), weight: .bold))
+                    .foregroundStyle(skin.mid)
+                    .offset(x: -42 * s, y: (propBeat ? -30 : -44) * s)
+                    .opacity(propBeat ? 0.95 : 0.3)
+            }
+        case .stretch:
+            // Sparkle marks at full stretch.
+            ForEach(0..<2, id: \.self) { i in
+                Image(systemName: "sparkle")
+                    .font(.system(size: max(6, 8 * s), weight: .bold))
+                    .foregroundStyle(skin.hi.opacity(propBeat ? 0.9 : 0.4))
+                    .offset(x: (i == 0 ? -40 : 40) * s, y: (i == 0 ? -28 : -36) * s)
             }
         }
     }

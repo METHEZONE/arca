@@ -221,6 +221,10 @@ struct HomeView: View {
             DayLogView { session in openedDaySession = session }
         case .wiki:
             UserWikiScreen()
+        case .skills:
+            SkillsView()
+        case .shop:
+            ShopView()
         case .home, .tasks, .memory, .library:
             // Reached only if the card list grows; these have their own tabs.
             VitalsView()

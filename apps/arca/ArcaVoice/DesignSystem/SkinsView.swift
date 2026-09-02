@@ -49,11 +49,14 @@ struct SkinsView: View {
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(ArcaSkins.all) { skin in
                         SkinCard(skin: skin, isWorn: wearing == skin.id) {
+                            // Coats are bought in the Shop; the locker only wears owned ones.
+                            guard CompanionProgress.shared.owns(skinId: skin.id) else { return }
                             withAnimation(.spring(duration: 0.35, bounce: 0.4)) {
                                 ArcaSkins.select(skin)
                                 wearing = skin.id
                             }
                         }
+                        .opacity(CompanionProgress.shared.owns(skinId: skin.id) ? 1 : 0.45)
                     }
                 }
                 .padding(.horizontal, 16)

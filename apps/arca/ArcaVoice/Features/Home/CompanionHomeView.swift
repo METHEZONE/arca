@@ -66,6 +66,7 @@ struct CompanionHomeView: View {
     @State private var remark = MemoryRemarkProvider()
     @State private var projectDialogConversationId: String?
     @State private var newProjectName = ""
+    @State private var heroActivity: ArcaFace.Activity?
 
     private let background = Color(red: 0.03, green: 0.05, blue: 0.09)
     private var coordinator: RecordingCoordinator { services.coordinator }
@@ -358,6 +359,16 @@ struct CompanionHomeView: View {
             UserWikiView(ownerName: ownerName, facts: facts, sessions: sessions)
         case .library:
             CompanionLibraryView(selectedSession: $selectedSession, showRecorder: $showRecorder)
+        case .skills:
+            SkillsView { prompt in
+                // "Try it" drops the sample request into a fresh chat and sends it.
+                startEmptyChat()
+                mode = .home
+                chat.draftText = prompt
+                chat.send()
+            }
+        case .shop:
+            ShopView()
         }
     }
 
@@ -374,10 +385,24 @@ struct CompanionHomeView: View {
                 }
             } label: {
                 ArcaFace(mood: coordinator.phase == .idle ? .idle : .listening, size: 180,
-                         halo: true, followsPointer: true)
+                         halo: true, followsPointer: true, activities: true,
+                         onActivity: { activity in
+                             withAnimation(.spring(duration: 0.35)) { heroActivity = activity }
+                         })
                     .frame(width: 210, height: 210)
             }
             .buttonStyle(.arcaPress)
+            .overlay(alignment: .bottom) {
+                if let heroActivity {
+                    Text(heroActivity.caption)
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background(.white.opacity(0.08), in: Capsule())
+                        .offset(y: 14)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+            }
             .help(L("ARCA를 누르면 바로 녹음이 시작돼요", "Tap ARCA and recording starts right away"))
 
             VStack(spacing: 8) {
@@ -632,18 +657,8 @@ private struct CompanionChatThread: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(chat.messages) { message in
-                            CompanionBubble(message: message, isThinking: false)
+                            ChatBubbleView(message: message, onSaveNote: { text in saveAsNote(text) })
                                 .id(message.id)
-                        }
-                        if chat.isThinking {
-                            HStack(spacing: 8) {
-                                ArcaFace(mood: .thinking, size: 28, halo: false)
-                                    .frame(width: 32, height: 32)
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 28)
                         }
                     }
                     .padding(.vertical, 12)
@@ -651,6 +666,11 @@ private struct CompanionChatThread: View {
                 .onChange(of: chat.messages.last?.id) { _, id in
                     guard let id else { return }
                     withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .bottom) }
+                }
+                // Keep the live turn in view as thoughts and text stream in.
+                .onChange(of: chat.messages.last?.parts.count) { _, _ in
+                    guard let id = chat.messages.last?.id else { return }
+                    proxy.scrollTo(id, anchor: .bottom)
                 }
             }
 
@@ -661,30 +681,14 @@ private struct CompanionChatThread: View {
             .padding(.vertical, 18)
         }
     }
-}
 
-private struct CompanionBubble: View {
-    let message: ChatMessage
-    let isThinking: Bool
-    private var isUser: Bool { message.role == .user }
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            if isUser { Spacer(minLength: 80) }
-            if !isUser {
-                ArcaFace(mood: isThinking ? .thinking : .idle, size: 28, halo: false, alive: false)
-                    .frame(width: 32, height: 32)
-            }
-            Text(message.displayText)
-                .font(.system(.body, design: .rounded))
-                .foregroundStyle(isUser ? .white : .white.opacity(0.88))
-                .textSelection(.enabled)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(isUser ? ArcaTheme.idle.opacity(0.88) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-            if !isUser { Spacer(minLength: 80) }
+    /// The artifact path: a long answer becomes a markdown note in the vault
+    /// (or ~/Documents/ARCA) and is revealed in Finder.
+    private func saveAsNote(_ text: String) {
+        let title = text.split(separator: "\n").first.map { String($0.trimmingCharacters(in: CharacterSet(charactersIn: "# *"))).prefix(60) } ?? "ARCA note"
+        if let url = try? ChatToolbox.saveNote(title: String(title), markdown: text) {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
         }
-        .padding(.horizontal, 28)
     }
 }
 

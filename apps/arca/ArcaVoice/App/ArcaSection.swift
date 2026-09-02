@@ -20,6 +20,8 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     case day
     case wiki
     case library
+    case skills
+    case shop
 
     var id: String { rawValue }
 
@@ -32,6 +34,8 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
         case .day: return L("하루", "Day")
         case .wiki: return L("위키", "Wiki")
         case .library: return L("라이브러리", "Library")
+        case .skills: return L("스킬", "Skills")
+        case .shop: return L("상점", "Shop")
         }
     }
 
@@ -44,6 +48,8 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
         case .day: return "sun.horizon"
         case .wiki: return "book.closed"
         case .library: return "waveform"
+        case .skills: return "star.circle"
+        case .shop: return "bag"
         }
     }
 
@@ -57,6 +63,8 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
         case .day: return L("오늘 무엇에 시간을 썼는지", "Where your time went today")
         case .wiki: return L("ARCA가 기록한 당신의 이야기", "Your story, as ARCA wrote it down")
         case .library: return L("녹음·전사·회의록", "Recordings · transcripts · notes")
+        case .skills: return L("ARCA가 할 수 있는 것과 얼마나 자랐는지", "What ARCA can do, and how much it has grown")
+        case .shop: return L("일해서 번 코인으로 코트 사기", "Spend coins earned by work on coats")
         }
     }
 
@@ -70,7 +78,7 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .day: return .macOnly
         case .condition: return .phoneOnly
-        case .home, .tasks, .memory, .wiki, .library: return .everywhere
+        case .home, .tasks, .memory, .wiki, .library, .skills, .shop: return .everywhere
         }
     }
 
@@ -111,5 +119,5 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
 
     /// The Mac sidebar order. Todos keep their permanent right-hand rail there,
     /// which is why `.tasks` isn't in the list.
-    static let macSidebar: [ArcaSection] = [.home, .condition, .memory, .day, .wiki, .library]
+    static let macSidebar: [ArcaSection] = [.home, .condition, .memory, .day, .wiki, .library, .skills, .shop]
 }

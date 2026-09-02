@@ -125,39 +125,8 @@ struct ChatPanel: View {
 
 private struct MessageBubble: View {
     let message: ChatMessage
-
-    private var isUser: Bool { message.role == .user }
-
     var body: some View {
-        HStack {
-            if isUser { Spacer(minLength: 40) }
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
-                ForEach(Array(message.parts.enumerated()), id: \.offset) { _, part in
-                    switch part.kind {
-                    case .image:
-                        if let data = part.imageData, let nsImage = NSImage(data: data) {
-                            Image(nsImage: nsImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 220, maxHeight: 140)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                    case .text:
-                        Text(LocalizedStringKey(part.text ?? ""))
-                            .font(.callout)
-                            .foregroundStyle(isUser ? .white : .white.opacity(0.92))
-                            .textSelection(.enabled)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                isUser ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.white.opacity(0.1)),
-                                in: RoundedRectangle(cornerRadius: 14)
-                            )
-                    }
-                }
-            }
-            if !isUser { Spacer(minLength: 40) }
-        }
+        ChatBubbleView(message: message, compact: true, showFace: false)
     }
 }
 #endif

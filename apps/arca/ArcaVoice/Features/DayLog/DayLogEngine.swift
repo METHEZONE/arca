@@ -104,6 +104,7 @@ final class DayLogEngine {
             note.summaryMarkdown = digest.fullMarkdown
             session.note = note
             context.insert(session)
+            CompanionProgress.shared.award(.dayReport)
             try context.save()
             autoExportDayDigest(session)
             statusMessage = "오늘 정리를 라이브러리에 저장했습니다."

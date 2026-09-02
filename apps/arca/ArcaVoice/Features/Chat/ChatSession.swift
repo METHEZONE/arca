@@ -126,7 +126,8 @@ final class ChatSession {
         let anthropicKey = KeychainStore.get(.anthropic)
         let openAIKey = KeychainStore.get(.openAI)
         guard anthropicKey?.isEmpty == false || openAIKey?.isEmpty == false else {
-            appendAssistant("An OpenAI or Anthropic key is required — add one in Settings.")
+            appendAssistant(L("OpenAI 또는 Anthropic 키가 필요해요 — 설정에서 추가해 주세요.",
+                              "An OpenAI or Anthropic key is required — add one in Settings."))
             return
         }
         isThinking = true
@@ -140,13 +141,19 @@ final class ChatSession {
         if let contextBlock {
             memoryBlock = "\n\n" + contextBlock + memoryBlock
         }
+
+        // The live assistant turn: thoughts, tool steps and text stream into
+        // this one message as they arrive, then it's finalized.
+        let liveID = UUID()
+        messages.append(ChatMessage(id: liveID, role: .assistant, parts: [], isPending: true))
+
         Task { @MainActor in
             do {
                 let raw: String
                 if let apiKey = anthropicKey, !apiKey.isEmpty {
                     do {
-                        raw = try await ClaudeChat(apiKey: apiKey, model: model,
-                                                   extraSystem: memoryBlock).reply(to: history)
+                        raw = try await runClaudeAgent(apiKey: apiKey, model: model, system: memoryBlock,
+                                                       history: history, liveID: liveID)
                     } catch {
                         guard let apiKey = openAIKey, !apiKey.isEmpty else { throw error }
                         raw = try await OpenAIChat(apiKey: apiKey).reply(to: history)
@@ -154,10 +161,10 @@ final class ChatSession {
                 } else if let apiKey = openAIKey, !apiKey.isEmpty {
                     raw = try await OpenAIChat(apiKey: apiKey).reply(to: history)
                 } else {
-                    raw = "An OpenAI or Anthropic key is required."
+                    raw = L("OpenAI 또는 Anthropic 키가 필요해요.", "An OpenAI or Anthropic key is required.")
                 }
                 let visible = ClaudeChat.stripActionTags(raw)
-                appendAssistant(visible.isEmpty ? "(No response)" : visible)
+                finalizeLive(id: liveID, text: visible.isEmpty ? L("(응답 없음)", "(No response)") : visible)
                 #if os(macOS)
                 proposedBrowserTask = ClaudeChat.browserTask(in: raw)
                 #endif
@@ -177,9 +184,85 @@ final class ChatSession {
                     await logMeal(meal)
                 }
             } catch {
-                appendAssistant(UserFacingError.message(for: error))
+                finalizeLive(id: liveID, text: UserFacingError.message(for: error))
             }
             isThinking = false
+        }
+    }
+
+    /// Streams one Claude turn with thinking and tools into the live message.
+    private func runClaudeAgent(apiKey: String, model: String, system: String,
+                                history: [ChatMessage], liveID: UUID) async throws -> String {
+        let agent = ClaudeAgent(apiKey: apiKey, model: model)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd (EEEE) HH:mm"
+        let dateBlock = "\nRight now it is \(dateFormatter.string(from: Date())) in the user's time zone (\(TimeZone.current.identifier))."
+        let fullSystem = ClaudeChat.systemPrompt + dateBlock + system
+
+        return try await agent.turn(
+            system: fullSystem,
+            history: history,
+            tools: ChatToolbox.specs,
+            webSearch: true,
+            execute: { name, inputJSON in
+                await ChatToolbox.execute(name: name, inputJSON: inputJSON)
+            },
+            onEvent: { event in
+                Task { @MainActor in self.apply(event, to: liveID) }
+            })
+    }
+
+    private func apply(_ event: ClaudeAgentEvent, to liveID: UUID) {
+        guard let index = messages.firstIndex(where: { $0.id == liveID }) else { return }
+        var parts = messages[index].parts
+        switch event {
+        case .thinking(let delta):
+            if let last = parts.indices.last, parts[last].kind == .thought {
+                parts[last].text = (parts[last].text ?? "") + delta
+            } else {
+                parts.append(.thought(delta))
+            }
+        case .text(let delta):
+            if let last = parts.indices.last, parts[last].kind == .text {
+                parts[last].text = (parts[last].text ?? "") + delta
+            } else {
+                parts.append(.text(delta))
+            }
+        case .toolStarted(_, let name, let inputJSON):
+            parts.append(.tool(name, summary: ChatToolbox.label(for: name, inputJSON: inputJSON), status: .running))
+        case .toolFinished(_, let name, let summary, let ok):
+            if let running = parts.lastIndex(where: { $0.kind == .tool && $0.toolName == name && $0.toolStatus == .running }) {
+                parts[running].text = summary
+                parts[running].toolStatus = ok ? .done : .failed
+            }
+        case .webSearch(let query):
+            parts.append(.tool("web_search", summary: L("웹 검색: \(query)", "Web search: \(query)"), status: .done))
+        case .finished:
+            break
+        }
+        messages[index].parts = parts
+    }
+
+    /// Replaces the streamed text with the cleaned final text (action tags
+    /// stripped), keeps the thoughts and tool steps, and persists the words.
+    private func finalizeLive(id: UUID, text: String) {
+        guard let index = messages.firstIndex(where: { $0.id == id }) else {
+            appendAssistant(text)
+            return
+        }
+        var parts = messages[index].parts.filter { $0.kind != .text }
+        parts.append(.text(text))
+        messages[index].parts = parts
+        messages[index].isPending = false
+        persist(role: "assistant", text: text)
+        CompanionProgress.shared.award(.chatTurn)
+        for part in messages[index].parts where part.kind == .tool && part.toolStatus == .done {
+            switch part.toolName {
+            case "save_note": CompanionProgress.shared.award(.noteSaved)
+            case "run_browser_task": CompanionProgress.shared.award(.browserTask)
+            default: break
+            }
         }
     }
 

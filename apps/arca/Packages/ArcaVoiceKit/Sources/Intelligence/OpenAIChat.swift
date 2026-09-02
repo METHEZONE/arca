@@ -36,7 +36,7 @@ public struct OpenAIChat: Sendable {
     }
 
     static func wireMessage(_ message: ChatMessage) -> [String: Any] {
-        let content: [[String: Any]] = message.parts.map { part in
+        var content: [[String: Any]] = message.parts.compactMap { part in
             switch part.kind {
             case .text:
                 return ["type": "input_text", "text": part.text ?? ""]
@@ -44,8 +44,11 @@ public struct OpenAIChat: Sendable {
                 let mediaType = part.mediaType ?? "image/jpeg"
                 let base64 = (part.imageData ?? Data()).base64EncodedString()
                 return ["type": "input_image", "image_url": "data:\(mediaType);base64,\(base64)"]
+            case .thought, .tool:
+                return nil
             }
         }
+        if content.isEmpty { content = [["type": "input_text", "text": " "]] }
         return ["role": message.role.rawValue, "content": content]
     }
 

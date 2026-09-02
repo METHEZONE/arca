@@ -66,6 +66,7 @@ final class TaskEngine {
                     let result = try await runWithClaude(task)
                     task.resultMarkdown = result
                     task.state = .done
+                    CompanionProgress.shared.award(.todoDone)
                 case .send, .broad:
                     #if os(macOS)
                     var log = ""

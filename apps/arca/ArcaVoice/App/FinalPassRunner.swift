@@ -119,6 +119,7 @@ enum FinalPassRunner {
                 try record.modelContext?.save()
 
                 if let notes = output.notes {
+                    CompanionProgress.shared.award(.meetingSummarized)
                     SummaryNotifier.summaryReady(record: record, notes: notes)
                     sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)

@@ -10,8 +10,37 @@ import ArcaVoiceKit
 @MainActor
 @Observable
 final class BrainEngine {
-    enum NodeKind: String, Sendable {
-        case memory, session, insight
+    /// One color and one silhouette per kind — the whole point of the redesign:
+    /// a glance at the brain tells you what kind of thoughts live there.
+    enum NodeKind: String, Sendable, CaseIterable {
+        case user, preference, project, fact, insight, session
+
+        static func from(kindRaw: String) -> NodeKind {
+            NodeKind(rawValue: kindRaw) ?? .fact
+        }
+
+        var label: String {
+            switch self {
+            case .user: return L("나에 대해", "About me")
+            case .preference: return L("취향", "Preferences")
+            case .project: return L("프로젝트", "Projects")
+            case .fact: return L("사실", "Facts")
+            case .insight: return L("인사이트", "Insights")
+            case .session: return L("회의", "Meetings")
+            }
+        }
+
+        /// Headspace-bright flat palette.
+        var hex: UInt32 {
+            switch self {
+            case .user: return 0xFFC531
+            case .preference: return 0xFF6FA8
+            case .project: return 0x4C8DFF
+            case .fact: return 0x3DC26F
+            case .insight: return 0x9B7BFF
+            case .session: return 0xFF7A1A
+            }
+        }
     }
 
     struct Node: Identifiable, Sendable {
@@ -21,6 +50,9 @@ final class BrainEngine {
         var weight: Double
         var position: CGPoint
         var velocity: CGPoint = .zero
+        var createdAt: Date = .now
+        var source: String = ""
+        var seeded = false
         /// Cluster index (by memory source) — nodes from the same place pool
         /// into the same "lobe" of the brain.
         var group: Int = 0
@@ -60,6 +92,32 @@ final class BrainEngine {
     /// Full source text per node id — kept out of `Node` so the struct stays
     /// small (Canvas redraws read `nodes`/`edges` every animation frame).
     private var nodeText: [String: String] = [:]
+    /// Back-reference to the store row, for the detail panel's delete.
+    private var identifiers: [String: PersistentIdentifier] = [:]
+
+    /// Layout temperature. Forces are scaled by it and it cools every tick,
+    /// so the map settles and then holds still — a still map is one you can
+    /// click. Breathing and blinking are drawn, not simulated.
+    private(set) var alpha: Double = 1
+    var isSettled: Bool { alpha < 0.012 }
+    /// Kinds hidden by the legend filter (empty = show everything).
+    var hiddenKinds: Set<NodeKind> = []
+
+    func text(for nodeId: String) -> String { nodeText[nodeId] ?? "" }
+    func node(_ id: String) -> Node? { nodes.first { $0.id == id } }
+
+    /// Reheats the layout (after a reload or a drag) so it re-settles.
+    func reheat(_ to: Double = 0.6) { alpha = max(alpha, to) }
+
+    /// Deletes a memory node's row. Sessions are not deletable from here.
+    func delete(nodeId: String, context: ModelContext) {
+        guard let identifier = identifiers[nodeId],
+              let fact = context.model(for: identifier) as? MemoryFact else { return }
+        context.delete(fact)
+        try? context.save()
+        selectedNode = nil
+        load(context: context)
+    }
 
     private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
     private var model: String {
@@ -90,15 +148,19 @@ final class BrainEngine {
         let facts = (try? context.fetch(FetchDescriptor<MemoryFact>())) ?? []
         let sessions = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
 
+        var ids: [String: PersistentIdentifier] = [:]
         var candidates: [Candidate] = facts.map { fact in
-            Candidate(
-                id: "fact-\(String(describing: fact.persistentModelID))",
+            let id = "fact-\(String(describing: fact.persistentModelID))"
+            ids[id] = fact.persistentModelID
+            return Candidate(
+                id: id,
                 label: String(fact.text.prefix(40)),
                 text: fact.text,
-                kind: fact.kindRaw == "insight" ? .insight : .memory,
+                kind: NodeKind.from(kindRaw: fact.kindRaw),
                 createdAt: fact.createdAt,
-                source: fact.kindRaw == "insight" ? "insight" : fact.sourceRaw)
+                source: fact.sourceRaw)
         }
+        identifiers = ids
         for session in sessions {
             guard let summary = session.note?.summaryMarkdown, !summary.isEmpty else { continue }
             candidates.append(Candidate(
@@ -125,11 +187,17 @@ final class BrainEngine {
         for node in nodes { previous[node.id] = (node.position, node.velocity) }
 
         nodes = capped.map { c in
-            let (pos, vel) = previous[c.id] ?? (Self.initialPosition(for: c.id), .zero)
-            let baseWeight: Double = c.kind == .session ? 0.6 : (c.kind == .insight ? 0.75 : 0.4)
-            return Node(id: c.id, label: c.label, kind: c.kind, weight: baseWeight,
-                        position: pos, velocity: vel, group: groupIndex[c.source] ?? 0)
+            let kept = previous[c.id]
+            let (pos, vel) = kept ?? (Self.initialPosition(for: c.id), .zero)
+            let baseWeight: Double = c.kind == .session ? 0.6 : (c.kind == .insight ? 0.75 : 0.45)
+            var node = Node(id: c.id, label: c.label, kind: c.kind, weight: baseWeight,
+                            position: pos, velocity: vel, group: groupIndex[c.source] ?? 0)
+            node.createdAt = c.createdAt
+            node.source = c.source
+            node.seeded = kept != nil
+            return node
         }
+        alpha = 1
         edges = Self.buildBaselineEdges(nodes: nodes, nodeText: nodeText)
 
         // Connectivity → hubs: normalized degree drives size and centering.
@@ -152,6 +220,13 @@ final class BrainEngine {
     func tick(size: CGSize) {
         let n = nodes.count
         guard n > 0, size.width > 1, size.height > 1 else { return }
+        seedUnplaced(size: size)
+        guard !isSettled else {
+            // Still map: only the occasional spark travels an edge.
+            simTime += 1.0 / 60.0
+            fireSynapse()
+            return
+        }
 
         var fx = [Double](repeating: 0, count: n)
         var fy = [Double](repeating: 0, count: n)
@@ -233,37 +308,17 @@ final class BrainEngine {
             }
         }
 
-        // Gentle perpetual drift so the map still feels alive at rest, even
-        // with zero insight edges — a per-node phase keeps it from looking
-        // like uniform jitter. `simTime` is the engine's own clock so the
-        // `tick(size:)` signature stays free of a dt/date parameter.
         simTime += 1.0 / 60.0
-        for i in 0..<n {
-            let phase = Self.seeded01(nodes[i].id.hashValue) * 2 * .pi
-            fx[i] += sin(simTime * 0.5 + phase) * Self.driftK
-            fy[i] += cos(simTime * 0.4 + phase * 1.3) * Self.driftK
-        }
+        fireSynapse()
 
-        // Synapse firing: every second or two a random edge carries a signal
-        // (insight edges fire more). The view draws the traveling spark.
-        if simTime >= nextFireAt, !edges.isEmpty {
-            let pool = edges.filter(\.isInsight).isEmpty
-                ? edges
-                : edges + edges.filter(\.isInsight) // insight edges twice as likely
-            if let edge = pool.randomElement() {
-                firings.append(Firing(edgeId: edge.id, start: simTime,
-                                      duration: Double.random(in: 0.7...1.1)))
-            }
-            nextFireAt = simTime + Double.random(in: 0.8...2.0)
-        }
-        firings.removeAll { simTime - $0.start > $0.duration }
-
-        // Integrate, damp, and clamp speed. The radial containment above is
-        // the boundary; positions are never hard-clamped.
-        let speedClamp = min(Self.maxSpeed, max(4, shortSide * 0.4))
+        // Integrate, damp, and clamp speed — all scaled by the cooling alpha
+        // so the map settles and stops. The radial containment above is the
+        // boundary; positions are never hard-clamped.
+        alpha *= Self.cooling
+        let speedClamp = min(Self.maxSpeed, max(4, shortSide * 0.4)) * max(alpha, 0.05)
         for i in 0..<n {
-            var vx = (Double(nodes[i].velocity.x) + fx[i]) * Self.damping
-            var vy = (Double(nodes[i].velocity.y) + fy[i]) * Self.damping
+            var vx = (Double(nodes[i].velocity.x) + fx[i] * alpha) * Self.damping
+            var vy = (Double(nodes[i].velocity.y) + fy[i] * alpha) * Self.damping
             let speed = (vx * vx + vy * vy).squareRoot()
             if speed > speedClamp {
                 let scale = speedClamp / speed
@@ -296,7 +351,41 @@ final class BrainEngine {
     private static let damping: Double = 0.82
     private static let maxSpeed: Double = 28
     private static let minDistance: Double = 24
-    private static let driftK: Double = 0.6
+    /// Per-tick multiplier on the layout temperature; ~4 s to stillness at 60 fps.
+    private static let cooling: Double = 0.982
+
+    /// Synapse firing: every second or two a random edge carries a signal
+    /// (insight edges fire more). The view draws the traveling spark.
+    private func fireSynapse() {
+        if simTime >= nextFireAt, !edges.isEmpty {
+            let insightEdges = edges.filter(\.isInsight)
+            let pool = insightEdges.isEmpty ? edges : edges + insightEdges
+            if let edge = pool.randomElement() {
+                firings.append(Firing(edgeId: edge.id, start: simTime,
+                                      duration: Double.random(in: 0.7...1.1)))
+            }
+            nextFireAt = simTime + Double.random(in: 1.2...2.8)
+        }
+        firings.removeAll { simTime - $0.start > $0.duration }
+    }
+
+    /// New nodes start on a golden-angle spiral around the canvas center,
+    /// grouped by kind, so the sim only has to tidy, not migrate a cloud in.
+    private func seedUnplaced(size: CGSize) {
+        let cx = size.width / 2, cy = size.height / 2
+        let radius = min(size.width, size.height) * 0.38
+        var placed = 0
+        for i in nodes.indices where !nodes[i].seeded {
+            let kindIndex = Double(NodeKind.allCases.firstIndex(of: nodes[i].kind) ?? 0)
+            let angle = kindIndex / Double(NodeKind.allCases.count) * 2 * .pi
+                + Self.seeded01(nodes[i].id.hashValue) * 0.9 - 0.45
+            let r = radius * (0.25 + 0.75 * Self.seeded01(nodes[i].id.hashValue ^ 0x9e37))
+            nodes[i].position = CGPoint(x: cx + CGFloat(cos(angle)) * r, y: cy + CGFloat(sin(angle)) * r)
+            nodes[i].seeded = true
+            placed += 1
+        }
+        if placed > 0 { alpha = 1 }
+    }
     /// Pull toward the node's source-group anchor — strong enough to pool
     /// lobes, weak enough that keyword springs can still bridge them.
     private static let lobeK: Double = 0.004
@@ -445,6 +534,7 @@ final class BrainEngine {
                 bumpWeight(item.aId)
                 bumpWeight(item.bId)
                 context.insert(MemoryFact(text: item.insight, kind: "insight", source: "brain"))
+                CompanionProgress.shared.award(.insightWoven)
             }
             try? context.save()
         } catch {

@@ -329,32 +329,7 @@ private struct LiveBubble: View {
     private var isUser: Bool { message.role == .user }
 
     var body: some View {
-        HStack {
-            if isUser { Spacer(minLength: 40) }
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
-                ForEach(Array(message.parts.enumerated()), id: \.offset) { _, part in
-                    switch part.kind {
-                    case .image:
-                        if let data = part.imageData, let ui = UIImage(data: data) {
-                            Image(uiImage: ui)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 220, maxHeight: 160)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    case .text:
-                        Text(LocalizedStringKey(part.text ?? ""))
-                            .padding(.horizontal, 12).padding(.vertical, 8)
-                            .foregroundStyle(isUser ? .white : .primary)
-                            .background(
-                                isUser ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.quaternary),
-                                in: RoundedRectangle(cornerRadius: 14))
-                            .textSelection(.enabled)
-                    }
-                }
-            }
-            if !isUser { Spacer(minLength: 40) }
-        }
+        ChatBubbleView(message: message, compact: true, showFace: false)
     }
 }
 #endif

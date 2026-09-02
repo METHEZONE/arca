@@ -136,20 +136,8 @@ struct MeetingChatSheet: View {
 
 private struct MeetingChatBubble: View {
     let message: ChatMessage
-    private var isUser: Bool { message.role == .user }
-
     var body: some View {
-        HStack {
-            if isUser { Spacer(minLength: 40) }
-            Text(LocalizedStringKey(message.displayText))
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .foregroundStyle(isUser ? .white : .primary)
-                .background(
-                    isUser ? AnyShapeStyle(ArcaTheme.idle) : AnyShapeStyle(.quaternary),
-                    in: RoundedRectangle(cornerRadius: 14))
-                .textSelection(.enabled)
-            if !isUser { Spacer(minLength: 40) }
-        }
+        ChatBubbleView(message: message, compact: true, showFace: false)
     }
 }
 
