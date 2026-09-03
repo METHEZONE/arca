@@ -24,6 +24,7 @@ struct ArcaVoiceApp: App {
                     ChatLogEntry.self,
                     MemoryFact.self,
                     ReplyProposal.self,
+                    ActionProposal.self,
                 ])
                 container = try ModelContainer(
                     for: schema,
@@ -75,6 +76,7 @@ struct ArcaVoiceApp: App {
                 ChatLogEntry.self,
                 MemoryFact.self,
                 ReplyProposal.self,
+                    ActionProposal.self,
             ])
             let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             let url = base
@@ -98,7 +100,8 @@ struct ArcaVoiceApp: App {
                 TodoTask.self,
                 ChatLogEntry.self,
                 MemoryFact.self,
-                ReplyProposal.self
+                ReplyProposal.self,
+                ActionProposal.self
             )
             #endif
         }
@@ -113,6 +116,7 @@ struct ArcaVoiceApp: App {
             ChatLogEntry.self,
             MemoryFact.self,
             ReplyProposal.self,
+                    ActionProposal.self,
         ])
         let url = accountStoreURL(accountId: accountId)
         try FileManager.default.createDirectory(

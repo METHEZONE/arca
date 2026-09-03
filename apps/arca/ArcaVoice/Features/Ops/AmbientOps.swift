@@ -113,7 +113,7 @@ final class AmbientOps {
                 let preview = ((m["preview"] as? [String: Any])?["body"] as? String)
                     ?? (m["messageText"] as? String) ?? ""
                 inbound.append(["source": "gmail", "author": sender, "title": subject,
-                                "body": String(preview.prefix(400)), "channel": "", "ts": ""])
+                                "body": String(preview.prefix(3000)), "channel": "", "ts": ""])
             }
         }
 
@@ -153,6 +153,15 @@ final class AmbientOps {
         var seen = Set(UserDefaults.standard.stringArray(forKey: "harvestSeen") ?? [])
         let fresh = inbound.filter { !seen.contains(Self.fingerprint($0)) }
         guard !fresh.isEmpty else { return }
+
+        // Dated things (a meeting to attend, something to deliver by a time)
+        // become proposals the user answers from the bell, before any task is
+        // created for the same message.
+        let proposalInbound = fresh.map { item in
+            ProposalEngine.Inbound(source: item["source"] ?? "inbox", sender: item["author"] ?? "",
+                                   subject: item["title"] ?? "", body: item["body"] ?? "")
+        }
+        _ = await ProposalEngine.shared.propose(from: proposalInbound, context: context)
 
         do {
             let triaged = try await triage(fresh)

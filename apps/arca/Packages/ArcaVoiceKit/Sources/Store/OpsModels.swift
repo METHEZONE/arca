@@ -38,3 +38,46 @@ public final class ReplyProposal {
         self.createdAt = .now
     }
 }
+
+/// Something ARCA noticed in an inbound message and wants to do for the
+/// user — put a meeting on the calendar, track a deadline — but asks first.
+/// Lives until answered; the notification bell shows what's still open.
+@Model
+public final class ActionProposal {
+    public var uid: UUID = UUID()
+    /// calendar | task
+    public var kindRaw: String = "calendar"
+    /// gmail | slack | paste
+    public var sourceRaw: String = "gmail"
+    public var sender: String = ""
+    public var subject: String = ""
+    /// One line, in the user's language: what the message was.
+    public var summary: String = ""
+    /// The yes/no question ARCA asks, in the user's language.
+    public var question: String = ""
+    /// The structured thing to create, as JSON (calendar: title/start/durationMinutes/location/description; task: title/detail/due).
+    public var payloadJSON: String = "{}"
+    /// proposed | accepted | declined | failed
+    public var stateRaw: String = "proposed"
+    public var createdAt: Date = Date.now
+    public var resolvedAt: Date?
+    public var note: String?
+
+    public init(kind: String, source: String, sender: String, subject: String,
+                summary: String, question: String, payloadJSON: String) {
+        self.uid = UUID()
+        self.kindRaw = kind
+        self.sourceRaw = source
+        self.sender = sender
+        self.subject = subject
+        self.summary = summary
+        self.question = question
+        self.payloadJSON = payloadJSON
+        self.stateRaw = "proposed"
+        self.createdAt = .now
+    }
+
+    public var payload: [String: Any] {
+        (try? JSONSerialization.jsonObject(with: Data(payloadJSON.utf8)) as? [String: Any]) ?? [:]
+    }
+}

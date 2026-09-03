@@ -119,6 +119,11 @@ struct CompanionHomeView: View {
             }
         }
         .animation(.spring(duration: 0.35), value: services.coordinator.errorMessage != nil)
+        .overlay(alignment: .topTrailing) {
+            ProposalToast()
+                .padding(.top, 12)
+                .padding(.trailing, 20)
+        }
         .toolbar { toolbar }
         .onAppear { StorageJanitor.shared.runIfDue(context: modelContext) }
         .sheet(isPresented: $showSettings) {
@@ -165,6 +170,9 @@ struct CompanionHomeView: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
+        ToolbarItem {
+            NotificationBell()
+        }
         ToolbarItem {
             Button {
                 withAnimation(.spring(duration: 0.25)) { showRightRail.toggle() }
