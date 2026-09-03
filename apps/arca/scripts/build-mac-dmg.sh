@@ -11,6 +11,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 OUT="${1:-/tmp/arca-dist}"
+SCHEME="${SCHEME:-ARCA-Beta}"
+PRODUCT="${PRODUCT:-ARCA Beta}"
 ASC_KEY="$HOME/.appstoreconnect/private_keys/AuthKey_D3CFFDDQFB.p8"
 ASC_KEY_ID="D3CFFDDQFB"
 ASC_ISSUER="14e5aa60-5bc9-474f-8217-077735364dbe"
@@ -19,12 +21,12 @@ EXPORT="$OUT/export"
 mkdir -p "$OUT"
 
 echo "▶ archive"
-xcodebuild -project ARCA.xcodeproj -scheme ARCA -destination 'platform=macOS' -configuration Release \
+xcodebuild -project ARCA.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' -configuration Release \
   archive -archivePath "$ARCHIVE" \
   -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER" \
   | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)"
 
-APP="$ARCHIVE/Products/Applications/ARCA.app"
+APP="$ARCHIVE/Products/Applications/$PRODUCT.app"
 echo "▶ strip owner keys from the bundle (BYOK: testers enter their own in onboarding)"
 # Keep only the Composio project key: connectors work per user (each install
 # mints its own user id). LLM keys, GitHub relay and the owner's Composio user
@@ -45,9 +47,9 @@ echo "▶ verify no LLM keys shipped"
 if /usr/libexec/PlistBuddy -c "Print :anthropic" "$EXPORT/ARCA.app/Contents/Resources/BundledKeys.plist" >/dev/null 2>&1; then echo "anthropic key still present — abort"; exit 1; fi
 
 echo "▶ notarize"
-DMG="$OUT/ARCA.dmg"
+DMG="$OUT/$(echo "$PRODUCT" | tr " " "-")-mac.dmg"
 rm -f "$DMG"
-hdiutil create -volname "ARCA" -srcfolder "$EXPORT/ARCA.app" -ov -format UDZO "$DMG" >/dev/null
+hdiutil create -volname "ARCA" -srcfolder "$EXPORT/$PRODUCT.app" -ov -format UDZO "$DMG" >/dev/null
 xcrun notarytool submit "$DMG" --key "$ASC_KEY" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER" --wait
 xcrun stapler staple "$DMG"
 echo "✅ $DMG"
