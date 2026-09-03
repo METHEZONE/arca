@@ -85,7 +85,7 @@ final class RelaySync {
             runRelayedTasks(context: context)
             #endif
         } catch {
-            lastError = error.localizedDescription
+            lastError = UserFacingError.message(for: error)
         }
     }
 

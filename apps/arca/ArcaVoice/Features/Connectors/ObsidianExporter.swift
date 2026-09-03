@@ -64,8 +64,7 @@ enum ObsidianExporter {
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         ))
 
-        let memoriesURL = arcaDirectory.appendingPathComponent("ARCA Memories.md")
-        try memoriesMarkdown(for: facts).write(to: memoriesURL, atomically: true, encoding: .utf8)
+        try exportMemories(facts, arcaDirectory: arcaDirectory)
         var fileCount = 1
 
         for session in sessions {
@@ -79,6 +78,14 @@ enum ObsidianExporter {
         }
 
         return fileCount
+    }
+
+    /// `ARCA/Memory/Memories.md` — the whole brain as one readable file.
+    static func exportMemories(_ facts: [MemoryFact], arcaDirectory: URL) throws {
+        let memoryDir = arcaDirectory.appendingPathComponent("Memory", isDirectory: true)
+        try FileManager.default.createDirectory(at: memoryDir, withIntermediateDirectories: true)
+        try memoriesMarkdown(for: facts)
+            .write(to: memoryDir.appendingPathComponent("Memories.md"), atomically: true, encoding: .utf8)
     }
 
     private static func memoriesMarkdown(for facts: [MemoryFact]) -> String {

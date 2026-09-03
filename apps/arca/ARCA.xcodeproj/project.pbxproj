@@ -41,6 +41,7 @@
 		2B5A1A1CEECAF38614C97F59 /* CalendarEventCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */; };
 		2B68D00D73DECB51BCB675E6 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
 		2B6E9833A44618B9E564D671 /* HealthVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */; };
+		2D9A8B3174F06DC9B68D91FA /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		31E2B8888A98B97DEEAC9B3A /* ScreenGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */; };
 		32337036BDBBBD87CA30E7BA /* SkillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB81A6577D769549369CE27 /* SkillsView.swift */; };
@@ -57,6 +58,7 @@
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		45BE7B009A03D2F1C25F3F13 /* CompanionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799893AA765465142E125D54 /* CompanionProgress.swift */; };
+		46FC4F2DB5B9CED78458AA8E /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
 		4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
 		4E959DE0AAF10547AFA64C6C /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
@@ -91,6 +93,7 @@
 		6210A8679715F8C495AA112F /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
+		643572A87436F0C521F11054 /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		644FFA60D7949368499BCC8A /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		651725966B3E7D1B8EEE0C9F /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
 		6578435762FF9D15791181F5 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
@@ -140,6 +143,7 @@
 		8E0CC13FCAF29F7CFB1A48C2 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		8EA96F69337862888B31A362 /* CalendarEventCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */; };
 		8F0DBA040CC02B982A6D7CB7 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
+		91233AFF7C31C69206965542 /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
 		924D6BA8A87EC54C60B9DF25 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
 		9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */; };
 		93F85BAD90DB4B5B346AC98D /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
@@ -160,6 +164,7 @@
 		A31222589649A037D38B86DA /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
 		A3C8A637CBF3D17816618F86 /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
 		A48DE84ABEA45864A315A78B /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
+		A4C04AAB3DB114A755857E1B /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
 		A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		A7E568DBA52765B84E8DE21A /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
 		A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */; };
@@ -240,6 +245,7 @@
 		F5EC7D87CEDC1AE969D207E7 /* MorningMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A455369D5DD48B9F437A391 /* MorningMoment.swift */; };
 		F7AD10DA730B6B756F6A2B4C /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
+		FA8D01FEB53E5285127B5344 /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
 		FC375BD773C1A2D772BADC59 /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		FD98C74A577CEC8CD8664D0B /* ChatToolbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */; };
 		FE768817571590D07AC89C90 /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 43B589F1254CC496D339F2A1 /* ArcaVoiceKit */; };
@@ -382,7 +388,9 @@
 		96268CC8284FD42543FCFD79 /* CallLab-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "CallLab-macOS.entitlements"; sourceTree = "<group>"; };
 		98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcher.swift; sourceTree = "<group>"; };
 		9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCoordinator.swift; sourceTree = "<group>"; };
+		9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaVault.swift; sourceTree = "<group>"; };
 		9A455369D5DD48B9F437A391 /* MorningMoment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningMoment.swift; sourceTree = "<group>"; };
+		9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageJanitor.swift; sourceTree = "<group>"; };
 		9B747507721FFF3DF877DF6C /* VoiceTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTalk.swift; sourceTree = "<group>"; };
 		9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDeepMeasure.swift; sourceTree = "<group>"; };
 		A2F819D6795C53B655D03603 /* CallLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallLabApp.swift; sourceTree = "<group>"; };
@@ -414,6 +422,7 @@
 		D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAudioBar.swift; sourceTree = "<group>"; };
 		D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoTriage.swift; sourceTree = "<group>"; };
 		D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassRetryScheduler.swift; sourceTree = "<group>"; };
+		D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSettingsView.swift; sourceTree = "<group>"; };
 		D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectorHub.swift; sourceTree = "<group>"; };
 		D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubbleView.swift; sourceTree = "<group>"; };
 		D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatToolbox.swift; sourceTree = "<group>"; };
@@ -668,10 +677,12 @@
 			children = (
 				4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */,
 				123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */,
+				9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */,
 				3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */,
 				C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */,
 				DEBC34E500207D5A68BA0EAE /* ScreenCapturePermission.swift */,
 				EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */,
+				9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -734,6 +745,7 @@
 			isa = PBXGroup;
 			children = (
 				EE3D17BAB77EB7A2054C849E /* SettingsView.swift */,
+				D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1108,6 +1120,7 @@
 				AB46DD9B63F867D5DD5694F0 /* ArcaShortcuts.swift in Sources */,
 				AA28F03E1B9D53033B6D43DB /* ArcaSkin.swift in Sources */,
 				691BE8125B684F1717F806EC /* ArcaTheme.swift in Sources */,
+				91233AFF7C31C69206965542 /* ArcaVault.swift in Sources */,
 				95F26638142C47C082C1BE29 /* ArcaVoiceApp.swift in Sources */,
 				A7E568DBA52765B84E8DE21A /* AsideBridge.swift in Sources */,
 				331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */,
@@ -1186,6 +1199,8 @@
 				F3E745C6272817671239CF28 /* SkinsView.swift in Sources */,
 				C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */,
 				8AD1F41A8864A72E9047CA70 /* SpiritFace.swift in Sources */,
+				46FC4F2DB5B9CED78458AA8E /* StorageJanitor.swift in Sources */,
+				2D9A8B3174F06DC9B68D91FA /* StorageSettingsView.swift in Sources */,
 				2B08901B1DE80BE8563B618B /* SummaryNotifier.swift in Sources */,
 				48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */,
 				75A2C962704E733B29979FAB /* TaskListView.swift in Sources */,
@@ -1229,6 +1244,7 @@
 				69027D761CE5C84ACEDB8475 /* ArcaShortcuts.swift in Sources */,
 				61865228BC0D55E1A0C6FE63 /* ArcaSkin.swift in Sources */,
 				8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */,
+				A4C04AAB3DB114A755857E1B /* ArcaVault.swift in Sources */,
 				821675514E0AF335504778BC /* ArcaVoiceApp.swift in Sources */,
 				C382540473D03DB11EA5E569 /* AsideBridge.swift in Sources */,
 				C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */,
@@ -1307,6 +1323,8 @@
 				5105A62996215256730F9325 /* SkinsView.swift in Sources */,
 				8ABB73D05461DD7754A4FBA3 /* SlackHarvestFilter.swift in Sources */,
 				327C390E9EB82EC1888FDD5B /* SpiritFace.swift in Sources */,
+				FA8D01FEB53E5285127B5344 /* StorageJanitor.swift in Sources */,
+				643572A87436F0C521F11054 /* StorageSettingsView.swift in Sources */,
 				B9B4266E53EACFBD73AC798E /* SummaryNotifier.swift in Sources */,
 				821322D39F0C0A6B069DFB72 /* TaskEngine.swift in Sources */,
 				0E92345997357839377901B4 /* TaskListView.swift in Sources */,

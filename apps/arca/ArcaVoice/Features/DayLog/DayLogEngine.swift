@@ -110,7 +110,7 @@ final class DayLogEngine {
             statusMessage = "오늘 정리를 라이브러리에 저장했습니다."
             return session
         } catch {
-            statusMessage = error.localizedDescription
+            statusMessage = UserFacingError.message(for: error)
             DebugTrace.log("daylog digest failed: \(error)")
             return nil
         }

@@ -115,6 +115,10 @@ final class NightlyDigest {
         if count > 0 {
             defaults.set(Array(exported), forKey: Keys.exportedUIDs)
         }
+        // The brain as a file, refreshed on the same sweep — Memory/Memories.md.
+        if let facts = try? context.fetch(FetchDescriptor<MemoryFact>()), !facts.isEmpty {
+            try? ObsidianExporter.exportMemories(facts, arcaDirectory: ArcaVault.arcaFolder())
+        }
         return count
     }
 
@@ -268,10 +272,10 @@ final class NightlyDigest {
         return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
 
+    /// Never nil anymore: without a linked Obsidian vault the notes go to the
+    /// default ARCA folder in ~/Documents.
     private func vaultURL() -> URL? {
-        guard let path = AccountDefaults.string("obsidianVaultPath"),
-              !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
-        return URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+        ArcaVault.resolvedRoot()
     }
 
     private static func sourceLabel(_ source: SessionSource) -> String {

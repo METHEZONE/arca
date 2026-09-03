@@ -632,7 +632,7 @@ final class BrainEngine {
     }
 
     private static func friendlyMessage(for error: Error) -> String {
-        String(error.localizedDescription.prefix(140))
+        UserFacingError.message(for: error)
     }
 
     enum WeaveError: Error, LocalizedError {

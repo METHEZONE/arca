@@ -20,10 +20,9 @@ enum ObsidianAutoImport {
         let path = AccountDefaults.string("obsidianVaultPath")?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !path.isEmpty else {
-            // Remind once per launch cycle, not every heartbeat.
+            // No Obsidian vault linked: nothing to import, and nothing to nag
+            // about — ARCA keeps its own folder in ~/Documents regardless.
             defaults.set(now.timeIntervalSince1970, forKey: "obsidianLastAutoImportAt")
-            AppServices.shared.notch.showNotice(
-                "옵시디언 볼트 경로가 이 앱에 설정돼 있지 않아요 — 설정에서 지정하면 기억으로 가져올게요", seconds: 8)
             return
         }
 

@@ -315,7 +315,7 @@ enum FinalPassRunner {
             try await sender.sendSummary(to: recipient, sessionTitle: record.title,
                                          notes: notes, date: record.createdAt)
         } catch {
-            record.processingError = error.localizedDescription
+            record.processingError = UserFacingError.message(for: error)
             try? record.modelContext?.save()
         }
         #endif
@@ -326,15 +326,10 @@ enum FinalPassRunner {
         #if os(macOS)
         let defaults = UserDefaults.standard
         let enabled = defaults.object(forKey: "autoObsidianExport") as? Bool ?? true
-        guard enabled,
-              let path = AccountDefaults.string("obsidianVaultPath"),
-              !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return
-        }
+        guard enabled else { return }
 
         do {
-            let expanded = (path as NSString).expandingTildeInPath
-            _ = try ObsidianExporter.exportSession(record, to: URL(fileURLWithPath: expanded))
+            _ = try ObsidianExporter.exportSession(record, to: ArcaVault.resolvedRoot())
         } catch {
             DebugTrace.log("obsidian auto-export failed: \(error.localizedDescription)")
         }

@@ -19,7 +19,9 @@ struct SessionAudioBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if localFiles.isEmpty {
+            if session.audioAssets.isEmpty, session.duration > 0 {
+                purgedRow
+            } else if localFiles.isEmpty {
                 downloadRow
             } else {
                 playerRow
@@ -70,6 +72,21 @@ struct SessionAudioBar: View {
         }
         .buttonStyle(.borderless)
         .disabled(isWorking)
+    }
+
+    /// The janitor removed this recording's audio after its retention period.
+    private var purgedRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "internaldrive").foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L("오디오는 보관 기간이 지나 정리됐어요", "Audio was cleared after its retention period"))
+                    .font(.subheadline.weight(.medium))
+                Text(L("전사와 회의록은 그대로 남아 있어요. 보관 기간은 설정 › 저장 공간에서 바꿀 수 있어요.",
+                       "The transcript and notes are kept. Change the retention period in Settings › Storage."))
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
     }
 
     private var downloadRow: some View {

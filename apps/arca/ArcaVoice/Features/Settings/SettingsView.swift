@@ -68,6 +68,11 @@ struct SettingsView: View {
                 } label: {
                     Label(L("메모리 브레인", "Memory Brain"), systemImage: "brain.head.profile")
                 }
+                NavigationLink {
+                    StorageSettingsView()
+                } label: {
+                    Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
+                }
             } footer: {
                 Text(L("Gmail, 캘린더, 드라이브, Slack까지 — ARCA가 컨텍스트를 먼저 가져와서 이미 알고 있어요.",
                        "Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows."))

@@ -184,7 +184,7 @@ final class AmbientOps {
             RelaySync.shared.scheduleSync()
             lastError = nil
         } catch {
-            lastError = String(error.localizedDescription.prefix(140))
+            lastError = UserFacingError.message(for: error)
         }
     }
 
@@ -297,7 +297,7 @@ final class AmbientOps {
             #endif
         } catch {
             proposal.stateRaw = "failed"
-            lastError = String(error.localizedDescription.prefix(140))
+            lastError = UserFacingError.message(for: error)
         }
         try? context.save()
     }
@@ -422,7 +422,7 @@ final class AmbientOps {
                 generatedAt: .now)
             lastError = nil
         } catch {
-            lastError = String(error.localizedDescription.prefix(140))
+            lastError = UserFacingError.message(for: error)
         }
     }
 

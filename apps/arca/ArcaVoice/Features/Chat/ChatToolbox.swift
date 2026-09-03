@@ -165,15 +165,7 @@ enum ChatToolbox {
 
     /// Notes land in the vault's ARCA/Notes folder, or ~/Documents/ARCA.
     static func saveNote(title: String, markdown: String) throws -> URL {
-        let vault = AccountDefaults.string("obsidianVaultPath") ?? ""
-        let base: URL
-        if !vault.isEmpty, FileManager.default.fileExists(atPath: vault) {
-            base = URL(fileURLWithPath: vault).appendingPathComponent("ARCA/Notes", isDirectory: true)
-        } else {
-            base = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                .appendingPathComponent("ARCA", isDirectory: true)
-        }
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        let base = ArcaVault.folder(.notes)
         let day = MeetingNoteMarkdown.dayString(from: .now)
         let slug = MeetingNoteMarkdown.slugify(title)
         let url = base.appendingPathComponent("\(day) \(slug).md")

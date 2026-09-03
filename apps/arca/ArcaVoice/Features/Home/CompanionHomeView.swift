@@ -120,6 +120,7 @@ struct CompanionHomeView: View {
         }
         .animation(.spring(duration: 0.35), value: services.coordinator.errorMessage != nil)
         .toolbar { toolbar }
+        .onAppear { StorageJanitor.shared.runIfDue(context: modelContext) }
         .sheet(isPresented: $showSettings) {
             NavigationStack { SettingsView() }
         }

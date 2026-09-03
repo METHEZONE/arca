@@ -134,6 +134,7 @@ struct UserWikiView: View {
                     .generate(ownerName: ownerName, memories: Array(memoryInputs), sessions: sessionInputs)
                 markdown = generated
                 AccountDefaults.set(generated, for: "userWikiMarkdown")
+                try? Data(generated.utf8).write(to: ArcaVault.folder(.wiki).appendingPathComponent("Wiki.md"), options: .atomic)
                 generatedAt = Date.now.timeIntervalSince1970
                 UserDefaults.standard.set(generatedAt, forKey: AccountDefaults.key("userWikiGeneratedAt"))
             } catch {

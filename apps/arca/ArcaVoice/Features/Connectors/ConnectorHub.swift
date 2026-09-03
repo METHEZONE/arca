@@ -145,8 +145,8 @@ final class ConnectorHub {
             accounts = mapped
             lastError = nil
         } catch {
-            lastError = L("커넥터를 불러오지 못했어요: \(error.localizedDescription)",
-                          "Couldn't load connectors: \(error.localizedDescription)")
+            lastError = L("커넥터를 불러오지 못했어요: \(UserFacingError.message(for: error))",
+                          "Couldn't load connectors: \(UserFacingError.message(for: error))")
         }
     }
 
@@ -225,8 +225,8 @@ final class ConnectorHub {
                 let added = Self.insertNewFacts(items, info: info, into: context, seen: &seen)
                 if added > 0 { counts.append((info.shortName, added)) }
             } catch {
-                lastError = L("\(info.displayName) 가져오기에 실패했어요: \(error.localizedDescription)",
-                              "Pull failed for \(info.displayName): \(error.localizedDescription)")
+                lastError = L("\(info.displayName) 가져오기에 실패했어요: \(UserFacingError.message(for: error))",
+                              "Pull failed for \(info.displayName): \(UserFacingError.message(for: error))")
             }
         }
         try? context.save()
@@ -252,8 +252,8 @@ final class ConnectorHub {
                     added == 1 ? "Pulled 1 \(info.shortName) item" : "Pulled \(added) \(info.shortName) items")
                 : L("\(info.shortName)에서 새로 가져올 항목이 없어요.", "Nothing new from \(info.shortName).")
         } catch {
-            lastError = L("\(info.displayName) 가져오기에 실패했어요: \(error.localizedDescription)",
-                          "Pull failed for \(info.displayName): \(error.localizedDescription)")
+            lastError = L("\(info.displayName) 가져오기에 실패했어요: \(UserFacingError.message(for: error))",
+                          "Pull failed for \(info.displayName): \(UserFacingError.message(for: error))")
         }
     }
 

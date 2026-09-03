@@ -34,3 +34,6 @@ ir/arca-pitch-router-preview.html
 # Xcode user state
 xcuserdata/
 apps/arca/build/
+
+# owner key backups must never be tracked
+apps/arca/ArcaVoice/Support/BundledKeys.plist.*

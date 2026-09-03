@@ -421,14 +421,12 @@ struct ConnectorsView: View {
     }
     #endif
 
+    /// Nothing to set anymore: with no linked vault, ARCA writes to its own
+    /// folder in ~/Documents (see `ArcaVault`). The row just shows where.
     private func setDefaultObsidianVaultIfNeeded() {
-        guard AccountStore.isDefault(AccountStore.currentAccountId()),
-              obsidianVaultPath.isEmpty else { return }
-        let defaultURL = URL(fileURLWithPath: "/Users/minsungpark/MY ZONE/ME", isDirectory: true)
-        var isDirectory: ObjCBool = false
-        if FileManager.default.fileExists(atPath: defaultURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
-            obsidianVaultPath = defaultURL.path
-            AccountDefaults.set(defaultURL.path, for: "obsidianVaultPath")
+        if obsidianVaultPath.isEmpty {
+            obsidianVaultPath = ""
+            _ = ArcaVault.arcaFolder()
         }
     }
 

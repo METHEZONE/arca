@@ -24,7 +24,9 @@ final class ChannelWriter: @unchecked Sendable {
         let fileRate = aacRates.contains(sourceFormat.sampleRate) ? sourceFormat.sampleRate : 48000
         // The encoder rejects bitrates outside the valid range for the
         // rate/channel combo (96kbps @16kHz mono = '!dat') — scale it.
-        let bitRate = min(96_000, Int(fileRate) * 2) * Int(channelCount)
+        // Speech only: 40 kbps/channel AAC is transparent for transcription and
+        // playback, and less than half the size of the old 96 kbps.
+        let bitRate = min(40_000, Int(fileRate) * 2) * Int(channelCount)
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
             AVSampleRateKey: fileRate,
