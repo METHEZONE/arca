@@ -7,7 +7,7 @@ import ArcaVoiceCore
 public struct MemoryExtractor: Sendable {
     private let apiKey: String
     private let model: String
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
 
     public struct Extracted: Sendable {
         public var text: String

@@ -422,7 +422,7 @@ final class VitalsEngine {
 
     func runCoach() async {
         guard !isCoaching else { return }
-        guard let key = KeychainStore.get(.anthropic), !key.isEmpty else {
+        guard let key = ArcaCloud.anthropicKey, !key.isEmpty else {
             statusMessage = L("Anthropic API 키가 필요해요 — 설정에서 넣어주세요.",
                               "An Anthropic API key is needed — add one in Settings.")
             return

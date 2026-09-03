@@ -175,7 +175,7 @@ final class NightlyDigest {
         // Insights are best-effort: a missing key or a failed call must never cost
         // the user the meeting notes themselves, which are the durable part.
         var insightMarkdown: String?
-        if let key = KeychainStore.get(.anthropic), !key.isEmpty {
+        if let key = ArcaCloud.anthropicKey, !key.isEmpty {
             let model = defaults.string(forKey: "chatModel") ?? "claude-sonnet-5"
             do {
                 let insight = try await DailyInsightGenerator(apiKey: key, model: model)

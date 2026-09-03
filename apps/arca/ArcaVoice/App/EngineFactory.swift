@@ -38,7 +38,7 @@ enum EngineFactory {
     }
 
     static var hasSummarizerKey: Bool {
-        KeychainStore.get(.anthropic)?.isEmpty == false || KeychainStore.get(.openAI)?.isEmpty == false
+        ArcaCloud.anthropicKey?.isEmpty == false || KeychainStore.get(.openAI)?.isEmpty == false
     }
 
     /// Defaults to the free engine. Transcription is by far the largest line on
@@ -57,7 +57,7 @@ enum EngineFactory {
     ///   default for everything else.
     static func processingPipeline(engine: TranscriptionEngine? = nil) -> ProcessingPipeline? {
         let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
-        let anthropicKey = KeychainStore.get(.anthropic).flatMap { $0.isEmpty ? nil : $0 }
+        let anthropicKey = ArcaCloud.anthropicKey.flatMap { $0.isEmpty ? nil : $0 }
 
         let finalTranscriber: any FinalTranscriber
         switch engine ?? transcriptionEngine {

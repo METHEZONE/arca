@@ -31,7 +31,7 @@ final class MemoryRemarkProvider {
         text = fallback
 
         guard !isGenerating,
-              let apiKey = KeychainStore.get(.anthropic),
+              let apiKey = ArcaCloud.anthropicKey,
               !apiKey.isEmpty,
               !facts.isEmpty else { return }
 

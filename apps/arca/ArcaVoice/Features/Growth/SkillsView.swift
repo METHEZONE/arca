@@ -102,7 +102,7 @@ struct SkillsView: View {
     private func isAwake(_ skill: Skill) -> Bool {
         switch skill.requirement {
         case .none: return true
-        case .anthropic: return KeychainStore.get(.anthropic) != nil
+        case .anthropic: return ArcaCloud.anthropicKey != nil
         case .openAI: return KeychainStore.get(.openAI) != nil
         case .connector(let slug): return hub.accounts[slug] != nil
         case .screenRecording:

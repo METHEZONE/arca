@@ -8,7 +8,7 @@ import Store
 public struct AutonomyClassifier: Sendable {
     private let apiKey: String
     private let model: String
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
 
     public struct Judgment: Sendable {
         public var actionKind: TaskActionKind

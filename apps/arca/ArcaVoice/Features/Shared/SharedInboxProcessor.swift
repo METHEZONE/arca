@@ -26,7 +26,7 @@ final class SharedInboxProcessor {
     @discardableResult
     func generate(modelContext: ModelContext) async -> RecordingSession? {
         guard let item = offering,
-              let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else { return nil }
+              let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else { return nil }
         isWorking = true
         defer { isWorking = false }
 

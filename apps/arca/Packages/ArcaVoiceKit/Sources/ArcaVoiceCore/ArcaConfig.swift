@@ -125,7 +125,7 @@ public enum ArcaConfig {
             }
         }
         if let key = keys.anthropic, !key.isEmpty,
-           fileChanged || KeychainStore.get(.anthropic) == nil {
+           fileChanged || ArcaCloud.anthropicKey == nil {
             do {
                 try KeychainStore.set(key, for: .anthropic)
                 NSLog("[ArcaVoice] key import: anthropic stored")
@@ -136,7 +136,7 @@ public enum ArcaConfig {
         // Composio는 connections.json이 원본 — Keychain에 없으면 같이 채워서
         // 커넥터 허브가 어느 빌드(본편/테스트)에서든 바로 살아나게 한다.
         if let composio = loadConnections()?.composioApiKey, !composio.isEmpty,
-           KeychainStore.get(.composio) == nil {
+           ArcaCloud.composioKey == nil {
             do {
                 try KeychainStore.set(composio, for: .composio)
                 NSLog("[ArcaVoice] key import: composio stored")

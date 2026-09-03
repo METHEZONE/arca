@@ -79,7 +79,7 @@ public struct ComposioCalendarReader: Sendable {
     private let apiKey: String
     private let userId: String
     private let connectedAccountId: String
-    private let endpoint = URL(string: "https://backend.composio.dev/api/v3/tools/execute/GOOGLECALENDAR_EVENTS_LIST")!
+    private let endpoint = URL(string: "\(ArcaCloud.composioBase)/tools/execute/GOOGLECALENDAR_EVENTS_LIST")!
 
     public init(apiKey: String, userId: String, connectedAccountId: String) {
         self.apiKey = apiKey

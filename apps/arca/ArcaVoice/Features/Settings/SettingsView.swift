@@ -269,7 +269,7 @@ struct SettingsView: View {
             reloadAccounts()
             loadScopedSettings()
             openAIKey = KeychainStore.get(.openAI) ?? ""
-            anthropicKey = KeychainStore.get(.anthropic) ?? ""
+            anthropicKey = ArcaCloud.anthropicKey ?? ""
         }
         .alert(L("계정 추가", "Add account"), isPresented: $showingAddAccount) {
             TextField(L("이름", "Name"), text: $newAccountName)
@@ -717,7 +717,7 @@ struct SettingsView: View {
         reloadAccounts()
         loadScopedSettings()
         openAIKey = KeychainStore.get(.openAI) ?? ""
-        anthropicKey = KeychainStore.get(.anthropic) ?? ""
+        anthropicKey = ArcaCloud.anthropicKey ?? ""
         accountNotice = L("계정 전환은 ARCA를 다시 시작한 후 적용됩니다.",
                           "Switching accounts takes effect after you restart ARCA.")
     }
@@ -728,7 +728,7 @@ struct SettingsView: View {
         reloadAccounts()
         loadScopedSettings()
         openAIKey = KeychainStore.get(.openAI) ?? ""
-        anthropicKey = KeychainStore.get(.anthropic) ?? ""
+        anthropicKey = ArcaCloud.anthropicKey ?? ""
         accountNotice = L("계정 전환은 ARCA를 다시 시작한 후 적용됩니다.",
                           "Switching accounts takes effect after you restart ARCA.")
     }

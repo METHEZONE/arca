@@ -32,7 +32,7 @@ final class ContextEngine {
     private(set) var error: String?
 
     private var item: SharedInbox.Item?
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
     private var model: String {
         UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
     }
@@ -44,7 +44,7 @@ final class ContextEngine {
         error = nil
         defer { isAnalyzing = false }
 
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
             error = "Add an Anthropic key in Settings to read this."
             return
         }
@@ -73,7 +73,7 @@ final class ContextEngine {
     /// A quick ARCA reply to a typed instruction, grounded in the analysis
     /// summary (and the shared image, if any) — used for a direct inline answer.
     func answerDirect(_ instruction: String) async -> String {
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
             return "Add an Anthropic key in Settings to ask ARCA."
         }
         var parts: [ChatMessage.Part] = []
@@ -146,7 +146,7 @@ final class ContextEngine {
 
     private func savePlan(context: ModelContext) async -> String {
         guard let item else { return "Nothing to build a plan from." }
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
             return "Add an Anthropic key in Settings to build the plan."
         }
         let planner = ClaudeVisionPlanner(apiKey: apiKey, model: model)

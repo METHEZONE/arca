@@ -9,6 +9,7 @@ import UIKit
 /// on the right (stacked on iPhone). Volatile text breathes at lower opacity
 /// and settles when finalized.
 struct RecordView: View {
+    @State private var idlePulse = false
     @Environment(RecordingCoordinator.self) private var coordinator
     @Environment(\.modelContext) private var modelContext
     @AppStorage("ownerName") private var ownerName = "Me"
@@ -34,24 +35,37 @@ struct RecordView: View {
     }
 
     private var idleView: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 22) {
             Spacer()
             recordButton
-            Text(L("눌러서 녹음을 시작하세요", "Tap to start recording"))
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 6) {
+                Text(L("회의를 시작할까요?", "Ready to record?"))
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                Text(L("ARCA를 누르면 바로 듣기 시작해요. 끝나면 요약·결정·액션 아이템이 정리돼요.",
+                       "Tap ARCA and it starts listening. When you stop, you get the summary, decisions and action items."))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 380)
+            }
 
             #if os(macOS)
-            Toggle(isOn: Binding(
-                get: { coordinator.includeSystemAudio },
-                set: { coordinator.includeSystemAudio = $0 }
-            )) {
-                Label(L("상대방 오디오도 함께 녹음 (영상 통화)",
-                        "Also capture the other person's audio (video calls)"),
-                      systemImage: "speaker.wave.2.fill")
+            Button {
+                coordinator.includeSystemAudio.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: coordinator.includeSystemAudio ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(coordinator.includeSystemAudio ? ArcaSkins.current.mid : .secondary)
+                    Image(systemName: "speaker.wave.2.fill").foregroundStyle(.secondary)
+                    Text(L("상대방 소리도 함께 (영상 통화·회의)", "Include the other side (calls & meetings)"))
+                        .font(.system(.callout, design: .rounded, weight: .medium))
+                }
+                .padding(.horizontal, 14).padding(.vertical, 9)
+                .background(.white.opacity(coordinator.includeSystemAudio ? 0.10 : 0.05), in: Capsule())
+                .overlay(Capsule().strokeBorder(coordinator.includeSystemAudio ? ArcaSkins.current.mid.opacity(0.5) : .white.opacity(0.08)))
             }
-            .toggleStyle(.checkbox)
-            .padding(.top, 8)
+            .buttonStyle(.arcaPress)
+            .padding(.top, 4)
             #endif
             Spacer()
         }
@@ -181,14 +195,29 @@ struct RecordView: View {
                     languageHints: TranscriptionPrefs.languageHints)
             }
         } label: {
-            Circle()
-                .fill(ArcaTheme.idle)
-                .frame(width: 96, height: 96)
-                .overlay {
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 36, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+            ZStack {
+                // Breathing ring, then ARCA itself — the companion is the button.
+                Circle()
+                    .strokeBorder(ArcaSkins.current.mid.opacity(0.35), lineWidth: 2)
+                    .frame(width: 196, height: 196)
+                    .scaleEffect(idlePulse ? 1.06 : 0.96)
+                    .opacity(idlePulse ? 0.25 : 0.7)
+                Circle()
+                    .fill(ArcaSkins.current.mid.opacity(0.10))
+                    .frame(width: 176, height: 176)
+                ArcaFace(mood: .listening, size: 128, halo: true, followsPointer: true)
+                    .frame(width: 150, height: 150)
+                Label(L("녹음 시작", "Start"), systemImage: "waveform")
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(ArcaSkins.current.mid, in: Capsule())
+                    .foregroundStyle(.black)
+                    .offset(y: 92)
+            }
+            .frame(width: 200, height: 220)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { idlePulse = true }
+            }
         }
         .buttonStyle(.arcaPress)
     }

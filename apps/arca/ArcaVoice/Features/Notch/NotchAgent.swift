@@ -97,7 +97,7 @@ final class NotchAgent {
         // Watchdog: a stuck vision call can't wedge the agent — it recovers to idle.
         set(.readingCapture, autoDismissAfter: 80)
         Task { @MainActor in
-            guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+            guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
                 DebugTrace.log("no anthropic key")
                 set(.notice("Anthropic key needed — add it in Settings to create screenshot action plans."), autoDismissAfter: 6)
                 return

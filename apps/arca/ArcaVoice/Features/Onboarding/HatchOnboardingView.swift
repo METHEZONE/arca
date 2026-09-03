@@ -644,10 +644,19 @@ private struct PowerCard: View {
     @ViewBuilder
     private var extras: some View {
         switch power {
-        case .brain where status != .awake && KeychainStore.get(.anthropic) == nil:
-            SecureField(L("Anthropic API 키 — Brain은 Claude로 생각해요", "Anthropic API key — Brain thinks with Claude"), text: $anthropicKey)
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 360)
+        case .brain where status != .awake && ArcaCloud.anthropicKey == nil:
+            VStack(alignment: .leading, spacing: 4) {
+                SecureField(L("초대 코드 또는 Anthropic API 키", "Invite code or Anthropic API key"), text: $anthropicKey)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 360)
+                Text(L("초대 메일에 있는 코드를 붙여 넣으면 키 없이 바로 써요. 본인 키(sk-ant-…)가 있으면 그걸 넣어도 돼요.",
+                       "Paste the code from your invite mail to use ARCA without a key — or your own key (sk-ant-…)."))
+                    .font(.caption).foregroundStyle(.white.opacity(0.45))
+                if status == .needsSettings {
+                    Text(L("코드 모양이 맞지 않아요 — 메일의 코드를 그대로 붙여 넣어 주세요.", "That doesn't look like a code — paste it exactly as in the mail."))
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            }
         case .ears where KeychainStore.get(.openAI) == nil:
             VStack(alignment: .leading, spacing: 4) {
                 Text(L("선택: OpenAI 키가 있으면 다중 화자 분리가 켜져요", "Optional: an OpenAI key turns on multi-speaker separation"))
@@ -679,7 +688,7 @@ private struct PowerCard: View {
             ProgressView().controlSize(.small)
         case .locked, .needsSettings:
             Button(action: tap) {
-                Text(status == .needsSettings ? L("설정 열기", "Open Settings") : L("깨우기", "Wake"))
+                Text(status == .needsSettings && power != .brain ? L("설정 열기", "Open Settings") : L("깨우기", "Wake"))
                     .font(.subheadline.weight(.bold))
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.white.opacity(0.12), in: Capsule())
@@ -690,7 +699,7 @@ private struct PowerCard: View {
 
     private func autoWake() {
         switch power {
-        case .brain where KeychainStore.get(.anthropic) != nil: wake()
+        case .brain where ArcaCloud.anthropicKey != nil: wake()
         case .ears where MicrophonePermission.isGranted: saveOpenAI(); wake()
         case .eyes where MacPermission.screenRecording.isGranted: enableDayLog(); wake()
         case .wiki: wake()
@@ -703,7 +712,12 @@ private struct PowerCard: View {
         case .brain:
             let key = anthropicKey.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !key.isEmpty else { return }
-            try? KeychainStore.set(key, for: .anthropic)
+            if key.hasPrefix("sk-ant") {
+                try? KeychainStore.set(key, for: .anthropic)
+            } else if ArcaCloud.setInviteToken(key) == nil {
+                status = .needsSettings
+                return
+            }
             wake()
         case .ears:
             saveOpenAI()
@@ -782,8 +796,8 @@ private struct ConnectorQuickConnect: View {
             .padding(.top, 28)
 
             if !hub.isConfigured {
-                Text(L("커넥터 허브 키가 아직 없어요. 나중에 설정 › 커넥터에서 Composio 키를 넣으면 바로 연결할 수 있어요.",
-                       "No connector-hub key yet. Add a Composio key later in Settings › Connectors and this lights up."))
+                Text(L("먼저 Brain 단계에서 초대 코드를 넣어주세요 — 그러면 여기서 바로 연결할 수 있어요.",
+                       "Enter your invite code in the Brain step first — then these connect right here."))
                     .font(.callout).foregroundStyle(.orange)
                     .frame(maxWidth: 560)
                     .multilineTextAlignment(.center)
@@ -833,7 +847,7 @@ private struct ConnectorQuickConnect: View {
         .task {
             // A fresh account should be a fresh person to Composio — never inherit
             // the owner's connected accounts through a shared user id.
-            if AccountDefaults.string("composioUserId") == nil {
+            if ArcaCloud.composioUserId == nil {
                 let suffix = String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(8)).uppercased()
                 AccountDefaults.set("arca-\(suffix)", for: "composioUserId")
             }

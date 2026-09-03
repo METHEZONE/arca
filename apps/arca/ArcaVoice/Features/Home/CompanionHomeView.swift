@@ -67,6 +67,10 @@ struct CompanionHomeView: View {
     @State private var projectDialogConversationId: String?
     @State private var newProjectName = ""
     @State private var heroActivity: ArcaFace.Activity?
+    /// The post-hatch walk-through, shown once per account until skipped or finished.
+    @State private var showTour = AccountDefaults.bool(MacOnboarding.onboardedKey) == true
+        && AccountDefaults.bool(CompanionTour.doneKey) != true
+    @State private var tourFocus: ArcaSection?
 
     private let background = Color(red: 0.03, green: 0.05, blue: 0.09)
     private var coordinator: RecordingCoordinator { services.coordinator }
@@ -123,6 +127,23 @@ struct CompanionHomeView: View {
             ProposalToast()
                 .padding(.top, 12)
                 .padding(.trailing, 20)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if showTour {
+                CompanionTour(
+                    companionName: HatchedCompanion.load()?.name ?? "ARCA",
+                    onFocus: { section in
+                        withAnimation(.spring(duration: 0.3)) {
+                            tourFocus = section
+                            if let section { mode = section }
+                        }
+                    },
+                    onStartRecording: { startNewRecording() },
+                    onFinish: { withAnimation(.easeOut(duration: 0.3)) { showTour = false } })
+                .padding(.trailing, showRightRail ? 320 : 20)
+                .padding(.bottom, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .toolbar { toolbar }
         .onAppear { StorageJanitor.shared.runIfDue(context: modelContext) }
@@ -218,6 +239,14 @@ struct CompanionHomeView: View {
             VStack(spacing: 4) {
                 ForEach(ArcaSection.macSidebar) { item in
                     sidebarButton(mode: item)
+                        .overlay {
+                            if tourFocus == item {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(ArcaSkins.current.mid, lineWidth: 2)
+                                    .shadow(color: ArcaSkins.current.mid.opacity(0.7), radius: 8)
+                                    .transition(.opacity)
+                            }
+                        }
                 }
             }
             .padding(.horizontal, 10)
@@ -435,12 +464,15 @@ struct CompanionHomeView: View {
             recordCTA
             statsRow
 
-            // Same two cards the iPhone home shows, from the same data.
-            HStack(alignment: .top, spacing: ArcaSpacing.md) {
-                MorningMomentCard { mode = .condition }
-                RecoveredTimeCard()
+            // Same two cards the iPhone home shows, from the same data. The Beta
+            // edition has no body tracking, so it shows neither.
+            if !ArcaEdition.isBeta {
+                HStack(alignment: .top, spacing: ArcaSpacing.md) {
+                    MorningMomentCard { mode = .condition }
+                    RecoveredTimeCard()
+                }
+                .frame(maxWidth: 760)
             }
-            .frame(maxWidth: 760)
 
             recentHighlights
             Spacer(minLength: 18)
@@ -490,14 +522,16 @@ struct CompanionHomeView: View {
                      systemImage: "brain.head.profile")
             statChip(L("세션 \(sessions.count)개", "\(sessions.count) sessions"),
                      systemImage: "waveform")
-            Button {
-                withAnimation(.spring(duration: 0.18)) { mode = .condition }
-            } label: {
-                statChip(vitals.ringScore.map { L("몰입 \($0)", "Focus \($0)") }
-                         ?? L("컨디션", "Condition"),
-                         systemImage: "bolt.heart")
+            if !ArcaEdition.isBeta {
+                Button {
+                    withAnimation(.spring(duration: 0.18)) { mode = .condition }
+                } label: {
+                    statChip(vitals.ringScore.map { L("몰입 \($0)", "Focus \($0)") }
+                             ?? L("컨디션", "Condition"),
+                             systemImage: "bolt.heart")
+                }
+                .buttonStyle(.arcaPress)
             }
-            .buttonStyle(.arcaPress)
             Button {
                 showSkins = true
             } label: {

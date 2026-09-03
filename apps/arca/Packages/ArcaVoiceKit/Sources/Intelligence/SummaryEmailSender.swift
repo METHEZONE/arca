@@ -13,7 +13,7 @@ public struct ComposioEmailSender: Sendable {
     private let apiKey: String
     private let userId: String
     private let connectedAccountId: String
-    private let endpoint = URL(string: "https://backend.composio.dev/api/v3/tools/execute/GMAIL_SEND_EMAIL")!
+    private let endpoint = URL(string: "\(ArcaCloud.composioBase)/tools/execute/GMAIL_SEND_EMAIL")!
     private let sendHandler: @Sendable (String, String, String) async throws -> Void
 
     public init(apiKey: String, userId: String, connectedAccountId: String) {
@@ -42,13 +42,18 @@ public struct ComposioEmailSender: Sendable {
     /// Builds a sender from ~/.arca/connections.json; nil when Composio or the
     /// Gmail connection isn't configured.
     public static func fromArcaConfig() -> ComposioEmailSender? {
-        guard let connections = ArcaConfig.loadConnections(),
-              let apiKey = connections.composioApiKey, !apiKey.isEmpty,
-              let gmailAccount = connections.connectedAccounts?["GMAIL"], !gmailAccount.isEmpty else {
-            return nil
+        if let connections = ArcaConfig.loadConnections(),
+           let apiKey = connections.composioApiKey, !apiKey.isEmpty,
+           let gmailAccount = connections.connectedAccounts?["GMAIL"], !gmailAccount.isEmpty {
+            return ComposioEmailSender(apiKey: apiKey, userId: connections.userId,
+                                       connectedAccountId: gmailAccount)
         }
-        return ComposioEmailSender(apiKey: apiKey, userId: connections.userId,
-                                   connectedAccountId: gmailAccount)
+        // ARCA Cloud: the proxy holds the key and scopes calls to this user's
+        // entity; Composio picks that entity's connected Gmail on its own.
+        if let token = ArcaCloud.inviteToken, let userId = ArcaCloud.composioUserId {
+            return ComposioEmailSender(apiKey: token, userId: userId, connectedAccountId: "")
+        }
+        return nil
     }
 
     public func send(to recipient: String, subject: String, htmlBody: String) async throws {
@@ -58,13 +63,12 @@ public struct ComposioEmailSender: Sendable {
     private static func sendViaComposio(apiKey: String, userId: String, connectedAccountId: String,
                                         recipient: String, subject: String,
                                         htmlBody: String) async throws {
-        let endpoint = URL(string: "https://backend.composio.dev/api/v3/tools/execute/GMAIL_SEND_EMAIL")!
+        let endpoint = URL(string: "\(ArcaCloud.composioBase)/tools/execute/GMAIL_SEND_EMAIL")!
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = [
-            "connected_account_id": connectedAccountId,
+        var body: [String: Any] = [
             "user_id": userId,
             "arguments": [
                 "recipient_email": recipient,
@@ -73,6 +77,7 @@ public struct ComposioEmailSender: Sendable {
                 "is_html": true,
             ] as [String: Any],
         ]
+        if !connectedAccountId.isEmpty { body["connected_account_id"] = connectedAccountId }
         let payload = try JSONSerialization.data(withJSONObject: body)
 
         // upload(from:) — HTML summary bodies can be large; data(for:) with a big

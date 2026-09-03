@@ -107,7 +107,7 @@ final class ZoneEngine {
 
     /// One polling pass: pull recent inbound items, classify, auto-handle or queue.
     private func pollOnce() async {
-        guard let key = KeychainStore.get(.anthropic), !key.isEmpty else { return }
+        guard let key = ArcaCloud.anthropicKey, !key.isEmpty else { return }
         let items = await ZoneSources.recentInbound(limit: 8)
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         let classifier = AutonomyClassifier(apiKey: key, model: model)
@@ -167,7 +167,7 @@ final class ZoneEngine {
             "tools": [tool], "tool_choice": ["type": "tool", "name": "offer_choices"],
             "messages": [["role": "user", "content": [["type": "text", "text": userText]]]],
         ]
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var request = URLRequest(url: ArcaCloud.anthropicMessagesURL)
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")

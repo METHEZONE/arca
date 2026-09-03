@@ -16,7 +16,7 @@ final class TaskEngine {
     private(set) var runningCount = 0
 
     private var anthropicKey: String? {
-        let k = KeychainStore.get(.anthropic); return (k?.isEmpty == false) ? k : nil
+        let k = ArcaCloud.anthropicKey; return (k?.isEmpty == false) ? k : nil
     }
     private var model: String {
         UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"

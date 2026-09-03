@@ -86,7 +86,7 @@ final class DayLogEngine {
         do {
             let timeline = await digestTimelineMarkdown(context: context)
             let snapshots = await sampledSnapshotData()
-            guard let key = KeychainStore.get(.anthropic), !key.isEmpty else {
+            guard let key = ArcaCloud.anthropicKey, !key.isEmpty else {
                 statusMessage = "Anthropic API key가 없어 오늘 정리를 만들 수 없습니다."
                 DebugTrace.log("daylog digest skipped: missing anthropic key")
                 return nil

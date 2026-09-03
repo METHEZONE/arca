@@ -38,7 +38,7 @@ public struct ClaudeAgent: Sendable {
 
     private let apiKey: String
     private let model: String
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
 
     public init(apiKey: String, model: String) {
         self.apiKey = apiKey

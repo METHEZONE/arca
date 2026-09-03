@@ -12,6 +12,7 @@ export default function ArcaDash() {
   const [days, setDays] = useState(14);
   const [link, setLink] = useState<string | null>(null);
   const [expires, setExpires] = useState<string | null>(null);
+  const [invite, setInvite] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "busy" | "error">("idle");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -36,6 +37,7 @@ export default function ArcaDash() {
       if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setLink(data.link);
       setExpires(data.expiresAt);
+      setInvite(data.invite ?? null);
       setPhase("idle");
     } catch (err) {
       setError((err as Error).message);
@@ -45,7 +47,7 @@ export default function ArcaDash() {
 
   const mailto = link
     ? `mailto:${email}?subject=${encodeURIComponent("ARCA 베타 다운로드 링크")}&body=${encodeURIComponent(
-        `안녕하세요! ARCA macOS 베타 링크입니다 (14일 유효).\n\n${link}\n\n설치: zip 풀고 응용 프로그램으로 이동 → 첫 실행은 오른쪽 클릭 › 열기.\n온보딩에서 본인 Anthropic API 키를 넣어주세요 (console.anthropic.com).\n\niPhone은 TestFlight: https://testflight.apple.com/join/U78MNCxj\n\n— 박민성`
+        `안녕하세요! ARCA macOS 베타 링크입니다 (14일 유효).\n\n${link}\n\n설치: 다운로드한 파일을 열어 ARCA Beta를 응용 프로그램 폴더로 옮기고 실행하세요.\n\n초대 코드 (온보딩 "Brain" 단계에 붙여 넣으면 API 키 없이 바로 쓸 수 있어요, 90일 유효):\n${invite ?? ""}\n\niPhone은 TestFlight: https://testflight.apple.com/join/U78MNCxj\n\n— 박민성`
       )}`
     : "";
 
@@ -78,6 +80,12 @@ export default function ArcaDash() {
           <div style={{ display: "grid", gap: 10, background: "rgba(82,219,115,0.08)", border: "1px solid rgba(82,219,115,0.35)", padding: 18, borderRadius: 16 }}>
             <p style={{ margin: 0, fontWeight: 700 }}>승인 링크 · {expires ? new Date(expires).toLocaleDateString("ko-KR") : ""}까지</p>
             <code style={{ wordBreak: "break-all", fontSize: 12, opacity: 0.85 }}>{link}</code>
+            {invite && (
+              <>
+                <p style={{ margin: "6px 0 0", fontWeight: 700 }}>초대 코드 (키 없이 ARCA Cloud 사용, 90일)</p>
+                <code style={{ wordBreak: "break-all", fontSize: 12, opacity: 0.85 }}>{invite}</code>
+              </>
+            )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
                 type="button"

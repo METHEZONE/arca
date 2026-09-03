@@ -312,11 +312,11 @@ final class AppServices {
                 DebugTrace.log("nettest POST-big-echo-upload: ERROR \(error)")
             }
         }
-        var small = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var small = URLRequest(url: ArcaCloud.anthropicMessagesURL)
         small.httpMethod = "POST"
         small.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         small.setValue("application/json", forHTTPHeaderField: "content-type")
-        small.setValue(KeychainStore.get(.anthropic) ?? "", forHTTPHeaderField: "x-api-key")
+        small.setValue(ArcaCloud.anthropicKey ?? "", forHTTPHeaderField: "x-api-key")
         small.httpBody = try? JSONSerialization.data(withJSONObject: [
             "model": "claude-sonnet-5", "max_tokens": 16,
             "messages": [["role": "user", "content": "hi"]],

@@ -330,7 +330,7 @@ struct HomeView: View {
                                failed: true)
                 return
             }
-            guard let key = KeychainStore.get(.anthropic), !key.isEmpty else {
+            guard let key = ArcaCloud.anthropicKey, !key.isEmpty else {
                 showShotResult(L("Anthropic 키가 필요해요 — 설정을 확인해 주세요.",
                                  "Anthropic key needed — check Settings."),
                                failed: true)

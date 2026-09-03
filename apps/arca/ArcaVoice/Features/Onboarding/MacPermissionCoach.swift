@@ -121,6 +121,12 @@ final class MacPermissionCoach {
         if let url = permission.settingsURL {
             NSWorkspace.shared.open(url)
         }
+        // Microphone is a plain switch list — nothing to drop, so no drag card;
+        // the pane is open and we just wait for the switch to flip.
+        guard permission.acceptsAppDrop else {
+            startPolling(permission)
+            return
+        }
         // A beat, so the panel lands on top of System Settings rather than being
         // buried by it as it comes forward.
         Task { @MainActor in
@@ -184,7 +190,9 @@ final class MacPermissionCoach {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
-        panel.isMovableByWindowBackground = true
+        // Dragging the icon must drag the icon, not the card. A movable
+        // background swallowed the drag and the whole panel followed the pointer.
+        panel.isMovableByWindowBackground = false
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.becomesKeyOnlyIfNeeded = true

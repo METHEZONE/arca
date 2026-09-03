@@ -21,7 +21,7 @@ public struct MeetingRoster: Sendable, Codable, Equatable {
 public struct MeetingRosterReader: Sendable {
     private let apiKey: String
     private let model: String
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
 
     public init(apiKey: String, model: String = "claude-haiku-4-5-20251001") {
         self.apiKey = apiKey

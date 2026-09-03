@@ -29,13 +29,13 @@ final class AmbientOps {
     // MARK: - Composio plumbing
 
     private var composioKey: String? {
-        let k = KeychainStore.get(.composio); return (k?.isEmpty == false) ? k : nil
+        let k = ArcaCloud.composioKey; return (k?.isEmpty == false) ? k : nil
     }
     private var composioUser: String? {
-        AccountDefaults.string("composioUserId")
+        ArcaCloud.composioUserId
     }
     private var anthropicKey: String? {
-        let k = KeychainStore.get(.anthropic); return (k?.isEmpty == false) ? k : nil
+        let k = ArcaCloud.anthropicKey; return (k?.isEmpty == false) ? k : nil
     }
     private var model: String {
         UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
@@ -51,7 +51,7 @@ final class AmbientOps {
             return id
         }
         var request = URLRequest(url: URL(string:
-            "https://backend.composio.dev/api/v3/connected_accounts?user_ids=\(user)")!)
+            "\(ArcaCloud.composioBase)/connected_accounts?user_ids=\(user)")!)
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         guard let (data, _) = try? await URLSession.shared.data(for: request),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -71,7 +71,7 @@ final class AmbientOps {
             throw OpsError.notConnected(toolkit)
         }
         var request = URLRequest(url: URL(string:
-            "https://backend.composio.dev/api/v3/tools/execute/\(slug)")!)
+            "\(ArcaCloud.composioBase)/tools/execute/\(slug)")!)
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -255,7 +255,7 @@ final class AmbientOps {
             "tools": [tool], "tool_choice": ["type": "tool", "name": "triage_inbox"],
             "messages": [["role": "user", "content": [["type": "text", "text": prompt]]]],
         ]
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var request = URLRequest(url: ArcaCloud.anthropicMessagesURL)
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -408,7 +408,7 @@ final class AmbientOps {
         \(facts.isEmpty ? "(no facts — say so gracefully)" : facts.joined(separator: "\n"))
         """
         do {
-            var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+            var request = URLRequest(url: ArcaCloud.anthropicMessagesURL)
             request.httpMethod = "POST"
             request.setValue(key, forHTTPHeaderField: "x-api-key")
             request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")

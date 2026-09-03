@@ -104,7 +104,7 @@ final class ChatSession {
         // Nothing worth remembering in a one-sided or empty exchange.
         guard messages.count >= 2 else { return }
         memoriesExtracted = true
-        guard let key = KeychainStore.get(.anthropic), !key.isEmpty else { return }
+        guard let key = ArcaCloud.anthropicKey, !key.isEmpty else { return }
         let transcript = messages
             .map { "\($0.role == .user ? "User" : "ARCA"): \($0.displayText)" }
             .joined(separator: "\n")
@@ -123,7 +123,7 @@ final class ChatSession {
     }
 
     private func runTurn() {
-        let anthropicKey = KeychainStore.get(.anthropic)
+        let anthropicKey = ArcaCloud.anthropicKey
         let openAIKey = KeychainStore.get(.openAI)
         guard anthropicKey?.isEmpty == false || openAIKey?.isEmpty == false else {
             appendAssistant(L("OpenAI 또는 Anthropic 키가 필요해요 — 설정에서 추가해 주세요.",

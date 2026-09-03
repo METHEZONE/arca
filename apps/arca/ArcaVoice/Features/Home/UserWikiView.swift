@@ -111,7 +111,7 @@ struct UserWikiView: View {
 
     private func generate() {
         guard !isGenerating else { return }
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
             errorText = L("Anthropic 키를 Settings에 추가하면 위키를 생성할 수 있어요.",
                           "Add your Anthropic key in Settings to generate your wiki.")
             return

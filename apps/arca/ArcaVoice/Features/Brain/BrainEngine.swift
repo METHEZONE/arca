@@ -119,7 +119,7 @@ final class BrainEngine {
         load(context: context)
     }
 
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
     private var model: String {
         UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
     }
@@ -497,7 +497,7 @@ final class BrainEngine {
     /// discovered insight is also saved as a new memory so it persists.
     func weaveInsights(context: ModelContext) async {
         guard !isWeaving else { return }
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else {
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else {
             lastError = "Add an Anthropic key in Settings to weave insights."
             return
         }

@@ -13,7 +13,7 @@ final class ProposalEngine {
     private(set) var isWorking = false
     private(set) var lastError: String?
 
-    private var apiKey: String? { KeychainStore.get(.anthropic) }
+    private var apiKey: String? { ArcaCloud.anthropicKey }
     private var model: String { UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5" }
 
     struct Inbound {
@@ -159,7 +159,7 @@ final class ProposalEngine {
             "tools": [tool], "tool_choice": ["type": "tool", "name": "propose_actions"],
             "messages": [["role": "user", "content": [["type": "text", "text": prompt]]]],
         ]
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var request = URLRequest(url: ArcaCloud.anthropicMessagesURL)
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -253,7 +253,7 @@ final class ProposalEngine {
             "tools": [tool], "tool_choice": ["type": "tool", "name": "revise"],
             "messages": [["role": "user", "content": [["type": "text", "text": prompt]]]],
         ]
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var request = URLRequest(url: ArcaCloud.anthropicMessagesURL)
         request.httpMethod = "POST"
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")

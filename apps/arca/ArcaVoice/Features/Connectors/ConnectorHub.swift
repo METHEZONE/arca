@@ -93,11 +93,11 @@ final class ConnectorHub {
     private(set) var lastError: String?
     private(set) var lastPullSummary: String = ""
 
-    private let base = URL(string: "https://backend.composio.dev/api/v3")!
+    private let base = ArcaCloud.composioBaseURL
 
-    private var apiKey: String? { KeychainStore.get(.composio) }
+    private var apiKey: String? { ArcaCloud.composioKey }
     private var userId: String? {
-        let id = AccountDefaults.string("composioUserId")
+        let id = ArcaCloud.composioUserId
         return (id?.isEmpty ?? true) ? nil : id
     }
 

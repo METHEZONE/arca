@@ -26,7 +26,7 @@ enum ZoneSources {
 
     private static func fetchGmailUnread(apiKey: String, userId: String, account: String,
                                          limit: Int) async -> [Inbound] {
-        var request = URLRequest(url: URL(string: "https://backend.composio.dev/api/v3/tools/execute/GMAIL_FETCH_EMAILS")!)
+        var request = URLRequest(url: URL(string: "\(ArcaCloud.composioBase)/tools/execute/GMAIL_FETCH_EMAILS")!)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "content-type")

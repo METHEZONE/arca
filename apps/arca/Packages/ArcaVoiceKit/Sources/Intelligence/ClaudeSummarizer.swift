@@ -24,7 +24,7 @@ public struct ClaudeSummarizer: Summarizer {
     public init(
         apiKey: String,
         model: String = "claude-sonnet-5",
-        endpoint: URL = URL(string: "https://api.anthropic.com/v1/messages")!,
+        endpoint: URL = ArcaCloud.anthropicMessagesURL,
         anthropicVersion: String = "2023-06-01",
         maxTokens: Int = 8192,
         urlSession: URLSession = .shared

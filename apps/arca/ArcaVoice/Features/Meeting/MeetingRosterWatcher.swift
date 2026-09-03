@@ -126,7 +126,7 @@ final class MeetingRosterWatcher {
     /// from the meeting screen" before there is a recording to watch — same
     /// screenshot, same reader, no duplicated prompt.
     static func readRosterNow() async -> MeetingRoster? {
-        guard let apiKey = KeychainStore.get(.anthropic), !apiKey.isEmpty else { return nil }
+        guard let apiKey = ArcaCloud.anthropicKey, !apiKey.isEmpty else { return nil }
         guard let (data, mediaType) = await ScreenGrab.meetingWindowJPEG() else { return nil }
         guard let roster = try? await MeetingRosterReader(apiKey: apiKey)
             .read(imageData: data, mediaType: mediaType),

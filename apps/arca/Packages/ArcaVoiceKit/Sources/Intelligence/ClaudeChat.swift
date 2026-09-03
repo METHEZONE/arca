@@ -7,7 +7,7 @@ import ArcaVoiceCore
 public struct ClaudeChat: Sendable {
     private let apiKey: String
     private let model: String
-    private let endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
+    private let endpoint = ArcaCloud.anthropicMessagesURL
 
     /// ARCA's voice: a screen-aware companion, concise and action-oriented.
     public static let systemPrompt = """
