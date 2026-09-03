@@ -58,13 +58,24 @@ struct ArcaVoiceApp: App {
                 .id(language.generation)
         }
         .modelContainer(container)
+
+        #if os(macOS)
+        // The chat in its own window — opened from the floating ARCA.
+        Window(L("ARCA 채팅", "ARCA Chat"), id: "arca-chat") {
+            ChatWindowView()
+                .id(language.generation)
+        }
+        .modelContainer(container)
+        .defaultSize(width: 520, height: 680)
+        .keyboardShortcut("j", modifiers: [.command, .shift])
+        #endif
     }
 
     private static func makeContainer() throws -> ModelContainer {
         let accountId = AccountStore.currentAccountId()
         if AccountStore.isDefault(accountId) {
-            #if ARCA_TEST_BUILD
-            // 테스트 앱은 본편의 default.store를 절대 공유하지 않는다 —
+            #if ARCA_TEST_BUILD || ARCA_BETA
+            // 테스트/베타 앱은 본편의 default.store를 절대 공유하지 않는다 —
             // 자기만의 스토어 파일에 격리.
             let schema = Schema([
                 RecordingSession.self,
@@ -80,8 +91,8 @@ struct ArcaVoiceApp: App {
             ])
             let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             let url = base
-                .appendingPathComponent("ArcaVoiceTest", isDirectory: true)
-                .appendingPathComponent("arca-test.store")
+                .appendingPathComponent(ArcaEdition.dataFolderName, isDirectory: true)
+                .appendingPathComponent(ArcaEdition.isBeta ? "arca-beta.store" : "arca-test.store")
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(),
                 withIntermediateDirectories: true

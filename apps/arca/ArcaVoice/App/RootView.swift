@@ -3,6 +3,9 @@ import SwiftData
 import ArcaVoiceKit
 
 struct RootView: View {
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
     @State private var services = AppServices.shared
     @State private var selectedSession: RecordingSession?
     @State private var showSettings = false
@@ -113,6 +116,10 @@ struct RootView: View {
         }
         #else
         MacOnboardingGate { CompanionHomeView() }
+            .onReceive(NotificationCenter.default.publisher(for: .arcaOpenChatWindow)) { _ in
+                openWindow(id: "arca-chat")
+                NSApp.activate(ignoringOtherApps: true)
+            }
             // arca://record|stop (arca-test:// on the test app) — lets
             // Shortcuts/Raycast and the ARCA Test verification harness drive
             // the core loop without touching the UI.

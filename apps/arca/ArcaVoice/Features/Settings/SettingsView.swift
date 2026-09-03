@@ -73,6 +73,18 @@ struct SettingsView: View {
                 } label: {
                     Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
                 }
+                #if os(macOS)
+                Toggle(isOn: Binding(
+                    get: { UserDefaults.standard.object(forKey: FloatingCompanionController.enabledKey) as? Bool ?? true },
+                    set: { AppServices.shared.setFloatingCompanion(enabled: $0) })) {
+                    Label(L("떠다니는 ARCA (화면 어디든 드래그)", "Floating ARCA (drag anywhere)"), systemImage: "circle.dotted.and.circle")
+                }
+                Button {
+                    NotificationCenter.default.post(name: .arcaOpenChatWindow, object: nil)
+                } label: {
+                    Label(L("채팅을 별도 창으로 열기 (⇧⌘J)", "Open chat in its own window (⇧⌘J)"), systemImage: "macwindow.on.rectangle")
+                }
+                #endif
             } footer: {
                 Text(L("Gmail, 캘린더, 드라이브, Slack까지 — ARCA가 컨텍스트를 먼저 가져와서 이미 알고 있어요.",
                        "Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows."))

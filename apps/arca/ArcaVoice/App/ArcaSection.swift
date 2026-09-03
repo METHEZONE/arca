@@ -119,5 +119,9 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
 
     /// The Mac sidebar order. Todos keep their permanent right-hand rail there,
     /// which is why `.tasks` isn't in the list.
-    static let macSidebar: [ArcaSection] = [.home, .condition, .memory, .day, .wiki, .library, .skills, .shop]
+    static var macSidebar: [ArcaSection] {
+        ArcaEdition.isBeta
+            ? [.home, .memory, .day, .wiki, .library]
+            : [.home, .condition, .memory, .day, .wiki, .library, .skills, .shop]
+    }
 }

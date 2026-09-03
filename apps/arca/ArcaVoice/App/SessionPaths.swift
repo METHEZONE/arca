@@ -4,13 +4,7 @@ import ArcaVoiceKit
 enum SessionPaths {
     /// 테스트 빌드(ARCA Test)는 본편 데이터를 절대 건드리지 않도록
     /// Application Support 하위 폴더를 통째로 분리한다.
-    static var rootFolderName: String {
-        #if ARCA_TEST_BUILD
-        return "ArcaVoiceTest"
-        #else
-        return "ArcaVoice"
-        #endif
-    }
+    static var rootFolderName: String { ArcaEdition.dataFolderName }
 
     static var sessionsRoot: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

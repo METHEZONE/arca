@@ -856,3 +856,8 @@
   justify-content: center;
   margin-top: 28px;
 }
+
+/* beta application: three fields stacked on narrow screens */
+.arca-root .a-wl-beta { flex-wrap: wrap; }
+.arca-root .a-wl-beta input { min-width: 200px; }
+@media (max-width: 640px) { .arca-root .a-wl-beta input { width: 100%; } }

@@ -222,6 +222,14 @@ export async function recordWaitlist(entry: WaitlistEntry): Promise<Delivery> {
   return { file, email, slack };
 }
 
+/// One message to the owner through whichever channel is configured —
+/// email (Resend, or the FormSubmit fallback) and Slack. Used by intake
+/// forms that need no ledger of their own.
+export async function notifyOwner(subject: string, html: string, slackText?: string): Promise<{ email: boolean; slack: boolean }> {
+  const [email, slack] = await Promise.all([sendEmail(subject, html), sendSlack(slackText ?? subject)]);
+  return { email, slack };
+}
+
 export function newRingId(): string {
   return `${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`;
 }

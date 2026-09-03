@@ -10,15 +10,25 @@
 		0112BC917961D27794B1D5A1 /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
 		015EF5966CA5EF443795CFCF /* ParticipantPrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80718C2481B20CF410C64A36 /* ParticipantPrep.swift */; };
 		04EDBCB9B2E22FD136ED4521 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
+		059A055C3247CBCFDC13E4D8 /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
+		060CAEF2921DAFE944676E2B /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
 		09E4EB92F8B681714B2CDC3A /* ArcaVoiceWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64DC3EBEA6736025A0FFAE93 /* ArcaVoiceWidgetsBundle.swift */; };
+		09FE18A010B9AF50B4B39575 /* ArcaShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */; };
 		0BA6B4B26E4010E08C2A9E74 /* TodoColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */; };
+		0C61FE1EF50879DB5BC6DCDD /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
 		0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		0E92345997357839377901B4 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		103900A43A7B7901C8143B0C /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
+		107DA608DA069CAB13C41622 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		10BE6349CD3B3EC0D122D986 /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
+		11BF81810E16C348426F48C9 /* ScreenCapturePermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBC34E500207D5A68BA0EAE /* ScreenCapturePermission.swift */; };
+		13DFAA78EAC8BDB2351A12A6 /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
+		14C864289DF8DC9B7628671D /* FloatingCompanion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */; };
 		169285183B6242F055AB5960 /* VitalsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AF49E49651BBE466E45012 /* VitalsEngine.swift */; };
+		178024833E6E9B7725E84324 /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19E5C51A1863C1860E4F6A3C /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
+		1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1A9E34AF467D6004D2D63347 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		1AFE0013D06EB360A29C7129 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C67787A4026B8F5719B5BB /* WatchRecorder.swift */; };
@@ -29,12 +39,18 @@
 		1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1ECB9FEBD66AAE8BC7CA2521 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
 		1FBD7E6F7531639BD4B0C00C /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
+		2148DA949AB84FB8392F1DAB /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6214BB03BF1DE4EC38C39C93 /* ArcaVoiceKit */; };
 		21912877959F3E63A51EF6C0 /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69B74064D232506B6F096FF /* HotkeyMonitor.swift */; };
 		22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */; };
 		225496038B58E3099EB410B0 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
+		225EE0F54E720E61061F39DC /* FocusMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242AE25F7831562835F5E0F /* FocusMode.swift */; };
+		23508B446043F29680AC05FD /* ArcaEdition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0965856119018122EAA4BBDC /* ArcaEdition.swift */; };
 		2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82731CD2C6E93B4C80F2272C /* AppServices.swift */; };
 		2493E4003B27898955F20AA9 /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
+		2507446A56FAF998D45DF30D /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
 		2546F0C2BA65F2C1A5D534FA /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
+		256C2F21993AD8538446869F /* SummaryNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */; };
+		256D9B0EB284A1D0CBEEEFF1 /* ConnectorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */; };
 		29C617BF860550A479D20379 /* AccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C7A0ED63FEA2911217C441 /* AccountSwitcher.swift */; };
 		2A540D8A36A52CF650EF0A35 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		2A81322A19E2615CB0446F3C /* WatchDeepMeasure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */; };
@@ -43,6 +59,8 @@
 		2B68D00D73DECB51BCB675E6 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
 		2B6E9833A44618B9E564D671 /* HealthVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */; };
 		2D9A8B3174F06DC9B68D91FA /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
+		2EDB367F3BEA7B63C4885D07 /* Info-Beta.plist in Resources */ = {isa = PBXBuildFile; fileRef = 141CCF2F66F97F549D01285B /* Info-Beta.plist */; };
+		30DC4A93431EFB7D0473B1B1 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
 		3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		31E2B8888A98B97DEEAC9B3A /* ScreenGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */; };
 		32337036BDBBBD87CA30E7BA /* SkillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB81A6577D769549369CE27 /* SkillsView.swift */; };
@@ -50,44 +68,71 @@
 		331AF90D1323C1D23C8BADE5 /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		33D7BD22F21FD3DEBF62CE92 /* AccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C7A0ED63FEA2911217C441 /* AccountSwitcher.swift */; };
 		342252208D76A5C060F846D5 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		3432E7B800C09699696544DC /* BrainEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A2E73A6DB6F112E58F3F5A /* BrainEntry.swift */; };
 		3453CE7D27DC507331B5C18F /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
+		346B549160697131A79F3236 /* NightlyDigest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5544B905C9F4B84834415444 /* NightlyDigest.swift */; };
 		35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
+		35EC6F3ACDDB4563A573E73E /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		35F1C50886FD9C50CA31CB72 /* ArcaVoiceWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		36534AF5BCB824E795B7D5B7 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		375E80C608202ABD44B6693F /* CallLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F819D6795C53B655D03603 /* CallLabApp.swift */; };
+		382989C88EF2EAF7ED8C2485 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
+		3909C5ECED3BC4C3AD04F21D /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
+		3A4166CF0B0BF34BED219BB2 /* ImageDownscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141182B1EC364988D1301EE /* ImageDownscaler.swift */; };
 		3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
+		3E12935886E50568B39D6104 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */; };
 		3EC4A0508B690429C9911FC2 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		3F912A22A9BE2C7452C08199 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
+		4116A32396F23A0D8E4D49F0 /* PassRetryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */; };
+		41CB42C5D90DBA0BCE45B9F6 /* PhoneWatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */; };
 		42450C3683B96B76393291B1 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
+		441F3D55DEFA6BA5E6912126 /* DayLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53522C2C5C3826D2AFB9F83B /* DayLogView.swift */; };
 		45BDFFF46170B9D9D5BD224E /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		45BE7B009A03D2F1C25F3F13 /* CompanionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799893AA765465142E125D54 /* CompanionProgress.swift */; };
 		46FC4F2DB5B9CED78458AA8E /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
 		48BFB8BDAF62CBD180C92ED6 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
+		49AC0B8E8998A8FD5DB54C64 /* DevicePresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */; };
+		4A93DFCDC820C66AEDB2BAA8 /* SessionPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA434C8AF00098C130A7852 /* SessionPaths.swift */; };
 		4ABD1B8AAFC88AC21B5DF3FB /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
 		4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
+		4D8D4024DAC7671D6C7D3C5C /* ObsidianExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D3EC43CFA5109F60636F4 /* ObsidianExporter.swift */; };
+		4DCFC9EFCFC1BFC5C06A9BD5 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		4E959DE0AAF10547AFA64C6C /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		4EE2B9574DCB7996EE23DA2C /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		4FAA38A921A476952656A6C5 /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
 		5006E0E4F2E47958AFB01670 /* ScreenGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */; };
+		50E38125E02E5A174DEFF7CD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		5105A62996215256730F9325 /* SkinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785C78DA8EA61A38047E7465 /* SkinsView.swift */; };
 		51F5ABDDD0D37B9EAD7474E6 /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		525AE78151032FF12256D55E /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF038E0787776F6E8E323E0D /* SessionDetailView.swift */; };
 		5344C4ECAD2A231EB74F0EF1 /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
 		536A0AD4438A9250E5E50AF8 /* VitalsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7789DEEB3D5D740130D28C07 /* VitalsWidget.swift */; };
 		54333B1A7B3F2958E86B4E7C /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
+		548BE58CF8197F8FFEBFF57D /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
+		54CD21FB990F9C8385062CF1 /* Info-Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5C85B6787FFA1E9297B85F5A /* Info-Test.plist */; };
 		560B7C76DCC15F93BA691BB5 /* RecordingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32119B9D537A00E6D116EA27 /* RecordingLiveActivity.swift */; };
+		5648F1D5501434BFF78926B7 /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
+		56A17FBA446DB359FDD09ED4 /* HatchOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */; };
+		56F7E007A00D1DEB56DD25D7 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
 		5707E27CAB2A58DBEDA6F9B5 /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
+		5807F9D46013C68B817CF6EA /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF038E0787776F6E8E323E0D /* SessionDetailView.swift */; };
 		587B3698CDE73F54CDA387CB /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
 		58CA9A76AE0745194F7016AF /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 70515C845FE50DFE32063242 /* ArcaVoiceKit */; };
 		5A3B52C0E69C23F0A08D5095 /* ImageDownscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141182B1EC364988D1301EE /* ImageDownscaler.swift */; };
 		5AAB5C7AA3094B769F88D2C1 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0573ECA9B3866ACA5804292D /* Info.plist */; };
+		5B0356FCD7360FEA4C0212AD /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */; };
+		5BBFCA0BFAB8F7230293D910 /* ChatWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */; };
 		5C55D8DF3537DBCD2FD09B02 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A8BD7E8A8EFAE6C8B0A82C /* OnboardingView.swift */; };
 		5CD2B3DF6CF7561DA7509A3A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 331A655D08E04AC43DB31558 /* Assets.xcassets */; };
 		5D78CD31DECC3BFB914C26DA /* SkillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB81A6577D769549369CE27 /* SkillsView.swift */; };
+		5DA46D01C8C4A51D3BA65872 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		5E34580BAE1E006087A8DA92 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */; };
 		5EA2E2E93540DAFF3FDE43E8 /* DevicePresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */; };
+		5F7E2C66944BC9F57DAAB615 /* CompanionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799893AA765465142E125D54 /* CompanionProgress.swift */; };
 		5FED7B5775E546286EEB794A /* ParticipantsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */; };
 		60BA35F3F4FCF453FA95CFB5 /* NotchAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */; };
 		61389DF50DFDB212E16AA032 /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
+		6139B32A04789D73A2FF33BB /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A8BD7E8A8EFAE6C8B0A82C /* OnboardingView.swift */; };
 		614BA61001574075CF188904 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */; };
 		6151FF0DF25B6B3B7C6E1CE7 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
 		61865228BC0D55E1A0C6FE63 /* ArcaSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */; };
@@ -97,127 +142,192 @@
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		6352533A67B7DEF20EF3A650 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
+		63D78D050554D0EC405A5598 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		643572A87436F0C521F11054 /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		644FFA60D7949368499BCC8A /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		651725966B3E7D1B8EEE0C9F /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
 		6578435762FF9D15791181F5 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
+		659F1BEFED6CC860216FE4D2 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		65E68F6D13325971BFD3FB4E /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
 		67AA18366CB83FBC06BF4D90 /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
+		6827B927BA9746330808FE36 /* VitalsRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113834A824878A4554AD2328 /* VitalsRelay.swift */; };
+		683DD2D6A53148B07A90E63C /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
+		68B8FE1F5770DE4242C18347 /* AccountSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C7A0ED63FEA2911217C441 /* AccountSwitcher.swift */; };
 		69027D761CE5C84ACEDB8475 /* ArcaShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */; };
 		691BE8125B684F1717F806EC /* ArcaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2EB7A5B10040606E35425 /* ArcaTheme.swift */; };
 		6965A3490993EE5ABE7CEAC3 /* ConnectorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */; };
 		6A57F325A885756E0B472B6F /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		6A97F0CBFC548ACF1169D33D /* ParticipantsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */; };
+		6BA5C40615E34C8B4F6ECB99 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82731CD2C6E93B4C80F2272C /* AppServices.swift */; };
+		6D0E5077534F548D1431B794 /* ChatWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */; };
 		6D25F5D537ED818295A779A6 /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
 		6F2B4BC3B8C9AE06BD479EDF /* CodexBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488E853E67519340E1F4AD47 /* CodexBridge.swift */; };
 		6F5C3824266A4A13181C143C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2108C8890C2111D74F4D45 /* RootView.swift */; };
+		6F5C7A64798347078A9406F1 /* ContextEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */; };
+		6FACB293448623D41B5CC9DE /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A507775C5099D33DEF92A0E /* ChatSession.swift */; };
+		70B2250CDFD252FBC510FBB0 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		70E1158229AFA2ABB3664B41 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		717417AB89CA1A36474438E1 /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 67E2D4259D978BA6CD755788 /* ArcaVoiceKit */; };
 		72010F1448C45F2CF75D59F6 /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
+		72789C89E4F5F95B58442611 /* ChatWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */; };
 		72DFE8866767CD9A2FD13202 /* SessionPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA434C8AF00098C130A7852 /* SessionPaths.swift */; };
 		73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
 		744C52DB68A38DC3A355E0D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */; };
 		749CA50C862CDD124258506C /* PassRetryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */; };
+		74BA45C70823032010E1CE9E /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		75A2C962704E733B29979FAB /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		782EFC269E0629B7DCECAF4E /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
+		786B1AC912D50EF59A2C67A5 /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
 		78AAA360D7EE64FF8DBDD87F /* VitalsRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113834A824878A4554AD2328 /* VitalsRelay.swift */; };
 		79100E3B9D8189CB91B099EC /* HatchOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */; };
 		7B5194BFEF0F620A717CA485 /* NightlyDigest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5544B905C9F4B84834415444 /* NightlyDigest.swift */; };
 		7BD8DE659AF6152FC713481B /* ImageDownscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141182B1EC364988D1301EE /* ImageDownscaler.swift */; };
+		7CC4774607EB4733E5EF326C /* VitalsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AF49E49651BBE466E45012 /* VitalsEngine.swift */; };
 		7D0054A8227A9A4818BDF47E /* CompanionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799893AA765465142E125D54 /* CompanionProgress.swift */; };
+		7D8A5BFDE07CEFF22C0C9B9C /* SpiritFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */; };
+		7DC818AE12E1F68F4A76023C /* FloatingCompanion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */; };
 		7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
+		7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
 		80D20DE45431D7ED588D4175 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
 		813647902A9B1E5B100C6C9E /* ContextEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */; };
 		816ABA846AA793CC5178F403 /* ArcaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251782279561DB97C74E91BD /* ArcaSection.swift */; };
 		821322D39F0C0A6B069DFB72 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
+		8215C5E22B581C5DD5D11057 /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
 		821675514E0AF335504778BC /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
+		832FD3FFDA572363F224694F /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		83533E48AC7218E00331343A /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
+		83EF008D7767609011EB35EB /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		842FA6613CC50564B90453E9 /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
 		84F6D3B732E8A92FAD17B0C0 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		85BF8142317587B2ABE2E728 /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
+		86048B969598C0854E74B66E /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
+		86B9FB725879514C2F9AA643 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
+		86BF5DC3BA73F1C9FCF6015A /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
+		872D1CA1ED0F00FBFD26EC39 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
+		875E14D09F06A687C82DE18E /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
 		876B935C1FABD5AD0EB2E807 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
 		8796EF58C9B6E368F9016DBC /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */; };
 		8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2EB7A5B10040606E35425 /* ArcaTheme.swift */; };
 		8ABB73D05461DD7754A4FBA3 /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
 		8AD1F41A8864A72E9047CA70 /* SpiritFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */; };
 		8B819DFD05C5875C0129784D /* TodoColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */; };
+		8BDDB066604A00B0DB7C3BB3 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
+		8CEA12548E3BCBC82984E619 /* MorningMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A455369D5DD48B9F437A391 /* MorningMoment.swift */; };
 		8D4BB69D4610DC2A0AE72C4B /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1599B4E5607159B229B81BEF /* ArcaVoiceKit */; };
 		8D5139B23D64B467DA16DDB6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 331A655D08E04AC43DB31558 /* Assets.xcassets */; };
+		8D5DFB00FB130273CBEA164A /* HealthVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */; };
 		8E08E042E647373568FA6689 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		8E0CC13FCAF29F7CFB1A48C2 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
+		8E9E40BE070352D33A860653 /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
 		8EA96F69337862888B31A362 /* CalendarEventCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */; };
 		8F0DBA040CC02B982A6D7CB7 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
 		91233AFF7C31C69206965542 /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
+		912EA03264205C4834487276 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		9132F83BF6262069C17A4561 /* CalendarEventCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */; };
 		924D6BA8A87EC54C60B9DF25 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
 		9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */; };
 		93F85BAD90DB4B5B346AC98D /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
+		94A8065ADFDE3C4E2E7943CC /* ArcaClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */; };
+		959D1987E74A9D396A90C815 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 331A655D08E04AC43DB31558 /* Assets.xcassets */; };
 		95D34F10E946443FB6E24BA0 /* ConnectorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D51DC533C114CBD275C79DF5 /* ConnectorHub.swift */; };
 		95F26638142C47C082C1BE29 /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
+		9924ECFD8F3DF295863EFC35 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
+		996ECAC7C565B5C08C6490DE /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		9994D5A60E66A2FB059938AF /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		99DAF8E2B8920D279EBCF8CD /* ContextEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */; };
 		9A3735F4D5405FD96636A84F /* PassRetryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */; };
+		9A4DFEEFFC30FC2048B189C9 /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
 		9AB23652E1D36B3538000164 /* DeepMeasureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9D9F8587D9057CB6B186D9 /* DeepMeasureView.swift */; };
 		9AEF97622424C7E8D2A0245C /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = BCAAE3A5420E2AC1E4DE05F1 /* ArcaVoiceKit */; };
 		9B0D129AF4F7844EAFD7F6A6 /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */; };
+		9B338B70C7C9ED57CC2EFD1D /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
+		9CE932E265749D75EC5C8903 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		9D1E4C004936D329FC1068BF /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		9D4E15F80647F2399BB43FC4 /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		9DA1D8EF06A3C84D3C5B953F /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */; };
 		9DC70E96CA4ECEBA49531B62 /* DebugTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E20975BF767500024D5E80F /* DebugTrace.swift */; };
+		9E9782675FB02D679D22FF39 /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		9FAC3E0DBE0142DEAA514558 /* ChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC278547B59354CA3624B45D /* ChatPanel.swift */; };
+		A04BC1C8EDCBD11C2A3D787B /* TodoColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */; };
+		A1703BCDD18B663C8C9AE0D9 /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
 		A27956365B55BAB564912384 /* MorningMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A455369D5DD48B9F437A391 /* MorningMoment.swift */; };
 		A31222589649A037D38B86DA /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
+		A3707929DDDD31434A6F6191 /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69B74064D232506B6F096FF /* HotkeyMonitor.swift */; };
 		A3C8A637CBF3D17816618F86 /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
+		A48445E622E6D989A5AF0C01 /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */; };
 		A48DE84ABEA45864A315A78B /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
+		A4B0ACB2CDFA39E6E4F96151 /* ParticipantsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */; };
 		A4C04AAB3DB114A755857E1B /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
 		A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		A7E568DBA52765B84E8DE21A /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
+		A8F968B50847620BF10146A7 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */; };
 		A9B49BBFEFE96460C3890046 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A8BD7E8A8EFAE6C8B0A82C /* OnboardingView.swift */; };
 		AA1C226D82EC62F2EFA4C898 /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
 		AA28F03E1B9D53033B6D43DB /* ArcaSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */; };
 		AB46DD9B63F867D5DD5694F0 /* ArcaShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */; };
 		AC0B00B87125A20CE97FEEA0 /* ChatToolbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */; };
+		ACAA43DD26C2710CBDD31327 /* NotificationBell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54488392E83C5D2F055F1BF /* NotificationBell.swift */; };
 		ACC5533AC8013A7FAB2D6F6D /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
+		ACF819F7C62A22544A104409 /* Info-Beta.plist in Resources */ = {isa = PBXBuildFile; fileRef = 141CCF2F66F97F549D01285B /* Info-Beta.plist */; };
 		AE7C5FE0B3D368F697B59A47 /* PhoneWatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */; };
+		B0A2427C4D63562747905E7D /* ArcaSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3AC3E1E2C9593789B127B5 /* ArcaSkin.swift */; };
 		B0B352F5C777C6A583690650 /* ObsidianExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D3EC43CFA5109F60636F4 /* ObsidianExporter.swift */; };
 		B136378A7C63A0BEEB5D06B2 /* ScreenCapturePermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBC34E500207D5A68BA0EAE /* ScreenCapturePermission.swift */; };
+		B1627ACCBB68FE6A297A765F /* ChatToolbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */; };
 		B1CD4EDE8F5058096B8153DB /* NotificationBell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54488392E83C5D2F055F1BF /* NotificationBell.swift */; };
 		B21429B28BC93C8E843B1C5B /* BrainEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A2E73A6DB6F112E58F3F5A /* BrainEntry.swift */; };
 		B2479709FAC18C7B2D89FBAF /* CallLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1849B6D1ACFACBAB57240 /* CallLabView.swift */; };
 		B2A1E9ECCA581865B8084316 /* VitalsRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113834A824878A4554AD2328 /* VitalsRelay.swift */; };
 		B35500F5B3E11A8AFF3C1B06 /* HealthVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */; };
 		B39038945742E00A8AC54CDF /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
+		B411D228C6EB91621320182B /* ArcaEdition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0965856119018122EAA4BBDC /* ArcaEdition.swift */; };
 		B4862408CD8D517265C1DAE0 /* VoiceTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B747507721FFF3DF877DF6C /* VoiceTalk.swift */; };
 		B516DE3F085A055F2FF3D9A6 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		B6154A18A13B1A951464411C /* ScreenCapturePermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBC34E500207D5A68BA0EAE /* ScreenCapturePermission.swift */; };
 		B6650B3E271636127A4DD2A3 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
+		B790D3624E1844636B2032C7 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		B7D0D1A766334C1C56D7EC5E /* WatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289DDA43D652B1B04FDB7252 /* WatchSync.swift */; };
 		B7DC04E01BB94B2D88D042C8 /* ParticipantPrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80718C2481B20CF410C64A36 /* ParticipantPrep.swift */; };
 		B87F97F2816E9F6FB638FC95 /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A507775C5099D33DEF92A0E /* ChatSession.swift */; };
+		B8FCF809382DEDEDFF8692F3 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2108C8890C2111D74F4D45 /* RootView.swift */; };
+		B925A83DC69DD89F4AC35B07 /* ParticipantPrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80718C2481B20CF410C64A36 /* ParticipantPrep.swift */; };
+		B9625A284F7AB2EF530E636E /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
 		B96BFD4CEBB64DC76982D55F /* DebugTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E20975BF767500024D5E80F /* DebugTrace.swift */; };
 		B9B4266E53EACFBD73AC798E /* SummaryNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836DD8E5C0A97B2815EC4745 /* SummaryNotifier.swift */; };
 		B9FEC579970A8A7734D410F2 /* FocusMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242AE25F7831562835F5E0F /* FocusMode.swift */; };
 		BA0DBDCBB35D99F55F08FD3F /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
 		BA2A47750E904DB8E7D8E69F /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82731CD2C6E93B4C80F2272C /* AppServices.swift */; };
+		BAA928B4E9EB996A639C9B57 /* DebugTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E20975BF767500024D5E80F /* DebugTrace.swift */; };
+		BAF5FCB6B9F619BB54C57DCD /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
 		BB5CA82891A149C3948D205E /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69B74064D232506B6F096FF /* HotkeyMonitor.swift */; };
 		BBD0C138343110A0D1B9B693 /* NightlyDigest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5544B905C9F4B84834415444 /* NightlyDigest.swift */; };
+		BDAC7E79F997527C47E9E678 /* CodexBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488E853E67519340E1F4AD47 /* CodexBridge.swift */; };
+		BDCBA473A4D4FD427FA3E224 /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
 		BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242AE25F7831562835F5E0F /* FocusMode.swift */; };
+		BE0B01AB120BA8117E65483C /* ArcaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251782279561DB97C74E91BD /* ArcaSection.swift */; };
 		BE4EDB427340D146D1D8B592 /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
 		BF2A76DC38BDCA8A705C7DFE /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
 		BF818A9846E5F0B873082247 /* HatchOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */; };
 		BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FEEDCAD2492CA691357BAE /* CompanionHomeView.swift */; };
 		C04F5A834923E8FC2A9F3FF0 /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
+		C074EB1D3F3A85BE961D7066 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
+		C1CF742367A2FC2AC78CD204 /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		C27D8B801F9A3E5D2938828A /* AudioRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9017F59421D2C0F63F092C3D /* AudioRelay.swift */; };
 		C28F915E28669660B31E54B5 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
 		C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		C382540473D03DB11EA5E569 /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
 		C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78A32E703ECAAC127268AFC /* FaceRecordView.swift */; };
 		C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
+		C7F8362013B099962AC5CCE0 /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
 		C810FEF3E59368728C16B8C5 /* ArcaVoiceWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CA137F6F45E228FF0612F1 /* ArcaVoiceWatchApp.swift */; };
 		C8186E58CBF6F0D18271714D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2108C8890C2111D74F4D45 /* RootView.swift */; };
+		C995BE6CACCAEE8ABBAC9222 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0573ECA9B3866ACA5804292D /* Info.plist */; };
 		C9BD0AA34B19377BDD2E1EA2 /* PhoneWatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */; };
+		CB4D5288CD4BA1170FFE7411 /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
 		CC8256CCAC8A5BEA15A4C314 /* DayLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53522C2C5C3826D2AFB9F83B /* DayLogView.swift */; };
 		CD1002CA56927BF8FE91D31A /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF038E0787776F6E8E323E0D /* SessionDetailView.swift */; };
+		CEED398AE19D9E47C8240B55 /* SkinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785C78DA8EA61A38047E7465 /* SkinsView.swift */; };
 		CFB46A60755F5B0D8452FEF3 /* NotchAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */; };
 		D15B3BBB53917611EFD193F5 /* ArcaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251782279561DB97C74E91BD /* ArcaSection.swift */; };
 		D17480663134EF0142D22EA8 /* DayLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53522C2C5C3826D2AFB9F83B /* DayLogView.swift */; };
@@ -225,18 +335,29 @@
 		D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		D250D75DEF42750AB474C7CB /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		D470D8A3A70E7B441C9E5D8B /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
+		D4A342E948D858AE87794949 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
+		D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
+		D6AA177F3790247AF6F1BCEA /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
 		D718F4321CE32D322F74B3E4 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
 		D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
+		D9E9F969F6196BB8D0F1F738 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
+		DBD984802091724B3C097A09 /* ArcaEdition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0965856119018122EAA4BBDC /* ArcaEdition.swift */; };
 		DC4A25D9832A91BE21AAF6FA /* NotificationBell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54488392E83C5D2F055F1BF /* NotificationBell.swift */; };
 		DCAEEBEB8BBA40678F030042 /* WatchLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD2C83E58AEB77B8852236DB /* WatchLocalization.swift */; };
+		DD5284EEA3864A8B74D5EBD5 /* NotchAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */; };
 		DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AF3176B12884BB78616861 /* SummaryListView.swift */; };
 		DF6017CBB997D00A88012188 /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
+		E19C450617B87E3941822AA2 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		E1F046C638824AC6BA10690D /* DevicePresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */; };
 		E4F94193460A48D6F66E8B29 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
+		E8484060B9DE7C4A38CFEB0E /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
 		E9443B99F4866E3EC3AA281E /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A507775C5099D33DEF92A0E /* ChatSession.swift */; };
 		EA53283BE0501CB2B4952970 /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
+		EB2B7D8092776D72356B639F /* ScreenGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */; };
+		EC6284E258BEC77CE4842838 /* ArcaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2EB7A5B10040606E35425 /* ArcaTheme.swift */; };
+		ED279BE553EE28D60D4DE596 /* FloatingCompanion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */; };
 		EF1E159AC864EFC90CC1242B /* BrainEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A2E73A6DB6F112E58F3F5A /* BrainEntry.swift */; };
 		F02C529E261CC98DF1C8B78C /* CodexBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488E853E67519340E1F4AD47 /* CodexBridge.swift */; };
 		F09589FD7D2836CCE2993B64 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
@@ -249,8 +370,12 @@
 		F5A711151F5B285CB3F7CC40 /* Info-Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5C85B6787FFA1E9297B85F5A /* Info-Test.plist */; };
 		F5DD0AF91D01F97D3C400975 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */; };
 		F5EC7D87CEDC1AE969D207E7 /* MorningMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A455369D5DD48B9F437A391 /* MorningMoment.swift */; };
+		F6B74A0485F13B83494860C2 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4FB406C7CD214415138E30 /* BackgroundRefresh.swift */; };
+		F7565F4CBBF8C6DFF113B1C0 /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
 		F7AD10DA730B6B756F6A2B4C /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
+		F9CECD0F66B2E95393C1A5F2 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
+		FA77563C23A0863D16CBA20D /* SkillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB81A6577D769549369CE27 /* SkillsView.swift */; };
 		FA8D01FEB53E5285127B5344 /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
 		FC375BD773C1A2D772BADC59 /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		FD98C74A577CEC8CD8664D0B /* ChatToolbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */; };
@@ -315,6 +440,7 @@
 		06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaShortcuts.swift; sourceTree = "<group>"; };
 		081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
 		08C67787A4026B8F5719B5BB /* WatchRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecorder.swift; sourceTree = "<group>"; };
+		0965856119018122EAA4BBDC /* ArcaEdition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaEdition.swift; sourceTree = "<group>"; };
 		0AA434C8AF00098C130A7852 /* SessionPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaths.swift; sourceTree = "<group>"; };
 		10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSummaryStore.swift; sourceTree = "<group>"; };
 		11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvestFilter.swift; sourceTree = "<group>"; };
@@ -322,6 +448,7 @@
 		123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaMarkdown.swift; sourceTree = "<group>"; };
 		1242AE25F7831562835F5E0F /* FocusMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusMode.swift; sourceTree = "<group>"; };
 		124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAgent.swift; sourceTree = "<group>"; };
+		141CCF2F66F97F549D01285B /* Info-Beta.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Beta.plist"; sourceTree = "<group>"; };
 		16F2EB7A5B10040606E35425 /* ArcaTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaTheme.swift; sourceTree = "<group>"; };
 		17C7A0ED63FEA2911217C441 /* AccountSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSwitcher.swift; sourceTree = "<group>"; };
 		17F1D3B8553B70334F545836 /* ArcaVoiceWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArcaVoiceWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -366,6 +493,7 @@
 		59B31B9C3656C6518CDFCCED /* BundledKeys.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = BundledKeys.plist; sourceTree = "<group>"; };
 		5C85B6787FFA1E9297B85F5A /* Info-Test.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Test.plist"; sourceTree = "<group>"; };
 		5E20975BF767500024D5E80F /* DebugTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTrace.swift; sourceTree = "<group>"; };
+		5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatWindowView.swift; sourceTree = "<group>"; };
 		6374B4731CD9794ADC3D1902 /* AmbientOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientOps.swift; sourceTree = "<group>"; };
 		64AF49E49651BBE466E45012 /* VitalsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalsEngine.swift; sourceTree = "<group>"; };
 		64DC3EBEA6736025A0FFAE93 /* ArcaVoiceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaVoiceWidgetsBundle.swift; sourceTree = "<group>"; };
@@ -443,6 +571,8 @@
 		E37C83D49E48C2C908912BF5 /* NotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchView.swift; sourceTree = "<group>"; };
 		E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoneSources.swift; sourceTree = "<group>"; };
 		E54488392E83C5D2F055F1BF /* NotificationBell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBell.swift; sourceTree = "<group>"; };
+		E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingCompanion.swift; sourceTree = "<group>"; };
+		E84B636D05D23DB68E5F839D /* ARCA-Beta.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ARCA-Beta.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemsCard.swift; sourceTree = "<group>"; };
 		EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthVitals.swift; sourceTree = "<group>"; };
 		EC6561ECCE098C515C911F12 /* ARCA-CallLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ARCA-CallLab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -471,6 +601,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				58CA9A76AE0745194F7016AF /* ArcaVoiceKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		91D50C3819CDBDD214E20E3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2148DA949AB84FB8392F1DAB /* ArcaVoiceKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -518,6 +656,7 @@
 		041A9233E4FEEFC5EB9B08FF /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				E84B636D05D23DB68E5F839D /* ARCA-Beta.app */,
 				EC6561ECCE098C515C911F12 /* ARCA-CallLab.app */,
 				C05EC8DE279C3EEDF20375A6 /* ARCA-Test.app */,
 				30954CEF8090ACBD1A63750D /* ARCA.app */,
@@ -591,6 +730,7 @@
 			children = (
 				BC278547B59354CA3624B45D /* ChatPanel.swift */,
 				F523CD6A3D6CADC8B5C54D79 /* DashboardView.swift */,
+				E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */,
 				0141182B1EC364988D1301EE /* ImageDownscaler.swift */,
 				124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */,
 				E37C83D49E48C2C908912BF5 /* NotchView.swift */,
@@ -788,6 +928,7 @@
 			isa = PBXGroup;
 			children = (
 				82731CD2C6E93B4C80F2272C /* AppServices.swift */,
+				0965856119018122EAA4BBDC /* ArcaEdition.swift */,
 				702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */,
 				251782279561DB97C74E91BD /* ArcaSection.swift */,
 				06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */,
@@ -857,6 +998,7 @@
 				DE2E70D6F63358C5E15E5E24 /* ArcaVoice-iOS.entitlements */,
 				836495A6A9F0B481863F388F /* ArcaVoice-macOS.entitlements */,
 				59B31B9C3656C6518CDFCCED /* BundledKeys.plist */,
+				141CCF2F66F97F549D01285B /* Info-Beta.plist */,
 				5C85B6787FFA1E9297B85F5A /* Info-Test.plist */,
 				0573ECA9B3866ACA5804292D /* Info.plist */,
 			);
@@ -871,6 +1013,7 @@
 				4A507775C5099D33DEF92A0E /* ChatSession.swift */,
 				7D040B49523067F15BC91CA7 /* ChatTabView.swift */,
 				D845D88A34D4DCC1AEFCB5BB /* ChatToolbox.swift */,
+				5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */,
 				488E853E67519340E1F4AD47 /* CodexBridge.swift */,
 				A69B74064D232506B6F096FF /* HotkeyMonitor.swift */,
 				944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */,
@@ -966,6 +1109,26 @@
 			productReference = 30954CEF8090ACBD1A63750D /* ARCA.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AA7BCFCA4F20736AD9AFC131 /* ARCA-Beta */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CF97FF4C0C55131BE36BBC2E /* Build configuration list for PBXNativeTarget "ARCA-Beta" */;
+			buildPhases = (
+				7CA7F01205D8BC64DDFDA3C9 /* Sources */,
+				22CBF206F98B9CA609732555 /* Resources */,
+				91D50C3819CDBDD214E20E3B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ARCA-Beta";
+			packageProductDependencies = (
+				6214BB03BF1DE4EC38C39C93 /* ArcaVoiceKit */,
+			);
+			productName = "ARCA-Beta";
+			productReference = E84B636D05D23DB68E5F839D /* ARCA-Beta.app */;
+			productType = "com.apple.product-type.application";
+		};
 		AAEA9CBEA1E826DEB167B4D9 /* ARCA-Test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 660AAE5DFA6055CD4CDD55EE /* Build configuration list for PBXNativeTarget "ARCA-Test" */;
@@ -1045,6 +1208,10 @@
 						DevelopmentTeam = Q85V836Q45;
 						ProvisioningStyle = Automatic;
 					};
+					AA7BCFCA4F20736AD9AFC131 = {
+						DevelopmentTeam = Q85V836Q45;
+						ProvisioningStyle = Automatic;
+					};
 					AAEA9CBEA1E826DEB167B4D9 = {
 						DevelopmentTeam = Q85V836Q45;
 						ProvisioningStyle = Automatic;
@@ -1077,6 +1244,7 @@
 			projectRoot = "";
 			targets = (
 				4198F00CF610372E4D469F75 /* ARCA */,
+				AA7BCFCA4F20736AD9AFC131 /* ARCA-Beta */,
 				BEB38118D64A46CA93C377C1 /* ARCA-CallLab */,
 				AAEA9CBEA1E826DEB167B4D9 /* ARCA-Test */,
 				D033CFF376733706A1D56D11 /* ArcaVoiceShare */,
@@ -1093,7 +1261,19 @@
 			files = (
 				8D5139B23D64B467DA16DDB6 /* Assets.xcassets in Resources */,
 				1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */,
+				ACF819F7C62A22544A104409 /* Info-Beta.plist in Resources */,
 				5AAB5C7AA3094B769F88D2C1 /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22CBF206F98B9CA609732555 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				959D1987E74A9D396A90C815 /* Assets.xcassets in Resources */,
+				1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */,
+				54CD21FB990F9C8385062CF1 /* Info-Test.plist in Resources */,
+				C995BE6CACCAEE8ABBAC9222 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1111,6 +1291,7 @@
 			files = (
 				5CD2B3DF6CF7561DA7509A3A /* Assets.xcassets in Resources */,
 				D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */,
+				2EDB367F3BEA7B63C4885D07 /* Info-Beta.plist in Resources */,
 				F5A711151F5B285CB3F7CC40 /* Info-Test.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1127,6 +1308,7 @@
 				35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */,
 				BA2A47750E904DB8E7D8E69F /* AppServices.swift in Sources */,
 				22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */,
+				B411D228C6EB91621320182B /* ArcaEdition.swift in Sources */,
 				587B3698CDE73F54CDA387CB /* ArcaLanguage.swift in Sources */,
 				7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */,
 				D15B3BBB53917611EFD193F5 /* ArcaSection.swift in Sources */,
@@ -1147,6 +1329,7 @@
 				B87F97F2816E9F6FB638FC95 /* ChatSession.swift in Sources */,
 				D17554AFD89FA3DEBC8A4457 /* ChatTabView.swift in Sources */,
 				AC0B00B87125A20CE97FEEA0 /* ChatToolbox.swift in Sources */,
+				72789C89E4F5F95B58442611 /* ChatWindowView.swift in Sources */,
 				6F2B4BC3B8C9AE06BD479EDF /* CodexBridge.swift in Sources */,
 				619AEF1295DEC7DE4574355C /* CompanionGenesis.swift in Sources */,
 				BFECBFA76B57455401B0C50C /* CompanionHomeView.swift in Sources */,
@@ -1164,6 +1347,7 @@
 				A48DE84ABEA45864A315A78B /* DevicePresenceBar.swift in Sources */,
 				6578435762FF9D15791181F5 /* EngineFactory.swift in Sources */,
 				84F6D3B732E8A92FAD17B0C0 /* FinalPassRunner.swift in Sources */,
+				7DC818AE12E1F68F4A76023C /* FloatingCompanion.swift in Sources */,
 				BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */,
 				D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */,
 				BF818A9846E5F0B873082247 /* HatchOnboardingView.swift in Sources */,
@@ -1254,6 +1438,7 @@
 				F336100BAB08C31DD593C25F /* AmbientOps.swift in Sources */,
 				2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */,
 				9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */,
+				23508B446043F29680AC05FD /* ArcaEdition.swift in Sources */,
 				10BE6349CD3B3EC0D122D986 /* ArcaLanguage.swift in Sources */,
 				2B68D00D73DECB51BCB675E6 /* ArcaMarkdown.swift in Sources */,
 				816ABA846AA793CC5178F403 /* ArcaSection.swift in Sources */,
@@ -1274,6 +1459,7 @@
 				E9443B99F4866E3EC3AA281E /* ChatSession.swift in Sources */,
 				8F0DBA040CC02B982A6D7CB7 /* ChatTabView.swift in Sources */,
 				FD98C74A577CEC8CD8664D0B /* ChatToolbox.swift in Sources */,
+				5BBFCA0BFAB8F7230293D910 /* ChatWindowView.swift in Sources */,
 				F02C529E261CC98DF1C8B78C /* CodexBridge.swift in Sources */,
 				EA53283BE0501CB2B4952970 /* CompanionGenesis.swift in Sources */,
 				51F5ABDDD0D37B9EAD7474E6 /* CompanionHomeView.swift in Sources */,
@@ -1291,6 +1477,7 @@
 				F27383C9CD5CE2D53DF656E0 /* DevicePresenceBar.swift in Sources */,
 				F09589FD7D2836CCE2993B64 /* EngineFactory.swift in Sources */,
 				A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */,
+				14C864289DF8DC9B7628671D /* FloatingCompanion.swift in Sources */,
 				B9FEC579970A8A7734D410F2 /* FocusMode.swift in Sources */,
 				04EDBCB9B2E22FD136ED4521 /* FocusRing.swift in Sources */,
 				79100E3B9D8189CB91B099EC /* HatchOnboardingView.swift in Sources */,
@@ -1358,6 +1545,125 @@
 				E4F94193460A48D6F66E8B29 /* ZoneEngine.swift in Sources */,
 				1FBD7E6F7531639BD4B0C00C /* ZoneReportView.swift in Sources */,
 				1ECB9FEBD66AAE8BC7CA2521 /* ZoneSources.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7CA7F01205D8BC64DDFDA3C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				68B8FE1F5770DE4242C18347 /* AccountSwitcher.swift in Sources */,
+				875E14D09F06A687C82DE18E /* ActionItemsCard.swift in Sources */,
+				786B1AC912D50EF59A2C67A5 /* AmbientOps.swift in Sources */,
+				6BA5C40615E34C8B4F6ECB99 /* AppServices.swift in Sources */,
+				94A8065ADFDE3C4E2E7943CC /* ArcaClipboard.swift in Sources */,
+				DBD984802091724B3C097A09 /* ArcaEdition.swift in Sources */,
+				D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */,
+				56F7E007A00D1DEB56DD25D7 /* ArcaMarkdown.swift in Sources */,
+				BE0B01AB120BA8117E65483C /* ArcaSection.swift in Sources */,
+				09FE18A010B9AF50B4B39575 /* ArcaShortcuts.swift in Sources */,
+				B0A2427C4D63562747905E7D /* ArcaSkin.swift in Sources */,
+				EC6284E258BEC77CE4842838 /* ArcaTheme.swift in Sources */,
+				BDCBA473A4D4FD427FA3E224 /* ArcaVault.swift in Sources */,
+				2507446A56FAF998D45DF30D /* ArcaVoiceApp.swift in Sources */,
+				5648F1D5501434BFF78926B7 /* AsideBridge.swift in Sources */,
+				C1CF742367A2FC2AC78CD204 /* AudioRelay.swift in Sources */,
+				F6B74A0485F13B83494860C2 /* BackgroundRefresh.swift in Sources */,
+				63D78D050554D0EC405A5598 /* BrainEngine.swift in Sources */,
+				3432E7B800C09699696544DC /* BrainEntry.swift in Sources */,
+				996ECAC7C565B5C08C6490DE /* BrainView.swift in Sources */,
+				9132F83BF6262069C17A4561 /* CalendarEventCreator.swift in Sources */,
+				9B338B70C7C9ED57CC2EFD1D /* ChatBubbleView.swift in Sources */,
+				912EA03264205C4834487276 /* ChatPanel.swift in Sources */,
+				6FACB293448623D41B5CC9DE /* ChatSession.swift in Sources */,
+				C074EB1D3F3A85BE961D7066 /* ChatTabView.swift in Sources */,
+				B1627ACCBB68FE6A297A765F /* ChatToolbox.swift in Sources */,
+				6D0E5077534F548D1431B794 /* ChatWindowView.swift in Sources */,
+				BDAC7E79F997527C47E9E678 /* CodexBridge.swift in Sources */,
+				8E9E40BE070352D33A860653 /* CompanionGenesis.swift in Sources */,
+				9E9782675FB02D679D22FF39 /* CompanionHomeView.swift in Sources */,
+				5F7E2C66944BC9F57DAAB615 /* CompanionProgress.swift in Sources */,
+				3909C5ECED3BC4C3AD04F21D /* CompanionTodoRail.swift in Sources */,
+				256D9B0EB284A1D0CBEEEFF1 /* ConnectorHub.swift in Sources */,
+				D6AA177F3790247AF6F1BCEA /* ConnectorsView.swift in Sources */,
+				6F5C7A64798347078A9406F1 /* ContextEngine.swift in Sources */,
+				4DCFC9EFCFC1BFC5C06A9BD5 /* ContextView.swift in Sources */,
+				5B0356FCD7360FEA4C0212AD /* DashboardView.swift in Sources */,
+				74BA45C70823032010E1CE9E /* DayLogEngine.swift in Sources */,
+				441F3D55DEFA6BA5E6912126 /* DayLogView.swift in Sources */,
+				BAA928B4E9EB996A639C9B57 /* DebugTrace.swift in Sources */,
+				49AC0B8E8998A8FD5DB54C64 /* DevicePresence.swift in Sources */,
+				178024833E6E9B7725E84324 /* DevicePresenceBar.swift in Sources */,
+				9924ECFD8F3DF295863EFC35 /* EngineFactory.swift in Sources */,
+				36534AF5BCB824E795B7D5B7 /* FinalPassRunner.swift in Sources */,
+				ED279BE553EE28D60D4DE596 /* FloatingCompanion.swift in Sources */,
+				225EE0F54E720E61061F39DC /* FocusMode.swift in Sources */,
+				382989C88EF2EAF7ED8C2485 /* FocusRing.swift in Sources */,
+				56A17FBA446DB359FDD09ED4 /* HatchOnboardingView.swift in Sources */,
+				8D5DFB00FB130273CBEA164A /* HealthVitals.swift in Sources */,
+				9CE932E265749D75EC5C8903 /* HomeView.swift in Sources */,
+				A3707929DDDD31434A6F6191 /* HotkeyMonitor.swift in Sources */,
+				3A4166CF0B0BF34BED219BB2 /* ImageDownscaler.swift in Sources */,
+				C7F8362013B099962AC5CCE0 /* MacOnboardingGate.swift in Sources */,
+				7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */,
+				8215C5E22B581C5DD5D11057 /* MeetingChatSheet.swift in Sources */,
+				832FD3FFDA572363F224694F /* MeetingDetector.swift in Sources */,
+				059A055C3247CBCFDC13E4D8 /* MeetingRosterWatcher.swift in Sources */,
+				B9625A284F7AB2EF530E636E /* MemoryRemarkProvider.swift in Sources */,
+				8CEA12548E3BCBC82984E619 /* MorningMoment.swift in Sources */,
+				346B549160697131A79F3236 /* NightlyDigest.swift in Sources */,
+				DD5284EEA3864A8B74D5EBD5 /* NotchAgent.swift in Sources */,
+				E19C450617B87E3941822AA2 /* NotchView.swift in Sources */,
+				35EC6F3ACDDB4563A573E73E /* NotchWindowController.swift in Sources */,
+				ACAA43DD26C2710CBDD31327 /* NotificationBell.swift in Sources */,
+				A8F968B50847620BF10146A7 /* ObsidianAutoImport.swift in Sources */,
+				4D8D4024DAC7671D6C7D3C5C /* ObsidianExporter.swift in Sources */,
+				D4A342E948D858AE87794949 /* ObsidianImporter.swift in Sources */,
+				6139B32A04789D73A2FF33BB /* OnboardingView.swift in Sources */,
+				107DA608DA069CAB13C41622 /* OpsViews.swift in Sources */,
+				B925A83DC69DD89F4AC35B07 /* ParticipantPrep.swift in Sources */,
+				A4B0ACB2CDFA39E6E4F96151 /* ParticipantsCard.swift in Sources */,
+				4116A32396F23A0D8E4D49F0 /* PassRetryScheduler.swift in Sources */,
+				41CB42C5D90DBA0BCE45B9F6 /* PhoneWatchSync.swift in Sources */,
+				F9CECD0F66B2E95393C1A5F2 /* ProposalEngine.swift in Sources */,
+				86BF5DC3BA73F1C9FCF6015A /* RecordView.swift in Sources */,
+				86048B969598C0854E74B66E /* RecordingActivityController.swift in Sources */,
+				D9E9F969F6196BB8D0F1F738 /* RecordingCoordinator.swift in Sources */,
+				86B9FB725879514C2F9AA643 /* RecordingIntents.swift in Sources */,
+				659F1BEFED6CC860216FE4D2 /* RelaySync.swift in Sources */,
+				B8FCF809382DEDEDFF8692F3 /* RootView.swift in Sources */,
+				11BF81810E16C348426F48C9 /* ScreenCapturePermission.swift in Sources */,
+				EB2B7D8092776D72356B639F /* ScreenGrab.swift in Sources */,
+				A48445E622E6D989A5AF0C01 /* ScreenshotWatcher.swift in Sources */,
+				872D1CA1ED0F00FBFD26EC39 /* SessionAudioBar.swift in Sources */,
+				5807F9D46013C68B817CF6EA /* SessionDetailView.swift in Sources */,
+				5DA46D01C8C4A51D3BA65872 /* SessionListView.swift in Sources */,
+				4A93DFCDC820C66AEDB2BAA8 /* SessionPaths.swift in Sources */,
+				E8484060B9DE7C4A38CFEB0E /* SessionSpeakerStyle.swift in Sources */,
+				50E38125E02E5A174DEFF7CD /* SettingsView.swift in Sources */,
+				BAF5FCB6B9F619BB54C57DCD /* SharedInboxProcessor.swift in Sources */,
+				3E12935886E50568B39D6104 /* ShopView.swift in Sources */,
+				FA77563C23A0863D16CBA20D /* SkillsView.swift in Sources */,
+				CEED398AE19D9E47C8240B55 /* SkinsView.swift in Sources */,
+				13DFAA78EAC8BDB2351A12A6 /* SlackHarvestFilter.swift in Sources */,
+				7D8A5BFDE07CEFF22C0C9B9C /* SpiritFace.swift in Sources */,
+				F7565F4CBBF8C6DFF113B1C0 /* StorageJanitor.swift in Sources */,
+				83EF008D7767609011EB35EB /* StorageSettingsView.swift in Sources */,
+				256C2F21993AD8538446869F /* SummaryNotifier.swift in Sources */,
+				30DC4A93431EFB7D0473B1B1 /* TaskEngine.swift in Sources */,
+				B790D3624E1844636B2032C7 /* TaskListView.swift in Sources */,
+				A04BC1C8EDCBD11C2A3D787B /* TodoColumn.swift in Sources */,
+				060CAEF2921DAFE944676E2B /* TodoTriage.swift in Sources */,
+				CB4D5288CD4BA1170FFE7411 /* TranscriptionPrefs.swift in Sources */,
+				683DD2D6A53148B07A90E63C /* UserWikiView.swift in Sources */,
+				7CC4774607EB4733E5EF326C /* VitalsEngine.swift in Sources */,
+				6827B927BA9746330808FE36 /* VitalsRelay.swift in Sources */,
+				0C61FE1EF50879DB5BC6DCDD /* VitalsStore.swift in Sources */,
+				9A4DFEEFFC30FC2048B189C9 /* VitalsView.swift in Sources */,
+				70B2250CDFD252FBC510FBB0 /* VoiceTalk.swift in Sources */,
+				548BE58CF8197F8FFEBFF57D /* ZoneEngine.swift in Sources */,
+				A1703BCDD18B663C8C9AE0D9 /* ZoneReportView.swift in Sources */,
+				8BDDB066604A00B0DB7C3BB3 /* ZoneSources.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1509,6 +1815,34 @@
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
+		7E03FB3B004DE5852B209B7F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "ArcaVoice/Support/ArcaVoice-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = Q85V836Q45;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "ArcaVoice/Support/Info-Beta.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.thezone.arca.beta;
+				PRODUCT_NAME = "ARCA Beta";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ARCA_BETA";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "";
 			};
 			name = Release;
 		};
@@ -1773,6 +2107,34 @@
 			};
 			name = Debug;
 		};
+		F9FE5D918375EA4A9C3852DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "ArcaVoice/Support/ArcaVoice-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = Q85V836Q45;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "ArcaVoice/Support/Info-Beta.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.thezone.arca.beta;
+				PRODUCT_NAME = "ARCA Beta";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ARCA_BETA";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "";
+			};
+			name = Debug;
+		};
 		FB005E2CFFFCEA3569A3AF15 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1903,6 +2265,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		CF97FF4C0C55131BE36BBC2E /* Build configuration list for PBXNativeTarget "ARCA-Beta" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F9FE5D918375EA4A9C3852DE /* Debug */,
+				7E03FB3B004DE5852B209B7F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -1918,6 +2289,10 @@
 			productName = ArcaVoiceKit;
 		};
 		43B589F1254CC496D339F2A1 /* ArcaVoiceKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ArcaVoiceKit;
+		};
+		6214BB03BF1DE4EC38C39C93 /* ArcaVoiceKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ArcaVoiceKit;
 		};

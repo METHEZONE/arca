@@ -8,18 +8,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-/tmp/arca-beta}"
+SCHEME="${SCHEME:-ARCA-Beta}"
+PRODUCT="${PRODUCT:-ARCA Beta}"
 ASC_KEY="$HOME/.appstoreconnect/private_keys/AuthKey_D3CFFDDQFB.p8"
 mkdir -p "$OUT"
 DD="$OUT/dd"
 
 echo "▶ build (Release)"
-xcodebuild -project ARCA.xcodeproj -scheme ARCA -destination 'platform=macOS' -configuration Release -derivedDataPath "$DD" build \
+xcodebuild -project ARCA.xcodeproj -scheme "$SCHEME" -destination 'platform=macOS' -configuration Release -derivedDataPath "$DD" build \
   -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" -authenticationKeyID D3CFFDDQFB -authenticationKeyIssuerID 14e5aa60-5bc9-474f-8217-077735364dbe \
   | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
 
-APP="$OUT/ARCA.app"
+APP="$OUT/$PRODUCT.app"
 rm -rf "$APP"
-cp -R "$DD/Build/Products/Release/ARCA.app" "$APP"
+cp -R "$DD/Build/Products/Release/$PRODUCT.app" "$APP"
 
 echo "▶ strip owner keys"
 find "$APP/Contents/Resources" -maxdepth 1 -name "BundledKeys.plist.*" -delete
@@ -37,7 +39,7 @@ codesign --force --deep --options runtime --sign "$IDENTITY" "$APP"
 codesign --verify --deep --strict "$APP" && echo "signature ok: $IDENTITY"
 
 echo "▶ zip"
-ZIP="$OUT/ARCA-beta-$(date +%Y%m%d).zip"
+ZIP="$OUT/$(echo "$PRODUCT" | tr " " "-")-$(date +%Y%m%d).zip"
 rm -f "$ZIP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 echo "✅ $ZIP ($(du -h "$ZIP" | cut -f1))"

@@ -71,6 +71,44 @@ targets:
         CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]: ArcaVoice/Support/ArcaVoice-iOS.entitlements
         CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]: ArcaVoice/Support/ArcaVoice-iOS.entitlements
 
+  # 베타 배포용 — 같은 코드, 무거운 표면(컨디션·스킬/상점·Slack 수집·바이탈)을 끈 판.
+  # 번들ID/키체인/데이터가 본편과 분리되어 있어 한 맥에 나란히 설치할 수 있다.
+  ARCA-Beta:
+    type: application
+    supportedDestinations: [macOS]
+    sources:
+      - path: ArcaVoice
+      - path: ArcaVoiceWidgets/RecordingIntents.swift
+    dependencies:
+      - package: ArcaVoiceKit
+        product: ArcaVoiceKit
+    info:
+      path: ArcaVoice/Support/Info-Beta.plist
+      properties:
+        CFBundleDisplayName: ARCA Beta
+        NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
+        NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
+        NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
+        NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.thezone.arca.beta
+            CFBundleURLSchemes: [arca-beta]
+        LSMinimumSystemVersion: "26.0"
+        LSApplicationCategoryType: public.app-category.productivity
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        PRODUCT_NAME: ARCA Beta
+        PRODUCT_BUNDLE_IDENTIFIER: com.thezone.arca.beta
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: Q85V836Q45
+        ENABLE_HARDENED_RUNTIME: true
+        SWIFT_STRICT_CONCURRENCY: complete
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS[sdk=macosx*]: ArcaVoice/Support/ArcaVoice-macOS.entitlements
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) ARCA_BETA"
+
   # 신기능 검증용 테스트 앱 — 본편과 번들ID/키체인/데이터 완전 분리.
   # 여기서 OK 받은 커밋만 본편(ARCA)으로 올린다.
   ARCA-Test:

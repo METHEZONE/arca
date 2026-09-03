@@ -118,7 +118,9 @@ final class AmbientOps {
         }
 
         var slackSeen = Set<String>()
-        for query in SlackHarvestFilter.searchQueries(after: Self.yesterday()) {
+        // Beta keeps to mail: Slack harvesting is one of the heavy surfaces
+        // switched off there.
+        for query in ArcaEdition.isBeta ? [] : SlackHarvestFilter.searchQueries(after: Self.yesterday()) {
             guard let data = try? await execute(
                 "SLACK_SEARCH_MESSAGES",
                 toolkit: "slack",

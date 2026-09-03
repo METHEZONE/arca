@@ -24,6 +24,7 @@ final class AppServices {
     let zone = ZoneEngine()
     let dayLog = DayLogEngine()
     @ObservationIgnored private var notchWindow: NotchWindowController?
+    @ObservationIgnored private var floating: FloatingCompanionController?
     @ObservationIgnored private var screenshotWatcher: ScreenshotWatcher?
     @ObservationIgnored private let hotkeyMonitor = HotkeyMonitor()
     @ObservationIgnored private var zoneReportWindow: NSWindow?
@@ -53,7 +54,7 @@ final class AppServices {
         // queries what the Watch already wrote to Apple Health, on macOS it only
         // profiles the app-switch timeline. It never prompts for Health access
         // on its own — that's asked for in Settings, or during onboarding.
-        VitalsEngine.shared.configure()
+        if !ArcaEdition.isBeta { VitalsEngine.shared.configure() }
         // Opt-in and off by default, so this only ever re-arms an alarm the user
         // asked for. It also self-disables if the notification prompt is denied.
         Task { await MorningNotifier.reschedule() }
@@ -92,6 +93,10 @@ final class AppServices {
             if ProcessInfo.processInfo.environment["ARCA_NO_NOTCH"] == nil {
                 self.notchWindow = NotchWindowController(
                     agent: self.notch, coordinator: self.coordinator, container: container)
+            }
+            // The free-floating ARCA: on by default, hideable from its menu or Settings.
+            if UserDefaults.standard.object(forKey: FloatingCompanionController.enabledKey) as? Bool ?? true {
+                self.floating = FloatingCompanionController(services: self)
             }
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
@@ -346,6 +351,18 @@ final class AppServices {
         DevicePresence.reportActivity(zoneStartedAt: zoneStartedAt,
                                       isRecording: coordinator.phase != .idle)
     }
+
+    #if os(macOS)
+    func setFloatingCompanion(enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: FloatingCompanionController.enabledKey)
+        if enabled {
+            if floating == nil { floating = FloatingCompanionController(services: self) }
+        } else {
+            floating?.close()
+            floating = nil
+        }
+    }
+    #endif
 
     func stopRecording() {
         Task { @MainActor in

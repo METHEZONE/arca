@@ -433,6 +433,27 @@ export default function ArcaLanding() {
     setProductHref(`${base()}/` || "/");
   }, []);
 
+  const [betaName, setBetaName] = useState("");
+  const [betaEmail, setBetaEmail] = useState("");
+  const [betaNote, setBetaNote] = useState("");
+  const [betaPhase, setBetaPhase] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  async function applyBeta(e: React.FormEvent) {
+    e.preventDefault();
+    setBetaPhase("sending");
+    try {
+      const res = await fetch(`${base()}/api/arca/beta/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: betaName, email: betaEmail, note: betaNote, platform: "mac" }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setBetaPhase("done");
+    } catch {
+      setBetaPhase("error");
+    }
+  }
+
   async function joinWaitlist(e: React.FormEvent) {
     e.preventDefault();
     if (!wlEmail.trim()) return;
@@ -466,9 +487,10 @@ export default function ArcaLanding() {
           <a href="#demo">Product</a>
           <a href="#agents">Agents</a>
           <a href="#pricing">Pricing</a>
+          <a href="#beta">Beta</a>
         </div>
-        <a className="a-nav-cta" href="#waitlist">
-          Get early access
+        <a className="a-nav-cta" href="#beta">
+          Download beta
         </a>
       </nav>
 
@@ -498,8 +520,8 @@ export default function ArcaLanding() {
             <TypeLoop />
           </motion.div>
           <motion.div className="a-hero-ctas" variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}>
-            <a className="a-btn" href="#waitlist">
-              Join the waitlist
+            <a className="a-btn" href="#beta">
+              Download the Mac beta
             </a>
             <a className="a-btn-ghost" href="#demo">
               Watch it work ↓
@@ -737,6 +759,44 @@ export default function ArcaLanding() {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* ── Beta ── */}
+      <section className="a-section a-waitlist" id="beta">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          <p className="a-eyebrow">macOS · iPhone · Apple Watch</p>
+          <h2>
+            Run the real <em>beta.</em>
+          </h2>
+          <p className="a-sub">
+            Bring your own Anthropic key. Your recordings and memory stay on your Mac. Apple silicon, macOS 26+.
+          </p>
+          <div className="a-hero-ctas" style={{ justifyContent: "center", marginBottom: 22 }}>
+            <a className="a-btn-ghost" href="https://testflight.apple.com/join/U78MNCxj" target="_blank" rel="noreferrer">
+              iPhone · TestFlight →
+            </a>
+          </div>
+          {betaPhase !== "done" ? (
+            <form className="a-wl a-wl-beta" onSubmit={applyBeta}>
+              <input value={betaName} onChange={(e) => setBetaName(e.target.value)} placeholder="Name" required />
+              <input value={betaEmail} onChange={(e) => setBetaEmail(e.target.value)} placeholder="you@email.com" type="email" inputMode="email" required />
+              <input value={betaNote} onChange={(e) => setBetaNote(e.target.value)} placeholder="What will you use it for? (optional)" />
+              <motion.button type="submit" disabled={betaPhase === "sending"} whileTap={{ scale: 0.96 }}>
+                {betaPhase === "sending" ? "…" : "Request the Mac beta"}
+              </motion.button>
+            </form>
+          ) : (
+            <motion.p className="a-wl-done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              Got it. Min approves each tester by hand — your download link arrives by email, usually within a day ✓
+            </motion.p>
+          )}
+          {betaPhase === "error" && <p className="a-error">Something broke — try again?</p>}
+        </motion.div>
       </section>
 
       {/* ── Waitlist ── */}
