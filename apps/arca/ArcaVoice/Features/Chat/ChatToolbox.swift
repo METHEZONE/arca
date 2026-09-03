@@ -36,7 +36,7 @@ enum ChatToolbox {
             schemaJSON: #"{"type":"object","properties":{"url":{"type":"string"}},"required":["url"]}"#),
         ClaudeToolSpec(
             name: "run_browser_task",
-            description: "Delegate a multi-step task in the user's own logged-in browser (fill a form, find and compare things across sites, post a message in a web app). Describe the goal, not the clicks. Slow — use for things that genuinely need a browser.",
+            description: "Delegate a multi-step task to ARCA's own browser window (find and compare things across sites, fill a form, read a page behind a login the user has done there, post in a web app). ARCA looks at screenshots and clicks/types itself; the user watches and approves risky clicks. Describe the goal, not the clicks. Slow — use for things that genuinely need a browser.",
             schemaJSON: #"{"type":"object","properties":{"task":{"type":"string","description":"One paragraph describing the outcome wanted."}},"required":["task"]}"#),
     ]
 
@@ -145,12 +145,17 @@ enum ChatToolbox {
             let task = input["task"] as? String ?? ""
             #if os(macOS)
             var log: [String] = []
-            if AsideBridge.isAvailable {
+            if BrowserAgent.shared.isAvailable {
+                for await line in BrowserAgent.shared.run(task: task) { log.append(line); if log.count > 400 { log.removeFirst() } }
+                let result = BrowserAgent.shared.lastResult
+                return (L("브라우저 작업 완료", "Browser task finished"),
+                        result.isEmpty ? log.suffix(20).joined(separator: "\n") : result, true)
+            } else if AsideBridge.isAvailable {
                 for await line in AsideBridge.run(task: task) { log.append(line); if log.count > 400 { log.removeFirst() } }
             } else if CodexBridge.codexPath() != nil {
                 for await line in CodexBridge.run(task: task) { log.append(line); if log.count > 400 { log.removeFirst() } }
             } else {
-                return (L("브라우저 에이전트가 없어요", "No browser agent installed"), "Neither aside nor codex is installed.", false)
+                return (L("브라우저 작업에 쓸 모델 키가 없어요", "No model key for browser tasks"), "Add an Anthropic key or invite code; aside/codex are not installed either.", false)
             }
             let tail = log.suffix(60).joined(separator: "\n")
             return (L("브라우저 작업 완료", "Browser task finished"), tail.isEmpty ? "Finished with no output." : tail, true)
