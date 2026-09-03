@@ -27,24 +27,20 @@ xcodebuild -project ARCA.xcodeproj -scheme "$SCHEME" -destination 'platform=macO
   | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)"
 
 APP="$ARCHIVE/Products/Applications/$PRODUCT.app"
-echo "▶ strip owner keys from the bundle (BYOK: testers enter their own in onboarding)"
-# Keep only the Composio project key: connectors work per user (each install
-# mints its own user id). LLM keys, GitHub relay and the owner's Composio user
-# id must not ship.
-find "$APP/Contents/Resources" -maxdepth 1 -name "BundledKeys.plist.*" -delete
-PLIST="$APP/Contents/Resources/BundledKeys.plist"
-if [ -f "$PLIST" ]; then
-  for k in anthropic openAI githubToken githubRepo composioUserId; do /usr/libexec/PlistBuddy -c "Delete :$k" "$PLIST" 2>/dev/null || true; done
-  /usr/libexec/PlistBuddy -c "Print" "$PLIST" | sed -E 's/= .{4}.*/= ****/'
-fi
+echo "▶ strip owner keys from the bundle (keyless: testers use their own key or an ARCA Cloud invite code)"
+# Nothing of THE ZONE's ships: no LLM keys, no Composio project key, no GitHub
+# relay. Connectors for invited testers go through the ARCA Cloud proxy, which
+# scopes them to the tester's own entity.
+find "$APP/Contents/Resources" -maxdepth 1 -name "BundledKeys.plist*" -delete
 
 echo "▶ export with Developer ID (re-signs after the strip)"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$EXPORT" -exportOptionsPlist ExportOptions-developerid.plist \
   -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER" \
   | grep -E "error:|EXPORT (SUCCEEDED|FAILED)"
 
-echo "▶ verify no LLM keys shipped"
-if /usr/libexec/PlistBuddy -c "Print :anthropic" "$EXPORT/ARCA.app/Contents/Resources/BundledKeys.plist" >/dev/null 2>&1; then echo "anthropic key still present — abort"; exit 1; fi
+echo "▶ verify no keys shipped"
+if ls "$EXPORT/$PRODUCT.app/Contents/Resources"/BundledKeys.plist* >/dev/null 2>&1; then echo "BundledKeys still present — abort"; exit 1; fi
+if grep -rl "sk-ant-" "$EXPORT/$PRODUCT.app/Contents/Resources" >/dev/null 2>&1; then echo "key material found in Resources — abort"; exit 1; fi
 
 echo "▶ notarize"
 DMG="$OUT/$(echo "$PRODUCT" | tr " " "-")-mac.dmg"
