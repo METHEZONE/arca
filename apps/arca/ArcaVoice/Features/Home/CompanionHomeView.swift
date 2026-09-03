@@ -238,6 +238,10 @@ struct CompanionHomeView: View {
 
             Spacer()
 
+            AccountChip()
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+
             Button {
                 showSettings = true
             } label: {

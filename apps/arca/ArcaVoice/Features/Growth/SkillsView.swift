@@ -105,7 +105,12 @@ struct SkillsView: View {
         case .anthropic: return KeychainStore.get(.anthropic) != nil
         case .openAI: return KeychainStore.get(.openAI) != nil
         case .connector(let slug): return hub.accounts[slug] != nil
-        case .screenRecording: return MacPermission.screenRecording.isGranted && (UserDefaults.standard.object(forKey: "dayTrackerEnabled") as? Bool ?? false)
+        case .screenRecording:
+            #if os(macOS)
+            return MacPermission.screenRecording.isGranted && (UserDefaults.standard.object(forKey: "dayTrackerEnabled") as? Bool ?? false)
+            #else
+            return false
+            #endif
         }
     }
 }

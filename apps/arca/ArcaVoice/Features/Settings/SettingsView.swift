@@ -727,9 +727,7 @@ struct SettingsView: View {
     /// one menu pick away. This is how "log out and see the first run" works
     /// in an app that has no server-side login.
     private func startAsNewUser() {
-        let account = AccountStore.add(displayName: L("새 친구", "New friend"), email: nil)
-        AccountStore.switchTo(id: account.id)
-        MacPermissionCoach.shared.relaunch()
+        AccountSwitcher.logOutToFreshAccount()
     }
     #endif
 

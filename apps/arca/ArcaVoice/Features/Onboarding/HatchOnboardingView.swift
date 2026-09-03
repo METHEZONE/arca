@@ -181,6 +181,22 @@ struct HatchOnboardingView: View {
             }
             .buttonStyle(.arcaPress)
             .keyboardShortcut(.defaultAction)
+
+            // Coming back after a logout: the other accounts are one pick away.
+            let others = AccountSwitcher.all.filter { $0.id != AccountSwitcher.current.id }
+            if !others.isEmpty {
+                Menu {
+                    ForEach(others) { account in
+                        Button(account.displayName) { AccountSwitcher.logIn(to: account) }
+                    }
+                } label: {
+                    Text(L("이미 계정이 있어요 — 로그인", "Already have an account — log in"))
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
             Spacer()
         }
         .transition(.opacity.combined(with: .scale(scale: 0.98)))
