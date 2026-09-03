@@ -71,6 +71,7 @@ struct CompanionHomeView: View {
     @State private var showTour = AccountDefaults.bool(MacOnboarding.onboardedKey) == true
         && AccountDefaults.bool(CompanionTour.doneKey) != true
     @State private var tourFocus: ArcaSection?
+    @State private var sidebarFrames: [ArcaSection: CGRect] = [:]
 
     private let background = Color(red: 0.03, green: 0.05, blue: 0.09)
     private var coordinator: RecordingCoordinator { services.coordinator }
@@ -104,6 +105,18 @@ struct CompanionHomeView: View {
                         .font(.callout)
                         .lineLimit(2)
                     Spacer()
+                    if error.localizedCaseInsensitiveContains("마이크") || error.localizedCaseInsensitiveContains("microphone") {
+                        Button {
+                            MacPermissionCoach.shared.begin(.microphone)
+                        } label: {
+                            Text(L("설정 열기", "Open Settings"))
+                                .font(.caption.weight(.bold))
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(.orange, in: Capsule())
+                                .foregroundStyle(.black)
+                        }
+                        .buttonStyle(.arcaPress)
+                    }
                     Button {
                         services.coordinator.errorMessage = nil
                     } label: {
@@ -128,22 +141,31 @@ struct CompanionHomeView: View {
                 .padding(.top, 12)
                 .padding(.trailing, 20)
         }
-        .overlay(alignment: .bottomTrailing) {
-            if showTour {
-                CompanionTour(
-                    companionName: HatchedCompanion.load()?.name ?? "ARCA",
-                    onFocus: { section in
-                        withAnimation(.spring(duration: 0.3)) {
-                            tourFocus = section
-                            if let section { mode = section }
-                        }
-                    },
-                    onStartRecording: { startNewRecording() },
-                    onFinish: { withAnimation(.easeOut(duration: 0.3)) { showTour = false } })
-                .padding(.trailing, showRightRail ? 320 : 20)
-                .padding(.bottom, 20)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+        .onPreferenceChange(SidebarFramesKey.self) { frames in
+            sidebarFrames.merge(frames) { _, new in new }
+            TourDirector.shared.refreshPlacement()
+        }
+        .onAppear {
+            guard showTour, !TourDirector.shared.isActive else { return }
+            // The guide is the floating ARCA; make sure it is on screen.
+            if !(UserDefaults.standard.object(forKey: FloatingCompanionController.enabledKey) as? Bool ?? true) {
+                services.setFloatingCompanion(enabled: true)
             }
+            let name = HatchedCompanion.load()?.name ?? "ARCA"
+            TourDirector.shared.start(
+                steps: CompanionTour.steps(companionName: name),
+                anchorFor: { section in
+                    guard let section, let rect = sidebarFrames[section] else { return nil }
+                    return Self.screenRect(from: rect)
+                },
+                onFocus: { section in
+                    withAnimation(.spring(duration: 0.3)) {
+                        tourFocus = section
+                        if let section { mode = section }
+                    }
+                    if section == nil { showTour = false }
+                },
+                onRecord: { startNewRecording() })
         }
         .toolbar { toolbar }
         .onAppear { StorageJanitor.shared.runIfDue(context: modelContext) }
@@ -239,6 +261,9 @@ struct CompanionHomeView: View {
             VStack(spacing: 4) {
                 ForEach(ArcaSection.macSidebar) { item in
                     sidebarButton(mode: item)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: SidebarFramesKey.self, value: [item: geo.frame(in: .global)])
+                        })
                         .overlay {
                             if tourFocus == item {
                                 RoundedRectangle(cornerRadius: 10)
@@ -672,6 +697,26 @@ struct CompanionHomeView: View {
         }
         try? modelContext.save()
         if activeConversationId == conversationId { endActiveConversation() }
+    }
+}
+
+/// Sidebar item frames in the window's SwiftUI global space, for the tour.
+private struct SidebarFramesKey: PreferenceKey {
+    static let defaultValue: [ArcaSection: CGRect] = [:]
+    static func reduce(value: inout [ArcaSection: CGRect], nextValue: () -> [ArcaSection: CGRect]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
+extension CompanionHomeView {
+    /// SwiftUI global (top-left, window content) → AppKit screen (bottom-left).
+    static func screenRect(from rect: CGRect) -> CGRect? {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.styleMask.contains(.titled) && $0.title != "ARCA 채팅" && $0.title != "ARCA Chat" }),
+              let content = window.contentView else { return nil }
+        let contentOriginOnScreen = window.convertToScreen(content.frame).origin
+        let x = contentOriginOnScreen.x + rect.minX
+        let y = contentOriginOnScreen.y + (content.frame.height - rect.maxY)
+        return CGRect(x: x, y: y, width: rect.width, height: rect.height)
     }
 }
 

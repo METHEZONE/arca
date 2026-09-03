@@ -26,9 +26,11 @@ public enum CaptureError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .microphonePermissionDenied:
-            return "Microphone access is required. Allow ARCA to use the microphone in Settings."
+            return L("마이크 권한이 필요해요. 시스템 설정 › 개인정보 보호 및 보안 › 마이크에서 ARCA를 켜주세요.",
+                     "Microphone access is required. Turn on ARCA under System Settings › Privacy & Security › Microphone.")
         case .tapCreationFailed(let status):
-            return "Couldn't create the system audio tap (\(status)). Check Settings > Privacy > Screen & System Audio Recording."
+            return L("상대방 소리(시스템 오디오)를 잡지 못했어요 (\(status)). 시스템 설정 › 개인정보 보호 및 보안 › 화면 및 시스템 오디오 녹음에서 ARCA를 켜주세요.",
+                     "Couldn't capture system audio (\(status)). Turn on ARCA under System Settings › Privacy & Security › Screen & System Audio Recording.")
         case .aggregateDeviceCreationFailed(let status):
             return "Couldn't configure the audio device (\(status))"
         case .ioProcFailed(let status):
