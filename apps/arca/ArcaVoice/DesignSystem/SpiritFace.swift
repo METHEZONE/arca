@@ -199,10 +199,10 @@ struct ArcaFace: View {
         }
         .animation(.spring(duration: 0.35, bounce: 0.3), value: mood)
         .contentShape(Circle())
-        .onTapGesture {
-            guard interactive else { return }
-            happyBurst()
-        }
+        // Only an interactive face owns the tap. A gesture that merely ignores
+        // the tap still swallows it, and the phone's home hero (tap to record)
+        // and the Mac record button sit *behind* this view.
+        .modifier(TapIfInteractive(enabled: interactive) { happyBurst() })
         .onContinuousHover { phase in
             guard interactive || followsPointer else { return }
             switch phase {
@@ -674,4 +674,14 @@ struct HornShape: Shape {
     }
     .padding(50)
     .background(Color(red: 0.03, green: 0.05, blue: 0.09))
+}
+
+/// Attaches a tap gesture only when enabled, so a non-interactive face lets
+/// the tap through to whatever container is listening for it.
+private struct TapIfInteractive: ViewModifier {
+    let enabled: Bool
+    let action: () -> Void
+    func body(content: Content) -> some View {
+        if enabled { content.onTapGesture(perform: action) } else { content }
+    }
 }
