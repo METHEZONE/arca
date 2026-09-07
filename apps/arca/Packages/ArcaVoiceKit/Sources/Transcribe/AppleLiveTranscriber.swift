@@ -7,6 +7,7 @@ import ArcaVoiceCore
 /// (macOS 26 / iOS 26). Emits volatile segments that settle into finalized ones —
 /// the UI animates that stabilization. Models are OS-managed; the first use of a
 /// locale may download an asset.
+@available(macOS 26.0, iOS 26.0, *)
 public final class AppleLiveTranscriber: LiveTranscriber {
     /// Words the recognizer should expect — attendee names, product terms.
     ///
@@ -127,6 +128,7 @@ public final class AppleLiveTranscriber: LiveTranscriber {
 public enum TranscribeError: Error, LocalizedError {
     case noCompatibleAudioFormat
     case localeNotSupported(String)
+    case speechNotAuthorized
 
     public var errorDescription: String? {
         switch self {
@@ -134,6 +136,9 @@ public enum TranscribeError: Error, LocalizedError {
             return "No audio format compatible with the transcription engine"
         case .localeNotSupported(let identifier):
             return "On-device transcription on this device doesn't support \(identifier)"
+        case .speechNotAuthorized:
+            return L("음성 인식 권한이 없어요 — 시스템 설정 › 개인정보 보호 및 보안 › 음성 인식에서 ARCA를 켜주세요.",
+                     "Speech recognition isn't allowed — turn ARCA on in System Settings › Privacy & Security › Speech Recognition.")
         }
     }
 }

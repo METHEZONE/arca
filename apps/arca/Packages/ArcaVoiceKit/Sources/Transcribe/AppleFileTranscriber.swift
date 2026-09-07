@@ -15,6 +15,7 @@ import ArcaVoiceCore
 /// "them" are already separated by construction, for free. The paid diarized
 /// pass only adds the ability to split several remote speakers apart from each
 /// other within the system channel.
+@available(macOS 26.0, iOS 26.0, *)
 public struct AppleFileTranscriber: FinalTranscriber {
     private let locale: Locale?
 

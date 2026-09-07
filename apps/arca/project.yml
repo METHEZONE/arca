@@ -2,7 +2,7 @@ name: ARCA
 options:
   bundleIdPrefix: com.thezone.arca
   deploymentTarget:
-    macOS: "26.0"
+    macOS: "15.0"
     iOS: "26.0"
     watchOS: "26.0"
   createIntermediateGroups: true
@@ -55,7 +55,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        LSMinimumSystemVersion: "26.0"
+        LSMinimumSystemVersion: "15.0"
     settings:
       base:
         SWIFT_VERSION: "6.0"
@@ -93,7 +93,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.beta
             CFBundleURLSchemes: [arca-beta]
-        LSMinimumSystemVersion: "26.0"
+        LSMinimumSystemVersion: "15.0"
         LSApplicationCategoryType: public.app-category.productivity
     settings:
       base:
@@ -132,7 +132,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice.test
             CFBundleURLSchemes: [arca-test]
-        LSMinimumSystemVersion: "26.0"
+        LSMinimumSystemVersion: "15.0"
     settings:
       base:
         SWIFT_VERSION: "6.0"
@@ -168,7 +168,7 @@ targets:
         UIBackgroundModes: [audio]
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        LSMinimumSystemVersion: "26.0"
+        LSMinimumSystemVersion: "15.0"
     settings:
       base:
         SWIFT_VERSION: "6.0"
