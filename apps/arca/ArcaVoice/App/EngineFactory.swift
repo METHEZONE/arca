@@ -66,7 +66,11 @@ enum EngineFactory {
             // than the cloud model's language hints — those can be empty (the
             // "auto" setting) or bare like "ko", and the on-device engine wants
             // a locale it actually publishes.
-            finalTranscriber = AppleFileTranscriber(locale: TranscriptionPrefs.liveLocale)
+            if #available(macOS 26.0, iOS 26.0, *), !UserDefaults.standard.bool(forKey: "legacySpeech") {
+                finalTranscriber = AppleFileTranscriber(locale: TranscriptionPrefs.liveLocale)
+            } else {
+                finalTranscriber = LegacyFileTranscriber(locale: TranscriptionPrefs.liveLocale)
+            }
         case .cloudDiarized:
             guard let openAIKey else { return nil }
             finalTranscriber = OpenAIDiarizedTranscriber(apiKey: openAIKey)

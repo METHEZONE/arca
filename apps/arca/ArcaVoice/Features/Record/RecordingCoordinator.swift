@@ -99,8 +99,16 @@ final class RecordingCoordinator {
             // are spelled right in the transcript scrolling past the user —
             // this is the whole payoff of asking beforehand on an engine that
             // can't tell voices apart.
-            let transcriber = AppleLiveTranscriber(
-                vocabulary: plannedParticipants.vocabulary(excluding: Self.ownerName))
+            let vocabulary = plannedParticipants.vocabulary(excluding: Self.ownerName)
+            let transcriber: any LiveTranscriber
+            // `legacySpeech` (UserDefaults) forces the Sequoia path on a newer
+            // Mac so the fallback can be QA'd without an old machine.
+            if #available(macOS 26.0, iOS 26.0, *), !UserDefaults.standard.bool(forKey: "legacySpeech") {
+                transcriber = AppleLiveTranscriber(vocabulary: vocabulary)
+            } else {
+                // Sequoia and earlier: the older recognizer, rotated per minute.
+                transcriber = LegacyLiveTranscriber(vocabulary: vocabulary)
+            }
             for (channel, stream) in streams {
                 let task = Task { [weak self] in
                     do {
