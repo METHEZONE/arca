@@ -34,7 +34,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>26.0</string>
+	<string>15.0</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
