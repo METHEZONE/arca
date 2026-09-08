@@ -7,10 +7,16 @@ import { eq } from "drizzle-orm";
 
 import { deviceIdFromRequest } from "@/lib/arca/device";
 import { authorizeInvite } from "@/lib/cloud";
+import { sessionFromRequest } from "@/lib/arca/session";
 import { db } from "@/lib/db/client";
 import { devices } from "@/lib/db/schema";
 
 export async function resolveOwner(req: Request): Promise<string | null> {
+  // A signed-in tenant (session cookie / bearer, lib/arca/session.ts) is the
+  // most specific identity, and the one every device of that user shares.
+  const session = await sessionFromRequest(req).catch(() => null);
+  if (session?.userId) return `user:${session.userId}`;
+
   const deviceId = deviceIdFromRequest(req);
   if (deviceId) {
     const client = db();

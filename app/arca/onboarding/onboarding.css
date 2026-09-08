@@ -1,0 +1,183 @@
+/* ARCA onboarding — reuses tokens + a-btn/a-btn-ghost/a-error/a-price from
+   ../arca.css; only layout + step-specific classes live here. */
+
+.onb-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.onb-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  background: var(--canvas);
+}
+
+.onb-logo {
+  display: block;
+  margin-bottom: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.onb-step h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.onb-sub {
+  margin: 0 0 20px;
+  color: var(--sub);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.onb-google {
+  width: 100%;
+  padding: 13px 18px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
+.onb-google:hover {
+  background: var(--line);
+}
+
+.onb-email {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.onb-email input {
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.onb-email input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.onb-email button {
+  width: 100%;
+}
+
+.onb-ok {
+  margin: 4px 0 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.onb-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.onb-links a {
+  font-size: 13.5px;
+  color: var(--sub);
+}
+
+.onb-skip {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.onb-skip-link {
+  display: block;
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--sub);
+}
+
+.onb-plans {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onb-plan {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--field);
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+  text-decoration: none;
+  font: inherit;
+}
+
+.onb-plan h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.onb-plan .a-price {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.onb-plan .a-btn,
+.onb-plan .a-btn-ghost {
+  display: inline-block;
+  margin-top: 10px;
+  pointer-events: none;
+}
+
+.onb-plan-hot {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-cta);
+}
+
+.onb-note {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ter);
+}
+
+.onb-done {
+  text-align: center;
+}
+
+.onb-done .a-btn {
+  display: block;
+  margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+  .onb-card {
+    padding: 28px 20px;
+    border-radius: 16px;
+  }
+}

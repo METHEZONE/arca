@@ -73,6 +73,16 @@ export function analysisProvider(): AnalysisProvider {
   return "demo";
 }
 
+/* --------------------------------- Auth ----------------------------------- */
+
+export function googleOAuthClientId(): string | undefined {
+  return env("GOOGLE_OAUTH_CLIENT_ID");
+}
+
+export function googleOAuthClientSecret(): string | undefined {
+  return env("GOOGLE_OAUTH_CLIENT_SECRET");
+}
+
 /* ----------------------------- Integrations ------------------------------ */
 
 export function obsidianVaultPath(): string | undefined {
