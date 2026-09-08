@@ -53,3 +53,6 @@ CONFIG_LV_FONT_MONTSERRAT_16=y
 CONFIG_LV_FONT_MONTSERRAT_20=y
 CONFIG_LV_FONT_MONTSERRAT_28=y
 CONFIG_LV_COLOR_DEPTH_16=y
+
+# Cache the aura shadow: without this every bob re-blurs it and the frame rate halves.
+CONFIG_LV_DRAW_SW_SHADOW_CACHE_SIZE=96

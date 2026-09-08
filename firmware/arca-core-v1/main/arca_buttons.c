@@ -97,6 +97,25 @@ static void boot_edge_up(btn_t *b, int64_t held_ms)
     }
 }
 
+// ---------------------------------------------------------------- touch -----
+
+// No polling and no glitch filter here: LVGL already debounces the panel and
+// hands us clean press/release edges. Marks stay on the physical button.
+static btn_t s_touch = { .pin = -1 };
+
+void arca_buttons_touch(bool down)
+{
+    if (down && !s_touch.down) {
+        s_touch.down    = true;
+        s_touch.down_us = now_ms();
+        boot_edge_down(&s_touch);
+        ESP_LOGI(TAG, "touch down");
+    } else if (!down && s_touch.down) {
+        s_touch.down = false;
+        boot_edge_up(&s_touch, now_ms() - s_touch.down_us);
+    }
+}
+
 // ---------------------------------------------------------------- task ------
 
 static void tick(btn_t *b)

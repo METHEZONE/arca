@@ -1,4 +1,5 @@
 #include "arca_power.h"
+#include "arca_face.h"
 
 #include "arca_state.h"
 
@@ -76,7 +77,8 @@ static void key_tick(void)
         ESP_LOGI(TAG, "PWR long press -> sync now");
     } else if (sts & AXP2101_KEY_SHORT) {
         xEventGroupSetBits(arca_events(), ARCA_EVT_SCREEN_WAKE);
-        ESP_LOGI(TAG, "PWR short press -> screen wake");
+        arca_face_toggle_view();
+        ESP_LOGI(TAG, "PWR short press -> screen wake / view");
     }
 
     write_reg(AXP2101_REG_INTSTS2, sts);

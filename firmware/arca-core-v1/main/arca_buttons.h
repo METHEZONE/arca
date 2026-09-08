@@ -32,4 +32,10 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 void arca_buttons_start(void);
+
+// The touch panel as a second record button: press = same as BOOT going down,
+// release = same as BOOT coming up. Fed from the LVGL input events in arca_face.c.
+void arca_buttons_touch(bool down);

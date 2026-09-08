@@ -25,3 +25,6 @@ void arca_face_start(void);
 
 // Called by the event loop so the panel dims/sleeps on its own schedule.
 void arca_face_note_activity(void);
+
+// Face <-> stats. No-op while the panel is asleep (that press only wakes it).
+void arca_face_toggle_view(void);
