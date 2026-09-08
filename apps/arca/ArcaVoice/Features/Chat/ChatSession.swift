@@ -24,6 +24,11 @@ final class ChatSession {
 
     init(conversationId: String = UUID().uuidString) {
         self.conversationId = conversationId
+        // Server memory is fetched once per conversation, off the turn path;
+        // turns read the cache so a slow network never delays a reply.
+        if BrainClient.isAvailable {
+            Task.detached(priority: .utility) { await BrainClient.refreshContext() }
+        }
     }
 
     /// Scopes this conversation to a specific record (a meeting, a day log…):
@@ -119,6 +124,9 @@ final class ChatSession {
                 context.insert(MemoryFact(text: memory.text, kind: memory.kind, source: "chat"))
             }
             try? context.save()
+            await BrainClient.remember(extracted.map {
+                BrainEntry(text: $0.text, kind: $0.kind, source: "chat", sourceRef: conversationId)
+            })
         }
     }
 
@@ -134,7 +142,7 @@ final class ChatSession {
         proposedBrowserTask = nil
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         let history = messages
-        var memoryBlock = MemoryPrompt.systemBlock(facts: memoryFacts())
+        var memoryBlock = MemoryPrompt.systemBlock(facts: memoryFacts(), brain: BrainClient.cachedContext)
         // Today's measured body rides every turn, so "지금 컨디션 어때?" is answered
         // from Apple Health instead of guessed at. Empty when nothing's measured.
         memoryBlock += VitalsEngine.shared.chatContextBlock()

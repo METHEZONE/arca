@@ -8,14 +8,18 @@
     "start": "next start --port 4174",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:brain": "node --experimental-strip-types --test lib/brain/logic.test.ts",
     "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
     "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.41.0",
     "next": "16.2.9",
     "openai": "^6.42.0",
+    "postgres": "^3.4.9",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "zod": "^4.4.3"
@@ -27,6 +31,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.10",
     "puppeteer-core": "^25.2.1",

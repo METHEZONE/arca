@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/brain/consolidate", "schedule": "0 * * * *" }
+  ]
+}

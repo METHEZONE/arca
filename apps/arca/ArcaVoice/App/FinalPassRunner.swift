@@ -124,6 +124,8 @@ enum FinalPassRunner {
                     sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)
                     autoExportToObsidianIfEnabled(record: record)
+                    // Last: one more model call, and nothing the user is waiting on.
+                    await rememberFromMeeting(record: record, notes: notes)
                 }
             } catch {
                 // The live transcript stays put — it's already in `segments` and
@@ -334,5 +336,34 @@ enum FinalPassRunner {
             DebugTrace.log("obsidian auto-export failed: \(error.localizedDescription)")
         }
         #endif
+    }
+
+    /// Meetings are where most of what ARCA should remember is said, yet until
+    /// now only chats fed long-term memory. Distills the finished summary into
+    /// a few durable facts, keeps them locally, and sends them to ARCA Brain.
+    /// Best-effort: no key or a failed call just means no memories this time.
+    private static func rememberFromMeeting(record: RecordingSession, notes: MeetingNotes) async {
+        guard let key = ArcaCloud.anthropicKey, !key.isEmpty,
+              let context = record.modelContext else { return }
+        var text = "Meeting: \(notes.title)\n\(notes.summaryMarkdown)"
+        if !notes.decisions.isEmpty {
+            text += "\nDecisions:\n- " + notes.decisions.joined(separator: "\n- ")
+        }
+        if !notes.actionItems.isEmpty {
+            text += "\nAction items:\n- " + notes.actionItems.map(\.text).joined(separator: "\n- ")
+        }
+        let known = ((try? context.fetch(FetchDescriptor<MemoryFact>())) ?? []).map(\.text)
+        let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
+        guard let extracted = try? await MemoryExtractor(apiKey: key, model: model)
+            .extract(fromConversation: text, knownFacts: known), !extracted.isEmpty else { return }
+        for memory in extracted {
+            context.insert(MemoryFact(text: memory.text, kind: memory.kind, source: "meeting"))
+        }
+        try? context.save()
+        await BrainClient.remember(extracted.map {
+            BrainEntry(text: $0.text, kind: $0.kind, source: "meeting",
+                       sourceRef: record.directoryName, createdAt: record.createdAt)
+        })
+        DebugTrace.log("meeting memories: \(extracted.count) from \(record.directoryName)")
     }
 }
