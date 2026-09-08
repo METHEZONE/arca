@@ -170,6 +170,33 @@ bool arca_storage_mark_failed(const char *path)
     return move_with_sidecar(path, ARCA_DIR_FAILED);
 }
 
+void arca_storage_usage(uint64_t *total_mb, uint64_t *free_mb)
+{
+    uint64_t total = 0, freeb = 0;
+    if (s_ready) esp_vfs_fat_info(ARCA_SD_ROOT, &total, &freeb);
+    if (total_mb) *total_mb = total / (1024ULL * 1024ULL);
+    if (free_mb)  *free_mb  = freeb / (1024ULL * 1024ULL);
+}
+
+uint32_t arca_storage_free_oldest(int max_files)
+{
+    if (!s_ready) return 0;
+    uint32_t removed = 0;
+    for (int i = 0; i < max_files; i++) {
+        char victim[256];
+        if (!oldest_in(ARCA_DIR_UPLOADED, victim, sizeof(victim), ".wav")) break;
+        char sidecar[256];
+        snprintf(sidecar, sizeof(sidecar), "%s", victim);
+        char *ext = strrchr(sidecar, '.');
+        if (ext) strcpy(ext, ".json");
+        unlink(victim);
+        unlink(sidecar);
+        removed++;
+        ESP_LOGI(TAG, "panel freed %s", victim);
+    }
+    return removed;
+}
+
 void arca_storage_reclaim(uint32_t min_free_mb)
 {
     if (!s_ready) return;

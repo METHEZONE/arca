@@ -17,6 +17,13 @@ bool arca_storage_ready(void);
 
 uint64_t arca_storage_free_bytes(void);
 
+// Card usage for the control panel, in whole MB.
+void arca_storage_usage(uint64_t *total_mb, uint64_t *free_mb);
+
+// Delete up to max_files oldest ALREADY-UPLOADED recordings on demand (the
+// panel's "Free space"). Returns how many it removed. Never touches queue/.
+uint32_t arca_storage_free_oldest(int max_files);
+
 // Count of .wav files still waiting in queue/.
 uint32_t arca_storage_queue_count(void);
 

@@ -34,3 +34,7 @@ void arca_uploader_start(void);
 void arca_uploader_request_sync(void);
 
 bool arca_uploader_wifi_up(void);
+
+// For the on-device control panel.
+const char *arca_uploader_ssid(void);   // network in use / first configured
+int arca_uploader_network_count(void);  // 0 = no Wi-Fi set on the card yet

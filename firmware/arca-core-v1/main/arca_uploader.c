@@ -28,13 +28,19 @@ static const char *TAG = "arca-up";
 
 #define BOUNDARY "----ArcaCoreV1Boundary7f3a"
 
+#define ARCA_MAX_NETWORKS 4
+typedef struct { char ssid[33]; char password[65]; } arca_net_t;
+
 static struct {
-    char ssid[33];
-    char password[65];
+    arca_net_t nets[ARCA_MAX_NETWORKS];
+    int  net_count;
     char base_url[128];
     char token[96];
     char device_id[48];
 } s_cfg;
+
+// The network we are on / last tried, for the control panel to show.
+static char s_active_ssid[33];
 
 static EventGroupHandle_t s_wifi_evt;
 #define WIFI_CONNECTED BIT0
@@ -82,12 +88,38 @@ static bool load_config(void)
         }                                                                     \
     } while (0)
 
-    GRAB(ssid, "ssid");
-    GRAB(password, "password");
     GRAB(base_url, "baseUrl");
     GRAB(token, "token");
     GRAB(device_id, "deviceId");
 #undef GRAB
+
+    // Networks: a "networks":[{ssid,password}, ...] list is tried in order,
+    // which is how the home Wi-Fi and the iPhone hotspot both work with no app
+    // code - whichever is in range wins. A bare "ssid"/"password" pair still
+    // works and becomes the first entry.
+    s_cfg.net_count = 0;
+    cJSON *legacy_ssid = cJSON_GetObjectItemCaseSensitive(root, "ssid");
+    if (cJSON_IsString(legacy_ssid) && legacy_ssid->valuestring && legacy_ssid->valuestring[0]) {
+        cJSON *pw = cJSON_GetObjectItemCaseSensitive(root, "password");
+        snprintf(s_cfg.nets[0].ssid, sizeof(s_cfg.nets[0].ssid), "%s", legacy_ssid->valuestring);
+        if (cJSON_IsString(pw) && pw->valuestring)
+            snprintf(s_cfg.nets[0].password, sizeof(s_cfg.nets[0].password), "%s", pw->valuestring);
+        s_cfg.net_count = 1;
+    }
+    cJSON *nets = cJSON_GetObjectItemCaseSensitive(root, "networks");
+    if (cJSON_IsArray(nets)) {
+        cJSON *n;
+        cJSON_ArrayForEach(n, nets) {
+            if (s_cfg.net_count >= ARCA_MAX_NETWORKS) break;
+            cJSON *ns = cJSON_GetObjectItemCaseSensitive(n, "ssid");
+            cJSON *np = cJSON_GetObjectItemCaseSensitive(n, "password");
+            if (!cJSON_IsString(ns) || !ns->valuestring || !ns->valuestring[0]) continue;
+            arca_net_t *slot = &s_cfg.nets[s_cfg.net_count++];
+            snprintf(slot->ssid, sizeof(slot->ssid), "%s", ns->valuestring);
+            if (cJSON_IsString(np) && np->valuestring)
+                snprintf(slot->password, sizeof(slot->password), "%s", np->valuestring);
+        }
+    }
 
     cJSON_Delete(root);
 
@@ -95,10 +127,12 @@ static bool load_config(void)
     size_t bl = strlen(s_cfg.base_url);
     if (bl && s_cfg.base_url[bl - 1] == '/') s_cfg.base_url[bl - 1] = '\0';
 
-    ESP_LOGI(TAG, "config: ssid=\"%s\" base=%s device=%s token=%s",
-             s_cfg.ssid, s_cfg.base_url, s_cfg.device_id,
+    ESP_LOGI(TAG, "config: %d network(s), base=%s device=%s token=%s",
+             s_cfg.net_count, s_cfg.base_url, s_cfg.device_id,
              s_cfg.token[0] ? "set" : "MISSING");
-    return s_cfg.ssid[0] != '\0';
+    for (int i = 0; i < s_cfg.net_count; i++)
+        ESP_LOGI(TAG, "  net[%d] ssid=\"%s\"", i, s_cfg.nets[i].ssid);
+    return s_cfg.net_count > 0;
 }
 
 // ---------------------------------------------------------------- wifi ------
@@ -139,20 +173,14 @@ static void wifi_init_once(void)
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MIN_MODEM));
 }
 
-static bool wifi_connect(void)
+static bool wifi_try(const arca_net_t *net)
 {
-    if (s_wifi_up) return true;
-    if (!s_cfg.ssid[0]) return false;
-
-    wifi_init_once();
-
     wifi_config_t wc = {0};
     // wifi_config_t's ssid/password are exactly 32/64 bytes and may legally be
     // unterminated when full, so copy by measured length rather than snprintf.
-    memcpy(wc.sta.ssid, s_cfg.ssid, strnlen(s_cfg.ssid, sizeof(wc.sta.ssid)));
-    memcpy(wc.sta.password, s_cfg.password,
-           strnlen(s_cfg.password, sizeof(wc.sta.password)));
-    wc.sta.threshold.authmode = s_cfg.password[0] ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
+    memcpy(wc.sta.ssid, net->ssid, strnlen(net->ssid, sizeof(wc.sta.ssid)));
+    memcpy(wc.sta.password, net->password, strnlen(net->password, sizeof(wc.sta.password)));
+    wc.sta.threshold.authmode = net->password[0] ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
 
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
     xEventGroupClearBits(s_wifi_evt, WIFI_CONNECTED | WIFI_FAILED);
@@ -162,13 +190,28 @@ static bool wifi_connect(void)
                                            pdFALSE, pdFALSE,
                                            pdMS_TO_TICKS(ARCA_WIFI_CONNECT_TIMEOUT_MS));
     if (bits & WIFI_CONNECTED) {
-        ESP_LOGI(TAG, "wifi up on \"%s\"", s_cfg.ssid);
+        ESP_LOGI(TAG, "wifi up on \"%s\"", net->ssid);
+        snprintf(s_active_ssid, sizeof(s_active_ssid), "%s", net->ssid);
         arca_clock_sntp_start();
         return true;
     }
-
-    ESP_LOGI(TAG, "wifi \"%s\" not reachable, radio back down", s_cfg.ssid);
+    ESP_LOGI(TAG, "wifi \"%s\" not reachable", net->ssid);
     esp_wifi_stop();
+    return false;
+}
+
+// Tries every configured network in order; the first that answers wins. This is
+// the whole "auto-connect to home Wi-Fi or the phone hotspot" story.
+static bool wifi_connect(void)
+{
+    if (s_wifi_up) return true;
+    if (s_cfg.net_count == 0) return false;
+
+    wifi_init_once();
+
+    for (int i = 0; i < s_cfg.net_count; i++) {
+        if (wifi_try(&s_cfg.nets[i])) return true;
+    }
     s_wifi_up = false;
     return false;
 }
@@ -478,3 +521,11 @@ void arca_uploader_start(void)
 
 void arca_uploader_request_sync(void) { s_sync_requested = true; }
 bool arca_uploader_wifi_up(void)      { return s_wifi_up; }
+
+const char *arca_uploader_ssid(void)
+{
+    if (s_active_ssid[0]) return s_active_ssid;
+    if (s_cfg.net_count > 0) return s_cfg.nets[0].ssid;
+    return "";
+}
+int arca_uploader_network_count(void) { return s_cfg.net_count; }
