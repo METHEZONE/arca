@@ -29,9 +29,8 @@ Hold the device with **USB-C and both buttons along the top edge**:
 | **LEFT — BOOT (GPIO0)** | **hold** | push-to-talk. Records while held, stops on release |
 | | **click** | starts a long session. Click again to stop |
 | | hold during a session | drops a highlight marker |
-| **RIGHT — PWR (GPIO41)** | click | wake screen, then toggle face ↔ stats |
-| | double click | drops a highlight marker |
-| | hold ~1.2 s | sync to cloud now |
+| **RIGHT — PWR (AXP2101 PWRON)** | short press | wake screen, then toggle face ↔ stats |
+| | long press | sync to cloud now |
 | | hold ~6 s | ⚠️ AXP2101 cuts power **in hardware**. Firmware cannot veto it |
 | **Touch** | tap | wake / switch view only. Never starts or stops recording |
 
@@ -39,6 +38,17 @@ Hold the device with **USB-C and both buttons along the top edge**:
 button for as long as you are speaking, and a long hold on PWR reaches the PMU's
 hardware power-off. No firmware can override that, so push-to-talk physically
 cannot live on PWR. BOOT is a plain GPIO with none of that baggage.
+
+**The right button is not a GPIO.** It is wired to the AXP2101's `PWRON` pin —
+which is the same reason a 6 s hold kills power in hardware — so it is read by
+polling the PMU's key IRQ latch (`INTSTS2`, reg `0x49`) over I2C, not with
+`gpio_get_level`. An earlier version guessed GPIO41; that pin is absent from the
+BSP pin map and rests LOW, so the poller saw a button held down forever and
+fired a cloud sync 1.2 s into **every boot**. Only running it on the board found
+this — it builds and links perfectly either way.
+
+The PMU latch reports short press and long press, and nothing finer. That is why
+there is no PWR double-click gesture: marking during a session is a BOOT hold.
 
 **Touch never records.** A capacitive panel in a pocket fires constantly. Touch
 is allowed to wake the screen and change views, nothing else.
@@ -302,12 +312,16 @@ Console is USB-CDC over the same Type-C port, no separate UART bridge.
 
 ### Build status
 
-**Builds clean** with ESP-IDF 5.5 for esp32s3:
+**Builds clean and runs on the board** with ESP-IDF 5.5 for esp32s3:
 
 ```
-arca_core_v1.bin   1,634,672 bytes   (74% of the app partition still free)
-text 1,385,309   data 261,116   bss 2,890,637
+arca_core_v1.bin   1,706,256 bytes   (73% of the app partition still free)
 ```
+
+That is ~71 KB larger than a build with `sdkconfig.ci`, and the difference is
+the 68,983-byte mbedTLS root-CA bundle — the sandbox-workaround build turns it
+off, so check `CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y` in the generated `sdkconfig`
+before trusting an image to upload over HTTPS.
 
 All feature paths verified present in the linked ELF: `bsp_extra_i2s_read`
 (mic), `bsp_sdcard_mount` (card), `bsp_display_start_with_config` (panel),
@@ -350,18 +364,38 @@ unsigned dylib. Two tools work around it:
 ./build-vendored.sh --flash   # build + flash
 ```
 
-Flashing has one more wall on top of that. The sandbox also denies serial line
-control, and while `tcsetattr`/`tcflush` are safe to no-op on a USB-CDC endpoint,
-`ioctl(TIOCMBIS/TIOCMBIC)` is not: on the ESP32-S3's native USB-Serial-JTAG those
-lines are exactly how esptool drives the chip into ROM download mode. Blocked,
-esptool reaches the port, sends its sync frames and gets silence, because the
-application is still running.
+Two things that *look* like the same wall but are not:
 
-`tools/esptool_sandboxed.py` neutralises everything that is safe to neutralise,
-which is enough to flash a board that is *already* in download mode. This board
-has no RESET button (PWR goes through the AXP2101), so getting it there by hand
-means: **unplug USB-C, hold BOOT, plug USB-C back in, release BOOT** — then flash
-with `--before no_reset --after no_reset` and power-cycle to run the new app.
+**Serial line control is not always blocked.** Whether `ioctl(TIOCMBIS/TIOCMBIC)`
+gets through depends on the shell, not on the board. When it is denied, esptool
+reaches the port, sends sync frames and hears nothing, because those lines are
+exactly how it drives the ESP32-S3's native USB-Serial-JTAG into ROM download
+mode. **Test before assuming** — a plain `esptool ... chip_id` that prints
+`Chip is ESP32-S3` and `Hard resetting via RTS pin` means ordinary
+`--before default_reset` flashing works and none of the workarounds are needed.
+
+If it really is blocked, `tools/esptool_sandboxed.py` neutralises everything
+that is safe to neutralise, which is enough to flash a board *already* in
+download mode. This board has no RESET button (PWR goes through the AXP2101), so
+getting it there by hand means: **unplug USB-C, hold BOOT, plug USB-C back in,
+release BOOT** — then flash with `--before no_reset --after no_reset` and
+power-cycle to run the new app.
+
+**`cryptography` may be broken rather than blocked.** The CA-bundle step can
+fail with `cannot import name 'x509' from cryptography.hazmat.bindings._rust
+(unknown location)`. That is not the dylib policy — it means the compiled
+extension is missing from the IDF venv and only the `.pyi` stubs are there, so
+`_rust` resolves as an empty namespace package. Fix it properly instead of
+building without TLS:
+
+```bash
+~/.espressif/python_env/idf5.5_py3.9_env/bin/python \
+    -m pip install --force-reinstall --no-cache-dir cryptography
+```
+
+`build-vendored.sh` probes `from cryptography import x509`, not
+`import cryptography` — the latter is pure Python and succeeds even with the
+binding gone, which would silently produce a no-CA image that cannot upload.
 
 Two gotchas this uncovered, both encoded in the scripts:
 
@@ -481,6 +515,21 @@ You could port it. You would be reimplementing a working driver for no reason.
   ASCII for now; adding Korean means generating a Pretendard subset with
   `lv_font_conv` (project convention: Pretendard with tightened letter-spacing,
   never serif).
-- **Not flashed to hardware yet.** It *builds* (see below) and every feature
-  symbol links, but nothing has run on the board, so the display rotation, the
-  button feel, and the mic gain are all unverified against reality.
+- **PWR key bit mapping is still assumed.** `AXP2101_KEY_SHORT`/`_LONG` in
+  `arca_power.c` are bits 2 and 3 of `INTSTS2`. Idle reads 0 on the bench, so
+  the register is being read correctly, but no press has been observed yet.
+  `key_tick()` logs the raw latch (`PWRON latch 0x..`) precisely so one press
+  confirms or corrects the two constants.
+- **Mic gain and the face are unverified by eye.** The ES7210 configures and the
+  capture task reports `16000 Hz mono, 6 s pre-roll, 8 s ring`, and the face
+  reports `284x240 landscape rot270`, but nobody has looked at the screen or
+  listened to a recording yet.
+- **SD has never been exercised.** Every bench boot so far ran with no card, so
+  the queue, rollover and crash-repair code paths are untested on real media.
+
+  Note that **the card is not optional**: `arca_recorder_begin()` refuses
+  outright when storage is not ready, so with no card in the slot every press of
+  the record button puts `no SD - cannot record` on screen and nothing is
+  captured. `arca_storage.c` used to log `recording to RAM only` on mount
+  failure, which promised a fallback that does not exist anywhere in the
+  firmware.

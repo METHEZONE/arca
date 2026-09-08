@@ -46,14 +46,15 @@ actor HealthVitals {
     }
 
     /// Everything ARCA writes — food logged by voice, and the mindful minutes a
-    /// deep-measure session earns.
+    /// deep-measure session earns. The food correlation itself is not listed:
+    /// HealthKit rejects it at authorization time (uncatchable exception), and
+    /// saving a correlation only needs the nutrient types below.
     private static var shareTypes: Set<HKSampleType> {
         [
             HKQuantityType(.dietaryEnergyConsumed),
             HKQuantityType(.dietaryProtein),
             HKQuantityType(.dietaryCarbohydrates),
             HKQuantityType(.dietaryFatTotal),
-            HKCorrelationType(.food),
             HKCategoryType(.mindfulSession),
         ]
     }

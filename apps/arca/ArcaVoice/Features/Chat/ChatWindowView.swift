@@ -26,6 +26,15 @@ struct ChatWindowView: View {
                     .font(.system(.headline, design: .rounded, weight: .bold))
                 Spacer()
                 Button {
+                    BrowserAgentWindow.present()
+                } label: {
+                    Label(L("브라우저", "Browser"), systemImage: "globe")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.arcaPress)
+                .foregroundStyle(.white.opacity(0.7))
+                .help(L("ARCA가 직접 쓰는 브라우저 창. 로그인은 여기서 한 번만.", "The browser ARCA drives. Sign in once here."))
+                Button {
                     chat.endConversation()
                     chat = ChatSession()
                 } label: {

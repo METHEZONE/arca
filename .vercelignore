@@ -5,7 +5,7 @@ apps
 deck
 ir
 examples
-hardware
+/hardware
 docs
 data
 .slack
@@ -27,3 +27,5 @@ dist
 *.xcworkspace
 *.xcodeproj
 *.log
+/firmware
+.serena

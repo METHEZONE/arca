@@ -41,7 +41,12 @@ fi
 # uploader compiles either way (see the CONFIG_MBEDTLS_CERTIFICATE_BUNDLE guards
 # in arca_uploader.c). A normal ./flash.sh build keeps TLS verification on.
 DEFAULTS="sdkconfig.defaults"
-if ! python3 -c "import cryptography" >/dev/null 2>&1; then
+#
+# Probe what gen_crt_bundle.py actually imports, not just the top-level package.
+# `import cryptography` is pure Python and succeeds even when the compiled
+# `_rust` extension is absent - which is exactly how this venv shipped, and it
+# would have silently produced a no-CA image that cannot upload.
+if ! python3 -c "from cryptography import x509" >/dev/null 2>&1; then
   echo "==> cryptography unavailable, disabling the CA bundle for this build"
   DEFAULTS="sdkconfig.defaults;sdkconfig.ci"
 fi

@@ -129,6 +129,15 @@ struct RootView: View {
                     if coordinator.phase == .idle { services.startRecording() }
                 case "stop":
                     services.stopRecording()
+                case "browse":
+                    // arca://browse?task=... — open ARCA's browser and, with a
+                    // task, hand it to the browser agent (Shortcuts/Raycast/harness).
+                    BrowserAgentWindow.present()
+                    let task = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                        .queryItems?.first { $0.name == "task" }?.value ?? ""
+                    if !task.isEmpty {
+                        Task { for await _ in BrowserAgent.shared.run(task: task) {} }
+                    }
                 default:
                     break
                 }

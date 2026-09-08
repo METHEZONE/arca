@@ -273,6 +273,10 @@ bool arca_recorder_begin(arca_rec_mode_t mode)
         return true;
     }
     if (!arca_storage_ready()) {
+        // Say so on the wire too. This used to fail silently, so on a card-less
+        // board the log showed "BOOT down -> recording" with no matching
+        // release and no reason, which reads like a dead button.
+        ESP_LOGW(TAG, "record refused: no SD card mounted");
         arca_state_set_status("no SD - cannot record");
         arca_state_set_face(ARCA_FACE_ERROR);
         return false;

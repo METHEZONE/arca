@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import ArcaVoiceCore
 
 /// One long-term memory ARCA keeps about the user — a fact, preference, or
 /// ongoing project. Injected into every chat's system prompt so ARCA stays
@@ -23,6 +24,13 @@ public final class MemoryFact {
 }
 
 public enum MemoryPrompt {
+    /// Server memory (ARCA Brain) first, then the local facts. The local list
+    /// stays so a device without an invite code, or offline, behaves as before.
+    public static func systemBlock(facts: [MemoryFact], brain: BrainContext?) -> String {
+        let brainBlock = brain?.promptBlock() ?? ""
+        return brainBlock + systemBlock(facts: facts)
+    }
+
     /// Renders memory facts as a system-prompt block (empty string when none).
     public static func systemBlock(facts: [MemoryFact]) -> String {
         guard !facts.isEmpty else { return "" }

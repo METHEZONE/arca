@@ -44,7 +44,9 @@ bool arca_storage_mount(void)
     if (err != ESP_OK) {
         s_ready = false;
         arca_state_set_status("no SD card");
-        ESP_LOGE(TAG, "SD unavailable - recording to RAM only");
+        // Not "RAM only" - there is no such path. arca_recorder_begin() refuses
+        // outright without storage, so the card is required to record at all.
+        ESP_LOGE(TAG, "SD unavailable - cannot record until a FAT32 card is in");
         return false;
     }
 
