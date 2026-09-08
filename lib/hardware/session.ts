@@ -32,6 +32,7 @@ import { analyze } from "@/lib/analysis";
 import { transcribe } from "@/lib/transcription";
 import { pushToTargets } from "@/lib/integrations";
 import { newMemoryId, saveMemory, updateMemory } from "@/lib/secondbrain/store";
+import { mailOwner } from "@/lib/hardware/notify";
 import type { Memory, SpeakerSummary, Transcript, TranscriptSegment } from "@/lib/types";
 
 const SESSION_ID_RE = /^[A-Za-z0-9_.-]+$/;
@@ -69,6 +70,9 @@ export class SessionError extends Error {}
 /* ----------------------------------------------------------------- paths --- */
 
 function baseDir(): string {
+  // ponytail: on Vercel this is per-instance /tmp, so chunks of one session can
+  // land on different lambdas and the final stitch misses them. Move
+  // StoredSession to Postgres/Blob if long sessions come back incomplete.
   const configured = dataDir();
   if (process.env.VERCEL && !isAbsolute(configured)) return join("/tmp", configured);
   if (isAbsolute(configured)) return configured;
@@ -312,6 +316,14 @@ export async function ingestSessionChunk(file: File, meta: ChunkMeta): Promise<C
 
   await saveMemory(memory);
   await dropSession(session.sessionId);
+
+  // On Vercel that save lands in /tmp and is gone on the next cold start, so
+  // the owner gets the result by mail. Best effort: the upload already succeeded.
+  try {
+    await mailOwner(memory);
+  } catch (cause) {
+    console.error("[hardware] owner mail failed:", cause instanceof Error ? cause.message : cause);
+  }
 
   const targets = autoPushTargets();
   if (targets.length > 0) {
