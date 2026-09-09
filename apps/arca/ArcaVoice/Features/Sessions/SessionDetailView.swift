@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
 
 struct SessionDetailView: View {
     let session: RecordingSession
@@ -11,6 +16,12 @@ struct SessionDetailView: View {
     @State private var showingEmailSheet = false
     @State private var showingMeetingChat = false
     @State private var quickSend: QuickSendState = .idle
+    @State private var exportCache = TranscriptExportCache()
+    @State private var isResummarizing = false
+    @State private var resummarizeError: String?
+    #if os(macOS)
+    @State private var isSyncingNotion = false
+    #endif
 
     enum QuickSendState: Equatable { case idle, sending, sent, failed(String) }
 
@@ -146,8 +157,80 @@ struct SessionDetailView: View {
             .padding()
         }
         .navigationTitle(session.title)
+        .toolbar {
+            // Re-runs only the summarizer over the transcript already on disk —
+            // no re-upload, no re-transcription. The escape hatch for a meeting
+            // whose notes were written by an older, shallower prompt.
+            ToolbarItem {
+                Button {
+                    resummarize()
+                } label: {
+                    if isResummarizing {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label(L("다시 요약", "Re-summarize"), systemImage: "arrow.clockwise.circle")
+                    }
+                }
+                .disabled(isResummarizing || session.segments.isEmpty)
+                .help(L("저장된 전사로 요약·결정사항·액션 아이템을 다시 만들기",
+                        "Rebuild the summary, decisions and action items from the stored transcript"))
+            }
+            ToolbarItem {
+                Menu {
+                    Button {
+                        copyTranscript()
+                    } label: {
+                        Label(L("전사 복사", "Copy transcript"), systemImage: "doc.on.doc")
+                    }
+                    if let files = exportCache.files(for: session) {
+                        ShareLink(item: files.markdown) {
+                            Label(L("Markdown으로 내보내기 (.md)", "Export as Markdown (.md)"),
+                                  systemImage: "doc.richtext")
+                        }
+                        ShareLink(item: files.plainText) {
+                            Label(L("텍스트로 내보내기 (.txt)", "Export as text (.txt)"),
+                                  systemImage: "doc.plaintext")
+                        }
+                    }
+                } label: {
+                    Label(L("전사 공유", "Share transcript"), systemImage: "square.and.arrow.up")
+                }
+                .disabled(session.segments.isEmpty)
+                .help(L("전사 내용을 복사하거나 파일로 내보내기",
+                        "Copy the transcript or export it as a file"))
+            }
+            #if os(macOS)
+            // Also runs automatically after the quality pass when 커넥터's
+            // auto-update is on; this is the backfill path for meetings recorded
+            // before the database was linked.
+            ToolbarItem {
+                Button {
+                    guard !isSyncingNotion else { return }
+                    isSyncingNotion = true
+                    Task {
+                        defer { isSyncingNotion = false }
+                        await NotionDBAutoSync.runManually(record: session)
+                    }
+                } label: {
+                    Label(L("노션 DB 업데이트", "Update Notion DB"), systemImage: "tablecells")
+                }
+                .disabled(meetingNotes == nil || isSyncingNotion
+                          || NotionDBAutoSync.databaseReference == nil)
+                .help(L("이 회의 내용을 연결된 Notion 데이터베이스의 해당 행에 반영",
+                        "Write this meeting into its row in the linked Notion database"))
+            }
+            #endif
+        }
         .sheet(isPresented: $showingMeetingChat) {
             MeetingChatSheet(session: session)
+        }
+        .alert("다시 요약하지 못했어요", isPresented: Binding(
+            get: { resummarizeError != nil },
+            set: { if !$0 { resummarizeError = nil } }
+        )) {
+            Button("확인") { resummarizeError = nil }
+        } message: {
+            Text(resummarizeError ?? "")
         }
         .sheet(isPresented: $showingEmailSheet) {
             if let notes = meetingNotes {
@@ -178,7 +261,8 @@ struct SessionDetailView: View {
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(.blue.opacity(0.12), in: Capsule())
+                    .background(ArcaFace.ember.opacity(0.12), in: Capsule())
+                    .foregroundStyle(ArcaFace.ember)
             }
             Spacer()
         }
@@ -313,8 +397,15 @@ struct SessionDetailView: View {
         }
     }
 
-    /// Rows render lazily — a two-hour meeting has 1000+ segments, and
-    /// building them all eagerly is what used to freeze the screen on open.
+    /// Rows are emitted straight into the screen's single `LazyVStack` — no
+    /// container of their own.
+    ///
+    /// They used to sit in a second, nested `LazyVStack`, which is not lazy:
+    /// the outer stack has to size its child, so the inner one builds every
+    /// row at once. A long meeting whose quality pass failed falls back to the
+    /// raw live segments — thousands of them — and building all of those on the
+    /// main thread while opening the session is what the watchdog was killing.
+    /// Flat, only the visible rows are built.
     @ViewBuilder
     private func transcriptSection(model: TranscriptModel) -> some View {
         if !model.segments.isEmpty {
@@ -380,6 +471,33 @@ struct SessionDetailView: View {
         segment.speakerKey ?? (segment.channelRaw == "microphone" ? L("나", "Me") : L("상대", "Other"))
     }
 
+    private func resummarize() {
+        guard !isResummarizing else { return }
+        guard let summarizer = EngineFactory.summarizer() else {
+            resummarizeError = "설정에서 Anthropic 또는 OpenAI 키를 추가해 주세요."
+            return
+        }
+        isResummarizing = true
+        Task { @MainActor in
+            defer { isResummarizing = false }
+            do {
+                _ = try await SessionResummarizer.resummarize(session, using: summarizer)
+            } catch {
+                resummarizeError = error.localizedDescription
+            }
+        }
+    }
+
+    private func copyTranscript() {
+        let text = session.transcriptPlainText()
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #elseif os(iOS)
+        UIPasteboard.general.string = text
+        #endif
+    }
+
     private func saveSpeaker(oldName: String, newName: String, email: String?) {
         let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedEmail = email?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -437,6 +555,34 @@ struct SessionDetailView: View {
         }
         session.touch()
         try? modelContext.save()
+    }
+}
+
+/// `ShareLink` needs a URL up front and `Menu` builds its content whenever the
+/// view body runs, so the temp files are written once per transcript version
+/// instead of on every redraw — a two-hour meeting is a few hundred KB.
+@MainActor
+private final class TranscriptExportCache {
+    private var key: String?
+    private var cached: (markdown: URL, plainText: URL)?
+
+    func files(for session: RecordingSession) -> (markdown: URL, plainText: URL)? {
+        let currentKey = "\(session.title)|\(session.segments.count)|\(session.updatedAt.timeIntervalSince1970)"
+        if currentKey == key, let cached { return cached }
+
+        let directory = FileManager.default.temporaryDirectory
+        let stem = session.transcriptFileStem
+        let markdown = directory.appendingPathComponent("\(stem).md")
+        let plainText = directory.appendingPathComponent("\(stem).txt")
+        do {
+            try session.transcriptMarkdown().write(to: markdown, atomically: true, encoding: .utf8)
+            try session.transcriptPlainText().write(to: plainText, atomically: true, encoding: .utf8)
+        } catch {
+            return nil
+        }
+        key = currentKey
+        cached = (markdown, plainText)
+        return cached
     }
 }
 

@@ -3,6 +3,7 @@ import AVFoundation
 import Foundation
 import NaturalLanguage
 import Speech
+import ArcaVoiceKit
 
 /// Voice conversation with ARCA: tap to talk (live on-device STT), release →
 /// the text goes through the normal chat brain, and ARCA speaks the reply.
@@ -31,6 +32,14 @@ final class VoiceTalk: NSObject {
     /// Starts listening; live text lands in `liveTranscript`.
     func startListening() async {
         guard !isListening else { return }
+        // There is one AVAudioSession per process. Claiming it here with
+        // `.measurement` mode reconfigures the session under the recording's live
+        // AVAudioEngine, which stops the tap — the meeting keeps "recording" with
+        // no audio reaching disk. A recording in progress wins.
+        guard !AudioSessionArbiter.isRecordingClaimed else {
+            error = "녹음 중에는 음성 대화를 쓸 수 없어요. 녹음을 멈춘 뒤 다시 시도해 주세요."
+            return
+        }
         error = nil
         liveTranscript = ""
 
@@ -120,8 +129,14 @@ final class VoiceTalk: NSObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty else { return }
         stopSpeaking()
-        try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // Switching to `.playback` mid-recording deactivates the recording's
+        // input route. The recording's own `.playAndRecord` + `.defaultToSpeaker`
+        // session already plays out loud, so speak on top of it and leave the
+        // category alone.
+        if !AudioSessionArbiter.isRecordingClaimed {
+            try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try? AVAudioSession.sharedInstance().setActive(true)
+        }
         let utterance = AVSpeechUtterance(string: String(clean.prefix(600)))
         utterance.voice = Self.voice(for: clean)
         utterance.rate = 0.5

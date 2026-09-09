@@ -103,7 +103,7 @@ struct ChatPanel: View {
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 24))
-                    .foregroundStyle(chat.draftText.isEmpty ? .white.opacity(0.3) : ArcaTheme.idle)
+                    .foregroundStyle(chat.draftText.isEmpty ? .white.opacity(0.3) : ArcaFace.ember)
             }
             .buttonStyle(.arcaPress)
             .disabled(chat.draftText.isEmpty || chat.isThinking)

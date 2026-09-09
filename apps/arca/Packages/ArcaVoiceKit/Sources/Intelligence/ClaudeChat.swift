@@ -62,7 +62,10 @@ public struct ClaudeChat: Sendable {
     }
 
     /// Sends the conversation and returns ARCA's reply text.
-    public func reply(to messages: [ChatMessage], maxTokens: Int = 1500) async throws -> String {
+    // 1500 was clipping real replies mid-thought. 8192 stays comfortably under
+    // Anthropic's synchronous-request timeout threshold for non-streaming
+    // calls while giving ARCA room to actually finish a thought.
+    public func reply(to messages: [ChatMessage], maxTokens: Int = 8192) async throws -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")

@@ -7,6 +7,8 @@ import WatchConnectivity
 final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
     static let shared = WatchSync()
 
+    private var didSweepOrphans = false
+
     func activate() {
         guard WCSession.isSupported() else { return }
         let session = WCSession.default
@@ -80,14 +82,54 @@ final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         }
     }
 
+    /// A recording only reaches the phone from `WatchRecorder.stopAndSend()`.
+    /// If the Watch app died before that ran — force quit, battery saver,
+    /// watchdog — the audio is still sitting in Documents with nobody to hand
+    /// it over. Sweep those up so a lost meeting becomes a late one.
+    ///
+    /// Runs once per launch, right after activation (transfers can only be
+    /// queued on an activated session), and before any recording can have
+    /// started. A no-op when there is nothing stranded.
+    private func sweepOrphans(_ session: WCSession) {
+        guard !didSweepOrphans else { return }
+        didSweepOrphans = true
+
+        // File transfers survive app launches, so anything already queued from
+        // a previous run would otherwise be sent twice. Matched by name
+        // because WatchConnectivity may hand back its own copy's URL.
+        let queued = Set(session.outstandingFileTransfers.map { $0.file.fileURL.lastPathComponent })
+        for url in WatchRecordingStore.orphanedRecordings()
+        where !queued.contains(url.lastPathComponent) {
+            NSLog("[ArcaVoice] watch: resending stranded recording %@", url.lastPathComponent)
+            send(file: url,
+                 duration: WatchRecordingStore.estimatedDuration(of: url),
+                 createdAt: WatchRecordingStore.createdAt(of: url))
+        }
+    }
+
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState,
                  error: Error?) {
         let pending = session.outstandingFileTransfers.count
         Task { @MainActor in WatchTransferStatus.shared.setOutstanding(pending) }
+        guard activationState == .activated else { return }
+        sweepOrphans(session)
     }
 
     func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
         let failed = error != nil
+        let name = fileTransfer.file.fileURL.lastPathComponent
+        if failed {
+            // Left on disk on purpose: the next launch's sweep retries it.
+            NSLog("[ArcaVoice] watch: transfer of %@ failed: %@", name,
+                  "\(error.map(String.init(describing:)) ?? "unknown")")
+        } else {
+            // Recordings live in Documents now, so nothing else reclaims them.
+            // A confirmed handoff is the only safe moment to delete. Resolved
+            // against our own directory by name so this can't touch (or miss)
+            // WatchConnectivity's internal copy.
+            let local = WatchRecordingStore.directory.appendingPathComponent(name)
+            try? FileManager.default.removeItem(at: local)
+        }
         Task { @MainActor in WatchTransferStatus.shared.finished(failed: failed) }
     }
 

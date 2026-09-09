@@ -54,7 +54,7 @@ public struct MemoryExtractor: Sendable {
 
         let known = knownFacts.isEmpty ? "(none)" : knownFacts.joined(separator: "\n- ")
         let userText = """
-        Below is a conversation between the user and their AI companion. Extract only \
+        Below is a conversation or meeting record involving the user. Extract only \
         NEW durable facts worth remembering long-term (who they are, preferences, \
         ongoing projects, commitments). Skip anything transient or already known.
 

@@ -26,7 +26,11 @@ public struct ClaudeSummarizer: Summarizer {
         model: String = "claude-sonnet-5",
         endpoint: URL = ArcaCloud.anthropicMessagesURL,
         anthropicVersion: String = "2023-06-01",
-        maxTokens: Int = 8192,
+        // A 90-minute meeting needs room for per-topic sections, quotes and
+        // rationale; 4096 was the reason summaries came back as one paragraph.
+        // Kept well under the model's 128K output ceiling because this request
+        // is not streamed — a larger budget risks an HTTP timeout, not a bill.
+        maxTokens: Int = 16000,
         urlSession: URLSession = .shared
     ) {
         self.apiKey = apiKey
@@ -102,7 +106,7 @@ public struct ClaudeSummarizer: Summarizer {
         ]
     }
 
-    static func systemPrompt(style: NoteStyle) -> String {
+    public static func systemPrompt(style: NoteStyle) -> String {
         var lines = [
             "You are ARCA, a meeting-intelligence assistant. You turn a speaker-attributed transcript into the report a busy person actually wants: whether or not they attended, they get the full picture in three minutes without touching the transcript.",
             "",
@@ -172,10 +176,38 @@ public struct ClaudeSummarizer: Summarizer {
     }
 
     public static func formatTranscript(_ transcript: AttributedTranscript) -> String {
-        transcript.turns.map { turn in
-            let name = transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey
-            return "\(name): \(turn.text)"
-        }.joined(separator: "\n")
+        transcript.turns
+            .sorted { $0.start < $1.start }
+            .map { turn in
+                "[\(timecode(turn.start))] \(speakerLabel(for: turn, in: transcript)): \(turn.text)"
+            }
+            .joined(separator: "\n")
+    }
+
+    public static func timecode(_ seconds: TimeInterval) -> String {
+        let total = Int(max(0, seconds).rounded())
+        return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
+    }
+
+    /// The label shown for a turn, using the same "Me"/"Other" vocabulary as the
+    /// transcript export (`RecordingSession.exportSpeakerName`).
+    ///
+    /// A resolved name wins. Failing that, a `"<channel>:<diarizationLabel>"`
+    /// key is a channel artefact, not a name, so it renders as the channel —
+    /// keeping the diarization tag (`Other(S1)`, `Other(S2)`) so distinct remote
+    /// voices stay distinguishable. A bare key is already a display name: that
+    /// is how stored segments carry the resolved speaker.
+    public static func speakerLabel(for turn: SpeakerTurn, in transcript: AttributedTranscript) -> String {
+        if let name = transcript.speakerNames[turn.speakerKey], !name.isEmpty { return name }
+        if let colon = turn.speakerKey.firstIndex(of: ":") {
+            if turn.channel == .microphone { return "Me" }
+            let tag = String(turn.speakerKey[turn.speakerKey.index(after: colon)...])
+            return tag.isEmpty ? "Other" : "Other(\(tag))"
+        }
+        if turn.speakerKey.isEmpty {
+            return turn.channel == .microphone ? "Me" : "Other"
+        }
+        return turn.speakerKey
     }
 
     static func toolDefinition(style: NoteStyle) -> [String: Any] {
@@ -219,7 +251,7 @@ public struct ClaudeSummarizer: Summarizer {
                         "assigneeName": ["type": "string", "description": "The person responsible, if stated. Use the speaker's name from the transcript."],
                         "due": ["type": "string", "description": "Due date as an ISO 8601 date (YYYY-MM-DD). Resolve relative mentions using today's date from the prompt; omit if no deadline was stated."],
                     ],
-                    "required": ["text"],
+                    "required": ["text", "assigneeName", "due"],
                 ],
             ],
             "openQuestions": [
@@ -266,14 +298,60 @@ public struct ClaudeSummarizer: Summarizer {
             var heading: String
             var bullets: [String]
         }
+        /// The time-anchored per-topic form. The current schema asks for
+        /// `sections` instead, but notes generated under the topic schema — and
+        /// the OpenAI path when the model reverts to it — still decode here.
+        struct Topic: Decodable {
+            var title: String
+            var timeRange: String?
+            var keyPoints: [String]?
+            var quotes: [String]?
+        }
+        /// Accepts either a bare string (the current schema) or the object form
+        /// carrying rationale and decider, so neither shape is a decode failure.
+        struct Decision: Decodable {
+            var decision: String
+            var rationale: String?
+            var decidedBy: String?
+
+            init(from decoder: Decoder) throws {
+                if let text = try? decoder.singleValueContainer().decode(String.self) {
+                    decision = text
+                    return
+                }
+                enum Key: String, CodingKey { case decision, rationale, decidedBy }
+                let container = try decoder.container(keyedBy: Key.self)
+                decision = try container.decode(String.self, forKey: .decision)
+                rationale = try container.decodeIfPresent(String.self, forKey: .rationale)
+                decidedBy = try container.decodeIfPresent(String.self, forKey: .decidedBy)
+            }
+        }
         var title: String
         var tldr: String?
         var sections: [Section]?
         var summaryMarkdown: String?
-        var decisions: [String]?
+        var topics: [Topic]?
+        var decisions: [Decision]?
         var actionItems: [ActionItem]?
         var openQuestions: [String]?
         var enhancedNotesMarkdown: String?
+    }
+
+    /// The prompt asks for an explicit "미상"/"미정" rather than a blank when
+    /// something is undeterminable — that keeps the model from quietly dropping
+    /// the field, but the literal placeholder is noise once it reaches the note
+    /// ("근거: 미상"). Fold both forms back to nil; every renderer already has
+    /// its own 미지정/미정 fallback.
+    static let unknownPlaceholders: Set<String> = [
+        "미상", "미정", "미확정", "없음", "해당 없음", "n/a", "na", "unknown", "none", "tbd",
+    ]
+
+    static func blankToNil(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              !unknownPlaceholders.contains(trimmed.lowercased()) else { return nil }
+        return trimmed
     }
 
     public static func parseNotes(from data: Data, style: NoteStyle, userNotes: String?) throws -> MeetingNotes {
@@ -299,11 +377,32 @@ public struct ClaudeSummarizer: Summarizer {
             throw ClaudeSummarizerError.decoding(error)
         }
 
+        let sections = wire.sections ?? []
+        let topics = (wire.topics ?? []).map { topic in
+            MeetingNotes.Topic(
+                title: topic.title,
+                timeRange: topic.timeRange ?? "",
+                keyPoints: topic.keyPoints ?? [],
+                quotes: topic.quotes ?? []
+            )
+        }
+        let decisionDetails = (wire.decisions ?? []).map { decision in
+            MeetingNotes.Decision(
+                decision: decision.decision,
+                rationale: blankToNil(decision.rationale),
+                decidedBy: blankToNil(decision.decidedBy)
+            )
+        }
+        let openQuestions = (wire.openQuestions ?? []).filter { !$0.isEmpty }
         let actionItems = (wire.actionItems ?? []).map { item in
-            MeetingNotes.ActionItem(
+            // A deadline that isn't a calendar date used to be thrown away by
+            // `parseDate`; keep the stated text alongside it.
+            let parsed = parseDate(item.due)
+            return MeetingNotes.ActionItem(
                 text: item.text,
-                assigneeName: item.assigneeName?.isEmpty == true ? nil : item.assigneeName,
-                due: parseDate(item.due)
+                assigneeName: blankToNil(item.assigneeName),
+                due: parsed,
+                dueText: parsed == nil ? blankToNil(item.due) : nil
             )
         }
 
@@ -317,17 +416,33 @@ public struct ClaudeSummarizer: Summarizer {
             enhanced = nil
         }
 
+        // Two report shapes reach this point: the current TL;DR + sections one,
+        // and the time-anchored topic one. Render whichever the model actually
+        // returned rather than dropping the half it wasn't asked for.
+        let summary: String
+        if sections.isEmpty, !topics.isEmpty {
+            summary = MeetingNotes.composeSummaryMarkdown(
+                overview: wire.summaryMarkdown ?? wire.tldr ?? "",
+                topics: topics,
+                openQuestions: openQuestions)
+        } else {
+            summary = composeSummaryMarkdown(
+                tldr: wire.tldr,
+                sections: sections,
+                openQuestions: openQuestions,
+                legacySummary: wire.summaryMarkdown
+            )
+        }
+
         return MeetingNotes(
             title: wire.title,
-            summaryMarkdown: composeSummaryMarkdown(
-                tldr: wire.tldr,
-                sections: wire.sections ?? [],
-                openQuestions: wire.openQuestions ?? [],
-                legacySummary: wire.summaryMarkdown
-            ),
-            decisions: wire.decisions ?? [],
+            summaryMarkdown: summary,
+            decisions: decisionDetails.map(\.line),
             actionItems: actionItems,
-            enhancedNotesMarkdown: enhanced
+            enhancedNotesMarkdown: enhanced,
+            topics: topics,
+            decisionDetails: decisionDetails,
+            openQuestions: openQuestions
         )
     }
 

@@ -118,9 +118,13 @@ public enum BrainClient {
     static let cacheKey = "brainContextCache"
     private static let timeout: TimeInterval = 20
 
-    /// The invite code doubles as the Brain credential (same grant the cloud
-    /// proxies check). No code, no server memory — local facts still work.
-    public static var isAvailable: Bool { ArcaCloud.inviteToken != nil }
+    /// Either credential opens Brain: the invite code (the same grant the cloud
+    /// proxies check, `lib/cloud.ts`) or this install's device token
+    /// (`lib/arca/device.ts`). Neither one, no server memory — local facts
+    /// still work.
+    public static var isAvailable: Bool {
+        ArcaCloud.inviteToken != nil || ArcaCloudAccount.storedToken != nil
+    }
 
     static var decoder: JSONDecoder {
         let d = JSONDecoder()
@@ -134,10 +138,18 @@ public enum BrainClient {
     }
 
     private static func request(_ path: String, method: String = "GET") -> URLRequest? {
-        guard let token = ArcaCloud.inviteToken else { return nil }
+        // Both when both exist: an invited tester on a device that has also
+        // minted an identity is one user, and the server picks whichever
+        // credential the route understands. `storedToken` deliberately reads
+        // what is already in the Keychain — minting is a network round trip and
+        // has no business on the path that writes a memory.
+        let invite = ArcaCloud.inviteToken
+        let device = ArcaCloudAccount.storedToken
+        guard invite != nil || device != nil else { return nil }
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method
-        request.setValue(token, forHTTPHeaderField: "x-arca-token")
+        if let invite { request.setValue(invite, forHTTPHeaderField: "x-arca-token") }
+        if let device { request.setValue(device, forHTTPHeaderField: "x-arca-device") }
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.timeoutInterval = timeout
         return request

@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import ArcaVoiceKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// Process-wide services. The recording coordinator lives here (not in a view)
 /// because on macOS the notch agent must drive recordings with no window open.
@@ -49,7 +52,21 @@ final class AppServices {
 
     func configure(container: ModelContainer) {
         self.container = container
+        // Was only wired under `#if os(macOS)` below, so every CaptureTrace.log
+        // call in the recording/mic path (permission, format, interruption,
+        // recovery — the exact detail needed to diagnose a start failure) was a
+        // silent no-op on iOS. Wire it here, unconditionally, before anything
+        // can record.
+        DebugTrace.install()
+        CaptureTrace.sink = { message in DebugTrace.log("capture: \(message)") }
         RelaySync.shared.configure(container: container)
+        // Capture can die in a way it cannot recover from (the mic never comes
+        // back after an interruption). Close the recording out with what was
+        // captured instead of leaving the surface counting time over dead audio.
+        coordinator.onCaptureLost = { [weak self] in
+            Task { @MainActor in self?.stopRecording() }
+        }
+
         // Body + focus tracking. Starts read-only and battery-free: on iOS it
         // queries what the Watch already wrote to Apple Health, on macOS it only
         // profiles the app-switch timeline. It never prompts for Health access
@@ -66,6 +83,7 @@ final class AppServices {
             container: container,
             ownerName: { [weak self] in self?.ownerName ?? "Me" },
             languageHints: { TranscriptionPrefs.languageHints })
+
         #if os(iOS)
         // Dynamic Island buttons post this; LiveActivityIntents run in-process.
         NotificationCenter.default.addObserver(
@@ -80,9 +98,24 @@ final class AppServices {
                 }
             }
         }
+
+        // Healing a failed quality pass used to be macOS-only, so on iPhone a
+        // pass that died (dead key, network drop, backgrounded upload) stayed
+        // dead forever while the audio sat on disk. Retry at launch and again
+        // whenever the app comes forward — the phone is rarely relaunched, and
+        // returning to it is the natural moment to finish what was interrupted.
+        Task { @MainActor in
+            self.recoverOrphanedRecordings()
+            self.retryFailedFinalPasses()
+        }
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.retryFailedFinalPasses() }
+        }
+        Task { @MainActor in await self.backfillDetailedSummaries() }
         #endif
         #if os(macOS)
-        DebugTrace.install()
         zone.configure(container: container)
         dayLog.configure(container: container)
         #endif
@@ -100,6 +133,9 @@ final class AppServices {
             }
             self.watchZoneReport()
             TaskEngine.shared.retryFailedClassifications(context: container.mainContext)
+            self.recoverOrphanedRecordings()
+            self.retryFailedFinalPasses()
+            Task { @MainActor in await self.backfillDetailedSummaries() }
 
             self.meetingDetector.onDetect = { [weak self] meeting in
                 self?.notch.offerMeeting(label: meeting.label)
@@ -260,7 +296,7 @@ final class AppServices {
 
     private func presentZoneReport() {
         if zoneReportWindow == nil {
-            let hosting = NSHostingController(rootView: ZoneReportView(zone: zone))
+            let hosting = NSHostingController(rootView: ZoneReportView(zone: zone).tint(ArcaFace.ember))
             let window = NSWindow(contentViewController: hosting)
             window.title = "ZONE Report"
             window.styleMask = [.titled, .closable, .fullSizeContentView]
@@ -325,13 +361,78 @@ final class AppServices {
     }
     #endif
 
+    /// Adopts recordings the app lost track of — audio on disk with no row, and
+    /// rows left in `.recording` by a kill — into the processing queue, so the
+    /// retry sweep below can finish them. Runs before the sweep, at launch only:
+    /// mid-session there is nothing new to find.
+    func recoverOrphanedRecordings() {
+        guard let mainContext else { return }
+        let report = OrphanRecovery.run(context: mainContext,
+                                        activeDirectoryName: coordinator.activeDirectoryName)
+        guard !report.isEmpty else { return }
+        DebugTrace.log("orphan recovery: adopted \(report.adopted), revived \(report.revived)")
+        #if os(macOS)
+        let total = report.adopted + report.revived
+        notch.showNotice("중단된 녹음 \(total)건을 찾아 다시 처리하고 있어요", seconds: 8)
+        #endif
+    }
+
+    /// Re-runs the quality pass for sessions whose last attempt failed or never
+    /// finished. Safe to call repeatedly: a pass already running holds its
+    /// session in `FinalPassRunner.inFlight`, so it is not started twice.
+    func retryFailedFinalPasses() {
+        guard let mainContext else { return }
+        FinalPassRunner.retryFailed(context: mainContext,
+                                    ownerName: ownerName,
+                                    languageHints: TranscriptionPrefs.languageHints)
+    }
+
+    /// Key for the one-shot sweep below. Bumping the version re-runs it once.
+    private static let detailedSummaryBackfillKey = "didBackfillDetailedSummaryV1"
+
+    /// Re-summarizes every stored meeting once, so notes written under the old
+    /// shallow prompt/schema get the detailed treatment without the user having
+    /// to open each meeting and ask.
+    ///
+    /// Runs at most once ever, and the flag is set *before* the sweep starts: a
+    /// crash or a force-quit halfway through must not restart it on the next
+    /// launch and re-bill the whole library. Anything it misses is still
+    /// reachable from 세션 상세 → "다시 요약".
+    func backfillDetailedSummaries() async {
+        guard let mainContext else { return }
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.detailedSummaryBackfillKey) else { return }
+        guard let summarizer = EngineFactory.summarizer() else { return }
+        defaults.set(true, forKey: Self.detailedSummaryBackfillKey)
+
+        let report = await SessionResummarizer.backfillDetailedSummaries(
+            context: mainContext,
+            summarizer: summarizer,
+            log: { DebugTrace.log($0) })
+        #if os(macOS)
+        if report.regenerated > 0 {
+            notch.showNotice("지난 회의 \(report.regenerated)건을 더 자세한 요약으로 다시 정리했어요", seconds: 6)
+        }
+        #endif
+    }
+
     func startRecording(meetingApp: String? = nil,
                         participants: [MeetingParticipant] = []) {
         Task { @MainActor in
+            guard let mainContext else {
+                // Without a store the recording could not be persisted at all,
+                // and an unpersisted recording is the data loss this whole path
+                // exists to prevent. Say so instead of recording into the void.
+                coordinator.errorMessage = L(
+                    "ARCA가 저장소를 열 수 없어 녹음을 시작하지 않았습니다. 앱을 다시 시작해 주세요.",
+                    "ARCA couldn't open its store, so it didn't start recording. Please restart the app.")
+                return
+            }
             // Set before `start` — the live transcriber is built inside it and
             // takes the names as expected vocabulary.
             coordinator.plannedParticipants = participants
             await coordinator.start(
+                modelContext: mainContext,
                 locale: TranscriptionPrefs.liveLocale,
                 languageHints: TranscriptionPrefs.languageHints,
                 meetingApp: meetingApp)

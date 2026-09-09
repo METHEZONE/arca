@@ -307,7 +307,7 @@ private struct HistoryBubble: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(
-                            isUser ? AnyShapeStyle(ArcaTheme.idle.opacity(0.25)) : AnyShapeStyle(.quaternary.opacity(0.5)),
+                            isUser ? AnyShapeStyle(ArcaFace.ember.opacity(0.25)) : AnyShapeStyle(.quaternary.opacity(0.5)),
                             in: RoundedRectangle(cornerRadius: 14))
                 }
             }

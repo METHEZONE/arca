@@ -52,46 +52,82 @@ enum EngineFactory {
         set { UserDefaults.standard.set(newValue.rawValue, forKey: engineDefaultsKey) }
     }
 
-    /// - Parameter engine: overrides the stored preference for one run, so a
-    ///   single recording can be sent for paid diarization without changing the
-    ///   default for everything else.
-    static func processingPipeline(engine: TranscriptionEngine? = nil) -> ProcessingPipeline? {
-        let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
+    /// The summarizer for whichever key(s) are actually configured.
+    ///
+    /// Deliberately independent of the OpenAI key: summarizing a transcript that
+    /// already exists needs no transcription, so an Anthropic-only user must not
+    /// be left with nothing. Optional on purpose — with the local engine and no
+    /// keys at all ARCA still transcribes, and losing the summary is a smaller
+    /// loss than losing the words.
+    static func summarizer() -> (any Summarizer)? {
         let anthropicKey = ArcaCloud.anthropicKey.flatMap { $0.isEmpty ? nil : $0 }
+        let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
+        switch (anthropicKey, openAIKey) {
+        case let (anthropic?, openAI?):
+            return FallbackSummarizer(
+                primary: ClaudeSummarizer(apiKey: anthropic),
+                fallback: OpenAISummarizer(apiKey: openAI)
+            )
+        case let (anthropic?, nil):
+            return ClaudeSummarizer(apiKey: anthropic)
+        case let (nil, openAI?):
+            return OpenAISummarizer(apiKey: openAI)
+        case (nil, nil):
+            return nil
+        }
+    }
 
-        let finalTranscriber: any FinalTranscriber
-        switch engine ?? transcriptionEngine {
-        case .localFree:
+    /// Apple's on-device file transcriber for this OS. SpeechAnalyzer only
+    /// exists on macOS 26 / iOS 26, so anything older (and anyone who ticked
+    /// `legacySpeech`) gets `SFSpeechRecognizer` instead.
+    private static func onDeviceTranscriber() -> any FinalTranscriber {
+        if #available(macOS 26.0, iOS 26.0, *), !UserDefaults.standard.bool(forKey: "legacySpeech") {
             // The same locale the live pass already transcribes with, rather
             // than the cloud model's language hints — those can be empty (the
             // "auto" setting) or bare like "ko", and the on-device engine wants
             // a locale it actually publishes.
-            if #available(macOS 26.0, iOS 26.0, *), !UserDefaults.standard.bool(forKey: "legacySpeech") {
-                finalTranscriber = AppleFileTranscriber(locale: TranscriptionPrefs.liveLocale)
-            } else {
-                finalTranscriber = LegacyFileTranscriber(locale: TranscriptionPrefs.liveLocale)
-            }
-        case .cloudDiarized:
-            guard let openAIKey else { return nil }
-            finalTranscriber = OpenAIDiarizedTranscriber(apiKey: openAIKey)
+            return AppleFileTranscriber(locale: TranscriptionPrefs.liveLocale)
         }
+        return LegacyFileTranscriber(locale: TranscriptionPrefs.liveLocale)
+    }
 
-        // Optional on purpose: with the local engine and no keys at all, ARCA
-        // still transcribes. Losing the summary is a smaller loss than losing
-        // the words, and the pipeline already treats notes as optional.
-        var summarizer: (any Summarizer)?
-        switch (anthropicKey, openAIKey) {
-        case let (.some(anthropic), .some(openAI)):
-            summarizer = FallbackSummarizer(
-                primary: ClaudeSummarizer(apiKey: anthropic),
-                fallback: OpenAISummarizer(apiKey: openAI))
-        case let (.some(anthropic), .none):
-            summarizer = ClaudeSummarizer(apiKey: anthropic)
-        case let (.none, .some(openAI)):
-            summarizer = OpenAISummarizer(apiKey: openAI)
-        case (.none, .none):
-            summarizer = nil
+    /// The final-pass pipeline.
+    ///
+    /// On the paid engine transcription is a chain, not a single provider: the
+    /// cloud pass first, then Apple's on-device recognizer over the saved file.
+    /// Before that chain existed, a dead key or an outage meant no transcript
+    /// and — because the pipeline threw before summarization — no notes either.
+    ///
+    /// - Parameter engine: overrides the stored preference for one run, so a
+    ///   single recording can be sent for paid diarization without changing the
+    ///   default for everything else.
+    /// - Parameter includeOnDeviceFallback: pass `false` when the caller already
+    ///   holds a usable live transcript for this session. Re-running on-device
+    ///   recognition over audio that was already recognized in real time is pure
+    ///   duplicated work; promoting the stored segments is free. See
+    ///   `FinalPassRunner`, which makes that call per session.
+    static func processingPipeline(engine: TranscriptionEngine? = nil,
+                                   includeOnDeviceFallback: Bool = true) -> ProcessingPipeline? {
+        let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
+
+        let finalTranscriber: any FinalTranscriber
+        switch (engine ?? transcriptionEngine, includeOnDeviceFallback) {
+        case (.localFree, true):
+            finalTranscriber = onDeviceTranscriber()
+        case (.localFree, false):
+            // Nothing left to run: the on-device pass is the only engine here
+            // and its output is already in the store. The caller summarizes the
+            // live transcript instead of paying to redo it.
+            return nil
+        case let (.cloudDiarized, includeFallback):
+            guard let openAIKey else { return nil }
+            let cloud = OpenAIDiarizedTranscriber(apiKey: openAIKey)
+            finalTranscriber = includeFallback
+                ? FallbackTranscriber(primary: cloud,
+                                      fallback: onDeviceTranscriber(),
+                                      log: { DebugTrace.log($0) })
+                : cloud
         }
-        return ProcessingPipeline(finalTranscriber: finalTranscriber, summarizer: summarizer)
+        return ProcessingPipeline(finalTranscriber: finalTranscriber, summarizer: summarizer())
     }
 }

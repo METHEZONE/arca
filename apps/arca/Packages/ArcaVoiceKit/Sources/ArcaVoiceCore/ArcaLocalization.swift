@@ -52,7 +52,14 @@ public enum ArcaLanguageResolver {
     /// available as an explicit choice in Settings.
     public static func stored() -> ArcaLanguageChoice {
         let raw = UserDefaults.standard.string(forKey: defaultsKey) ?? ""
-        return ArcaLanguageChoice(rawValue: raw) ?? .korean
+        // "ko"/"en" are the two-letter spellings `ArcaLang` was written
+        // against. Same key, so both have to be understood or a value written
+        // by one side reads as "unset" to the other and silently flips to Korean.
+        switch raw {
+        case "ko": return .korean
+        case "en": return .english
+        default: return ArcaLanguageChoice(rawValue: raw) ?? .korean
+        }
     }
 
     public static func apply(_ choice: ArcaLanguageChoice) {

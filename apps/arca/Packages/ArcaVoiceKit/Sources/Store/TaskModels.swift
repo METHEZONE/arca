@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import ArcaVoiceCore
 
 /// How autonomously ARCA may act on the user's behalf. Ascending trust.
 /// Stored as the app's global setting AND used to gate whether a task is
@@ -17,21 +18,31 @@ public enum AutonomyLevel: Int, Codable, Sendable, CaseIterable, Comparable {
 
     public var label: String {
         switch self {
-        case .off: return "Off (suggestions only)"
-        case .readOnly: return "Read & organize only"
-        case .draftComms: return "Draft only"
-        case .sendRoutine: return "Handle routine tasks & send"
-        case .fullDelegate: return "Full delegation (arca it)"
+        case .off: return L("Off (suggestions only)", ko: "끄기 (제안만)")
+        case .readOnly: return L("Read & organize only", ko: "읽기·정리만")
+        case .draftComms: return L("Draft only", ko: "초안까지만")
+        case .sendRoutine: return L("Handle routine tasks & send", ko: "루틴한 일은 알아서 처리")
+        case .fullDelegate: return L("Full delegation (arca it)", ko: "완전 위임 (arca it)")
         }
     }
 
     public var detail: String {
         switch self {
-        case .off: return "ARCA won't act on its own — it only makes suggestions."
-        case .readOnly: return "Gathers info, summarizes, and researches only. No outbound actions."
-        case .draftComms: return "Prepares email/message drafts, but you send them yourself."
-        case .sendRoutine: return "Handles routine replies, scheduling, and filing on its own."
-        case .fullDelegate: return "Handles most tasks end-to-end on its own."
+        case .off:
+            return L("ARCA won't act on its own — it only makes suggestions.",
+                     ko: "ARCA가 스스로 행동하지 않아요 — 제안만 해요.")
+        case .readOnly:
+            return L("Gathers info, summarizes, and researches only. No outbound actions.",
+                     ko: "정보 수집·요약·리서치만 해요. 밖으로 나가는 행동은 없어요.")
+        case .draftComms:
+            return L("Prepares email/message drafts, but you send them yourself.",
+                     ko: "이메일·메시지 초안까지만 준비하고, 보내는 건 직접 하세요.")
+        case .sendRoutine:
+            return L("Handles routine replies, scheduling, and filing on its own. Routine document requests (사업자등록증 등) get sent and reported back.",
+                     ko: "루틴한 회신·일정·정리는 알아서 처리해요. 사업자등록증 요청 같은 건 보내고 나서 \"처리했어요\"라고 알려드려요.")
+        case .fullDelegate:
+            return L("Handles most tasks end-to-end on its own.",
+                     ko: "대부분의 일을 끝까지 알아서 처리해요.")
         }
     }
 

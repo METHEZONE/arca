@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import ArcaVoiceCore
 import Store
@@ -13,7 +14,6 @@ public struct ComposioEmailSender: Sendable {
     private let apiKey: String
     private let userId: String
     private let connectedAccountId: String
-    private let endpoint = URL(string: "\(ArcaCloud.composioBase)/tools/execute/GMAIL_SEND_EMAIL")!
     private let sendHandler: @Sendable (String, String, String) async throws -> Void
 
     public init(apiKey: String, userId: String, connectedAccountId: String) {
@@ -60,32 +60,146 @@ public struct ComposioEmailSender: Sendable {
         try await sendHandler(recipient, subject, htmlBody)
     }
 
-    private static func sendViaComposio(apiKey: String, userId: String, connectedAccountId: String,
-                                        recipient: String, subject: String,
-                                        htmlBody: String) async throws {
-        let endpoint = URL(string: "\(ArcaCloud.composioBase)/tools/execute/GMAIL_SEND_EMAIL")!
-        var request = URLRequest(url: endpoint)
+    /// A local file to attach. Composio's Gmail tools take files as
+    /// `{name, mimetype, s3key}` after a presigned upload — see
+    /// `uploadAttachment`.
+    public struct Attachment: Sendable {
+        public var fileURL: URL
+        public var name: String
+        public var mimetype: String
+
+        public init(fileURL: URL, name: String? = nil, mimetype: String? = nil) {
+            self.fileURL = fileURL
+            self.name = name ?? fileURL.lastPathComponent
+            self.mimetype = mimetype ?? DocumentVault.mimeType(for: fileURL)
+        }
+    }
+
+    /// Full-featured send: optional attachment, and when `threadId` is set the
+    /// mail goes out as an in-thread reply (GMAIL_REPLY_TO_THREAD) so it lands
+    /// under the original conversation instead of starting a new one.
+    /// Requires real credentials (not the test sendHandler init).
+    ///
+    /// GMAIL_REPLY_TO_THREAD argument shape live-verified against
+    /// GET /api/v3/tools/GMAIL_REPLY_TO_THREAD: thread_id, recipient_email,
+    /// message_body (NOT `body` — that's the send tool's name), is_html,
+    /// attachment.
+    public func send(to recipient: String, subject: String, htmlBody: String,
+                     threadId: String?, attachment: Attachment?) async throws {
+        guard !apiKey.isEmpty else {
+            // Handler-injected (test) instance has no transport for these —
+            // failing loudly beats a test that asserts a send whose attachment
+            // silently never existed.
+            guard attachment == nil, threadId == nil else {
+                throw EmailError.tool("attachment/thread transport unavailable on handler-injected sender")
+            }
+            try await sendHandler(recipient, subject, htmlBody)
+            return
+        }
+        var uploaded: [String: Any]?
+        if let attachment {
+            let toolSlug = (threadId?.isEmpty == false) ? "GMAIL_REPLY_TO_THREAD" : "GMAIL_SEND_EMAIL"
+            uploaded = try await Self.uploadAttachment(apiKey: apiKey, toolSlug: toolSlug,
+                                                       attachment: attachment)
+        }
+        if let threadId, !threadId.isEmpty {
+            var arguments: [String: Any] = [
+                "thread_id": threadId,
+                "recipient_email": recipient,
+                "message_body": htmlBody,
+                "is_html": true,
+            ]
+            if let uploaded { arguments["attachment"] = uploaded }
+            try await Self.executeGmailTool(slug: "GMAIL_REPLY_TO_THREAD", apiKey: apiKey,
+                                            userId: userId, connectedAccountId: connectedAccountId,
+                                            arguments: arguments)
+        } else {
+            var arguments: [String: Any] = [
+                "recipient_email": recipient,
+                "subject": subject,
+                "body": htmlBody,
+                "is_html": true,
+            ]
+            if let uploaded { arguments["attachment"] = uploaded }
+            try await Self.executeGmailTool(slug: "GMAIL_SEND_EMAIL", apiKey: apiKey,
+                                            userId: userId, connectedAccountId: connectedAccountId,
+                                            arguments: arguments)
+        }
+    }
+
+    /// Gmail rejects attachments over 25 MB; refuse before reading the file
+    /// into memory (the whole payload is buffered for the transport).
+    static let maxAttachmentBytes = 20 * 1024 * 1024
+
+    /// Presigned upload for a tool file parameter (live-verified flow, with
+    /// lowercase-hex md5): POST /api/v3/files/upload/request → PUT bytes to
+    /// `new_presigned_url` → pass `{name, mimetype, s3key: key}` as the tool's
+    /// `attachment` argument.
+    private static func uploadAttachment(apiKey: String, toolSlug: String,
+                                         attachment: Attachment) async throws -> [String: Any] {
+        let size = (try? attachment.fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        guard size <= maxAttachmentBytes else {
+            throw EmailError.tool("attachment too large (\(size / 1_048_576) MB > 20 MB): \(attachment.name)")
+        }
+        let data = try Data(contentsOf: attachment.fileURL)
+        let md5 = Insecure.MD5.hash(data: data).map { String(format: "%02x", $0) }.joined()
+
+        var request = URLRequest(url: URL(string: "\(ArcaCloud.composioBase)/files/upload/request")!)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = [
+            "toolkit_slug": "gmail",
+            "tool_slug": toolSlug,
+            "filename": attachment.name,
+            "mimetype": attachment.mimetype,
+            "md5": md5,
+        ]
+        let payload = try JSONSerialization.data(withJSONObject: body)
+        let (respData, response) = try await uploadBody(URLSession.shared, for: request, body: payload)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            let message = String(data: respData, encoding: .utf8) ?? ""
+            throw EmailError.http(status, "upload request: \(String(message.prefix(300)))")
+        }
+        guard let json = try JSONSerialization.jsonObject(with: respData) as? [String: Any],
+              let key = json["key"] as? String,
+              let presigned = (json["new_presigned_url"] as? String) ?? (json["newPresignedUrl"] as? String),
+              let putURL = URL(string: presigned) else {
+            let message = String(data: respData, encoding: .utf8) ?? ""
+            throw EmailError.tool("upload request returned an unexpected shape: \(String(message.prefix(300)))")
+        }
+
+        var put = URLRequest(url: putURL)
+        put.httpMethod = "PUT"
+        put.setValue(attachment.mimetype, forHTTPHeaderField: "Content-Type")
+        let (_, putResponse) = try await uploadBody(URLSession.shared, for: put, body: data)
+        guard let putHTTP = putResponse as? HTTPURLResponse,
+              (200..<300).contains(putHTTP.statusCode) else {
+            throw EmailError.http((putResponse as? HTTPURLResponse)?.statusCode ?? 0,
+                                  "attachment upload PUT failed")
+        }
+        return ["name": attachment.name, "mimetype": attachment.mimetype, "s3key": key]
+    }
+
+    private static func executeGmailTool(slug: String, apiKey: String, userId: String,
+                                         connectedAccountId: String,
+                                         arguments: [String: Any]) async throws {
+        var request = URLRequest(url: URL(string: "\(ArcaCloud.composioBase)/tools/execute/\(slug)")!)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         var body: [String: Any] = [
             "user_id": userId,
-            "arguments": [
-                "recipient_email": recipient,
-                "subject": subject,
-                "body": htmlBody,
-                "is_html": true,
-            ] as [String: Any],
+            "arguments": arguments,
         ]
         if !connectedAccountId.isEmpty { body["connected_account_id"] = connectedAccountId }
         let payload = try JSONSerialization.data(withJSONObject: body)
-
-        // upload(from:) — HTML summary bodies can be large; data(for:) with a big
-        // httpBody can hang over HTTP/2.
         let (data, response) = try await uploadBody(URLSession.shared, for: request, body: payload)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? ""
-            throw EmailError.http((response as? HTTPURLResponse)?.statusCode ?? 0, String(message.prefix(300)))
+            throw EmailError.http((response as? HTTPURLResponse)?.statusCode ?? 0,
+                                  String(message.prefix(300)))
         }
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            let successful = json["successful"] as? Bool, successful == false {
@@ -93,6 +207,19 @@ public struct ComposioEmailSender: Sendable {
                 ?? (json["error"] as? String) ?? "tool error"
             throw EmailError.tool(message)
         }
+    }
+
+    private static func sendViaComposio(apiKey: String, userId: String, connectedAccountId: String,
+                                        recipient: String, subject: String,
+                                        htmlBody: String) async throws {
+        try await executeGmailTool(slug: "GMAIL_SEND_EMAIL", apiKey: apiKey, userId: userId,
+                                   connectedAccountId: connectedAccountId,
+                                   arguments: [
+                                       "recipient_email": recipient,
+                                       "subject": subject,
+                                       "body": htmlBody,
+                                       "is_html": true,
+                                   ])
     }
 
     /// Renders MeetingNotes as the summary email and sends it.

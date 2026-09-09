@@ -14,7 +14,9 @@ public struct OpenAISummarizer: Summarizer {
         apiKey: String,
         model: String = "gpt-5-mini",
         endpoint: URL = URL(string: "https://api.openai.com/v1/responses")!,
-        maxOutputTokens: Int = 8192,
+        // Matches ClaudeSummarizer: the detailed per-topic record does not fit
+        // in 4096 output tokens for a long meeting.
+        maxOutputTokens: Int = 16000,
         urlSession: URLSession = .shared
     ) {
         self.apiKey = apiKey
@@ -86,6 +88,8 @@ public struct OpenAISummarizer: Summarizer {
     }
 
     static func userPrompt(transcript: AttributedTranscript, userNotes: String?, style: NoteStyle) -> String {
+        // Mirrors ClaudeSummarizer's forced-tool schema; the two must stay in
+        // step because both decode into the same wire struct below.
         let schemaHint = """
         Return only a JSON object with:
         {
@@ -97,6 +101,7 @@ public struct OpenAISummarizer: Summarizer {
           "openQuestions": string[],
           "enhancedNotesMarkdown": string|null
         }
+        `due` is an ISO date (YYYY-MM-DD) when a calendar date was stated, otherwise the deadline as it was said, otherwise "미정" — never null, never omitted.
         """
         return [ClaudeSummarizer.userPrompt(transcript: transcript, userNotes: userNotes, style: style), schemaHint]
             .joined(separator: "\n\n")

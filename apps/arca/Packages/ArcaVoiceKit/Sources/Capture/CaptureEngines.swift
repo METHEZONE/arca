@@ -15,13 +15,20 @@ public func makeDefaultCaptureEngine() -> any AudioCaptureEngine {
 
 final class ActiveCaptureSession: CaptureSession, @unchecked Sendable {
     let buffers: AsyncStream<CapturedBuffer>
+    let health: AsyncStream<CaptureHealth>
     private let continuation: AsyncStream<CapturedBuffer>.Continuation
+    /// Unbounded on purpose: health transitions are rare and every one matters —
+    /// dropping the ".stopped" event would leave the UI claiming to record.
+    private let healthContinuation: AsyncStream<CaptureHealth>.Continuation
     private let onStop: @Sendable () async throws -> CaptureArtifacts
 
     init(onStop: @escaping @Sendable () async throws -> CaptureArtifacts) {
         var continuation: AsyncStream<CapturedBuffer>.Continuation!
         self.buffers = AsyncStream(bufferingPolicy: .bufferingNewest(256)) { continuation = $0 }
         self.continuation = continuation
+        var healthContinuation: AsyncStream<CaptureHealth>.Continuation!
+        self.health = AsyncStream(bufferingPolicy: .unbounded) { healthContinuation = $0 }
+        self.healthContinuation = healthContinuation
         self.onStop = onStop
     }
 
@@ -29,9 +36,14 @@ final class ActiveCaptureSession: CaptureSession, @unchecked Sendable {
         continuation.yield(buffer)
     }
 
+    func yieldHealth(_ health: CaptureHealth) {
+        healthContinuation.yield(health)
+    }
+
     func stop() async throws -> CaptureArtifacts {
         let artifacts = try await onStop()
         continuation.finish()
+        healthContinuation.finish()
         return artifacts
     }
 }
@@ -43,6 +55,7 @@ public struct MicOnlyCaptureEngine: AudioCaptureEngine {
 
     public func start(config: CaptureConfig) async throws -> any CaptureSession {
         guard await MicCapture.requestPermission() else {
+            CaptureTrace.log("mic-only start: mic permission denied")
             throw CaptureError.microphonePermissionDenied
         }
         try FileManager.default.createDirectory(at: config.outputDirectory, withIntermediateDirectories: true)
@@ -54,9 +67,11 @@ public struct MicOnlyCaptureEngine: AudioCaptureEngine {
             }
             return CaptureArtifacts(files: [.microphone: result.url], duration: result.duration)
         })
-        try mic.start(directory: config.outputDirectory) { captured in
+        try mic.start(directory: config.outputDirectory, onBuffer: { captured in
             session.yield(captured)
-        }
+        }, onHealth: { health in
+            session.yieldHealth(health)
+        })
         return session
     }
 }
@@ -149,9 +164,11 @@ public struct MeetingCaptureEngine: AudioCaptureEngine {
             }
         }
 
-        try mic.start(directory: config.outputDirectory) { captured in
+        try mic.start(directory: config.outputDirectory, onBuffer: { captured in
             session.yield(captured)
-        }
+        }, onHealth: { health in
+            session.yieldHealth(health)
+        })
         CaptureTrace.log("meeting start: mic running")
         return session
     }

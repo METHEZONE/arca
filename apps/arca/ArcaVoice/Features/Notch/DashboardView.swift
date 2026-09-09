@@ -14,6 +14,8 @@ struct DashboardView: View {
     @State private var relay = RelaySync.shared
     @State private var vitals = VitalsEngine.shared
     @State private var usageSnapshot = AIUsageSnapshot.loading
+    // Unused in the body; forces a re-render when the app language changes.
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -470,7 +472,7 @@ private struct LogRow: View {
                 .foregroundStyle(isUser ? .white : .white.opacity(0.85))
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(
-                    isUser ? AnyShapeStyle(ArcaTheme.idle.opacity(0.85)) : AnyShapeStyle(.white.opacity(0.08)),
+                    isUser ? AnyShapeStyle(ArcaFace.ember.opacity(0.85)) : AnyShapeStyle(.white.opacity(0.08)),
                     in: RoundedRectangle(cornerRadius: 10))
                 .frame(maxWidth: 300, alignment: isUser ? .trailing : .leading)
             if !isUser { Spacer(minLength: 30) }

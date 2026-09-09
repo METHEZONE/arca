@@ -13,9 +13,26 @@ struct TodoColumn: View {
            sort: \TodoTask.updatedAt, order: .reverse) private var completed: [TodoTask]
     @Query(filter: #Predicate<ReplyProposal> { $0.stateRaw == "proposed" },
            sort: \ReplyProposal.createdAt, order: .reverse) private var proposals: [ReplyProposal]
+    @Query(filter: #Predicate<ReplyProposal> { $0.stateRaw == "failed" },
+           sort: \ReplyProposal.createdAt, order: .reverse) private var failedProposals: [ReplyProposal]
+    @Query private var sentProposals: [ReplyProposal]
     @AppStorage("autonomyLevel") private var autonomyRaw = AutonomyLevel.readOnly.rawValue
+    // Unused in the body; forces a re-render when the app language changes.
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
     @State private var draft = ""
     @State private var showSuggestions = false
+
+    init() {
+        // Bound the sent-report query in the predicate — an unbounded query
+        // would materialize every proposal ever sent on each store change.
+        let cutoff = Date.now.addingTimeInterval(-24 * 3600)
+        let floor = Date.distantPast
+        _sentProposals = Query(
+            filter: #Predicate<ReplyProposal> {
+                $0.stateRaw == "sent" && ($0.sentAt ?? floor) >= cutoff
+            },
+            sort: \ReplyProposal.sentAt, order: .reverse)
+    }
 
     private var level: AutonomyLevel { AutonomyLevel(rawValue: autonomyRaw) ?? .readOnly }
     private var humanTasks: [TodoTask] {
@@ -41,8 +58,21 @@ struct TodoColumn: View {
 
             ScrollView {
                 LazyVStack(spacing: 8) {
+                    if !proposals.isEmpty {
+                        Label(L("Waiting for your word", ko: "승인 대기"),
+                              systemImage: "hand.raised.fill")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(ArcaSkins.current.mid)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     ForEach(proposals) { proposal in
                         ReplyApprovalRow(proposal: proposal)
+                    }
+                    ForEach(failedProposals) { proposal in
+                        failedRow(proposal)
+                    }
+                    if !recentReports.isEmpty {
+                        reportsSection
                     }
                     ForEach(humanTasks) { task in
                         TodoTaskRow(task: task, level: level)
@@ -86,6 +116,106 @@ struct TodoColumn: View {
             }
         }
         .padding(.leading, 12)
+    }
+
+    /// What ARCA already handled (last 24h) — the "나 이거 처리했어!" report.
+    private var recentReports: [ReplyProposal] {
+        Array(sentProposals.prefix(3))
+    }
+
+    /// A send that failed must stay visible with a way to retry — a card that
+    /// silently vanishes reads as "handled" when it wasn't.
+    private func failedRow(_ proposal: ReplyProposal) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                Text(proposal.question
+                     ?? L("Reply to \(proposal.author)", ko: "\(proposal.author)에 회신"))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .lineLimit(2)
+                Spacer()
+            }
+            HStack(spacing: 8) {
+                Text(L("Send failed", ko: "전송 실패"))
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.orange)
+                Spacer()
+                Button(L("Dismiss", ko: "넘기기")) {
+                    AmbientOps.shared.skip(proposal, context: context)
+                }
+                .buttonStyle(.arcaPress)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                Button {
+                    Task { @MainActor in
+                        await AmbientOps.shared.approve(proposal, context: context)
+                    }
+                } label: {
+                    Text(L("Retry", ko: "다시 시도"))
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 9).padding(.vertical, 4)
+                        .background(.orange.opacity(0.85), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.arcaPress)
+            }
+        }
+        .padding(10)
+        .background(.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 11))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11)
+                .strokeBorder(.orange.opacity(0.3), lineWidth: 1)
+        }
+    }
+
+    private var reportsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(L("Handled for you", ko: "처리했어요"), systemImage: "checkmark.seal.fill")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.green)
+            ForEach(recentReports) { proposal in
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: proposal.autoSent ? "sparkles" : "paperplane.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.green.opacity(0.8))
+                        .padding(.top, 2)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(proposal.question
+                             ?? L("Replied to \(proposal.author)", ko: "\(proposal.author)에 회신"))
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.78))
+                            .lineLimit(2)
+                        HStack(spacing: 5) {
+                            if proposal.autoSent {
+                                Text(L("auto-handled", ko: "자동 처리"))
+                                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                                    .padding(.horizontal, 5).padding(.vertical, 1.5)
+                                    .background(.green.opacity(0.18), in: Capsule())
+                                    .foregroundStyle(.green)
+                            }
+                            if let attachment = proposal.attachmentName {
+                                Label(attachment, systemImage: "paperclip")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .lineLimit(1)
+                            }
+                            if let sentAt = proposal.sentAt {
+                                Text(sentAt, style: .relative)
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
+                        }
+                    }
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.green.opacity(0.06), in: RoundedRectangle(cornerRadius: 9))
+            }
+        }
+        .padding(.top, 2)
     }
 
     private var addBar: some View {

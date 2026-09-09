@@ -26,10 +26,18 @@
 	<string>ARCA saves each focus measurement to Apple Health as mindful minutes.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ARCA records voice notes from your wrist.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<!-- Primary mechanism: an audio session started in the foreground
+		     keeps running after the app backgrounds, so lowering your wrist
+		     no longer kills the recording. -->
+		<string>audio</string>
+	</array>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKBackgroundModes</key>
 	<array>
+		<string>mindfulness</string>
 		<string>workout-processing</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>

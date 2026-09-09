@@ -113,7 +113,7 @@ final class ChatSession {
         let transcript = messages
             .map { "\($0.role == .user ? "User" : "ARCA"): \($0.displayText)" }
             .joined(separator: "\n")
-        let known = memoryFacts().map(\.text)
+        let known = MemoryPrompt.knownFactsForDedup(memoryFacts())
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"
         Task { @MainActor in
             guard let extracted = try? await MemoryExtractor(apiKey: key, model: model)
@@ -277,6 +277,10 @@ final class ChatSession {
     private func appendAssistant(_ text: String) {
         messages.append(ChatMessage(role: .assistant, parts: [.text(text)]))
         persist(role: "assistant", text: text)
+        // Chat is the only thing the trial balance pays for — recording and
+        // transcription are unlimited. Billed on the reply rather than the
+        // send, so a request that failed before reaching the model is free.
+        TrialCredit.consumeChatMessage()
     }
 
     /// Executes or queues an `[EMAIL: …]` action, gated by declared action

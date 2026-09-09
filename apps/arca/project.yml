@@ -41,6 +41,8 @@ targets:
         NSSupportsLiveActivities: true
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        # Declared here, not hand-added to Info.plist — `xcodegen generate`
+        # rewrites the plist from these properties and drops anything missing.
         NSHealthShareUsageDescription: ARCA reads your sleep, heart rate, HRV, and activity so it can tell you when you focus best and when to rest. It stays on your devices.
         NSHealthUpdateUsageDescription: ARCA saves the meals you tell it about, and the minutes you spend in a focus measurement, to Apple Health.
         CFBundleURLTypes:
@@ -129,6 +131,8 @@ targets:
         NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSHealthShareUsageDescription: ARCA는 수면·HRV·안정 심박을 읽어, 그날 남긴 기록과 몸의 상태를 나란히 보여드립니다. 이 데이터는 기기에 남고 서버로 올라가지 않습니다.
+        NSHealthUpdateUsageDescription: ARCA가 기록한 마음챙김 세션을 애플 건강에 남깁니다.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice.test
             CFBundleURLSchemes: [arca-test]
@@ -250,9 +254,15 @@ targets:
         NSMicrophoneUsageDescription: ARCA records voice notes from your wrist.
         NSHealthShareUsageDescription: ARCA reads your heart rate while you measure a focus session, so it can tell you how deep you actually got.
         NSHealthUpdateUsageDescription: ARCA saves each focus measurement to Apple Health as mindful minutes.
-        # Lets the deep-measure session keep collecting heart rate with the wrist
-        # down. Only active while a measurement the user started is running.
-        WKBackgroundModes: [workout-processing]
+        # `audio` keeps a foreground-started recording session running after the
+        # wrist drops. The two WKBackgroundModes cover the two long-running
+        # sessions the watch app actually opens: `mindfulness` grants
+        # WKExtendedRuntimeSession while recording (WatchRuntimeGuard — the
+        # longest non-workout window watchOS offers, pending product/App Review
+        # sign-off), `workout-processing` keeps WatchDeepMeasure's HKWorkoutSession
+        # collecting heart rate. Both only run while the user started them.
+        UIBackgroundModes: [audio]
+        WKBackgroundModes: [mindfulness, workout-processing]
     settings:
       base:
         SWIFT_VERSION: "6.0"

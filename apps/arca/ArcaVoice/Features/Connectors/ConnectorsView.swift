@@ -29,6 +29,12 @@ struct ConnectorsView: View {
     #if os(macOS)
     @State private var isImportingMembase = false
     @State private var membaseResult: String?
+    @State private var notionDatabaseRef = ""
+    @State private var notionAutoSync = false
+    @State private var notionResult: String?
+    @State private var isCheckingNotion = false
+    #endif
+    #if os(iOS)
     #endif
 
     private var disconnectedConnectors: [ConnectorInfo] {
@@ -75,6 +81,7 @@ struct ConnectorsView: View {
                         ConnectorRow(
                             connector: connector,
                             accountId: hub.accounts[connector.slug],
+                            identity: hub.identities[connector.slug],
                             isSelected: selectedSlugs.contains(connector.slug),
                             isPending: pendingConnectionSlugs.contains(connector.slug) && hub.accounts[connector.slug] == nil,
                             isConnecting: connectingSlug == connector.slug,
@@ -125,6 +132,19 @@ struct ConnectorsView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+
+                    NotionDBConnectorRow(
+                        databaseRef: $notionDatabaseRef,
+                        autoSync: $notionAutoSync,
+                        isChecking: isCheckingNotion,
+                        resultText: notionResult,
+                        onCommitReference: saveNotionDatabaseRef,
+                        onToggleAutoSync: saveNotionAutoSync,
+                        onCheck: checkNotionDatabase
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                     #endif
                 } header: {
                     Text(L("기타 커넥터", "Other connectors"))
@@ -142,6 +162,16 @@ struct ConnectorsView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color(red: 0.03, green: 0.05, blue: 0.09).ignoresSafeArea())
+            // This screen is deliberately dark; without forcing the scheme the
+            // shared nav-bar chrome still follows system light mode, giving the
+            // washed-out light bar sitting on top of a black body.
+            .preferredColorScheme(.dark)
+            #if os(macOS)
+            // NavigationLink destinations don't inherit SettingsView's own
+            // .frame — without this, the List reports no intrinsic size and
+            // the whole sheet collapses to just the nav bar on push.
+            .frame(minWidth: 440, minHeight: 500)
+            #endif
             .navigationTitle(L("커넥터", "Connectors"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -432,7 +462,58 @@ struct ConnectorsView: View {
 
     private func loadScopedSettings() {
         obsidianVaultPath = AccountDefaults.string("obsidianVaultPath") ?? ""
+        #if os(macOS)
+        notionDatabaseRef = NotionDBAutoSync.databaseReference ?? ""
+        notionAutoSync = NotionDBAutoSync.isEnabled
+        #endif
     }
+
+    #if os(macOS)
+    private func saveNotionDatabaseRef() {
+        let trimmed = notionDatabaseRef.trimmingCharacters(in: .whitespacesAndNewlines)
+        AccountDefaults.set(trimmed, for: NotionDBAutoSync.databaseKey)
+        notionResult = nil
+        // Turning sync on without a database would fail silently after every
+        // meeting, so clearing the field turns it back off.
+        if trimmed.isEmpty, notionAutoSync {
+            notionAutoSync = false
+            saveNotionAutoSync()
+        }
+    }
+
+    private func saveNotionAutoSync() {
+        UserDefaults.standard.set(notionAutoSync, forKey: NotionDBAutoSync.enabledKey)
+    }
+
+    /// Validates the whole chain before a meeting depends on it: token present,
+    /// id parseable, database actually shared with the integration. Reports the
+    /// columns ARCA can fill, since a column missing from that list is the usual
+    /// reason a cell never gets written.
+    private func checkNotionDatabase() {
+        guard !isCheckingNotion else { return }
+        isCheckingNotion = true
+        notionResult = nil
+        Task {
+            defer { isCheckingNotion = false }
+            guard let client = NotionDBClient.fromArcaConfig() else {
+                notionResult = "~/.arca/connections.json 에 notionToken 이 없어요"
+                return
+            }
+            do {
+                let id = try NotionDBClient.databaseId(from: notionDatabaseRef)
+                let schema = try await client.fetchSchema(databaseId: id)
+                let names = schema.properties.map(\.name).joined(separator: ", ")
+                var lines = ["\(schema.title.isEmpty ? "DB" : schema.title) · 채울 수 있는 칸: \(names)"]
+                if !schema.skippedProperties.isEmpty {
+                    lines.append("쓸 수 없는 칸(수식·롤업 등): \(schema.skippedProperties.joined(separator: ", "))")
+                }
+                notionResult = lines.joined(separator: "\n")
+            } catch {
+                notionResult = error.localizedDescription
+            }
+        }
+    }
+    #endif
 
     private func displayName(for slug: String) -> String {
         ConnectorHub.catalog.first(where: { $0.slug == slug })?.displayName ?? slug
@@ -457,6 +538,9 @@ enum ConnectorPalette {
 private struct ConnectorRow: View {
     let connector: ConnectorInfo
     let accountId: String?
+    /// Which account this is — an email, a workspace name — resolved from the
+    /// toolkit itself. Nil while it's still being fetched.
+    let identity: String?
     let isSelected: Bool
     let isPending: Bool
     let isConnecting: Bool
@@ -485,9 +569,11 @@ private struct ConnectorRow: View {
             }
 
             Image(systemName: connector.symbol)
-                .font(.system(size: 17))
-                .foregroundStyle(isConnected ? ConnectorPalette.green : .secondary)
-                .frame(width: 26)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(connector.brandColor, in: RoundedRectangle(cornerRadius: 9))
+                .opacity(isConnected ? 1 : 0.55)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(connector.displayName)
@@ -822,6 +908,7 @@ private struct ObsidianConnectorRow: View {
 }
 
 #if os(macOS)
+
 private struct MembaseConnectorRow: View {
     let isImporting: Bool
     let resultText: String?
@@ -851,6 +938,73 @@ private struct MembaseConnectorRow: View {
             .disabled(isImporting)
         } detail: {
             EmptyView()
+        }
+    }
+}
+#endif
+
+#if os(macOS)
+/// Points ARCA at one Notion database and shows whether the whole chain works.
+///
+/// "연결 확인" exists because three separate things have to be true before a
+/// meeting can update a row — token in ~/.arca/connections.json, a parseable
+/// database id, and the database actually shared with the integration in Notion —
+/// and all three fail the same silent way after the fact.
+private struct NotionDBConnectorRow: View {
+    @Binding var databaseRef: String
+    @Binding var autoSync: Bool
+    let isChecking: Bool
+    let resultText: String?
+    let onCommitReference: () -> Void
+    let onToggleAutoSync: () -> Void
+    let onCheck: () -> Void
+
+    private var isConfigured: Bool {
+        !databaseRef.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        LocalConnectorCard(
+            symbol: "tablecells.fill",
+            title: "Notion DB",
+            status: isConfigured ? (autoSync ? "자동 업데이트 켜짐" : "연결됨 · 자동 꺼짐") : "미설정",
+            statusColor: isConfigured ? (autoSync ? ConnectorPalette.green : .secondary) : .secondary,
+            resultText: resultText
+        ) {
+            VStack(alignment: .trailing, spacing: 8) {
+                Toggle("회의 후 자동 업데이트", isOn: $autoSync)
+                    .toggleStyle(.switch)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .disabled(!isConfigured)
+                    .onChange(of: autoSync) { _, _ in onToggleAutoSync() }
+
+                Button(action: onCheck) {
+                    HStack(spacing: 6) {
+                        if isChecking {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "checkmark.seal")
+                        }
+                        Text("연결 확인")
+                    }
+                }
+                .buttonStyle(.arcaPress)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(ConnectorPalette.ember)
+                .opacity(isConfigured ? 1 : 0.5)
+                .disabled(!isConfigured || isChecking)
+            }
+        } detail: {
+            // Saved on every edit, not just on Enter — a pasted URL the user
+            // clicks away from must not be lost.
+            TextField("Notion 데이터베이스 주소 붙여넣기", text: $databaseRef)
+                .textFieldStyle(.plain)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .onSubmit(onCommitReference)
+                .onChange(of: databaseRef) { _, _ in onCommitReference() }
+                .frame(maxWidth: 260)
         }
     }
 }

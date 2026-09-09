@@ -8,6 +8,16 @@ import Intelligence
 /// The post-recording quality pass: per-channel high-quality transcription
 /// (with diarization on the system channel), channel merge, then LLM notes.
 public struct ProcessingPipeline: Sendable {
+    /// Where the transcript in an `Output` actually came from.
+    public enum TranscriptSource: String, Sendable {
+        /// The final pass produced it — cloud, or the on-device file fallback.
+        case finalPass
+        /// Nothing could transcribe the audio, so the live on-device segments
+        /// already sitting in the store were promoted instead. The caller must
+        /// not overwrite its stored segments with these: they *are* them.
+        case liveSegments
+    }
+
     public struct Output: Sendable {
         public let transcript: AttributedTranscript
         public let notes: MeetingNotes?
@@ -16,13 +26,22 @@ public struct ProcessingPipeline: Sendable {
         /// because those two demand opposite handling: one is a fact about the
         /// recording, the other must never overwrite what's already stored.
         public let emptyReason: EmptyReason?
+        /// Channels that threw while the pass still produced a usable transcript.
+        /// Non-empty means the meeting is only partly transcribed — the caller
+        /// surfaces this instead of presenting a half transcript as complete.
+        public let channelErrors: [String]
+        public let transcriptSource: TranscriptSource
 
         public init(transcript: AttributedTranscript,
                     notes: MeetingNotes?,
-                    emptyReason: EmptyReason? = nil) {
+                    emptyReason: EmptyReason? = nil,
+                    channelErrors: [String] = [],
+                    transcriptSource: TranscriptSource = .finalPass) {
             self.transcript = transcript
             self.notes = notes
             self.emptyReason = emptyReason
+            self.channelErrors = channelErrors
+            self.transcriptSource = transcriptSource
         }
     }
 
@@ -50,11 +69,16 @@ public struct ProcessingPipeline: Sendable {
         self.summarizer = summarizer
     }
 
+    /// - Parameter liveFallback: the transcript already reconstructed from the
+    ///   session's stored live segments, if it has any. Used only when nothing
+    ///   could transcribe the audio — a cloud outage then costs the user note
+    ///   quality, not the whole meeting.
     public func process(
         files: [CaptureChannel: URL],
         ownerName: String,
         hints: TranscriptHints = TranscriptHints(),
-        userNotes: String? = nil
+        userNotes: String? = nil,
+        liveFallback: AttributedTranscript? = nil
     ) async throws -> Output {
         // One dead channel (empty mic file, corrupt tap) must not sink the
         // whole pass — transcribe per channel, keep what succeeds, and only
@@ -80,6 +104,9 @@ public struct ProcessingPipeline: Sendable {
             return all
         }
 
+        // A channel that FAILED is not the same as one that was simply silent,
+        // and neither is the same as one that never captured. Collapsing them
+        // swallowed a genuine mic failure behind a dead-quiet system tap.
         var channelTurns: [CaptureChannel: [SpeakerTurn]] = [:]
         var channelErrors: [String] = []
         var transcribedChannels = 0
@@ -100,15 +127,31 @@ public struct ProcessingPipeline: Sendable {
         // made a total failure look like a success with an empty transcript —
         // which is how a recording's text got thrown away downstream.
         let producedTurns = channelTurns.values.contains { !$0.isEmpty }
-        if !producedTurns, let firstError = channelErrors.first {
+
+        // Failing shut here is what used to leave a session with no transcript
+        // AND no notes: the throw happened before summarization, so a cloud
+        // outage erased the meeting from the user's point of view even though
+        // the live pass had already written text into the store. If there is
+        // any transcript to work with — even the degraded live one — the pass
+        // continues and summarizes it.
+        var source = TranscriptSource.finalPass
+        let merged: AttributedTranscript
+        if producedTurns {
+            merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
+        } else if let liveFallback, !liveFallback.turns.isEmpty {
+            merged = liveFallback
+            source = .liveSegments
+        } else if let firstError = channelErrors.first {
             throw PipelineError.allChannelsFailed(firstError)
-        }
-
-        let merged = TranscriptMerger.merge(ownerName: ownerName, channelTurns: channelTurns)
-
-        guard producedTurns else {
-            return Output(transcript: merged, notes: nil,
-                          emptyReason: transcribedChannels == 0 ? .noAudioCaptured : .noSpeechFound)
+        } else {
+            // Nothing was said and there is no live transcript to fall back on.
+            // Report *why* rather than handing back a blank success, so the
+            // caller can keep whatever it already stored.
+            return Output(transcript: TranscriptMerger.merge(ownerName: ownerName,
+                                                             channelTurns: channelTurns),
+                          notes: nil,
+                          emptyReason: transcribedChannels == 0 ? .noAudioCaptured : .noSpeechFound,
+                          channelErrors: channelErrors)
         }
 
         var notes: MeetingNotes?
@@ -116,7 +159,8 @@ public struct ProcessingPipeline: Sendable {
             let style: NoteStyle = (userNotes?.isEmpty == false) ? .enhancedNotes : .meetingSummary
             notes = try await summarizer.summarize(merged, userNotes: userNotes, style: style)
         }
-        return Output(transcript: merged, notes: notes)
+        return Output(transcript: merged, notes: notes,
+                      channelErrors: channelErrors, transcriptSource: source)
     }
 
     /// Groups consecutive same-speaker segments into readable turns.

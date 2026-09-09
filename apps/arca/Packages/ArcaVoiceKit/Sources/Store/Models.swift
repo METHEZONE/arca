@@ -87,6 +87,71 @@ public final class RecordingSession {
     public func touch() { updatedAt = .now }
 }
 
+// MARK: - Transcript export
+
+extension RecordingSession {
+    /// The label the transcript UI shows for a segment — kept in sync with
+    /// `SessionDetailView.displayName(for:)` so an export reads like the screen.
+    private func exportSpeakerName(for segment: StoredSegment) -> String {
+        segment.speakerKey ?? (segment.channelRaw == "microphone" ? "Me" : "Other")
+    }
+
+    private static func timecode(_ seconds: TimeInterval) -> String {
+        let total = Int(max(0, seconds).rounded())
+        return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
+    }
+
+    private var exportSegments: [StoredSegment] {
+        segments.sorted { $0.start < $1.start }
+    }
+
+    /// Filename stem for an exported transcript, safe on every filesystem.
+    public var transcriptFileStem: String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        var slug = ""
+        var lastWasDash = false
+        for scalar in title.unicodeScalars {
+            if allowed.contains(scalar) {
+                slug.unicodeScalars.append(scalar)
+                lastWasDash = false
+            } else if !lastWasDash {
+                slug.append("-")
+                lastWasDash = true
+            }
+        }
+        slug = slug.trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+        if slug.isEmpty { slug = "session" }
+        return "\(slug.prefix(60))-transcript"
+    }
+
+    /// Markdown rendering of the transcript — the recommended export format.
+    public func transcriptMarkdown() -> String {
+        let lines = exportSegments.map { segment in
+            "**\(exportSpeakerName(for: segment))** _(\(Self.timecode(segment.start)))_: \(segment.text)"
+        }
+        return """
+        # \(title)
+
+        _\(createdAt.formatted(date: .abbreviated, time: .shortened))_
+
+        \(lines.joined(separator: "\n\n"))
+        """
+    }
+
+    /// Same content as `transcriptMarkdown()` with no markup.
+    public func transcriptPlainText() -> String {
+        let lines = exportSegments.map { segment in
+            "\(exportSpeakerName(for: segment)) (\(Self.timecode(segment.start))): \(segment.text)"
+        }
+        return """
+        \(title)
+        \(createdAt.formatted(date: .abbreviated, time: .shortened))
+
+        \(lines.joined(separator: "\n"))
+        """
+    }
+}
+
 @Model
 public final class AudioAsset {
     public var channelRaw: String
@@ -154,6 +219,19 @@ public final class SessionNote {
     public var summaryMarkdown: String?
     public var decisionsJSON: Data?
     public var actionItemsJSON: Data?
+    /// Set once `autoRememberMeetingIfEnabled` has extracted memories for this
+    /// note. A partial-channel failure or a live-transcript fallback leaves
+    /// `processingError` set, which queues the session for a final-pass retry
+    /// on the next launch — without this guard, that retry re-extracts
+    /// memories from the same summary every time it reprocesses.
+    public var memoryExtractedAt: Date?
+    /// Set once the summary email has gone out for this note. Unlike the
+    /// Obsidian export (idempotent via an anchor comment) or the Notion sync
+    /// (updates an existing row), sending an email has no natural idempotency —
+    /// without this, a session that keeps retrying its final pass (a
+    /// permanently failing channel, say) re-sends the same summary email on
+    /// every app launch.
+    public var summaryEmailedAt: Date?
 
     public init(roughMarkdown: String = "") {
         self.roughMarkdown = roughMarkdown

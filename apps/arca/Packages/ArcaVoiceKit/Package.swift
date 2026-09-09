@@ -27,6 +27,9 @@ let package = Package(
             name: "ArcaVoiceKit",
             dependencies: ["ArcaVoiceCore", "Capture", "Calling", "Transcribe", "Diarize", "Intelligence", "Store", "Vitals"]
         ),
+        // Modules are listed directly so tests can reach their internals with
+        // `@testable import` — the re-export through ArcaVoiceKit only carries
+        // the public surface.
         .testTarget(name: "ArcaVoiceKitTests",
                     dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling", "Intelligence"]),
     ]

@@ -18,16 +18,42 @@ public func uploadBody(_ session: URLSession, for request: URLRequest, body: Dat
     return try await session.upload(for: request, from: body)
 }
 
+/// Same, but the body is already on disk and is never read into memory.
+///
+/// Audio uploads are the one place where holding the body as `Data` is fatal
+/// rather than merely wasteful: a multi-hour recording's multipart payload is
+/// hundreds of megabytes, and iOS jetsam kills the app long before the upload
+/// finishes. The caller owns `bodyFile` and should delete it when done.
+public func uploadFile(_ session: URLSession, for request: URLRequest, bodyFile: URL) async throws -> (Data, URLResponse) {
+    #if os(macOS)
+    return try await CurlTransport.send(request: request, bodyFile: bodyFile)
+    #else
+    // iOS suspends the app seconds after it leaves the foreground, and a
+    // suspended in-process upload dies rather than pausing. Route the default
+    // path through a background session, which `nsurlsessiond` finishes out of
+    // process. A caller that injected its own session (tests, or anything that
+    // deliberately wants an in-process transfer) keeps the direct path.
+    if session === URLSession.shared {
+        return try await BackgroundUploader.shared.upload(request, bodyFile: bodyFile)
+    }
+    return try await session.upload(for: request, fromFile: bodyFile)
+    #endif
+}
+
 #if os(macOS)
 /// Minimal curl-backed HTTP transport for large POST bodies. Non-sandboxed
 /// macOS only. Streams the body from a temp file and parses status + body.
 enum CurlTransport {
     static func send(request: URLRequest, body: Data) async throws -> (Data, URLResponse) {
-        guard let url = request.url else { throw URLError(.badURL) }
         let bodyFile = FileManager.default.temporaryDirectory
             .appendingPathComponent("arca-curl-\(UUID().uuidString).bin")
         try body.write(to: bodyFile)
         defer { try? FileManager.default.removeItem(at: bodyFile) }
+        return try await send(request: request, bodyFile: bodyFile)
+    }
+
+    static func send(request: URLRequest, bodyFile: URL) async throws -> (Data, URLResponse) {
+        guard let url = request.url else { throw URLError(.badURL) }
 
         // Honor a caller-raised timeout (long transcription jobs); never go
         // below the old 120s floor.

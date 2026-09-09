@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-/// Which BYOK provider key a value belongs to. Raw value is the Keychain account.
+/// Which stored secret a value belongs to. Raw value is the Keychain account.
 public enum ApiKeyKind: String, Sendable, CaseIterable {
     case openAI
     case anthropic
@@ -9,6 +9,11 @@ public enum ApiKeyKind: String, Sendable, CaseIterable {
     case github
     /// Composio API key — connector hub (Gmail/Slack/Drive/Calendar…).
     case composio
+    /// This install's ARCA Cloud device token (`d1.<id>.<hmac>`). Not a BYOK
+    /// provider key — it rides in the same Keychain item family because it is
+    /// the same kind of secret with the same lifetime, and giving it a second
+    /// wrapper would just be a second thing to keep account-scoped.
+    case arcaDevice
 }
 
 /// Minimal Keychain wrapper for user-owned API keys. There is no server: keys
@@ -88,7 +93,9 @@ public struct KeychainStore {
             return nonEmpty(ArcaConfig.loadVoiceKeys()?.anthropic)
         case .composio:
             return nonEmpty(ArcaConfig.loadConnections()?.composioApiKey)
-        case .github:
+        case .github, .arcaDevice:
+            // No staging file behind these — a device token only ever exists
+            // because this install minted it.
             return nil
         }
         #else

@@ -37,6 +37,10 @@
 	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>ARCA adds events you approve from captured screens.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ARCA는 수면·HRV·안정 심박을 읽어, 그날 남긴 기록과 몸의 상태를 나란히 보여드립니다. 이 데이터는 기기에 남고 서버로 올라가지 않습니다.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ARCA가 기록한 마음챙김 세션을 애플 건강에 남깁니다.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ARCA records your meetings and voice notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

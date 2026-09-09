@@ -1,5 +1,8 @@
 import SwiftUI
 import ArcaVoiceKit
+#if os(macOS)
+import AppKit
+#endif
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -35,6 +38,8 @@ struct SettingsView: View {
     @AppStorage("dayTrackerSnapshots") private var dayTrackerSnapshots = true
     @AppStorage("dayTrackerIntervalMin") private var dayTrackerIntervalMin = 5
     @AppStorage("dayTrackerDigestHour") private var dayTrackerDigestHour = 21
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(DocumentVault.defaultsKey) private var documentVaultPath = ""
     @State private var emailRecipient = "me@thezonebio.com"
     @State private var obsidianVaultPath = ""
     @State private var accounts: [ArcaAccount] = []
@@ -89,6 +94,8 @@ struct SettingsView: View {
                 Text(L("Gmail, 캘린더, 드라이브, Slack까지 — ARCA가 컨텍스트를 먼저 가져와서 이미 알고 있어요.",
                        "Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows."))
             }
+
+            ArcaCloudSection()
 
             Section {
                 Picker(L("언어", "Language"), selection: Binding(
@@ -159,6 +166,26 @@ struct SettingsView: View {
                 Text(L("Slack 핸들과 이름을 쉼표로 구분해 적어주세요. ARCA는 나를 부르는 말이나 실제로 처리할 일만 찾고, 여기 적힌 내 이름에서 온 메시지는 무시하며, 답장은 당신이 확인한 뒤에만 나갑니다.",
                        "Comma-separated Slack handles/names. ARCA searches only likely pings or actionable asks, ignores messages from these self names, and drafts replies you approve before anything is sent."))
             }
+
+            #if os(macOS)
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("문서함", "Document vault"))
+                        Text(documentVaultDisplayPath)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    Spacer()
+                    Button(L("폴더 선택…", "Choose…")) { pickDocumentVault() }
+                }
+            } footer: {
+                Text(L("사업자등록증, 통장사본 같은 공식 서류 폴더예요. 이메일로 서류를 요청받으면 ARCA가 파일을 첨부한 회신을 제안하고, 승인해야 발송돼요.",
+                       "A folder of official documents (business registration cert, bank copy, …). When an email asks for one, ARCA proposes a reply with the file attached — you approve before it sends."))
+            }
+            #endif
 
             #if os(macOS)
             Section {
@@ -674,6 +701,26 @@ struct SettingsView: View {
             Text(L("계정", "Account"))
         }
     }
+
+    #if os(macOS)
+    private var documentVaultDisplayPath: String {
+        if let folder = DocumentVault.folderURL {
+            return folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")
+        }
+        return L("Not set — pick a folder", ko: "미설정 — 폴더를 선택하세요")
+    }
+
+    private func pickDocumentVault() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = L("Use this folder", ko: "이 폴더 사용")
+        if panel.runModal() == .OK, let url = panel.url {
+            documentVaultPath = url.path
+        }
+    }
+    #endif
 
     private func saveKeys() {
         if openAIKey.isEmpty {

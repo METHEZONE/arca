@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import type { Memory } from "@/lib/types";
 import type { DelegationEvent, DelegationReport, DelegationStepKey } from "@/lib/delegate/engine";
+import { getDeviceToken } from "@/lib/arca/deviceClient";
 import { CopyItem } from "./CopyItem";
 import { IconCheck, IconClose, IconSpark } from "./icons";
 
@@ -104,9 +105,13 @@ export function ArcaIt({ onFiled, notify }: Props): JSX.Element {
       abortRef.current = controller;
 
       try {
+        const deviceToken = await getDeviceToken();
         const res = await fetch("/api/arca/delegate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(deviceToken ? { "x-arca-device": deviceToken } : {}),
+          },
           body: JSON.stringify({ command: trimmed }),
           signal: controller.signal,
         });

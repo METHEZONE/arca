@@ -75,6 +75,7 @@ struct RecordView: View {
     private var recordingView: some View {
         VStack(spacing: 0) {
             header
+            captureHealthBanner
             Divider()
 
             #if os(macOS)
@@ -95,12 +96,40 @@ struct RecordView: View {
         }
     }
 
+    /// A ticking timer over dead audio is the one thing this surface must never
+    /// show: the user walks away believing the meeting is being recorded.
+    private var isAudioFlowing: Bool { coordinator.captureHealth == .capturing }
+
+    @ViewBuilder private var captureHealthBanner: some View {
+        switch coordinator.captureHealth {
+        case .capturing:
+            EmptyView()
+        case .interrupted(let reason):
+            healthNotice(reason, systemImage: "pause.circle.fill", tint: .orange)
+        case .stopped(let reason):
+            healthNotice(reason, systemImage: "exclamationmark.triangle.fill", tint: .red)
+        }
+    }
+
+    private func healthNotice(_ text: String, systemImage: String, tint: Color) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: systemImage)
+            Text(text)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .font(.caption)
+        .foregroundStyle(tint)
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+    }
+
     private var header: some View {
         HStack(spacing: 16) {
             Circle()
-                .fill(ArcaTheme.recording)
+                .fill(isAudioFlowing ? ArcaTheme.recording : Color.orange)
                 .frame(width: 10, height: 10)
-                .opacity(pulseOpacity)
+                .opacity(isAudioFlowing ? pulseOpacity : 1.0)
                 .onAppear {
                     withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
                         pulseOpacity = 0.3
@@ -114,9 +143,18 @@ struct RecordView: View {
                 }
 
             if let startedAt = coordinator.startedAt {
-                Text(startedAt, style: .timer)
-                    .font(.system(.title3, design: .monospaced, weight: .medium))
-                    .contentTransition(.numericText())
+                // Frozen while audio is down: the elapsed number would otherwise
+                // keep climbing over silence that was never captured.
+                Group {
+                    if isAudioFlowing {
+                        Text(startedAt, style: .timer)
+                            .contentTransition(.numericText())
+                    } else {
+                        Text("일시중지")
+                    }
+                }
+                .font(.system(.title3, design: .monospaced, weight: .medium))
+                .foregroundStyle(isAudioFlowing ? .primary : .secondary)
             }
 
             Spacer()
@@ -191,6 +229,7 @@ struct RecordView: View {
             #endif
             Task {
                 await coordinator.start(
+                    modelContext: modelContext,
                     locale: TranscriptionPrefs.liveLocale,
                     languageHints: TranscriptionPrefs.languageHints)
             }

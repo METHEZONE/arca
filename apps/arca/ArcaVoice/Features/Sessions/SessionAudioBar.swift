@@ -163,8 +163,14 @@ final class SessionPlayback: NSObject, AVAudioPlayerDelegate {
             ticker?.cancel()
         } else {
             #if os(iOS)
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-            try? AVAudioSession.sharedInstance().setActive(true)
+            // Playing back an old session must not reconfigure the audio session
+            // out from under a recording that is happening right now — that
+            // silently kills the live tap. `.playAndRecord` already routes
+            // playback to the speaker, so playback works either way.
+            if !AudioSessionArbiter.isRecordingClaimed {
+                try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
+                try? AVAudioSession.sharedInstance().setActive(true)
+            }
             #endif
             // Shared start time keeps split channels phase-locked.
             let startAt = lead.deviceCurrentTime + 0.05

@@ -229,11 +229,19 @@ struct ArcaFace: View {
         }
     }
 
-    /// Long-lived moods (idle, zone) must not run continuous animation: a
-    /// repeatForever loop re-renders the whole face at display refresh rate
-    /// for hours and was measured burning ~58% CPU at idle. They stay static
-    /// and get their life from `lifeLoop`'s periodic micro-acts instead;
-    /// only the short-lived active moods run continuous loops.
+    /// Long-lived moods must not run continuous animation: a repeatForever
+    /// loop re-renders the whole face at display refresh rate for as long as
+    /// the mood holds, and was measured burning ~58% CPU sustained. `.idle`
+    /// and `.zone` were fixed for this already; `.listening` and `.happy` are
+    /// exactly as unbounded and were still doing it — `.listening` runs for
+    /// an entire recording (a real meeting can go an hour-plus) and `.happy`
+    /// sits on decision screens (skin picker, onboarding) for as long as the
+    /// user takes to read and choose. Measured on 2026-08-13: an idle
+    /// `.listening` face alone sustained 60–65% CPU for the whole recording.
+    /// They stay static and get their life from `lifeLoop`'s periodic
+    /// bursts instead; only the genuinely short, self-resolving moods
+    /// (`.thinking`, `.working` — a few seconds to at most a couple of
+    /// minutes while something actually completes) run continuous loops.
     private func syncMotion() {
         guard !reduceMotion else {
             // Reduced motion: no continuous bob/orbit/pulse. The mood still
@@ -244,9 +252,9 @@ struct ArcaFace: View {
         }
 
         switch mood {
-        case .idle, .zone:
+        case .idle, .zone, .listening, .happy:
             withAnimation(.easeInOut(duration: 0.6)) { bob = false }
-        case .listening, .thinking, .working, .happy:
+        case .thinking, .working:
             withAnimation(.easeInOut(duration: mood == .working ? 0.5 : 2.6)
                 .repeatForever(autoreverses: true)) { bob = true }
         }
@@ -261,14 +269,10 @@ struct ArcaFace: View {
             withTransaction(still) { orbit = false }
         }
 
-        if mood == .listening {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulse = true
-            }
-        } else {
-            var still = Transaction(); still.disablesAnimations = true
-            withTransaction(still) { pulse = false }
-        }
+        // `.listening`'s sonar ring now breathes in bursts from `lifeLoop`
+        // rather than continuously — reset to off here, same as `.zone`.
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) { pulse = false }
     }
 
     /// Where the eyes actually point — a glance briefly overrides the cursor,
@@ -400,6 +404,15 @@ struct ArcaFace: View {
                 withAnimation(.easeInOut(duration: 1.4)) { pulse = true }
                 try? await Task.sleep(for: .milliseconds(1500))
                 withAnimation(.easeInOut(duration: 1.4)) { pulse = false }
+                continue
+            }
+            // LISTENING breathes the same way — a recording runs as long as
+            // the meeting does, so this is the loop that was actually
+            // measured burning 60%+ CPU as a continuous animation.
+            if mood == .listening {
+                withAnimation(.easeInOut(duration: 1.1)) { bob = true; pulse = true }
+                try? await Task.sleep(for: .milliseconds(1100))
+                withAnimation(.easeInOut(duration: 1.1)) { bob = false; pulse = false }
                 continue
             }
             guard mood == .idle, act == .none else { continue }
@@ -683,5 +696,122 @@ private struct TapIfInteractive: ViewModifier {
     let action: () -> Void
     func body(content: Content) -> some View {
         if enabled { content.onTapGesture(perform: action) } else { content }
+    }
+}
+
+
+// MARK: - Ignition
+
+/// ARCA catching light — a spark strikes, embers scatter, and the face grows
+/// out of the flame.
+///
+/// This is the first thing a new user sees, and it does the work a static logo
+/// can't: the companion *arrives* instead of already being there. The whole
+/// sequence runs under a second and a half so it reads as a birth, not a
+/// loading screen.
+///
+/// Wraps `ArcaFace` rather than reimplementing it — once ignition finishes the
+/// real face takes over with all its usual idle behavior.
+struct ArcaIgnition: View {
+    var size: CGFloat = 200
+    /// Fires once the face has fully arrived, so a caller can reveal its copy
+    /// on the same beat.
+    var onArrived: (() -> Void)?
+
+    private enum Stage: Int, Comparable {
+        case dark = 0    // nothing yet
+        case spark       // a bright point, flickering
+        case bloom       // embers throw outward, halo swells
+        case arrived     // the face, at full size
+
+        static func < (l: Stage, r: Stage) -> Bool { l.rawValue < r.rawValue }
+    }
+
+    @State private var stage: Stage = .dark
+    @State private var flicker = false
+    /// Fixed per instance so the scatter doesn't reshuffle on re-render.
+    @State private var emberAngles: [Double] =
+        (0..<9).map { Double($0) / 9 * 360 + Double.random(in: -14...14) }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var skin: ArcaSkin { ArcaSkins.current }
+
+    var body: some View {
+        ZStack {
+            // Heat haze under everything — grows with the stage.
+            Circle()
+                .fill(skin.mid)
+                .frame(width: size * 0.5, height: size * 0.5)
+                .blur(radius: size * 0.16)
+                .opacity(stage == .dark ? 0 : stage == .spark ? 0.35 : 0.5)
+                .scaleEffect(stage == .dark ? 0.2 : stage == .spark ? 0.5 : 1.25)
+
+            if stage < .arrived {
+                embers
+                spark
+            }
+
+            ArcaFace(mood: stage == .arrived ? .happy : .idle, size: size,
+                     halo: stage == .arrived, alive: stage == .arrived)
+                // Scales up out of the spark rather than fading in, so the
+                // flame reads as the thing that becomes the body.
+                .scaleEffect(stage == .arrived ? 1 : 0.04)
+                .opacity(stage == .arrived ? 1 : 0)
+        }
+        .frame(width: size, height: size)
+        .task { await ignite() }
+    }
+
+    /// The initial point of light, flickering while it's alone on screen.
+    private var spark: some View {
+        Circle()
+            .fill(RadialGradient(
+                colors: [.white, skin.hi, skin.mid.opacity(0)],
+                center: .center,
+                startRadius: 0,
+                endRadius: size * (stage == .spark ? 0.09 : 0.2)))
+            .frame(width: size * (stage == .spark ? 0.18 : 0.42),
+                   height: size * (stage == .spark ? 0.18 : 0.42))
+            .scaleEffect(flicker ? 1.18 : 0.86)
+            .opacity(stage == .dark ? 0 : stage == .bloom ? 0.7 : 1)
+            .shadow(color: skin.hi, radius: size * 0.08)
+    }
+
+    /// Sparks thrown outward as the flame takes.
+    private var embers: some View {
+        ForEach(Array(emberAngles.enumerated()), id: \.offset) { i, angle in
+            Circle()
+                .fill(i.isMultiple(of: 2) ? skin.hi : Color.white)
+                .frame(width: size * 0.028, height: size * 0.028)
+                .offset(x: stage == .bloom ? size * 0.42 : 0)
+                .rotationEffect(.degrees(angle))
+                .opacity(stage == .bloom ? 0 : stage == .spark ? 0.9 : 0)
+                .animation(.easeOut(duration: 0.62).delay(Double(i) * 0.012),
+                           value: stage)
+        }
+    }
+
+    private func ignite() async {
+        guard !reduceMotion else {
+            // Reduced motion still gets an arrival, just without the flame.
+            withAnimation(.easeOut(duration: 0.3)) { stage = .arrived }
+            onArrived?()
+            return
+        }
+
+        withAnimation(.easeOut(duration: 0.22)) { stage = .spark }
+        withAnimation(.easeInOut(duration: 0.11).repeatForever(autoreverses: true)) {
+            flicker = true
+        }
+        try? await Task.sleep(for: .milliseconds(520))
+
+        withAnimation(.easeOut(duration: 0.34)) { stage = .bloom }
+        try? await Task.sleep(for: .milliseconds(300))
+
+        // Overshoot on arrival — the body lands with weight.
+        withAnimation(.spring(response: 0.52, dampingFraction: 0.58)) { stage = .arrived }
+        try? await Task.sleep(for: .milliseconds(420))
+        onArrived?()
     }
 }
