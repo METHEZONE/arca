@@ -17,6 +17,7 @@ export async function resolveOwner(req: Request): Promise<string | null> {
   const session = await sessionFromRequest(req).catch(() => null);
   if (session?.userId) return `user:${session.userId}`;
 
+  // A device that has been linked to an account is that account.
   const deviceId = deviceIdFromRequest(req);
   if (deviceId) {
     const client = db();
@@ -28,11 +29,14 @@ export async function resolveOwner(req: Request): Promise<string | null> {
         .limit(1);
       if (row?.userId) return `user:${row.userId}`;
     }
-    return `device:${deviceId}`;
   }
 
+  // An invite code names a person, so it beats an unlinked device token:
+  // otherwise minting a device identity would silently split one tester's
+  // memory into a per-device silo until they linked the device.
   const invite = authorizeInvite(req);
   if (invite) return `email:${invite.email}`;
 
+  if (deviceId) return `device:${deviceId}`;
   return null;
 }
