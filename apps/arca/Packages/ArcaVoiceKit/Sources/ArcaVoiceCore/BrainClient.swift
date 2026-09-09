@@ -197,4 +197,58 @@ public enum BrainClient {
         guard let (_, response) = try? await URLSession.shared.data(for: request) else { return false }
         return (response as? HTTPURLResponse)?.statusCode == 200
     }
+
+    // MARK: - Traction events (POST /api/brain/events)
+
+    static let eventQueueKey = "brainEventQueue"
+
+    struct EventBody: Encodable {
+        struct E: Encodable { let kind: String }
+        let events: [E]
+    }
+
+    /// Pure: the request body for a batch of event kinds (the server stamps `at`).
+    static func eventsPayload(_ kinds: [String]) -> Data? {
+        guard !kinds.isEmpty else { return nil }
+        return try? encoder.encode(EventBody(events: kinds.map { .init(kind: $0) }))
+    }
+
+    static func pendingEventKinds() -> [String] {
+        guard let text = AccountDefaults.string(eventQueueKey), let data = text.data(using: .utf8) else { return [] }
+        return (try? decoder.decode([String].self, from: data)) ?? []
+    }
+
+    private static func saveQueue(_ kinds: [String]) {
+        let capped = Array(kinds.suffix(500))
+        if let data = try? encoder.encode(capped), let text = String(data: data, encoding: .utf8) {
+            AccountDefaults.set(text, for: eventQueueKey)
+        }
+    }
+
+    /// Records one traction event (`app_open`, `proposal_approved`, `loop_closed`, …).
+    /// Never blocks and never throws: the kind is queued in AccountDefaults so an
+    /// offline day still counts, and a flush is attempted in the background. No
+    /// credential, no server memory, no event — same rule as `remember`.
+    public static func track(_ kind: String) {
+        guard isAvailable else { return }
+        saveQueue(pendingEventKinds() + [kind])
+        Task.detached(priority: .utility) { await flushEvents() }
+    }
+
+    /// Sends up to 100 queued events. Returns the server's accepted count, nil on
+    /// failure — in which case the queue is kept for the next attempt.
+    @discardableResult
+    public static func flushEvents() async -> Int? {
+        let queued = pendingEventKinds()
+        guard !queued.isEmpty, var request = request("events", method: "POST") else { return nil }
+        let batch = Array(queued.prefix(100))
+        guard let body = eventsPayload(batch) else { return nil }
+        request.httpBody = body
+        struct Reply: Decodable { let accepted: Int }
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let reply = try? decoder.decode(Reply.self, from: data) else { return nil }
+        saveQueue(Array(queued.dropFirst(batch.count)))
+        return reply.accepted
+    }
 }

@@ -60,6 +60,8 @@ final class AppServices {
         DebugTrace.install()
         CaptureTrace.sink = { message in DebugTrace.log("capture: \(message)") }
         RelaySync.shared.configure(container: container)
+        // Traction: one row per launch → WAU / D1·D7 on /arca/metrics.
+        BrainClient.track("app_open")
         // Capture can die in a way it cannot recover from (the mic never comes
         // back after an interruption). Close the recording out with what was
         // captured instead of leaving the surface counting time over dead audio.

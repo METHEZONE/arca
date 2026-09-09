@@ -66,6 +66,8 @@ final class TaskEngine {
                     let result = try await runWithClaude(task)
                     task.resultMarkdown = result
                     task.state = .done
+                    BrainClient.track("task_tossed")
+                    BrainClient.track("loop_closed")
                     CompanionProgress.shared.award(.todoDone)
                 case .send, .broad:
                     #if os(macOS)
@@ -75,6 +77,8 @@ final class TaskEngine {
                         task.resultMarkdown = String(log.suffix(1500))
                     }
                     task.state = .done
+                    BrainClient.track("task_tossed")
+                    BrainClient.track("loop_closed")
                     #else
                     // The phone can't drive Codex — relay it to the Mac agent.
                     task.state = .tossed

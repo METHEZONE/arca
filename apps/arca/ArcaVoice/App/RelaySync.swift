@@ -285,6 +285,7 @@ final class RelaySync {
                     // Full delegation: if the trust level covers it, the Mac
                     // just does it — that's what "arca it" means.
                     if task.isTossable() {
+                        BrainClient.track("auto_executed")
                         TaskEngine.shared.toss(task)
                     }
                     self.scheduleSync()

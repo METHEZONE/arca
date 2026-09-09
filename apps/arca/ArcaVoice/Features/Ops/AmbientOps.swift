@@ -269,6 +269,7 @@ final class AmbientOps {
                 // A drafted reply IS the task — don't also drop a note-style
                 // todo for the same inbound (the right panel is for decisions,
                 // not memos).
+                if madeProposal { BrainClient.track("proposal_shown") }
                 if verdict.actionable, !verdict.taskTitle.isEmpty, !madeProposal {
                     let task = TodoTask(title: verdict.taskTitle, detail: verdict.taskDetail,
                                         source: item["source"] ?? "inbox")
@@ -476,6 +477,9 @@ final class AmbientOps {
             proposal.stateRaw = "sent"
             proposal.sentAt = .now
             proposal.autoSent = auto
+            // Traction: a delegated reply actually left the building.
+            BrainClient.track(auto ? "auto_executed" : "proposal_approved")
+            BrainClient.track("loop_closed")
             #if os(macOS)
             let target = proposal.author.isEmpty ? proposal.channel : proposal.author
             let what = proposal.attachmentName.map {
@@ -608,6 +612,7 @@ final class AmbientOps {
 
     func skip(_ proposal: ReplyProposal, context: ModelContext) {
         proposal.stateRaw = "skipped"
+        BrainClient.track("proposal_rejected")
         try? context.save()
     }
 

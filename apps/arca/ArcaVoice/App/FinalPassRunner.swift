@@ -543,6 +543,7 @@ enum FinalPassRunner {
             BrainEntry(text: $0.text, kind: $0.kind, source: "meeting",
                        sourceRef: record.directoryName, createdAt: record.createdAt)
         })
+        BrainClient.track("meeting_captured")
         DebugTrace.log("meeting memories: \(extracted.count) from \(record.directoryName)")
     }
 }

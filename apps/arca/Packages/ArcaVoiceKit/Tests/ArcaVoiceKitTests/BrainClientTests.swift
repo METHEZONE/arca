@@ -50,4 +50,14 @@ import Testing
     @Test func baseURLDerivesFromCloudURL() {
         #expect(BrainClient.baseURL.absoluteString.hasSuffix("/api/brain"))
     }
+
+    @Test func eventsPayloadEncodesKindsInOrder() throws {
+        let data = try #require(BrainClient.eventsPayload(["app_open", "loop_closed"]))
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let events = try #require(json?["events"] as? [[String: Any]])
+        #expect(events.count == 2)
+        #expect(events[0]["kind"] as? String == "app_open")
+        #expect(events[1]["kind"] as? String == "loop_closed")
+        #expect(BrainClient.eventsPayload([]) == nil)
+    }
 }
