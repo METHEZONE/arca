@@ -8,7 +8,7 @@
     "start": "next start --port 4174",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:brain": "node --experimental-strip-types --test lib/brain/logic.test.ts",
+    "test:brain": "node --experimental-strip-types --test lib/brain/logic.test.ts lib/brain/metrics.test.ts",
     "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
     "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
   },
