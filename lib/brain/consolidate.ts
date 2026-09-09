@@ -16,7 +16,9 @@ type DbClient = NonNullable<ReturnType<typeof db>>;
 const MAX_PENDING_ENTRIES = 40;
 const MAX_RECENT_PAGES = 25;
 const MAX_RECENT_PAGES_CHARS = 40_000;
-export const MAX_OWNERS_PER_CRON_RUN = 20;
+// One owner takes 2–5 minutes; the cron function has 300s. Run a few owners
+// at once and let the rest wait for the next hour rather than time out.
+export const MAX_OWNERS_PER_CRON_RUN = 5;
 
 const WRITE_MEMORY_TOOL: Anthropic.Tool = {
   name: "write_memory",
@@ -284,11 +286,7 @@ async function consolidateOwner(client: DbClient, anthropic: Anthropic, owner: s
 /** Cron entry point: every due owner, capped at MAX_OWNERS_PER_CRON_RUN. */
 export async function consolidateDueOwners(client: DbClient, anthropic: Anthropic): Promise<ConsolidateResult[]> {
   const owners = (await dueOwners(client, new Date())).slice(0, MAX_OWNERS_PER_CRON_RUN);
-  const results: ConsolidateResult[] = [];
-  for (const owner of owners) {
-    results.push(await consolidateOwner(client, anthropic, owner));
-  }
-  return results;
+  return Promise.all(owners.map((owner) => consolidateOwner(client, anthropic, owner)));
 }
 
 /** Run-now entry point: this owner only, due-ness ignored. */
