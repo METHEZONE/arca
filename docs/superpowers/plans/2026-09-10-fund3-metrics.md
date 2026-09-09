@@ -16,9 +16,11 @@
 - Event kinds (exact strings): `app_open`, `meeting_captured`, `proposal_shown`, `proposal_approved`, `proposal_rejected`, `task_tossed`, `loop_closed`, `auto_executed`. Existing kinds `chat`, `transcribe`, `delegate` are untouched.
 - Telemetry must never break the request or the app: server `record()` already swallows DB errors; Swift `track` is fire-and-forget and offline-tolerant.
 - Metrics endpoint is founder-only: owner must equal env `BRAIN_METRICS_OWNER` (default `email:me@thezonebio.com`).
-- Swift work starts **only after** `arca-cloud-swift` (worktree `arca-wt-merge`, session arca-d3) has landed on `origin/main` — re-grep every line number below before editing; they were taken at `24781e6`.
+- `arca-cloud-swift` **has landed** on `origin/main` (= `45e24c5`, confirmed by session arca-d3 on 2026-09-10 05:30). Branch off that. Re-grep every Swift line number below before editing; they were taken at `24781e6`.
+- BrainClient already sends `x-arca-token` **and** `x-arca-device`; `resolveOwner` order on main is session > linked device (`user:`) > invite (`email:`) > unlinked device (`device:`). Reuse it unchanged so `usage_events.owner` matches `memory_entries.owner`.
+- Never read or write `memory_entries` from this work — arca-d3 is running consolidation in 60-entry batches; touching `consolidated_at` would corrupt it.
 - Branch: `fund3-metrics` off `origin/main`. Commit after every task. Run `npm run typecheck && npm run lint && npm run test:brain` before each commit.
-- Migrations run against Supabase `arca-brain`; `DATABASE_URL` comes from `vercel env pull .env.local` (transaction pooler 6543). If `ALTER TYPE … ADD VALUE` fails through the pooler, rerun with the same URL on port 5432 (session pooler) — see `docs/ARCA-BRAIN.md` line 11.
+- Migrations: `npx drizzle-kit generate` then `npm run db:migrate` with the **session pooler (5432)** URL (`docs/ARCA-BRAIN.md` line 11; the runtime `DATABASE_URL` in Vercel is the 6543 transaction pooler — swap the port for the migrate step only). Check `package.json` on main for `db:migrate`; if absent, `npx drizzle-kit migrate` is equivalent.
 
 ---
 
