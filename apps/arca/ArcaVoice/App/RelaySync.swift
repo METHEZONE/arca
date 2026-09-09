@@ -40,6 +40,7 @@ final class RelaySync {
                     // export path is macOS-only, so it never ran for them), then
                     // writes the evening day note once past the digest hour.
                     await NightlyDigest.shared.runIfDue(context: context)
+                    await FinalPassRunner.backfillMemoriesIfNeeded(context: context)
                 }
                 try? await Task.sleep(for: .seconds(60))
             }
@@ -264,7 +265,9 @@ final class RelaySync {
             byUID[uid] = nil
         }
         try? context.save()
-        return byUID.values.map(TaskWire.init)
+        // Stable order: an unchanged task list must encode to identical bytes,
+        // or every sync round commits a reshuffled tasks.json.
+        return byUID.values.sorted { $0.uid.uuidString < $1.uid.uuidString }.map(TaskWire.init)
     }
 
     #if os(macOS)
