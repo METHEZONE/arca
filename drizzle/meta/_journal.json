@@ -29,6 +29,13 @@
       "when": 1788849362550,
       "tag": "0003_dashing_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788985952737,
+      "tag": "0004_traction_events",
+      "breakpoints": true
     }
   ]
 }

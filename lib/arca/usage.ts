@@ -16,7 +16,31 @@
 import { db } from "@/lib/db/client";
 import { usageEvents } from "@/lib/db/schema";
 
-export type UsageKind = "chat" | "transcribe" | "delegate";
+export type UsageKind =
+  | "chat"
+  | "transcribe"
+  | "delegate"
+  | "app_open"
+  | "meeting_captured"
+  | "proposal_shown"
+  | "proposal_approved"
+  | "proposal_rejected"
+  | "task_tossed"
+  | "loop_closed"
+  | "auto_executed";
+
+/** Traction kinds emitted by the apps through POST /api/brain/events —
+ *  aggregated by lib/brain/metrics.ts for the IR-Day dashboard. */
+export const TRACTION_KINDS: ReadonlySet<UsageKind> = new Set<UsageKind>([
+  "app_open",
+  "meeting_captured",
+  "proposal_shown",
+  "proposal_approved",
+  "proposal_rejected",
+  "task_tossed",
+  "loop_closed",
+  "auto_executed",
+]);
 
 export interface UsageEvent {
   at: string;
@@ -24,6 +48,9 @@ export interface UsageEvent {
   /** Set once a request is tenant-authenticated (Phase 2 session). */
   userId?: string;
   organizationId?: string;
+  /** ARCA Brain owner (`user:` / `device:` / `email:`) — set by traction
+   *  events so metrics.ts can cut usage per person. */
+  owner?: string;
   kind: UsageKind;
   /** Model that served it, for cost attribution. */
   model?: string;
@@ -60,6 +87,7 @@ export async function record(event: Omit<UsageEvent, "at">): Promise<void> {
       deviceId: full.deviceId,
       userId: full.userId,
       organizationId: full.organizationId,
+      owner: full.owner,
       kind: full.kind,
       model: full.model,
       inputTokens: full.inputTokens,

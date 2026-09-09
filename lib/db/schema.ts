@@ -66,7 +66,21 @@ export const devices = pgTable("devices", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const usageKindEnum = pgEnum("usage_kind", ["chat", "transcribe", "delegate"]);
+export const usageKindEnum = pgEnum("usage_kind", [
+  "chat",
+  "transcribe",
+  "delegate",
+  // Traction events (IR Day 2026-09-21). Emitted by the apps through
+  // POST /api/brain/events; aggregated by lib/brain/metrics.ts.
+  "app_open",
+  "meeting_captured",
+  "proposal_shown",
+  "proposal_approved",
+  "proposal_rejected",
+  "task_tossed",
+  "loop_closed",
+  "auto_executed",
+]);
 
 /** Durable replacement for the single-line JSON logs `usage.ts` used to emit. */
 export const usageEvents = pgTable(
@@ -77,6 +91,10 @@ export const usageEvents = pgTable(
     deviceId: text("device_id"),
     userId: uuid("user_id").references(() => users.id),
     organizationId: uuid("organization_id").references(() => organizations.id),
+    /** ARCA Brain owner (`user:` / `device:` / `email:`), the same scope
+     *  memory rows use — so traction can be cut per person even before a
+     *  device is linked to an account. */
+    owner: text("owner"),
     kind: usageKindEnum("kind").notNull(),
     model: text("model"),
     inputTokens: integer("input_tokens"),
@@ -90,6 +108,7 @@ export const usageEvents = pgTable(
     // "events for this subject since some time" — this index serves both.
     index("usage_events_org_at_idx").on(table.organizationId, table.at),
     index("usage_events_device_at_idx").on(table.deviceId, table.at),
+    index("usage_events_owner_at_idx").on(table.owner, table.at),
   ],
 );
 
