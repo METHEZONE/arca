@@ -11,7 +11,9 @@ import { buildConsolidateUserMessage, CONSOLIDATE_SYSTEM_PROMPT } from "@/lib/br
 
 type DbClient = NonNullable<ReturnType<typeof db>>;
 
-const MAX_PENDING_ENTRIES = 200;
+// 60 entries fit one reply comfortably; 200 overflowed the output budget and
+// came back as an empty tool call that was then treated as success.
+const MAX_PENDING_ENTRIES = 60;
 const MAX_RECENT_PAGES = 40;
 const MAX_RECENT_PAGES_CHARS = 60_000;
 export const MAX_OWNERS_PER_CRON_RUN = 20;
@@ -172,19 +174,28 @@ async function consolidateOwner(client: DbClient, anthropic: Anthropic, owner: s
 
     const response = await anthropic.messages.create({
       model: model(),
-      max_tokens: 8192,
+      max_tokens: 16000,
       system: CONSOLIDATE_SYSTEM_PROMPT,
       tools: [WRITE_MEMORY_TOOL],
       tool_choice: { type: "tool", name: "write_memory" },
       messages: [{ role: "user", content: userMessage }],
     });
 
+    if (response.stop_reason === "max_tokens") {
+      throw new Error("write_memory output truncated at max_tokens; batch left pending");
+    }
     const toolUse = response.content.find((block) => block.type === "tool_use");
     if (!toolUse || toolUse.type !== "tool_use") {
       throw new Error("Anthropic response had no write_memory tool_use block");
     }
 
     const sanitized = sanitizeWriteMemory(toolUse.input as WriteMemoryOutput, existingSlugs);
+    const wroteNothing = sanitized.pages.length === 0 && Object.keys(sanitized.views).length === 0;
+    if (wroteNothing && pending.length >= 5) {
+      // A real batch that files nothing is a failed call, not a quiet day;
+      // leaving it pending is what lets the next run retry it.
+      throw new Error(`model wrote no pages or views for ${pending.length} entries; batch left pending`);
+    }
 
     for (const page of sanitized.pages) {
       await client
