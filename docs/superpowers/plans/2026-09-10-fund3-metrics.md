@@ -1,5 +1,7 @@
 # Traction Metrics (usage_events) Implementation Plan
 
+> **STATUS 2026-09-10 06:00 — Tasks 1–7 DONE, on main.** Migration 0004 applied to Supabase (enum 11 values, `usage_events.owner`). Prod smoke: `POST /api/brain/events` → `{accepted:1,skipped:1}`, `GET /api/brain/metrics` 200, `/arca/metrics` 200. Swift: BrainClientTests 6/6, macOS + iOS builds succeeded; **real-device check (Task 7 Step 7) still pending** — first approval on a TestFlight/Mac build must show `closedLoops` +1. Task 8 (deck wiring) waits for data.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the IR-Day traction slide (S7) provable from the server — closed loops, delegation approval rate by day, WAU, D1/D3/D7 — with a live dashboard, by extending the existing `usage_events` table rather than building a new telemetry system.
