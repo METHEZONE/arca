@@ -1,6 +1,6 @@
 # ARCA Brain — 서버 메모리 (v1 스펙)
 
-> 2026-09-08 · 상태: v1 구현 완료, 실DB 실구동 검증 완료 (브랜치 `arca-brain-server`, 워크트리 `../arca-wt-brain`). 미배포·미머지.
+> 2026-09-08~10 · 상태: v1 **프로덕션 배포 완료**(main). Google 로그인 프로덕션 게시, `/arca/privacy`·`/arca/terms` 공개, multitenant Swift(기기 링크·설정 ARCA Cloud 섹션) 머지, TestFlight 빌드 12 업로드.
 > 한 줄: ARCA의 "뇌"(기억)를 서버로 옮긴다. 맥·아이폰·워치·하드웨어가 꺼져 있어도 기억은 한 곳에 있고, 어느 기기든 같은 기억을 읽고 쓴다.
 
 ## 0. 왜
@@ -230,3 +230,11 @@ pgvector 검색, `user:` 승격, 기기별 buffer 파일, 하트비트(프로액
 7. 테스트 행은 삭제함. 프로덕션 배포·머지는 아직.
 
 다음: (a) 이 브랜치를 main에 머지해 Vercel 배포(크론 활성화), (b) 맥/아이폰 앱에 인바이트 코드 입력 → `BrainClient.isAvailable`, (c) `user:` 승격·pgvector·하트비트 이전은 v2.
+
+## 12. 배포 기록 (2026-09-10)
+
+- main: cee6d24(Brain) → 22ca54e(cloud auth 서버) → 6232c87(법적 페이지) → 77159b0(multitenant Swift 머지 + owner 우선순위). Vercel 프로덕션 자동 배포, `/api/brain/context` 401·`/api/arca/auth/google` 307·`/arca/privacy` 200 확인.
+- Google OAuth: GCP 프로젝트 `arca-cloud-508007`, 클라이언트 'ARCA Cloud Web', Audience **In production**. 실로그인 → `/arca/onboarding?step=device` → Supabase `users` 행 생성 → 세션 쿠키로 `/api/brain/context` 200.
+- owner 우선순위: 링크된 기기(`user:`) > 인바이트 코드(`email:`) > 미링크 기기(`device:`). 기기 링크 전에 기억이 기기별로 갈라지는 걸 막는다.
+- 앱: `BrainClient`는 `x-arca-token`(인바이트)과 `x-arca-device`(기기 토큰) 둘 다 보낸다. 설정 → ARCA Cloud 섹션에서 기기 토큰을 발급받아 웹 온보딩에 붙이면 계정에 링크된다.
+- 검증 남은 것: 실기기에서 HealthKit 버튼, 회의 종료 후 `memory_entries` 적재, 아이폰↔맥 동일 기억 표시. 맥 Release 빌드는 `/tmp/arca-mac12/export/ARCA.app`에 준비(실행 중인 앱 교체는 수동).
