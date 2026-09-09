@@ -1,0 +1,71 @@
+/* ARCA legal pages (privacy/terms) — reuses tokens + a-btn-ghost/a-footer
+   from ../arca.css; only prose layout lives here. */
+
+.legal-root {
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px 80px;
+}
+
+.legal-card {
+  width: 100%;
+  max-width: 680px;
+}
+
+.legal-back {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14.5px;
+  text-decoration: none;
+}
+
+.legal-card h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.legal-meta {
+  margin: 0 0 36px;
+  color: var(--ter);
+  font-size: 13.5px;
+}
+
+.legal-card h2 {
+  margin: 36px 0 10px;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.legal-card h3 {
+  margin: 24px 0 8px;
+  font-size: 15px;
+  color: var(--sub);
+}
+
+.legal-card p,
+.legal-card li {
+  margin: 0 0 10px;
+  color: var(--sub);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.legal-card ul {
+  padding-left: 20px;
+  margin: 0 0 10px;
+}
+
+.legal-card a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.legal-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 44px 0;
+}
