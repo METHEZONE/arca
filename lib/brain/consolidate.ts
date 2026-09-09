@@ -13,9 +13,9 @@ type DbClient = NonNullable<ReturnType<typeof db>>;
 
 // 60 entries fit one reply comfortably; 200 overflowed the output budget and
 // came back as an empty tool call that was then treated as success.
-const MAX_PENDING_ENTRIES = 60;
-const MAX_RECENT_PAGES = 40;
-const MAX_RECENT_PAGES_CHARS = 60_000;
+const MAX_PENDING_ENTRIES = 40;
+const MAX_RECENT_PAGES = 25;
+const MAX_RECENT_PAGES_CHARS = 40_000;
 export const MAX_OWNERS_PER_CRON_RUN = 20;
 
 const WRITE_MEMORY_TOOL: Anthropic.Tool = {
