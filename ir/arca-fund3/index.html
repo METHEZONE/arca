@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>ARCA — 당신의 하루를 기억하고, 대신 끝내는 컴패니언 · ZER01NE Sprint IR Day</title>
-<meta name="description" content="ARCA IR Deck · THE ZONE BIO · ZER01NE Sprint IR Day 2026.09.21 (10분 발표)" />
-<meta property="og:title" content="ARCA — 당신의 하루를 기억하고, 대신 끝내는 컴패니언" />
+<title>ARCA — 당신의 하루를 기억하고, 승인 한 번에 대신 끝내는 컴패니언 · ZER01NE Sprint IR Day</title>
+<meta name="description" content="ARCA IR Deck · THE ZONE BIO · ZER01NE Sprint IR Day 2026.09.21 (10분 발표 + 재무 부록)" />
+<meta property="og:title" content="ARCA — 당신의 하루를 기억하고, 승인 한 번에 대신 끝내는 컴패니언" />
 <meta property="og:description" content="THE ZONE BIO · ZER01NE Sprint IR Day 2026.09.21 · IR Deck (web)" />
 <meta property="og:image" content="https://thezonebio.com/arcapitch/img/arca-core.jpg" />
 <meta name="theme-color" content="#ffffff" />
@@ -13,67 +13,71 @@
 <style>
 :root{
   --canvas:#fff;--ink:#191f28;--sub:#4e5968;--ter:#8b95a1;--line:#f2f4f6;--field:#f7f8fa;
-  --accent:#f73b20;--accent-press:#e2331a;--tint:rgba(247,59,32,.06);--tint-strong:rgba(247,59,32,.12);
-  --shadow-card:0 -4px 16px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.05);--shadow-cta:0 8px 24px rgba(247,59,32,.28);
-  --r-sm:14px;--r:16px;--r-lg:24px;--ease:cubic-bezier(.22,.61,.36,1);
-  --hi:#ff9d6b;--mid:#f75b2b;--lo:#e2331a;
+  --accent:#f73b20;--accent-press:#e2331a;--tint:rgba(247,59,32,.07);--tint-strong:rgba(247,59,32,.14);
+  --shadow-card:0 -4px 16px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.06);--shadow-cta:0 10px 28px rgba(247,59,32,.30);
+  --r:16px;--r-lg:24px;--ease:cubic-bezier(.22,.61,.36,1);--spring:cubic-bezier(.34,1.56,.64,1);
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--canvas);color:var(--ink);
-  font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI",Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 h1,h2,h3,p{margin:0}
-h1,h2{letter-spacing:-.035em;line-height:1.12;font-weight:800;word-break:keep-all;overflow-wrap:anywhere}
-h3{font-weight:700;letter-spacing:-.02em;word-break:keep-all}
-p,li,td{word-break:keep-all;overflow-wrap:anywhere}
-b,strong{font-weight:700}
+h1,h2{letter-spacing:-.04em;line-height:1.06;font-weight:800;word-break:keep-all;overflow-wrap:anywhere}
+h3{font-weight:800;letter-spacing:-.025em;word-break:keep-all}
+p,li,td,th{word-break:keep-all;overflow-wrap:anywhere}
+b,strong{font-weight:800}
 em{font-style:normal;color:var(--accent)}
 .num{font-variant-numeric:tabular-nums}
-a{color:inherit}
 
 /* deck */
 .deck{height:100dvh;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-behavior:smooth;overscroll-behavior:contain}
-.slide{min-height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;
-  padding:clamp(56px,7vh,84px) clamp(20px,6vw,80px) clamp(64px,8vh,84px);position:relative;max-width:1180px;margin:0 auto;width:100%}
+.slide{min-height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;position:relative;
+  padding:clamp(56px,7vh,84px) clamp(22px,6vw,88px) clamp(60px,7vh,80px);max-width:1240px;margin:0 auto;width:100%}
 .slide.dark{max-width:none;background:var(--ink);color:#fff}
-.slide.dark .wrap{max-width:1180px;margin:0 auto;width:100%}
-.eyebrow{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
-.slide h2{font-size:clamp(28px,4.4vw,52px);margin-bottom:18px}
-.lead{font-size:clamp(16px,1.6vw,21px);line-height:1.55;color:var(--sub);max-width:820px}
-.src{position:absolute;left:clamp(20px,6vw,80px);right:clamp(20px,6vw,80px);bottom:22px;font-size:11.5px;line-height:1.5;color:var(--ter)}
-.src b{color:var(--sub);font-weight:600}
-.grid{display:grid;gap:18px}
+.slide.dark .wrap{max-width:1240px;margin:0 auto;width:100%}
+.eyebrow{font-size:clamp(13px,1.1vw,16px);font-weight:800;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;margin-bottom:16px}
+.slide h2{font-size:clamp(40px,6.2vw,84px);margin-bottom:22px}
+.slide h2.sm{font-size:clamp(34px,5vw,64px)}
+.lead{font-size:clamp(19px,2vw,27px);line-height:1.4;color:var(--sub);max-width:900px;font-weight:500}
+.src{position:absolute;left:clamp(22px,6vw,88px);right:clamp(22px,6vw,88px);bottom:18px;font-size:11.5px;line-height:1.45;color:var(--ter);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src b{color:var(--sub)}
+.grid{display:grid;gap:20px}
 .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
-.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 22px 20px;box-shadow:var(--shadow-card)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 26px 24px;box-shadow:var(--shadow-card)}
 .card.soft{background:var(--field);border-color:transparent;box-shadow:none}
-.card h3{font-size:17px;margin-bottom:8px}
-.card p{font-size:14.5px;line-height:1.55;color:var(--sub)}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:var(--field);font-size:13px;font-weight:600;color:var(--sub)}
-.chip.on{background:var(--tint);color:var(--accent)}
-.pill{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:18px;box-shadow:var(--shadow-cta);letter-spacing:-.02em}
-.stat{font-size:clamp(30px,4vw,46px);font-weight:800;letter-spacing:-.04em;line-height:1}
-.stat small{font-size:.42em;font-weight:700;color:var(--ter);margin-left:4px;letter-spacing:0}
-.cap{font-size:13px;color:var(--ter);margin-top:6px;line-height:1.45}
-.photo{border-radius:var(--r);object-fit:cover;width:100%;height:100%;display:block;background:var(--field)}
-.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
-.strip figure{margin:0;aspect-ratio:16/10;overflow:hidden;border-radius:var(--r);position:relative}
-.strip figcaption{position:absolute;left:10px;bottom:8px;font-size:11.5px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6);font-weight:600}
+.card h3{font-size:clamp(20px,1.9vw,26px);margin-bottom:8px}
+.card p{font-size:clamp(15px,1.35vw,18px);line-height:1.45;color:var(--sub)}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:clamp(20px,1.8vw,24px);box-shadow:var(--shadow-cta);letter-spacing:-.02em;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 10px 28px rgba(247,59,32,.30)}50%{box-shadow:0 14px 40px rgba(247,59,32,.48)}}
+.stat{font-size:clamp(48px,7vw,104px);font-weight:800;letter-spacing:-.05em;line-height:.95}
+.stat small{font-size:.32em;font-weight:800;color:var(--ter);margin-left:6px;letter-spacing:-.01em}
+.cap{font-size:clamp(14px,1.25vw,17px);color:var(--sub);margin-top:10px;line-height:1.4;font-weight:600}
+.photo{border-radius:var(--r);object-fit:cover;width:100%;height:100%;display:block;background:var(--field);transform:scale(1);transition:transform 6s linear}
+.slide.in .photo{transform:scale(1.06)}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.strip figure,.mosaic figure{margin:0;overflow:hidden;border-radius:var(--r);position:relative;aspect-ratio:16/9}
+.strip figcaption,.mosaic figcaption{position:absolute;left:12px;bottom:10px;font-size:13px;color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.7);font-weight:700}
 
-/* reveal */
-.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:calc(var(--i,0)*90ms)}
-.slide.in .reveal{opacity:1;transform:none}
+/* reveal / motion */
+.reveal{opacity:0;transform:translateY(22px) scale(.985);filter:blur(4px);transition:opacity .75s var(--ease),transform .75s var(--ease),filter .75s var(--ease);transition-delay:calc(var(--i,0)*110ms)}
+.slide.in .reveal{opacity:1;transform:none;filter:none}
+.pop{opacity:0;transform:scale(.7);transition:opacity .55s var(--ease),transform .7s var(--spring);transition-delay:calc(var(--i,0)*110ms)}
+.slide.in .pop{opacity:1;transform:none}
+.uline{background:linear-gradient(transparent 64%,var(--tint-strong) 64%) no-repeat;background-size:0% 100%;transition:background-size .9s var(--ease) .5s}
+.slide.in .uline{background-size:100% 100%}
+.arrow{color:var(--ter);font-size:clamp(28px,3vw,40px);font-weight:300;animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(0);opacity:.55}50%{transform:translateX(6px);opacity:1}}
 
 /* chrome */
-.progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:90;transition:width .2s linear}
-.dots{position:fixed;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:80}
+.progress{position:fixed;top:0;left:0;height:4px;width:0;background:var(--accent);z-index:90;transition:width .2s linear}
+.dots{position:fixed;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:7px;z-index:80}
 .dots button{width:8px;height:8px;border-radius:50%;border:0;background:#d9dde3;padding:0;cursor:pointer;transition:.25s}
 .dots button.on{background:var(--accent);height:22px;border-radius:6px}
-.counter{position:fixed;left:18px;bottom:14px;font-size:12px;color:var(--ter);font-weight:600;z-index:80;font-variant-numeric:tabular-nums}
-.brand{position:fixed;right:18px;bottom:14px;font-size:12px;color:var(--ter);font-weight:700;z-index:80;letter-spacing:-.01em}
-.slide.dark ~ .counter{color:#fff}
+.dots button.ap{background:#eceff2}
+.counter{position:fixed;left:18px;bottom:14px;font-size:12px;color:var(--ter);font-weight:700;z-index:80;font-variant-numeric:tabular-nums}
+.brand{position:fixed;right:18px;bottom:14px;font-size:12px;color:var(--ter);font-weight:800;z-index:80}
 
 /* spirit */
-.spirit{position:relative;filter:drop-shadow(0 10px 22px rgba(0,0,0,.14));animation:bob 2.6s ease-in-out infinite}
+.spirit{position:relative;filter:drop-shadow(0 12px 26px rgba(0,0,0,.16));animation:bob 2.6s ease-in-out infinite}
 .spirit svg{width:100%;height:100%;display:block;overflow:visible}
 .spirit .finL{transform-origin:18px 62px;animation:finL 1.8s ease-in-out infinite}
 .spirit .finR{transform-origin:82px 62px;animation:finR 1.8s ease-in-out infinite}
@@ -82,158 +86,188 @@ a{color:inherit}
 @keyframes finL{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(8deg)}}
 @keyframes finR{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-8deg)}}
 @keyframes blink{0%,88%,100%{transform:translate(var(--ex,0px),var(--ey,0px)) scaleY(1)}93%{transform:translate(var(--ex,0px),var(--ey,0px)) scaleY(.08)}}
+.corner{position:absolute;right:clamp(22px,6vw,88px);top:clamp(48px,6vh,72px);width:clamp(56px,6vw,84px);height:clamp(56px,6vw,84px);opacity:.95}
 
 /* S1 */
 #s1{align-items:center;text-align:center}
-#s1 .spirit{width:clamp(150px,22vw,230px);height:clamp(150px,22vw,230px);margin:0 auto 26px}
-#s1 h1{font-size:clamp(32px,5.6vw,68px);max-width:980px;margin:0 auto 18px}
-#s1 .lead{margin:0 auto 26px}
-#s1 .hint{margin-top:34px;font-size:12.5px;color:var(--ter);font-weight:600}
+#s1 .spirit{width:clamp(170px,24vw,260px);height:clamp(170px,24vw,260px);margin:0 auto 28px}
+#s1 h1{font-size:clamp(38px,6.4vw,84px);max-width:1100px;margin:0 auto 20px}
+#s1 .lead{margin:0 auto 30px}
+#s1 .hint{margin-top:34px;font-size:13px;color:var(--ter);font-weight:700}
 #s1 .hint span{display:inline-block;animation:bob 1.6s ease-in-out infinite}
 
 /* S2 */
-.bubbles{display:flex;flex-direction:column;gap:10px;max-width:560px;margin:8px 0 26px}
-.bubble{align-self:flex-start;background:var(--field);border-radius:20px 20px 20px 6px;padding:13px 16px;font-size:clamp(15px,1.5vw,19px);font-weight:600;color:var(--ink);
-  box-shadow:0 2px 0 rgba(0,0,0,.02)}
-.bubble:nth-child(2){align-self:flex-start;margin-left:26px}
-.bubble:nth-child(3){margin-left:12px}
-.punch{font-size:clamp(22px,2.8vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:0 0 26px}
-.punch em{background:linear-gradient(transparent 62%,var(--tint-strong) 62%)}
+.bubbles{display:flex;flex-direction:column;gap:12px;max-width:640px;margin:6px 0 28px}
+.bubble{align-self:flex-start;background:var(--field);border-radius:22px 22px 22px 6px;padding:16px 20px;font-size:clamp(18px,1.9vw,26px);font-weight:700;color:var(--ink)}
+.bubble:nth-child(2){margin-left:34px}.bubble:nth-child(3){margin-left:14px}
+.punch{font-size:clamp(30px,4.4vw,58px);font-weight:800;letter-spacing:-.04em;line-height:1.12;margin:0 0 22px}
+#s2 .stat{font-size:clamp(40px,5vw,72px)}
+#s2 .card.soft{padding:20px 22px 18px}
+#s2 .strip{margin-top:14px}#s2 .strip figure{aspect-ratio:16/6}
+#s2 .bubbles{gap:10px;margin:4px 0 20px}#s2 .bubble{padding:12px 18px}
 
 /* S3 */
-.was-is{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.was-is .card ul{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
-.was-is li{font-size:14.5px;line-height:1.5;color:var(--sub);padding-left:24px;position:relative}
-.was-is li::before{content:"";position:absolute;left:0;top:7px;width:14px;height:14px;border-radius:50%;background:#e5e8eb}
-.was-is .is li::before{background:var(--accent);box-shadow:0 0 0 4px var(--tint)}
-.was-is .is li{color:var(--ink);font-weight:500}
-.tag{font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--ter);text-transform:uppercase}
-.is .tag{color:var(--accent)}
-.appcard{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-card);overflow:hidden}
-.appcard header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--field)}
-.appcard header .s{width:22px;height:22px}
-.appcard header b{font-size:13.5px}
-.appcard header span{margin-left:auto;font-size:12px;color:var(--ter)}
-.appcard section{padding:14px 16px;border-bottom:1px solid var(--line)}
+.four{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.four .card{padding:22px 22px 20px;position:relative;overflow:hidden}
+.four .n{font-size:clamp(34px,3.6vw,48px);font-weight:800;letter-spacing:-.05em;color:var(--accent);line-height:1;margin-bottom:8px}
+.four h3{font-size:clamp(20px,1.9vw,26px)}
+.four p{font-size:clamp(14px,1.2vw,16px)}
+.appcard{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-card);overflow:hidden;font-size:15px}
+.appcard header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--field)}
+.appcard header .s{width:24px;height:24px;animation:none}
+.appcard header b{font-size:15px}
+.appcard header span{margin-left:auto;font-size:12.5px;color:var(--ter);font-weight:600}
+.appcard section{padding:14px 18px;border-bottom:1px solid var(--line)}
 .appcard section:last-child{border-bottom:0}
-.appcard h4{margin:0 0 7px;font-size:12.5px;color:var(--accent);letter-spacing:.02em;font-weight:800}
-.appcard p,.appcard li{font-size:13.5px;line-height:1.55;color:var(--sub);margin:0}
+.appcard h4{margin:0 0 6px;font-size:12.5px;color:var(--accent);letter-spacing:.03em;font-weight:800}
+.appcard p,.appcard li{font-size:15px;line-height:1.5;color:var(--sub);margin:0}
 .appcard ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:5px}
-.appcard .ai{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.appcard .due{flex:none;font-size:11.5px;color:var(--ter);background:var(--field);padding:3px 8px;border-radius:8px;font-weight:600}
 .appcard li b{color:var(--ink)}
+.appcard .ai{display:flex;justify-content:space-between;gap:10px;list-style:none}
+.appcard .due{flex:none;font-size:12px;color:var(--ter);background:var(--field);padding:3px 9px;border-radius:8px;font-weight:700}
 
-/* S4 flow */
-.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:stretch;margin:12px 0 22px}
-.flow .arrow{display:flex;align-items:center;justify-content:center;color:var(--ter);font-size:24px;font-weight:300}
-.flow .card{display:flex;flex-direction:column}
-.flow .n{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;margin-bottom:12px}
-.flow .thumb{margin-top:auto;border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:var(--field)}
-.flow .thumb img,.flow .thumb video{width:100%;height:100%;object-fit:cover;display:block}
-.mini{background:var(--field);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;color:var(--sub);margin-top:auto}
+/* S4 */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:14px;align-items:stretch;margin:6px 0 22px}
+.flow .arrow{display:flex;align-items:center;justify-content:center}
+.flow .card{display:flex;flex-direction:column;padding:24px}
+.flow .n{width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;font-size:18px;display:grid;place-items:center;margin-bottom:14px}
+.flow .thumb{margin-top:auto;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:var(--field)}
+.flow .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.mini{background:var(--field);border-radius:14px;padding:14px 48px 14px 16px;font-size:15px;line-height:1.5;color:var(--sub);margin-top:auto;position:relative}
 .mini b{color:var(--ink)}
-.mini .btn{display:inline-block;margin-top:8px;padding:6px 10px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:12.5px}
-.mini .ghost{display:inline-block;margin-top:8px;margin-left:6px;padding:6px 10px;border-radius:8px;background:#fff;color:var(--sub);font-weight:700;font-size:12.5px;border:1px solid var(--line)}
-.center{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.demo-slot{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
-.demo-slot .card{display:flex;gap:14px;align-items:center}
-.demo-slot .card img,.demo-slot .card video{width:112px;height:72px;object-fit:cover;border-radius:10px;flex:none;background:var(--field)}
+.mini .tag{position:absolute;right:12px;top:10px;font-size:11px;color:var(--ter);font-weight:800}
+.mini .btn{display:inline-block;margin-top:10px;padding:8px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;font-size:14px}
+.mini .ghost{display:inline-block;margin-top:10px;margin-left:6px;padding:8px 14px;border-radius:10px;background:#fff;color:var(--sub);font-weight:800;font-size:14px;border:1px solid var(--line)}
+.demo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.demo .card{display:flex;gap:14px;align-items:center;padding:14px 18px;flex:1;min-width:280px}
+.demo video,.demo .slot{width:120px;height:72px;border-radius:10px;object-fit:cover;flex:none;background:var(--field)}
+.demo .slot{display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:13px;background:var(--tint)}
+.demo h3{font-size:16px;margin:0 0 3px}.demo p{font-size:13.5px;margin:0}
 
 /* S5 */
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
-.tiles .card{padding:20px 18px}
-.tiles .stat{font-size:clamp(26px,3.2vw,40px)}
-.note{display:flex;gap:12px;align-items:flex-start;background:var(--field);border-radius:var(--r);padding:14px 16px;font-size:14.5px;line-height:1.55;color:var(--sub)}
-.note .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--accent);margin-top:6px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 20px}
+.tiles .card{padding:26px 22px}
+.tiles .stat{font-size:clamp(40px,4.6vw,64px)}
+.lead.small{font-size:clamp(16px,1.5vw,20px)}
 
-/* S6 moat */
-.asym{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:8px 0 20px}
-.asym .card h3{font-size:16.5px}
-.asym .k{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.03em;margin-bottom:8px}
-.loop{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--field);border-radius:var(--r-lg);padding:16px 18px}
-.loop .step{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:13.5px;font-weight:700}
-.loop .a{color:var(--ter);font-size:16px}
-.loop .back{color:var(--accent);font-weight:800;font-size:13px;margin-left:auto}
+/* S6 */
+.asym{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:16px;align-items:center;margin:6px 0 0}
+.asym .card{padding:26px 24px;min-height:220px}
+.asym .k{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.04em;margin-bottom:10px}
+.asym .card h3{font-size:clamp(22px,2vw,28px);margin-bottom:10px}
+.ring{position:relative;width:clamp(220px,22vw,300px);aspect-ratio:1;margin:0 auto}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring .track{fill:none;stroke:var(--line);stroke-width:2}
+.ring .run{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:40 260;stroke-linecap:round;animation:run 4s linear infinite}
+@keyframes run{to{stroke-dashoffset:-300}}
+.ring .node{position:absolute;left:50%;top:50%;width:0;height:0}
+.ring .node span{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:800;white-space:nowrap;box-shadow:var(--shadow-card)}
+.ring .core{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-weight:800;font-size:14px;color:var(--accent);line-height:1.3}
 
 /* S7 */
-.split{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
-.facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-.facts li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.5;color:var(--ink)}
-.facts .ok{flex:none;width:20px;height:20px;border-radius:50%;background:var(--tint);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
-.facts small{color:var(--ter);font-size:12.5px}
-table.t{width:100%;border-collapse:collapse;font-size:14px}
-table.t th{text-align:left;font-size:12px;color:var(--ter);font-weight:700;padding:0 0 8px;border-bottom:1px solid var(--line)}
-table.t td{padding:10px 0;border-bottom:1px solid var(--line);color:var(--ink);font-weight:600}
-table.t td.v{color:var(--ter);font-weight:700;text-align:right}
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:20px}
+.facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.facts li{display:flex;gap:12px;align-items:flex-start;font-size:clamp(17px,1.5vw,21px);line-height:1.35;color:var(--ink);font-weight:600}
+.facts .ok{flex:none;width:26px;height:26px;border-radius:50%;background:var(--tint);color:var(--accent);display:grid;place-items:center;font-size:14px;font-weight:800;margin-top:1px}
+.facts small{color:var(--ter);font-size:.8em;font-weight:600}
+table.t{width:100%;border-collapse:collapse;font-size:clamp(15px,1.3vw,18px)}
+table.t th{text-align:left;font-size:12px;color:var(--ter);font-weight:800;padding:0 0 10px;border-bottom:1px solid var(--line);letter-spacing:.03em}
+table.t td{padding:13px 0;border-bottom:1px solid var(--line);font-weight:700}
+table.t td.v{color:var(--ter);text-align:right}
 table.t td.blank{text-align:right}
-.blankbox{display:inline-block;min-width:44px;height:22px;border:1.5px dashed #cfd4da;border-radius:6px;vertical-align:middle}
+.blankbox{display:inline-block;min-width:54px;height:26px;border:2px dashed #cfd4da;border-radius:8px;vertical-align:middle}
 
 /* S8 */
-.ladder{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 18px}
-.ladder .step{padding:9px 14px;border-radius:12px;background:var(--field);font-weight:700;font-size:14px}
+.ladder{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 22px}
+.ladder .step{padding:12px 18px;border-radius:14px;background:var(--field);font-weight:800;font-size:clamp(15px,1.4vw,19px)}
 .ladder .step.on{background:var(--ink);color:#fff}
-.ladder .a{color:var(--ter)}
-.price{display:flex;gap:12px}
-.price .card{flex:1}
-.price .p{font-size:26px;font-weight:800;letter-spacing:-.03em}
-.price .p small{font-size:13px;color:var(--ter);font-weight:600;margin-left:4px}
-.ue{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
-.ue td{padding:6px 0;border-bottom:1px solid var(--line);color:var(--sub)}
-.ue td:last-child{text-align:right;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-.ue tr.sum td{color:var(--ink);font-weight:800;border-bottom:0}
-.warn{margin-top:10px;font-size:13px;color:var(--accent-press);font-weight:600;line-height:1.5}
+.price{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:14px}
+.price .p{font-size:clamp(34px,3.6vw,50px);font-weight:800;letter-spacing:-.04em;line-height:1}
+.price .p small{font-size:.36em;color:var(--ter);font-weight:800;margin-left:4px}
+.price .tag{font-size:12.5px;font-weight:800;color:var(--ter);letter-spacing:.04em;margin-bottom:8px}
 
 /* S9 */
-.team{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-.mosaic{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mosaic figure{margin:0;position:relative;overflow:hidden;border-radius:var(--r);aspect-ratio:4/3;box-shadow:var(--shadow-card)}
-.mosaic figcaption{position:absolute;left:10px;bottom:8px;font-size:11.5px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6);font-weight:600}
-.members{display:flex;flex-direction:column;gap:10px}
-.members .card{padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
-.members .av{flex:none;width:38px;height:38px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
-.members h3{font-size:15px;margin:0 0 3px}
-.members p{font-size:13px;line-height:1.5;color:var(--sub)}
-.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-.proof .card{padding:12px 14px}
-.proof .stat{font-size:20px}
-.proof .cap{font-size:12px}
-.proof .cap{margin-top:4px}
+.team{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.mosaic{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mosaic figure{aspect-ratio:4/3;box-shadow:var(--shadow-card)}
+.members{display:flex;flex-direction:column;gap:12px}
+.members .card{padding:16px 18px;display:flex;gap:14px;align-items:center}
+.members .av{flex:none;width:46px;height:46px;border-radius:14px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px}
+.members h3{font-size:clamp(17px,1.5vw,20px);margin:0 0 3px}
+.members p{font-size:14px;line-height:1.4;color:var(--sub)}
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
+.proof .card{padding:16px 18px}
+.proof .stat{font-size:clamp(30px,3vw,40px)}
+.proof .cap{font-size:13px;margin-top:6px}
 
 /* S10 */
-.ask{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;margin:8px 0 18px}
-.donut{width:clamp(150px,18vw,210px);aspect-ratio:1;border-radius:50%;position:relative;
-  background:conic-gradient(var(--accent) 0 45%,var(--ink) 45% 75%,#8b95a1 75% 90%,#d9dde3 90% 100%)}
-.donut::after{content:"";position:absolute;inset:27%;background:#fff;border-radius:50%}
-.donut b{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(14px,1.5vw,19px);font-weight:800;letter-spacing:-.03em;z-index:1;text-align:center;line-height:1.1}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.legend .card{padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
-.legend .sw{flex:none;width:12px;height:12px;border-radius:4px;margin-top:5px}
-.legend h3{font-size:14.5px;margin:0 0 3px}
-.legend p{font-size:13px;line-height:1.5;color:var(--sub)}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ask{display:grid;grid-template-columns:auto 1fr;gap:34px;align-items:center;margin:6px 0 22px}
+.donut{width:clamp(200px,22vw,280px);aspect-ratio:1;border-radius:50%;position:relative;background:conic-gradient(var(--accent) 0 45%,var(--ink) 45% 75%,#8b95a1 75% 90%,#d9dde3 90% 100%);transform:rotate(-90deg);transition:transform 1.2s var(--ease)}
+.slide.in .donut{transform:rotate(0)}
+.donut::after{content:"";position:absolute;inset:31%;background:#fff;border-radius:50%}
+.donut b{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(18px,1.9vw,24px);font-weight:800;letter-spacing:-.04em;z-index:1;text-align:center;line-height:1.1}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.legend .card{padding:18px 20px;display:flex;gap:12px;align-items:flex-start}
+.legend .sw{flex:none;width:14px;height:14px;border-radius:5px;margin-top:6px}
+.legend h3{font-size:clamp(17px,1.6vw,21px);margin:0 0 4px}
+.legend p{font-size:14.5px;line-height:1.45;color:var(--sub)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;padding:9px 14px;border-radius:999px;background:var(--tint);font-size:clamp(14px,1.2vw,16px);font-weight:800;color:var(--accent)}
 
 /* S11 */
 #s11{justify-content:center;text-align:center;align-items:center}
-#s11 .ladder-line{font-size:14px;color:rgba(255,255,255,.62);margin-bottom:34px;font-weight:600}
-#s11 h2{font-size:clamp(48px,9vw,120px);margin-bottom:26px;letter-spacing:-.05em}
-#s11 .q{font-size:clamp(16px,1.7vw,21px);line-height:1.55;color:rgba(255,255,255,.82);max-width:760px;margin:0 auto 34px}
-#s11 .contact{font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.7}
-#s11 .spirit{width:96px;height:96px;margin:0 auto 22px}
+#s11 .ladder-line{font-size:clamp(14px,1.2vw,17px);color:rgba(255,255,255,.6);margin-bottom:36px;font-weight:700}
+#s11 h2{font-size:clamp(64px,12vw,160px);margin-bottom:28px;letter-spacing:-.06em}
+#s11 .q{font-size:clamp(19px,2vw,26px);line-height:1.45;color:rgba(255,255,255,.85);max-width:860px;margin:0 auto 36px}
+#s11 .contact{font-size:14px;color:rgba(255,255,255,.55);line-height:1.7}
+#s11 .spirit{width:110px;height:110px;margin:0 auto 24px}
+
+/* appendix */
+.divider{align-items:center;text-align:center}
+.divider h2{font-size:clamp(40px,7vw,96px);color:#fff}
+.divider p{color:rgba(255,255,255,.65);font-size:clamp(16px,1.6vw,22px);line-height:1.5}
+.ap .eyebrow{color:var(--ter)}
+.ap h2{font-size:clamp(24px,2.6vw,34px);margin-bottom:6px}
+.ap .take{font-size:clamp(15px,1.35vw,18px);color:var(--ink);font-weight:700;margin-bottom:18px;padding-left:12px;border-left:4px solid var(--accent)}
+.ap .grid{gap:16px}
+.ap .card{padding:16px 18px}
+.ap .card h3{font-size:14px;color:var(--ter);letter-spacing:.03em;text-transform:uppercase;margin-bottom:10px}
+.tw{overflow-x:auto}
+table.f{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.f th{text-align:right;font-size:11.5px;color:var(--ter);font-weight:800;padding:6px 8px;border-bottom:1.5px solid #e5e8eb;white-space:nowrap}
+table.f th:first-child,table.f td:first-child{text-align:left}
+table.f td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;color:var(--ink);white-space:nowrap}
+table.f tr.sum td{font-weight:800;border-top:1.5px solid #e5e8eb;background:var(--field)}
+table.f td.neg{color:var(--accent-press);font-weight:800}
+table.f td.good{color:#1b8a4a;font-weight:800}
+table.f td.warn{color:#b26a00;font-weight:800}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:96px 1fr 72px;gap:10px;align-items:center;font-size:13px}
+.bar i{display:block;height:14px;border-radius:7px;background:var(--accent);transform-origin:left;transform:scaleX(0);transition:transform 1s var(--ease)}
+.slide.in .bar i{transform:scaleX(1)}
+.bar i.neg{background:#cfd4da}
+.bar em{font-weight:800;text-align:right}
+.note{font-size:12.5px;color:var(--ter);line-height:1.5;margin-top:10px}
+.chart{width:100%;height:auto;display:block}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.kpis .card{padding:14px 16px}
+.kpis .v{font-size:clamp(22px,2.2vw,30px);font-weight:800;letter-spacing:-.04em}
+.kpis .l{font-size:12px;color:var(--ter);font-weight:700;margin-top:2px}
 
 @media (max-width:820px){
   .deck{scroll-snap-type:y proximity}
-  .g2,.g3,.g4,.was-is,.split,.team,.tiles,.asym,.proof,.legend,.demo-slot,.strip{grid-template-columns:1fr 1fr}
-  .flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);height:18px}
+  .g2,.g3,.g4,.split,.team,.tiles,.proof,.legend,.mosaic,.price,.four,.kpis{grid-template-columns:1fr 1fr}
+  .asym{grid-template-columns:1fr 1fr}
+  .flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);height:24px}
   .ask{grid-template-columns:1fr;justify-items:center}
-  .dots{display:none}
-  .slide{padding-bottom:88px}
+  .dots{display:none}.corner{display:none}
+  .slide{padding-bottom:90px}
+  .src{white-space:normal}
 }
 @media (max-width:560px){
-  .g2,.g3,.g4,.was-is,.split,.team,.tiles,.asym,.proof,.legend,.demo-slot,.mosaic{grid-template-columns:1fr}
-  .slide h2{font-size:26px}
-  .appcard header{flex-wrap:wrap}.appcard header span{margin-left:0;width:100%}
+  .g2,.g3,.g4,.split,.team,.tiles,.asym,.proof,.legend,.mosaic,.price,.four,.kpis{grid-template-columns:1fr}
   .strip{grid-template-columns:1fr 1fr}
-  .price{flex-direction:column}
+  .slide h2{font-size:34px}.punch{font-size:28px}.stat{font-size:52px}
   .src{position:static;margin-top:22px}
   .slide{padding-bottom:72px}
 }
@@ -242,47 +276,37 @@ table.t td.blank{text-align:right}
   html,body{height:auto;width:1122px}
   .deck{height:auto;overflow:visible;scroll-snap-type:none;width:1122px}
   .slide{min-height:auto;height:794px;max-height:794px;width:1122px;overflow:hidden;break-after:page;break-inside:avoid;padding:36px 56px 52px;max-width:none}
-  .g2,.was-is,.split,.team,.demo-slot,.legend,.mosaic{grid-template-columns:1fr 1fr}
-  .g3,.asym,.proof,.strip{grid-template-columns:repeat(3,1fr)}.g4,.tiles{grid-template-columns:repeat(4,1fr)}
-  .flow{grid-template-columns:1fr auto 1fr auto 1fr}.flow .arrow{transform:none;height:auto}
-  .ask{grid-template-columns:auto 1fr}.price{flex-direction:row}
-  .src{position:absolute;margin:0}.dots{display:none}
-  .slide h2{font-size:34px;margin-bottom:12px}
-  .strip{margin-top:12px}.strip figure{aspect-ratio:16/6}
-  .flow .thumb{aspect-ratio:16/6}
-  .demo-slot .card{padding:12px 14px}
-  .progress,.dots,.counter,.brand{display:none}
-  .reveal{opacity:1;transform:none}
-  .spirit,.spirit *{animation:none!important}
-  .src{position:static;margin-top:18px}
+  .slide h2{font-size:48px;margin-bottom:14px}.slide h2.sm{font-size:40px}#s1 h1{font-size:56px}#s11 h2{font-size:110px}.ap h2{font-size:26px}
+  .stat{font-size:64px}.punch{font-size:38px}
+  .g2,.split,.team,.legend,.mosaic,.four{grid-template-columns:1fr 1fr}
+  .g3,.proof,.strip,.price{grid-template-columns:repeat(3,1fr)}.g4,.tiles,.kpis{grid-template-columns:repeat(4,1fr)}
+  .asym{grid-template-columns:1.1fr 1fr 1fr 1fr}.flow{grid-template-columns:1fr auto 1fr auto 1fr}.flow .arrow{transform:none;height:auto}
+  .ask{grid-template-columns:auto 1fr}.strip figure{aspect-ratio:16/6}.flow .thumb{aspect-ratio:16/6}
+  .progress,.dots,.counter,.brand,.corner{display:none}
+  .reveal,.pop{opacity:1;transform:none;filter:none}.uline{background-size:100% 100%}.bar i{transform:none}.donut{transform:none}
+  .spirit,.spirit *,.pill,.arrow{animation:none!important}
+  .src{position:absolute;margin:0}
 }
-@media (prefers-reduced-motion:reduce){.spirit,.spirit *,#s1 .hint span{animation:none!important}.reveal{transition:none}}
+@media (prefers-reduced-motion:reduce){.spirit,.spirit *,#s1 .hint span,.pill,.arrow,.ring .run{animation:none!important}.reveal,.pop,.photo,.donut{transition:none}}
 </style>
 </head>
 <body>
 <div class="progress" id="progress"></div>
 <nav class="dots" id="dots" aria-label="슬라이드"></nav>
-<div class="counter" id="counter">1 / 11</div>
+<div class="counter" id="counter">1 / 17</div>
 <div class="brand">ARCA · THE ZONE BIO</div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <radialGradient id="g-body" cx="36%" cy="30%" r="80%">
-      <stop offset="0%" stop-color="#ff9d6b"/><stop offset="55%" stop-color="#f75b2b"/><stop offset="100%" stop-color="#e2331a"/>
-    </radialGradient>
-    <linearGradient id="g-eye" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff6ec"/><stop offset="100%" stop-color="#ffe3c9"/>
-    </linearGradient>
+    <radialGradient id="g-body" cx="36%" cy="30%" r="80%"><stop offset="0%" stop-color="#ff9d6b"/><stop offset="55%" stop-color="#f75b2b"/><stop offset="100%" stop-color="#e2331a"/></radialGradient>
+    <linearGradient id="g-eye" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff6ec"/><stop offset="100%" stop-color="#ffe3c9"/></linearGradient>
     <symbol id="spirit" viewBox="0 0 100 100">
       <g class="finL"><ellipse cx="12" cy="62" rx="9" ry="6" fill="#e2331a"/></g>
       <g class="finR"><ellipse cx="88" cy="62" rx="9" ry="6" fill="#e2331a"/></g>
       <path d="M64 16 L78 8 L74 26 Z" fill="#e2331a"/>
       <circle cx="50" cy="56" r="34" fill="url(#g-body)"/>
       <ellipse cx="38" cy="40" rx="12" ry="8" fill="rgba(255,255,255,.28)"/>
-      <g class="eyes">
-        <path d="M28 58 Q28 44 37 44 Q46 44 46 58 Z" fill="url(#g-eye)"/>
-        <path d="M54 58 Q54 44 63 44 Q72 44 72 58 Z" fill="url(#g-eye)"/>
-      </g>
+      <g class="eyes"><path d="M28 58 Q28 44 37 44 Q46 44 46 58 Z" fill="url(#g-eye)"/><path d="M54 58 Q54 44 63 44 Q72 44 72 58 Z" fill="url(#g-eye)"/></g>
     </symbol>
   </defs>
 </svg>
@@ -291,249 +315,402 @@ table.t td.blank{text-align:right}
 
 <!-- S1 -->
 <section class="slide" id="s1">
-  <div class="spirit reveal" id="heroSpirit"><svg><use href="#spirit"/></svg></div>
+  <div class="spirit pop" id="heroSpirit"><svg><use href="#spirit"/></svg></div>
   <p class="eyebrow reveal" style="--i:1">THE ZONE BIO · ZER01NE Sprint IR Day · 2026.09.21</p>
-  <h1 class="reveal" style="--i:2">당신의 하루를 기억하고,<br/>승인 한 번에 대신 끝내는 컴패니언.</h1>
-  <p class="lead reveal" style="--i:3"><b>ARCA</b> — 공수 0으로 쌓이는 나의 맥락, 그 맥락으로 초안을 내밀고 승인 뒤에 실행하는, 함께 커가는 에이전트.</p>
-  <div class="reveal" style="--i:4"><span class="pill">arca 해놔</span></div>
-  <p class="hint reveal" style="--i:5"><span>↓</span> 스크롤 · 키보드 → · 10분 발표 · 11장</p>
-  <p class="src">발표 박민성 (Founder, THE ZONE BIO) · me@thezonebio.com · thezonebio.com/arca · 초안 v0.1 (2026-09-10) — 9/17 제출본 전 갱신</p>
+  <h1 class="reveal" style="--i:2">당신의 하루를 기억하고,<br/><span class="uline">승인 한 번에 대신 끝내는</span> 컴패니언.</h1>
+  <p class="lead reveal" style="--i:3"><b>ARCA</b> — 공수 0으로 쌓이는 나의 맥락. 초안을 내밀고, 승인 뒤에 실행하고, 함께 커간다.</p>
+  <div class="pop" style="--i:4"><span class="pill">arca 해놔</span></div>
+  <p class="hint reveal" style="--i:5"><span>↓</span> 본편 11장 · 10분 &nbsp;·&nbsp; 부록 재무 5장</p>
+  <p class="src">박민성 · Founder, THE ZONE BIO · me@thezonebio.com · 초안 v0.5 (2026-09-10) — 9/17 제출본 전 갱신</p>
 </section>
 
 <!-- S2 -->
 <section class="slide" id="s2">
+  <div class="spirit corner"><svg><use href="#spirit"/></svg></div>
   <p class="eyebrow reveal">문제</p>
   <h2 class="reveal" style="--i:1">나는 병목이 됐다.</h2>
   <div class="bubbles">
-    <div class="bubble reveal" style="--i:2">"사업계획서 다시 보내주세요"</div>
-    <div class="bubble reveal" style="--i:3">"견적서 주시면 오늘 결제하겠습니다"</div>
-    <div class="bubble reveal" style="--i:4">"지난 회의 다음 단계가 뭐였죠?"</div>
+    <div class="bubble pop" style="--i:2">"사업계획서 다시 보내주세요"</div>
+    <div class="bubble pop" style="--i:3">"견적서 주시면 오늘 결제하겠습니다"</div>
+    <div class="bubble pop" style="--i:4">"지난 회의 다음 단계가 뭐였죠?"</div>
   </div>
-  <p class="punch reveal" style="--i:5">안 하면 일이 멈추고, <em>하면 내 일이 끊긴다.</em></p>
+  <p class="punch reveal" style="--i:5">안 하면 일이 멈추고, <em class="uline">하면 내 일이 끊긴다.</em></p>
   <div class="grid g3">
-    <div class="card soft reveal" style="--i:6"><div class="stat num">57<small>%</small></div><p class="cap">지식노동자의 시간이 <b>소통</b>에 쓰임 (창작 43%)</p></div>
-    <div class="card soft reveal" style="--i:7"><div class="stat num">68<small>%</small></div><p class="cap">"방해받지 않는 집중 시간이 부족하다"</p></div>
-    <div class="card soft reveal" style="--i:8"><div class="stat num">40<small>명</small></div><p class="cap">한국 창업자 직접 인터뷰 — 정보가 아니라 <b>사람이 병목</b></p></div>
+    <div class="card soft reveal" style="--i:6"><div class="stat num"><span data-count="57">0</span><small>%</small></div><p class="cap">시간이 소통에 쓰인다</p></div>
+    <div class="card soft reveal" style="--i:7"><div class="stat num"><span data-count="68">0</span><small>%</small></div><p class="cap">집중할 시간이 없다</p></div>
+    <div class="card soft reveal" style="--i:8"><div class="stat num"><span data-count="40">0</span><small>명</small></div><p class="cap">창업자 인터뷰 — 병목은 사람</p></div>
   </div>
   <div class="strip reveal" style="--i:9">
     <figure><img class="photo" src="img/founders-interview-1.jpg" alt="창업자 인터뷰" loading="lazy"/><figcaption>창업자 인터뷰</figcaption></figure>
-    <figure><img class="photo" src="img/with-jung-nami.jpg" alt="아산나눔재단 정남이 이사와 인터뷰" loading="lazy"/><figcaption>아산나눔재단 정남이 이사</figcaption></figure>
+    <figure><img class="photo" src="img/with-jung-nami.jpg" alt="아산나눔재단 정남이 이사" loading="lazy"/><figcaption>아산나눔재단 정남이 이사</figcaption></figure>
     <figure><img class="photo" src="img/founders-interview-2.jpg" alt="창업자 인터뷰" loading="lazy"/><figcaption>2026 상반기 · n=40</figcaption></figure>
   </div>
-  <p class="src"><b>출처</b> Microsoft Work Trend Index 2023 (57/43%, 68%) · ARCA 자체 인터뷰 2026 상반기 (n=40)</p>
+  <p class="src"><b>출처</b> Microsoft Work Trend Index 2023 · ARCA 자체 인터뷰 2026 상반기 (n=40)</p>
 </section>
 
 <!-- S3 -->
 <section class="slide" id="s3">
-  <p class="eyebrow reveal">해법 — 창업자 본인(사용자 0번)의 70일, n=1</p>
-  <h2 class="reveal" style="--i:1">쓰기 전으로 <em>돌아갈 수 없게</em> 된 네 가지.</h2>
+  <p class="eyebrow reveal">해법 — 창업자 본인의 70일 (n=1)</p>
+  <h2 class="reveal" style="--i:1">돌아갈 수 없게 된 <em>네 가지.</em></h2>
   <div class="grid g2" style="align-items:start">
-    <div class="was-is">
-      <div class="card soft reveal" style="--i:2">
-        <div class="tag">BEFORE</div>
-        <ul>
-          <li>유료 회의록 앱 + 수동 정리</li>
-          <li>하루가 어디로 갔는지 기록 없음</li>
-          <li>"그 사람이랑 어디까지 얘기했지?"</li>
-          <li>잔일은 내가 먼저 떠올려야 시작</li>
-        </ul>
-      </div>
-      <div class="card is reveal" style="--i:3">
-        <div class="tag">AFTER · ARCA</div>
-        <ul>
-          <li>회의 → 결정·액션아이템까지 정리, <b>arca it</b> 가능한 건 알아서 처리 — 유료 회의록 앱 해지</li>
-          <li>공수 0으로 하루가 기록된다 — <b>일기를 대신 써준다</b></li>
-          <li><b>사람별·프로젝트별</b>로 쌓인다 — 누구와 어디까지, 어디까지 진행됐는지</li>
-          <li>덜 중요하지만 해야 하는 잔일을 <b>먼저 찾아 "대신 해줄까?"</b></li>
-        </ul>
-      </div>
+    <div class="four">
+      <div class="card pop" style="--i:2"><div class="n">01</div><h3>회의록 앱 해지</h3><p>회의 → 결정·액션아이템까지. 가능한 건 arca it.</p></div>
+      <div class="card pop" style="--i:3"><div class="n">02</div><h3>일기를 대신 쓴다</h3><p>공수 0으로 하루가 기록된다.</p></div>
+      <div class="card pop" style="--i:4"><div class="n">03</div><h3>사람별로 기억한다</h3><p>누구와 어디까지, 어디까지 진행됐는지.</p></div>
+      <div class="card pop" style="--i:5"><div class="n">04</div><h3>먼저 물어본다</h3><p>덜 중요하지만 해야 하는 잔일 — "대신 해줄까?"</p></div>
     </div>
     <div class="appcard reveal" style="--i:4">
-      <header><span class="spirit s" style="animation:none"><svg><use href="#spirit"/></svg></span><b>아르카 멘토링 미팅 · 2026-08-13</b><span>ARCA 자동 생성 · 발췌</span></header>
-      <section><h4>회의 요약</h4><p>9월 최종 피치덱 완성을 목표로 PMF 내러티브와 유저 트랙션 확보 방안을 논의. 기술적 복잡성보다 사용자 가치 중심의 직관적인 구성을 권고. 8/27 스토리라인 리뷰 후 9월 중순 제로원 내부 피칭, 10/13 파이널 피칭.</p></section>
-      <section><h4>결정사항</h4><ul>
-        <li>핵심 타깃 = <b>창업자·다중 프로젝트 매니저</b>, 세일즈 등 미팅이 많은 직군</li>
-        <li>멀티테넌트 전환 시 <b>오디오는 전사 후 폐기</b>, 텍스트 맥락만 사용자 클라우드에 저장</li>
-      </ul></section>
-      <section><h4>액션 아이템</h4><ul>
-        <li class="ai"><span>피치덱 스토리라인 확정 미팅</span><span class="due">8/27 17:00</span></li>
-        <li class="ai"><span>피치덱 초안 완성 → 사전 공유</span><span class="due">9/10</span></li>
-      </ul></section>
+      <header><span class="spirit s"><svg><use href="#spirit"/></svg></span><b>아르카 멘토링 미팅 · 2026-08-13</b><span>ARCA 자동 생성 · 발췌</span></header>
+      <section><h4>회의 요약</h4><p>9월 최종 피치덱 완성을 목표로 PMF 내러티브와 유저 트랙션 확보 방안을 논의. 기술적 복잡성보다 사용자 가치 중심의 직관적인 구성을 권고.</p></section>
+      <section><h4>결정사항</h4><ul><li>핵심 타깃 = <b>창업자·다중 프로젝트 매니저</b>, 미팅이 많은 직군</li><li>멀티테넌트 전환 시 <b>오디오는 전사 후 폐기</b>, 텍스트 맥락만 저장</li></ul></section>
+      <section><h4>액션 아이템</h4><ul><li class="ai"><span>피치덱 스토리라인 확정 미팅</span><span class="due">8/27 17:00</span></li><li class="ai"><span>피치덱 초안 완성 → 사전 공유</span><span class="due">9/10</span></li></ul></section>
     </div>
   </div>
-  <p class="src"><b>사실</b> 창업자 본인 사용 70일(2026-07-03~) · 축적 데이터 1.3GB(8/13 기준) · 우측 카드는 8/13 제로원 멘토링에서 ARCA가 자동 생성한 회의록의 <b>실제 출력 발췌</b> (참석: 김정수 멘토, 제로원인큐베이션팀)</p>
+  <p class="src"><b>사실</b> 본인 사용 70일(2026-07-03~) · 1.3GB(8/13 기준) · 우측 = 8/13 제로원 멘토링에서 ARCA가 자동 생성한 회의록 실제 출력 발췌 (참석: 김정수 멘토, 제로원인큐베이션팀)</p>
 </section>
 
 <!-- S4 -->
 <section class="slide" id="s4">
-  <p class="eyebrow reveal">제품 — 하나의 흐름</p>
-  <h2 class="reveal" style="--i:1">기록 → 기억 → 위임. <em>한 앱, 한 흐름.</em></h2>
+  <p class="eyebrow reveal">제품</p>
+  <h2 class="reveal" style="--i:1">기록 → 기억 → 위임. <em>한 흐름.</em></h2>
   <div class="flow">
-    <div class="card reveal" style="--i:2"><div class="n">1</div><h3>기록</h3><p>회의·통화·대면 대화가 저절로 들어온다. Mac 노치·iPhone·Watch, 그리고 손에 쥐는 <b>ARCA Core</b>까지.</p>
-      <div class="thumb" style="margin-top:14px"><img src="img/arca-core.jpg" alt="ARCA Core 실물" loading="lazy"/></div></div>
+    <div class="card pop" style="--i:2"><div class="n">1</div><h3>기록</h3><p>회의·통화·대면이 저절로 들어온다. Mac·iPhone·Watch, 그리고 <b>ARCA Core</b>.</p><div class="thumb" style="margin-top:14px"><img src="img/arca-core.jpg" alt="ARCA Core 실물" loading="lazy"/></div></div>
     <div class="arrow">→</div>
-    <div class="card reveal" style="--i:3"><div class="n">2</div><h3>기억</h3><p>회의가 끝나면 <b>사람별·프로젝트별 페이지</b>가 갱신된다. "김 대표님이랑 어디까지 얘기했지?" — 물으면 답한다.</p>
-      <div class="mini"><span style="float:right;font-size:11px;color:var(--ter);font-weight:700">예시</span><b>people/kim-cs</b> — OEM 담당, 스틱커피 견적 진행 · 최근 8/27<br/><b>projects/zer01ne-ir</b> — 9/17 제출, 9/21 IR Day · 결정 2 · 액션 3</div></div>
+    <div class="card pop" style="--i:3"><div class="n">2</div><h3>기억</h3><p>사람별·프로젝트별 페이지가 갱신된다. 물으면 답한다.</p><div class="mini"><span class="tag">예시</span><b>people/kim-cs</b> — OEM 담당, 견적 진행 · 최근 8/27<br/><b>projects/zer01ne-ir</b> — 9/17 제출 · 결정 2 · 액션 3</div></div>
     <div class="arrow">→</div>
-    <div class="card reveal" style="--i:4"><div class="n">3</div><h3>위임</h3><p>그 맥락으로 답장 초안을 먼저 내민다. <b>"대신 해줄까?"</b> → 승인 → 실제 발송. 승인 없이는 아무것도 나가지 않는다.</p>
-      <div class="mini"><span style="float:right;font-size:11px;color:var(--ter);font-weight:700">예시</span>김 대표님께 견적서 회신 초안이 준비됐어요. 지난 회의 결정(단가 유지·10월 초 납기) 반영.<br/><span class="btn">arca 해놔</span><span class="ghost">내가 할게</span></div></div>
+    <div class="card pop" style="--i:4"><div class="n">3</div><h3>위임</h3><p>맥락으로 초안을 내민다. <b>"대신 해줄까?"</b> 승인 없이는 아무것도 나가지 않는다.</p><div class="mini"><span class="tag">예시</span>김 대표님께 견적서 회신 초안 — 지난 회의 결정(단가 유지·10월 초 납기) 반영.<br/><span class="btn">arca 해놔</span><span class="ghost">내가 할게</span></div></div>
   </div>
-  <div class="demo-slot">
-    <div class="card soft reveal" style="--i:5"><video src="img/demo-2026-06.mp4" poster="img/demo-poster.jpg" muted playsinline preload="none" controls></video><div><h3 style="font-size:15px">2026-06 스프린트 데모 (58초)</h3><p style="font-size:13px">ZER01NE Sprint 당시 첫 프로토타입 — 회의 → 메모리 → 메일 초안. 캐릭터·UI는 이후 전면 개편.</p></div></div>
-    <div class="card soft reveal" style="--i:6"><div style="width:112px;height:72px;border-radius:10px;background:var(--tint);display:grid;place-items:center;color:var(--accent);font-weight:800;font-size:12px;flex:none">9/17 촬영</div><div><h3 style="font-size:15px">도그푸딩 데모 영상 (현재 빌드)</h3><p style="font-size:13px">위 3장면을 실제 하루에서 한 테이크로. 9/17 제출본에 포함 — IR Day에는 라이브 데모 + 폴백 영상.</p></div></div>
+  <div class="demo">
+    <div class="card soft reveal" style="--i:5"><video src="img/demo-2026-06.mp4" poster="img/demo-poster.jpg" muted playsinline preload="none" controls></video><div><h3>2026-06 스프린트 데모 · 58초</h3><p>첫 프로토타입 — 회의 → 메모리 → 메일 초안. UI·캐릭터는 이후 전면 개편.</p></div></div>
+    <div class="card soft reveal" style="--i:6"><div class="slot">9/17 촬영</div><div><h3>도그푸딩 데모 · 현재 빌드</h3><p>위 3장면을 실제 하루에서 한 테이크로. IR Day엔 라이브 + 폴백 영상.</p></div></div>
   </div>
-  <p class="src"><b>현재 출하</b> macOS 노치 컴패니언 · iOS/watchOS (TestFlight build 12, 9/9) · 서버 메모리 ARCA Brain (Supabase 서울) · Gmail/Slack/Calendar 커넥터 · ARCA Core v1 펌웨어 실물 부팅 (8/5) · 모든 자율 발신에 "sent by ○○'s ARCA" 표시</p>
+  <p class="src"><b>출하</b> macOS 노치 · iOS/watchOS (TestFlight 12, 9/9) · 서버 메모리(Supabase 서울) · Gmail/Slack/Calendar · ARCA Core v1 실물 부팅 (8/5) · 모든 자율 발신에 "sent by ○○'s ARCA"</p>
 </section>
 
 <!-- S5 -->
 <section class="slide" id="s5">
   <p class="eyebrow reveal">왜 지금</p>
-  <h2 class="reveal" style="--i:1">모두가 메모리를 만든다.<br/>묻는 AI는 깔렸다. <em>끝내는 AI는 비어 있다.</em></h2>
-  <p class="lead reveal" style="--i:2">ChatGPT·Claude·Copilot 전부 메모리를 달았고, 현대차·기아 임직원 80%가 사내 AI에 매일 묻는다. <b>묻는 것은 일상이 됐다.</b> 그 다음 병목은 '누가 그 일을 끝내는가'다 — 회의와 메일에서 초안을 내밀고 승인 뒤 실행하는 자리는 아직 비어 있다.</p>
+  <h2 class="reveal" style="--i:1">묻는 AI는 깔렸다.<br/><em class="uline">끝내는 AI는 비어 있다.</em></h2>
+  <p class="lead reveal" style="--i:2">모두가 메모리를 달았다. 다음 병목은 '누가 그 일을 끝내는가'다.</p>
   <div class="tiles">
-    <div class="card reveal" style="--i:3"><div class="stat num">3만<small>명</small></div><p class="cap">H Chat Pro 사용자 (2026-07)</p></div>
-    <div class="card reveal" style="--i:4"><div class="stat num">80<small>%</small></div><p class="cap">현대차·기아 일반직·연구직 사용률</p></div>
-    <div class="card reveal" style="--i:5"><div class="stat">2024–26</div><p class="cap">ChatGPT·Claude·Copilot·Notion AI 메모리 탑재 — "기억"은 기본값이 됐다</p></div>
-    <div class="card reveal" style="--i:6"><div class="stat">0</div><p class="cap">하루를 <b>보면서</b> 대신 행동하는 컴패니언 — 회의록 앱은 보기만, 스위트 AI는 스위트 안에서만</p></div>
+    <div class="card pop" style="--i:3"><div class="stat num"><span data-count="3">0</span>만<small>명</small></div><p class="cap">H Chat Pro 사용자 (2026-07)</p></div>
+    <div class="card pop" style="--i:4"><div class="stat num"><span data-count="80">0</span><small>%</small></div><p class="cap">현대차·기아 임직원이 사내 AI에 묻는다</p></div>
+    <div class="card pop" style="--i:5"><div class="stat">'24–26</div><p class="cap">ChatGPT·Claude·Copilot·Notion — 메모리는 기본값</p></div>
+    <div class="card pop" style="--i:6"><div class="stat num"><span data-count="0">0</span></div><p class="cap">하루를 <b>보면서</b> 대신 행동하는 컴패니언</p></div>
   </div>
-  <div class="note reveal" style="--i:7"><span class="dot"></span><p><b>반례를 먼저 말한다.</b> Dimension(AI coworker, $2M+ 조달)은 2026-05 폐업했다. 우리 해석: <b>사용자가 매일 열어야 하는 브리핑은 습관이 되지 않는다</b>. 그래서 ARCA는 사용자가 아무것도 하지 않아도 하루가 들어오게 설계했다. 시장은 뜨겁고(hot), 동시에 어렵다(hard).</p></div>
-  <p class="src"><b>출처</b> 디지털데일리 2026-08-12 "임직원 80%가 사내 AI 쓴다"(H Chat Pro 3만 명) — 9/17 제출본에서 1차 출처로 교체 · OpenAI Memory(2024-02~), Anthropic 메모리(2025~), Microsoft Copilot·Notion AI 메모리 공개 자료 · Dimension: 2026-05-20 winding-down 공지</p>
+  <p class="lead small reveal" style="--i:7"><b>반례부터.</b> Dimension은 2026-05 폐업했다 — 우리 해석: 매일 열어야 하는 브리핑은 습관이 안 된다. 그래서 ARCA는 하루가 <em>저절로</em> 들어온다.</p>
+  <p class="src"><b>출처</b> 디지털데일리 2026-08-12 (H Chat Pro 3만 명·80%) — 9/17 1차 출처 교체 · OpenAI Memory 2024-02~ · Dimension winding-down 2026-05-20</p>
 </section>
 
 <!-- S6 -->
 <section class="slide" id="s6">
   <p class="eyebrow reveal">왜 ARCA만 — 시간이 갈수록 벌어지는 세 비대칭</p>
-  <h2 class="reveal" style="--i:1">"메모리가 있다"는 해자가 아니다.<br/>메모리의 가치 = <em>입력면 × 행동 권한 × 시간.</em></h2>
-  <p class="lead reveal" style="--i:1;font-size:15px;margin:-6px 0 16px">살아있는 대체재 — Granola·Plaud·클로바노트(기록만, 행동 없음) · Copilot·Notion AI(행동하지만 스위트 안만) · ChatGPT·Claude 메모리(대화의 부산물, 회의·메일을 못 봄). <b>하루를 보면서 행동하는 것</b>은 셋 중 어디에도 없다.</p>
-  <div class="asym">
-    <div class="card reveal" style="--i:2"><div class="k">비대칭 1 · 입력면</div><h3>클수록 덜 보여준다.</h3><p>플랫폼의 상시 기록은 반발을 산다(Microsoft Recall, 2024 → 연기·옵트인 재설계). 사용자가 <b>스스로 고른 작은 컴패니언</b>이, <b>사용자가 소유하고 가져갈 수 있는 저장소</b>(에이전트가 써주는 나의 위키)에 쓸 때 하루 전체를 볼 허락을 받는다 — 우리 클라우드에 갇히지 않는다는 것이 들여보내는 이유다. ARCA Core는 대면·오프라인 대화까지 입력면을 넓힌다. 더 많이 보는 이유는 모델이 아니라 <b>허락</b>이다.</p></div>
-    <div class="card reveal" style="--i:3"><div class="k">비대칭 2 · 완수 데이터</div><h3>기억은 가져갈 수 있다. 신뢰는 다시 쌓아야 한다.</h3><p>위키는 이식된다 — 그게 약속이다. 하지만 <b>"이 사람이 무엇을 맡기고, 승인하고, 거절했는가"</b>는 하루를 보면서 행동하는 에이전트에게만 쌓이고, 새 에이전트는 0에서 다시 배운다. Copilot도 승인 로그를 쌓지만 스위트 안의 일만 본다 — <b>완수 데이터의 폭은 입력면의 폭</b>이다. 그래서 1번이 2번을 만든다.</p></div>
-    <div class="card reveal" style="--i:4"><div class="k">비대칭 3 · 관계</div><h3>복리가 느껴져야 캡처가 켜져 있다.</h3><p>"함께한 70일", "오늘 너에 대해 이걸 배웠어." 우리는 리텐션을 기능이 아니라 <b>관계</b>에 건다 — 이건 베팅이다. 컴패니언 앱(Friend·Replika)은 떠들 뿐 해주는 일이 없었고, 스위트는 캐릭터를 얹어도 툴로 남는다. <b>ARCA의 애정은 대화가 아니라 일에서 온다.</b></p></div>
+  <h2 class="sm reveal" style="--i:1">메모리의 가치 = <em>입력면 × 행동 권한 × 시간.</em></h2>
+  <p class="lead small reveal" style="--i:2">Granola·Plaud는 보기만. Copilot·Notion AI는 스위트 안에서만. ChatGPT 메모리는 대화의 부산물. <b>하루를 보면서 행동하는 것</b>은 없다.</p>
+  <div class="asym" style="margin-top:20px">
+    <div class="ring reveal" style="--i:3">
+      <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="46"/><circle class="run" cx="50" cy="50" r="46"/></svg>
+      <div class="core">한 바퀴마다<br/>격차가 벌어진다</div>
+      <div class="node" style="--a:-90deg"><span>하루가 들어온다</span></div>
+      <div class="node" style="--a:-45deg"><span>맥락 ↑</span></div>
+      <div class="node" style="--a:0deg"><span>제안 ↑</span></div>
+      <div class="node" style="--a:45deg"><span>승인 ↑</span></div>
+      <div class="node" style="--a:90deg"><span>위임 범위 ↑</span></div>
+      <div class="node" style="--a:135deg"><span>시간 ↑</span></div>
+      <div class="node" style="--a:180deg"><span>애정 ↑</span></div>
+      <div class="node" style="--a:225deg"><span>더 들여보낸다</span></div>
+    </div>
+    <div class="card pop" style="--i:4"><div class="k">비대칭 1 · 입력면</div><h3>클수록 덜 보여준다.</h3><p>플랫폼의 상시 기록은 반발을 산다(Recall). 사용자가 고른 컴패니언이, <b>가져갈 수 있는 나의 위키</b>에 쓸 때 하루 전체를 허락받는다.</p></div>
+    <div class="card pop" style="--i:5"><div class="k">비대칭 2 · 완수 데이터</div><h3>기억은 가져간다.<br/>신뢰는 다시 쌓는다.</h3><p>무엇을 맡기고 거절했는가는 하루를 보며 행동한 에이전트에게만 쌓인다. 완수 데이터의 폭 = 입력면의 폭.</p></div>
+    <div class="card pop" style="--i:6"><div class="k">비대칭 3 · 관계</div><h3>애정은 일에서 온다.</h3><p>"함께한 70일." 리텐션을 기능이 아니라 관계에 건다 — 이건 베팅이다. 컴패니언 앱은 일을 안 했고, 스위트는 캐릭터를 얹어도 툴이다.</p></div>
   </div>
-  <div class="loop reveal" style="--i:5">
-    <span class="step">하루가 들어온다</span><span class="a">→</span><span class="step">맥락</span><span class="a">→</span><span class="step">제안 ↑</span><span class="a">→</span><span class="step">승인 ↑</span><span class="a">→</span><span class="step">안전한 위임 범위 ↑</span><span class="a">→</span><span class="step">되찾은 시간 ↑</span><span class="a">→</span><span class="step">애정 ↑</span><span class="a">→</span><span class="step">더 들여보낸다</span><span class="back">↺ 한 바퀴마다 격차가 벌어진다</span>
-  </div>
-  <p class="src"><b>측정 가능</b> 이 논증은 숫자 하나로 검증된다 — 사용자별 <b>위임 승인율·자동 실행 비율</b>이 날짜와 함께 오르는가. 다음 장의 트랙션 계측이 그 곡선을 만든다. · 정직하게: 모두가 이 방향으로 달린다. 우리 베팅은 "OS·스위트 벤더가 아니라 사용자가 고른 컴패니언에게 하루를 맡기는 사람이 충분히 많다"는 것이고, 90일 안에 숫자로 확인한다. · Microsoft Recall: 2024-06 출시 연기 후 옵트인·재설계</p>
+  <p class="src"><b>측정</b> 사용자별 위임 승인율·자동 실행 비율이 날짜와 함께 오르는가 — 다음 장의 계측이 그 곡선을 만든다 · Microsoft Recall 2024-06 연기 후 옵트인 재설계</p>
 </section>
 
 <!-- S7 -->
 <section class="slide" id="s7">
-  <p class="eyebrow reveal">트랙션 — 오늘의 사실, 그리고 9/21까지 채울 칸</p>
-  <h2 class="reveal" style="--i:1">숫자가 작으면 <em>기울기</em>를 보여드립니다.</h2>
+  <p class="eyebrow reveal">트랙션 — 오늘의 사실, 9/21까지 채울 칸</p>
+  <h2 class="reveal" style="--i:1">숫자가 작으면 <em class="uline">기울기</em>를 보여드립니다.</h2>
   <div class="split">
     <div class="card reveal" style="--i:2">
-      <div class="tag" style="margin-bottom:12px">진짜인 것 (2026-09-10)</div>
       <ul class="facts">
-        <li><span class="ok">✓</span><span>베타 배포 시작 — <b>TestFlight build 12</b> (9/9) + Mac 앱, 초대 코드 방식 · 제로원인큐베이션팀 초대 완료</span></li>
-        <li><span class="ok">✓</span><span>n=1: 창업자 본인 <b>70일 매일 사용</b>, 축적 <b>1.3GB</b> <small>(8/13 기준)</small> — 본인 외 사용자 수치는 아직 0</span></li>
-        <li><span class="ok">✓</span><span>서버 메모리 프로덕션 (9/8) · ARCA Core v1 <b>실물 보드 부팅</b> (8/5)</span></li>
-        <li><span class="ok">✓</span><span>창업자 인터뷰 <b>40명</b> (6월) · waitlist <b>50+</b> (6월, 이후 정체 — 베타로 전환하는 것이 이번 스프린트)</span></li>
-        <li><span class="ok">✓</span><span>정성 신호: 데모 후 창업자들이 먼저 재연락 — 숫자로 바꾸는 것이 9/21까지의 일</span></li>
+        <li><span class="ok">✓</span><span>베타 배포 시작 — TestFlight 12 (9/9) + Mac <small>· 제로원팀 초대 완료</small></span></li>
+        <li><span class="ok">✓</span><span>n=1 · 창업자 70일 매일 · 1.3GB <small>— 본인 외 수치는 아직 0</small></span></li>
+        <li><span class="ok">✓</span><span>서버 메모리 프로덕션 (9/8) · ARCA Core 실물 부팅 (8/5)</span></li>
+        <li><span class="ok">✓</span><span>인터뷰 40명 · waitlist 50+ <small>(6월, 정체 → 베타 전환이 이번 스프린트)</small></span></li>
       </ul>
     </div>
     <div class="card soft reveal" style="--i:3">
-      <div class="tag" style="margin-bottom:12px">9/21까지 채울 칸 — 계측 중</div>
       <table class="t">
         <tr><th>지표</th><th style="text-align:right">목표</th><th style="text-align:right">9/21</th></tr>
         <tr><td>설치</td><td class="v num">30</td><td class="blank"><span class="blankbox"></span></td></tr>
         <tr><td>주간 활성</td><td class="v num">15</td><td class="blank"><span class="blankbox"></span></td></tr>
         <tr><td>닫힌 업무 루프</td><td class="v num">100+</td><td class="blank"><span class="blankbox"></span></td></tr>
-        <tr><td>유료 (₩12,900)</td><td class="v num">10</td><td class="blank"><span class="blankbox"></span></td></tr>
-        <tr><td>위임 승인율 · 일별 곡선</td><td class="v">우상향</td><td class="blank"><span class="blankbox"></span></td></tr>
+        <tr><td>유료 ₩12,900</td><td class="v num">10</td><td class="blank"><span class="blankbox"></span></td></tr>
+        <tr><td>위임 승인율 곡선</td><td class="v">우상향</td><td class="blank"><span class="blankbox"></span></td></tr>
       </table>
-      <p class="cap" style="margin-top:12px">서버 계측(<code>usage_events</code>: 승인/거절/닫힌 루프/재방문) 배선 중. IR Day에는 슬라이드 숫자 대신 <b>라이브 대시보드</b>를 새로고침합니다.</p>
+      <p class="cap">계측 가동(9/10) — IR Day엔 라이브 대시보드를 새로고침합니다.</p>
     </div>
   </div>
-  <p class="src"><b>원칙</b> 숨기지 않는다. 채워지지 않은 칸은 "시도했고 무엇이 막혔는가"로 대신한다. 프리시드가 사는 것은 결과값이 아니라 <b>학습 속도</b>다.</p>
+  <p class="src"><b>원칙</b> 숨기지 않는다. 채워지지 않은 칸은 "무엇이 막혔는가"로 대신한다.</p>
 </section>
 
 <!-- S8 -->
 <section class="slide" id="s8">
   <p class="eyebrow reveal">시장 · 모델</p>
-  <h2 class="reveal" style="--i:1">관여가 많을수록 더 필요하다.<br/>그래서 <em>창업자·오퍼레이터</em>부터.</h2>
-  <div class="ladder reveal" style="--i:2">
-    <span class="step on">여러 프로젝트·사람을 혼자 돌리는 창업자·오퍼레이터</span><span class="a">→</span><span class="step">회의·메일·메신저에 파편화된 지식노동자</span><span class="a">→</span><span class="step">컴패니언을 원하는 개인</span>
+  <h2 class="reveal" style="--i:1">관여가 많을수록 필요하다.<br/>그래서 <em>창업자</em>부터.</h2>
+  <div class="ladder reveal" style="--i:2"><span class="step on">여러 프로젝트를 혼자 돌리는 창업자·오퍼레이터</span><span class="arrow">→</span><span class="step">파편화된 지식노동자</span><span class="arrow">→</span><span class="step">컴패니언을 원하는 개인</span></div>
+  <div class="price">
+    <div class="card pop" style="--i:3"><div class="tag">PRO · 개인</div><div class="p">₩12,900<small>/월</small></div><p class="cap">개인 OAuth · IT 승인 불필요 → bottom-up</p></div>
+    <div class="card pop" style="--i:4"><div class="tag">TEAM</div><div class="p">₩19,900<small>/seat</small></div><p class="cap">헤비유저를 흡수하는 요금제</p></div>
+    <div class="card pop" style="--i:5"><div class="tag">공헌이익 · 월 10h</div><div class="p num"><span data-count="63">0</span><small>%</small></div><p class="cap">COGS $3.43 / ₩12,900 · 30h에서 붕괴 → 캡·Team (부록 A1–A3)</p></div>
   </div>
-  <div class="grid g2" style="align-items:start">
-    <div>
-      <div class="price">
-        <div class="card reveal" style="--i:3"><div class="tag">Pro · 개인</div><div class="p">₩12,900<small>/월</small></div><p class="cap">회의·메일·Slack 풀 · 개인 OAuth, IT 승인 불필요 → bottom-up</p></div>
-        <div class="card reveal" style="--i:4"><div class="tag">Team</div><div class="p">₩19,900<small>/seat</small></div><p class="cap">어드민·팀 분석 · 한계원가 유사 → 마진 ↑</p></div>
-      </div>
-      <p class="cap reveal" style="--i:5;margin-top:12px"><b>확장 경로</b> 개인(개인 OAuth, IT 승인 불필요) → 팀 → 기업. 기업 단계의 보안 3-tier(SSO/SCIM/감사로그 → BYOK·프라이빗 테넌트)와 ISMS-P는 <b>로드맵</b>이며 이번 라운드의 매출 가정에 넣지 않는다.</p>
-    </div>
-    <div class="card reveal" style="--i:6">
-      <div class="tag">유닛이코노믹스 · 월 10h 기준</div>
-      <table class="ue">
-        <tr><td>STT (batch) — ElevenLabs Scribe $0.22/h × 10h</td><td>$2.20</td></tr>
-        <tr><td>LLM 라우팅 — 저위험은 저가 모델</td><td>$0.80</td></tr>
-        <tr><td>인프라·저장</td><td>$0.15</td></tr>
-        <tr><td>결제 수수료 ~3%</td><td>$0.28</td></tr>
-        <tr class="sum"><td>COGS 합 / Gross margin</td><td>$3.43 / ≈63%</td></tr>
-      </table>
-      <p class="warn">한계선: STT는 사용 시간에 선형 → 월 30h↑에서 개인 요금제 마진 붕괴. 우리 첫 고객(미팅 많은 창업자)은 정확히 20–30h 구간 — 사용량 캡·팀 요금제·저가 STT 라우팅이 <b>첫 90일의 설계 과제</b>다.</p>
-    </div>
-  </div>
-  <p class="src"><b>출처</b> AI assistant software 시장 $8.46B(2024) → $35.7B(2033), CAGR ≈17% — Grand View Research (단일 출처) · ElevenLabs Scribe 공식 단가 · 환율 1,380원/$ · 가격은 가설(WTP 검증 전)</p>
+  <p class="src"><b>출처</b> AI assistant software $8.46B(2024)→$35.7B(2033), CAGR≈17% — Grand View Research · ElevenLabs Scribe 단가 · 1,380원/$ · 가격은 가설(WTP 검증 전)</p>
 </section>
 
 <!-- S9 -->
 <section class="slide" id="s9">
   <p class="eyebrow reveal">팀</p>
-  <h2 class="reveal" style="--i:1">SW + 하드웨어 + 심리 설계, <em>한 팀.</em></h2>
+  <h2 class="sm reveal" style="--i:1">SW + 하드웨어 + 심리 설계, <em>한 팀.</em></h2>
   <div class="team">
     <div class="mosaic reveal" style="--i:2">
       <figure><img class="photo" src="img/allnight-build.jpg" alt="밤새 빌드" loading="lazy"/><figcaption>2주 안에 빌드 · 6월</figcaption></figure>
-      <figure><img class="photo" src="img/jinsung-allnight.jpg" alt="박진성 하드웨어 작업" loading="lazy"/><figcaption>박진성 · 하드웨어</figcaption></figure>
+      <figure><img class="photo" src="img/jinsung-allnight.jpg" alt="박진성" loading="lazy"/><figcaption>박진성 · 하드웨어</figcaption></figure>
       <figure><img class="photo" src="img/hardware-build.jpg" alt="하드웨어 제작" loading="lazy"/><figcaption>ARCA Core 제작</figcaption></figure>
       <figure><img class="photo" src="img/booth.jpg" alt="부스 전시" loading="lazy"/><figcaption>부스 전시 · 6월</figcaption></figure>
     </div>
     <div class="members">
-      <div class="card reveal" style="--i:3"><div class="av">민</div><div><h3>박민성 · Founder</h3><p>제품·리서치·macOS/iOS 앱·발표를 직접. 사용자 0번. THE ZONE BIO 대표.</p></div></div>
-      <div class="card reveal" style="--i:4"><div class="av">진</div><div><h3>박진성 · 하드웨어</h3><p>서울대 기계공학 + 심리학적 사용 설계. ARCA Core 실물.</p></div></div>
-      <div class="card reveal" style="--i:5"><div class="av">승</div><div><h3>하승호 · 임베디드</h3><p>ISEF 임베디드 부문 세계 2등, Caltech. 펌웨어·센서.</p></div></div>
+      <div class="card pop" style="--i:3"><div class="av">민</div><div><h3>박민성 · Founder</h3><p>제품·리서치·앱·발표. 사용자 0번.</p></div></div>
+      <div class="card pop" style="--i:4"><div class="av">진</div><div><h3>박진성 · 하드웨어</h3><p>서울대 기계공학 + 심리학적 사용 설계.</p></div></div>
+      <div class="card pop" style="--i:5"><div class="av">승</div><div><h3>하승호 · 임베디드</h3><p>ISEF 임베디드 세계 2등 · Caltech.</p></div></div>
       <div class="proof">
-        <div class="card reveal" style="--i:6"><div class="stat">3위</div><p class="cap">Google Cloud × Solana AI Agentic Hackathon (knot, 8/21)</p></div>
-        <div class="card reveal" style="--i:7"><div class="stat num">74<small>커밋</small></div><p class="cap">6/1 이후 활동일 21일 · 3플랫폼 앱·서버·펌웨어</p></div>
-        <div class="card reveal" style="--i:8"><div class="stat">8/5</div><p class="cap">ARCA Core v1 실물 보드 부팅</p></div>
+        <div class="card pop" style="--i:6"><div class="stat">3위</div><p class="cap">Google Cloud × Solana AI Agentic Hackathon</p></div>
+        <div class="card pop" style="--i:7"><div class="stat num"><span data-count="74">0</span></div><p class="cap">커밋 · 6/1 이후 21 활동일</p></div>
+        <div class="card pop" style="--i:8"><div class="stat">8/5</div><p class="cap">ARCA Core first silicon</p></div>
       </div>
     </div>
   </div>
-  <p class="src"><b>파는 것은 아이디어가 아니라 실행 속도.</b> 스프린트 도중 피봇 → 2주 미만에 40명 인터뷰 + 작동 데모 + waitlist 50 (6월) → 3개월 뒤 3플랫폼 앱·서버·실물 하드웨어 (9월).</p>
+  <p class="src"><b>실행 속도</b> 스프린트 중 피봇 → 2주 미만 40명 인터뷰 + 작동 데모 (6월) → 3개월 뒤 3플랫폼 앱 · 서버 · 실물 하드웨어 (9월)</p>
 </section>
 
 <!-- S10 -->
 <section class="slide" id="s10">
   <p class="eyebrow reveal">Ask</p>
   <h2 class="reveal" style="--i:1"><em>5억</em> · 프리시드 · 12개월.</h2>
-  <p class="lead reveal" style="--i:2">12개월 런웨이 — <b>첫 90일에 핵심 가설을 죽이거나 살리고</b>, 남은 9개월은 그 결과 위에서 씁니다.</p>
+  <p class="lead reveal" style="--i:2">첫 90일에 핵심 가설을 죽이거나 살린다. 남은 9개월은 그 결과 위에서 쓴다.</p>
   <div class="ask">
     <div class="donut reveal" style="--i:3"><b>5억<br/><span style="font-size:.6em;color:var(--ter)">12개월</span></b></div>
     <div class="legend">
-      <div class="card reveal" style="--i:4"><span class="sw" style="background:var(--accent)"></span><div><h3>45% · 리텐션·제품</h3><p>SW/UX 엔지니어 1명 채용 (현재 SW는 대표 1인). 최대 리스크는 사용성이다.</p></div></div>
-      <div class="card reveal" style="--i:5"><span class="sw" style="background:var(--ink)"></span><div><h3>30% · 런웨이·인프라</h3><p>STT·LLM·서버, 유료 코호트 확대.</p></div></div>
-      <div class="card reveal" style="--i:6"><span class="sw" style="background:#8b95a1"></span><div><h3>15% · 엔터프라이즈 준비</h3><p>감사로그·SSO 구현, ISMS-P는 범위 산정까지 — 기업 도입의 실제 게이트.</p></div></div>
-      <div class="card reveal" style="--i:7"><span class="sw" style="background:#d9dde3"></span><div><h3>10% · 하드웨어</h3><p>ARCA Core 소량 제작. SW로 리텐션이 증명된 뒤에만 확대.</p></div></div>
+      <div class="card pop" style="--i:4"><span class="sw" style="background:var(--accent)"></span><div><h3>45% · 리텐션·제품</h3><p>SW/UX 엔지니어 1명 채용 (현재 SW = 대표 1인)</p></div></div>
+      <div class="card pop" style="--i:5"><span class="sw" style="background:var(--ink)"></span><div><h3>30% · 런웨이·인프라</h3><p>STT·LLM·서버, 유료 코호트 확대</p></div></div>
+      <div class="card pop" style="--i:6"><span class="sw" style="background:#8b95a1"></span><div><h3>15% · 엔터프라이즈 준비</h3><p>감사로그·SSO 구현, ISMS-P 범위 산정</p></div></div>
+      <div class="card pop" style="--i:7"><span class="sw" style="background:#d9dde3"></span><div><h3>10% · 하드웨어</h3><p>ARCA Core 소량 제작 — SW 리텐션 증명 뒤에만 확대</p></div></div>
     </div>
   </div>
-  <div class="reveal" style="--i:8">
-    <div class="tag" style="margin-bottom:8px">90일 성공 기준</div>
-    <div class="chips">
-      <span class="chip on">디자인 파트너 5–10팀</span><span class="chip on">반복 사용자 100명</span><span class="chip on">유저당 주간 닫힌 루프 수</span><span class="chip on">유료 또는 파일럿 LOI ≥ 1</span><span class="chip on">그룹사 협업 프로젝트 1건 착수</span>
-    </div>
-  </div>
-  <p class="src"><b>밸류에이션</b>은 라운드 구조와 함께 협의 — 금액·사용처·마일스톤만 제시합니다. · 보안·컴플라이언스(SOC 2, ISMS-P)는 보유가 아닌 <b>로드맵</b>입니다.</p>
+  <div class="chips reveal" style="--i:8"><span class="chip">디자인 파트너 5–10팀</span><span class="chip">반복 사용자 100명</span><span class="chip">유저당 주간 닫힌 루프</span><span class="chip">유료 또는 파일럿 LOI ≥ 1</span><span class="chip">그룹사 협업 1건 착수</span></div>
+  <p class="src"><b>밸류에이션</b>은 라운드 구조와 함께 협의 · SOC 2·ISMS-P는 보유가 아닌 로드맵 · 재무 상세는 부록 A1–A5</p>
 </section>
 
 <!-- S11 -->
 <section class="slide dark" id="s11">
   <div class="wrap">
-    <div class="spirit reveal"><svg><use href="#spirit"/></svg></div>
-    <p class="ladder-line reveal" style="--i:1">몰입 수호 → 삶의 맥락 → 위임이 쌓는 기억 → 노동에서의 해방 &nbsp;·&nbsp; 1층이 안 되면 나머지는 무의미</p>
+    <div class="spirit pop"><svg><use href="#spirit"/></svg></div>
+    <p class="ladder-line reveal" style="--i:1">몰입 수호 → 삶의 맥락 → 위임이 쌓는 기억 → 노동에서의 해방 · 1층이 안 되면 나머지는 무의미</p>
     <h2 class="reveal" style="--i:2">arca 해놔.</h2>
-    <p class="q reveal" style="--i:3">던지고 싶은 질문은 하나입니다 — <b>이 팀이 좁은 루프 하나를 끝까지 닫아, 돈 내고 위임하는 습관을 만들 수 있는가.</b><br/>다음 90일 안에 데이터로 답하겠습니다.</p>
+    <p class="q reveal" style="--i:3"><b>이 팀이 좁은 루프 하나를 끝까지 닫아, 돈 내고 위임하는 습관을 만들 수 있는가.</b><br/>다음 90일 안에 데이터로 답하겠습니다.</p>
     <p class="contact reveal" style="--i:4">박민성 · THE ZONE BIO, INC · me@thezonebio.com · +82 10 9942 7360<br/>thezonebio.com/arca · 이 덱: thezonebio.com/arcapitch</p>
   </div>
+</section>
+
+<!-- Appendix divider -->
+<section class="slide dark divider" id="a0">
+  <div class="wrap">
+    <p class="eyebrow reveal" style="color:rgba(255,255,255,.6)">부록 · 재무</p>
+    <h2 class="reveal" style="--i:1">읽는 장표 다섯 장.</h2>
+    <p class="reveal" style="--i:2">A1 공헌이익 · A2 LTV/CAC · A3 손익분기와 가격 설계 · A4 24개월 프로젝션 · A5 가정과 출처<br/>모든 숫자는 <b style="color:#fff">가정</b>이며 9/21까지의 실측으로 갱신됩니다.</p>
+  </div>
+</section>
+
+<!-- A1 -->
+<section class="slide ap" id="a1">
+  <p class="eyebrow reveal">A1 · 사용자당 월 공헌이익 (Contribution Margin)</p>
+  <h2 class="reveal" style="--i:1">공헌이익은 사용 시간의 함수다 — Pro는 30h에서 적자, Team은 30h에도 33%.</h2>
+  <p class="take reveal" style="--i:2">첫 고객(미팅 많은 창업자)이 20–30h 구간에 있으므로, 첫 90일의 가격 설계 과제는 "헤비유저를 Team·사용량 캡으로 옮기는 것"이다.</p>
+  <div class="grid g2">
+    <div class="card reveal" style="--i:3"><h3>변동원가 분해 · 월 · USD (1,380원/$)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>플랜 / 시간</th><th>STT</th><th>LLM</th><th>인프라</th><th>결제</th><th>COGS</th><th>가격</th><th>공헌이익</th><th>마진</th></tr>
+        <tr><td>Pro · 5h</td><td>1.10</td><td>0.40</td><td>0.15</td><td>0.28</td><td>1.93</td><td>9.35</td><td class="good">₩10,236</td><td class="good">79%</td></tr>
+        <tr><td>Pro · 10h (기준)</td><td>2.20</td><td>0.80</td><td>0.15</td><td>0.28</td><td>3.43</td><td>9.35</td><td class="good">₩8,166</td><td class="good">63%</td></tr>
+        <tr><td>Pro · 20h</td><td>4.40</td><td>1.60</td><td>0.20</td><td>0.28</td><td>6.48</td><td>9.35</td><td class="warn">₩3,957</td><td class="warn">31%</td></tr>
+        <tr><td>Pro · 30h</td><td>6.60</td><td>2.40</td><td>0.25</td><td>0.28</td><td>9.53</td><td>9.35</td><td class="neg">−₩252</td><td class="neg">−2%</td></tr>
+        <tr><td>Team · 10h</td><td>2.20</td><td>0.80</td><td>0.15</td><td>0.43</td><td>3.58</td><td>14.42</td><td class="good">₩14,956</td><td class="good">75%</td></tr>
+        <tr><td>Team · 20h</td><td>4.40</td><td>1.60</td><td>0.20</td><td>0.43</td><td>6.63</td><td>14.42</td><td class="good">₩10,747</td><td class="good">54%</td></tr>
+        <tr><td>Team · 30h</td><td>6.60</td><td>2.40</td><td>0.25</td><td>0.43</td><td>9.68</td><td>14.42</td><td class="warn">₩6,538</td><td class="warn">33%</td></tr>
+      </table></div>
+      <p class="note">STT $0.22/h (ElevenLabs Scribe batch) · LLM $0.08/h (저위험 라우팅, 검증 대상) · 인프라 5h/10h $0.15 → 20h $0.20 → 30h $0.25 · 결제 3%</p>
+    </div>
+    <div class="card reveal" style="--i:4"><h3>공헌이익 · ₩/월 (막대 = 플랜 내 최댓값 대비)</h3>
+      <div class="bars">
+        <div class="bar"><span>Pro 5h</span><i style="width:100%"></i><em>₩10,236</em></div>
+        <div class="bar"><span>Pro 10h</span><i style="width:80%"></i><em>₩8,166</em></div>
+        <div class="bar"><span>Pro 20h</span><i style="width:39%"></i><em>₩3,957</em></div>
+        <div class="bar"><span>Pro 30h</span><i class="neg" style="width:3%"></i><em style="color:var(--accent-press)">−₩252</em></div>
+        <div class="bar"><span>Team 10h</span><i style="width:100%;background:var(--ink)"></i><em>₩14,956</em></div>
+        <div class="bar"><span>Team 20h</span><i style="width:72%;background:var(--ink)"></i><em>₩10,747</em></div>
+        <div class="bar"><span>Team 30h</span><i style="width:44%;background:var(--ink)"></i><em>₩6,538</em></div>
+      </div>
+      <p class="note">레버 3개: ① Pro 월 15h 캡 후 초과분 Team 유도 ② 배치 STT·화자분리 자체 파이프라인으로 $0.22→$0.10/h 목표(달성 시 Pro 30h도 +₩4,700) ③ 긴 회의는 요약만·전사 온디맨드.</p>
+    </div>
+  </div>
+  <p class="src">가정 전부 부록 A5. 실제 사용 시간 분포는 9/21까지 계측(usage_events.audio_seconds)으로 대체.</p>
+</section>
+
+<!-- A2 -->
+<section class="slide ap" id="a2">
+  <p class="eyebrow reveal">A2 · LTV / CAC</p>
+  <h2 class="reveal" style="--i:1">Pro 10h는 CAC ₩40,000까지 LTV/CAC 3배를 지킨다. Pro 20h는 지키지 못한다 — Team으로 옮겨야 한다.</h2>
+  <p class="take reveal" style="--i:2">LTV = 월 공헌이익 × (1 / 월 이탈률). 이탈률은 실측이 없어 4 / 6 / 10%로 감도 분석. CAC는 첫 90일 창업자 직접 온보딩(현금 CAC ≈ 0) 이후 유료 채널 가정.</p>
+  <div class="grid g3">
+    <div class="card reveal" style="--i:3"><h3>LTV · ₩ (이탈률별)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>세그먼트</th><th>4%/월<br/>(25개월)</th><th>6%/월<br/>(17개월)</th><th>10%/월<br/>(10개월)</th></tr>
+        <tr><td>Pro · 10h</td><td class="good">204,150</td><td>136,100</td><td>81,660</td></tr>
+        <tr><td>Pro · 20h</td><td>98,925</td><td class="warn">65,950</td><td class="neg">39,570</td></tr>
+        <tr><td>Team · 20h</td><td class="good">268,675</td><td class="good">179,117</td><td>107,470</td></tr>
+      </table></div>
+    </div>
+    <div class="card reveal" style="--i:4"><h3>LTV / CAC · 이탈 6% 기준</h3>
+      <div class="tw"><table class="f">
+        <tr><th>세그먼트</th><th>CAC ₩20k</th><th>CAC ₩40k</th><th>CAC ₩60k</th></tr>
+        <tr><td>Pro · 10h</td><td class="good">6.8×</td><td class="good">3.4×</td><td class="warn">2.3×</td></tr>
+        <tr><td>Pro · 20h</td><td class="good">3.3×</td><td class="warn">1.6×</td><td class="neg">1.1×</td></tr>
+        <tr><td>Team · 20h</td><td class="good">9.0×</td><td class="good">4.5×</td><td class="good">3.0×</td></tr>
+      </table></div>
+      <p class="note">3× 이상 초록 · 2–3× 노랑 · 2× 미만 빨강. 회수 기간(CAC ÷ 월 공헌이익): Pro 10h @₩40k = 4.9개월, Team 20h @₩40k = 3.7개월.</p>
+    </div>
+    <div class="card reveal" style="--i:5"><h3>CAC 가정 · 채널별</h3>
+      <div class="tw"><table class="f">
+        <tr><th>채널</th><th>단계</th><th>CAC 가정</th></tr>
+        <tr><td>인터뷰 40 + waitlist 50 재활성화</td><td>M1–3</td><td>≈ ₩0 (창업자 시간)</td></tr>
+        <tr><td>@heyarca 캐릭터 계정 · 데모 영상</td><td>M2–6</td><td>₩10–20k</td></tr>
+        <tr><td>창업자 커뮤니티 · 제로원 네트워크</td><td>M3–9</td><td>₩20–40k</td></tr>
+        <tr><td>유료 채널 (검증 전)</td><td>M9+</td><td>₩40–60k</td></tr>
+      </table></div>
+      <p class="note">블렌디드 CAC 목표: M12 ≤ ₩30,000. 채널별 실측은 waitlist DB의 source 태그와 계측 owner로 추적.</p>
+    </div>
+  </div>
+  <p class="src">이탈률·CAC는 전부 가정 — 9/21 D1/D7 리텐션과 첫 유료 코호트로 첫 실측치 대체.</p>
+</section>
+
+<!-- A3 -->
+<section class="slide ap" id="a3">
+  <p class="eyebrow reveal">A3 · 손익분기와 가격 설계</p>
+  <h2 class="reveal" style="--i:1">월 고정비 ₩4,170만(5억/12) 기준 손익분기 = Pro 5,100명 또는 Team 3,900석. 12개월 안의 목표가 아니라, 다음 라운드의 논거다.</h2>
+  <div class="kpis">
+    <div class="card pop" style="--i:2"><div class="v">₩41.7M</div><div class="l">월 고정비 (5억 ÷ 12)</div></div>
+    <div class="card pop" style="--i:3"><div class="v">5,102</div><div class="l">BEP 유료 — Pro 10h (₩8,166)</div></div>
+    <div class="card pop" style="--i:4"><div class="v">10,530</div><div class="l">BEP 유료 — Pro 20h (₩3,957)</div></div>
+    <div class="card pop" style="--i:5"><div class="v">3,877</div><div class="l">BEP 좌석 — Team 20h (₩10,747)</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card reveal" style="--i:6"><h3>가격 설계 원칙 (첫 90일)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>원칙</th><th>실행</th><th>효과</th></tr>
+        <tr><td>사용량 캡</td><td>Pro 월 15h, 초과 시 Team 안내</td><td>Pro 최악 마진 −2% → 15h 기준 47%</td></tr>
+        <tr><td>헤비유저 = Team</td><td>20h↑ 사용자 자동 제안</td><td>공헌이익 ₩3,957 → ₩10,747</td></tr>
+        <tr><td>STT 원가</td><td>배치·화자분리 자체 파이프라인</td><td>$0.22 → $0.10/h 목표 (검증 전)</td></tr>
+        <tr><td>Founding 가격</td><td>₩12,900 선착 100 고정</td><td>WTP 첫 실측 · 이탈률 첫 실측</td></tr>
+      </table></div>
+    </div>
+    <div class="card reveal" style="--i:7"><h3>고정비 구성 · 월 (5억 / 12개월)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>항목</th><th>비중</th><th>₩/월</th><th>내용</th></tr>
+        <tr><td>인건비 (리텐션·제품)</td><td>45%</td><td>18.75M</td><td>SW/UX 1명 + 대표</td></tr>
+        <tr><td>런웨이·인프라</td><td>30%</td><td>12.50M</td><td>STT·LLM 최소약정·서버·툴</td></tr>
+        <tr><td>엔터프라이즈 준비</td><td>15%</td><td>6.25M</td><td>감사로그·SSO, ISMS-P 범위 산정</td></tr>
+        <tr><td>하드웨어</td><td>10%</td><td>4.17M</td><td>ARCA Core 소량 제작</td></tr>
+        <tr class="sum"><td>합계</td><td>100%</td><td>41.67M</td><td>= 월 번 (매출 제외)</td></tr>
+      </table></div>
+    </div>
+  </div>
+  <p class="src">인건비에 대표 급여 포함 여부·규모는 민성 확정 필요. 변동원가는 A1, 매출 차감은 A4.</p>
+</section>
+
+<!-- A4 -->
+<section class="slide ap" id="a4">
+  <p class="eyebrow reveal">A4 · 24개월 프로젝션 (Base 시나리오)</p>
+  <h2 class="reveal" style="--i:1">M12 유료 1,189명 · MRR ₩1,700만 · 현금 ₩4,200만 — 다음 라운드 트리거는 M9–12, "유료 1,000 · MRR ₩1,500만 · 승인율 우상향".</h2>
+  <div class="grid g2" style="align-items:start">
+    <div class="card reveal" style="--i:2"><h3>유료 사용자 · 현금 (₩M)</h3>
+      <svg class="chart" viewBox="0 0 640 260" role="img" aria-label="24개월 프로젝션">
+        <g stroke="#f2f4f6"><line x1="60" y1="20" x2="60" y2="220"/><line x1="60" y1="220" x2="620" y2="220"/><line x1="60" y1="120" x2="620" y2="120" stroke-dasharray="4 4"/><line x1="60" y1="20" x2="620" y2="20" stroke-dasharray="4 4"/></g>
+        <g font-size="11" fill="#8b95a1"><text x="8" y="24">4,000</text><text x="8" y="124">2,000</text><text x="8" y="224">0</text><text x="60" y="244">M1</text><text x="200" y="244">M6</text><text x="340" y="244">M12</text><text x="480" y="244">M18</text><text x="600" y="244">M24</text></g>
+        <polyline fill="none" stroke="#191f28" stroke-width="3" stroke-linecap="round" points="60,219.5 107,217.6 200,208.9 270,189.5 340,160.6 480,101.5 620,60.7"/>
+        <polyline fill="none" stroke="#f73b20" stroke-width="3" stroke-dasharray="6 5" points="60,20 107,69.6 200,118 270,163.2 340,203.2 372,220"/>
+        <circle cx="340" cy="160.6" r="5" fill="#191f28"/><text x="348" y="156" font-size="12" font-weight="800" fill="#191f28">M12 · 1,189명</text>
+        <circle cx="340" cy="203.2" r="5" fill="#f73b20"/><text x="250" y="200" font-size="12" font-weight="800" fill="#f73b20">현금 ₩42M</text>
+        <text x="380" y="236" font-size="11" fill="#f73b20" font-weight="800">→ M13 현금 소진 = 다음 라운드 시점</text>
+        <g font-size="11" font-weight="700"><rect x="440" y="28" width="12" height="3" fill="#191f28"/><text x="458" y="32" fill="#4e5968">유료 사용자</text><rect x="540" y="28" width="12" height="3" fill="#f73b20"/><text x="558" y="32" fill="#4e5968">현금 (₩M)</text></g>
+      </svg>
+    </div>
+    <div class="card reveal" style="--i:3"><h3>분기별 · Base (80% Pro 10h / 20% Team 20h · 이탈 6%)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>시점</th><th>월 순증</th><th>유료</th><th>MRR</th><th>공헌이익/월</th><th>현금 잔액</th></tr>
+        <tr><td>M3 (12월)</td><td>25</td><td>48</td><td>₩0.7M</td><td>₩0.4M</td><td>₩376M</td></tr>
+        <tr><td>M6 (3월)</td><td>90</td><td>222</td><td>₩3.2M</td><td>₩1.9M</td><td>₩255M</td></tr>
+        <tr><td>M9 (6월)</td><td>180</td><td>611</td><td>₩8.7M</td><td>₩5.3M</td><td>₩142M</td></tr>
+        <tr class="sum"><td>M12 (9월)</td><td>270</td><td>1,189</td><td>₩17.0M</td><td>₩10.3M</td><td>₩42M</td></tr>
+        <tr><td>M18</td><td>300</td><td>2,371</td><td>₩33.9M</td><td>₩20.6M</td><td class="neg">−₩108M*</td></tr>
+        <tr><td>M24</td><td>300</td><td>3,186</td><td>₩45.6M</td><td>₩27.7M</td><td class="neg">−₩208M*</td></tr>
+      </table></div>
+      <p class="note">* 추가 조달 없이 고정비 ₩41.7M 유지 가정 — 즉 M13 전 시드 라운드 필요. 블렌디드 ARPU ₩14,300 · 공헌이익/유저 ₩8,682 · 월 순증 M1 10 → M12 270 → 이후 300 고정(보수적). Bear: 순증 ½ → M12 유료 ≈ 600, MRR ₩8.5M. Bull: 순증 1.5× → M12 ≈ 1,780, MRR ₩25M.</p>
+    </div>
+  </div>
+  <p class="src">프로젝션은 시나리오이며 매출 약속이 아니다. 9/21 실측(설치·주간활성·유료·승인율)으로 M1 값을 교체한다.</p>
+</section>
+
+<!-- A5 -->
+<section class="slide ap" id="a5">
+  <p class="eyebrow reveal">A5 · 가정과 출처</p>
+  <h2 class="reveal" style="--i:1">확정 / 가정 / 검증 예정 — 숫자마다 등급을 붙였다.</h2>
+  <div class="grid g3">
+    <div class="card reveal" style="--i:2"><h3>확정 (1차 출처 · 실측)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>항목</th><th>값</th><th>출처</th></tr>
+        <tr><td>STT 단가</td><td>$0.22/h</td><td>ElevenLabs Scribe 공식</td></tr>
+        <tr><td>가격</td><td>₩12,900 / ₩19,900</td><td>랜딩·PRD 게시가</td></tr>
+        <tr><td>결제 수수료</td><td>3%</td><td>PG 표준</td></tr>
+        <tr><td>본인 사용</td><td>70일 · 1.3GB</td><td>기기 데이터 (8/13)</td></tr>
+        <tr><td>TAM</td><td>$8.46B→$35.7B</td><td>Grand View Research</td></tr>
+        <tr><td>WTI</td><td>57% / 68%</td><td>Microsoft 2023</td></tr>
+      </table></div>
+    </div>
+    <div class="card reveal" style="--i:3"><h3>가정 (감도 분석 대상)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>항목</th><th>Base</th><th>범위</th></tr>
+        <tr><td>LLM 원가</td><td>$0.08/h</td><td>0.05–0.15</td></tr>
+        <tr><td>월 사용 시간</td><td>10h</td><td>5–30h</td></tr>
+        <tr><td>월 이탈률</td><td>6%</td><td>4–10%</td></tr>
+        <tr><td>CAC (블렌디드)</td><td>₩30k</td><td>0–60k</td></tr>
+        <tr><td>플랜 믹스</td><td>80/20</td><td>Pro/Team</td></tr>
+        <tr><td>월 순증</td><td>10→300</td><td>Bear ½ · Bull 1.5×</td></tr>
+        <tr><td>환율</td><td>1,380</td><td>발표 직전 갱신</td></tr>
+      </table></div>
+    </div>
+    <div class="card reveal" style="--i:4"><h3>검증 예정 (9/21 실측으로 교체)</h3>
+      <div class="tw"><table class="f">
+        <tr><th>항목</th><th>측정 방법</th><th>시점</th></tr>
+        <tr><td>실제 사용 시간 분포</td><td>usage_events audio_seconds</td><td>9/21</td></tr>
+        <tr><td>D1/D3/D7 리텐션</td><td>/api/brain/metrics</td><td>9/21</td></tr>
+        <tr><td>위임 승인율 곡선</td><td>proposal_approved/rejected</td><td>9/21</td></tr>
+        <tr><td>WTP · 첫 유료 전환</td><td>Founding ₩12,900 선착</td><td>9/21</td></tr>
+        <tr><td>H Chat Pro 수치</td><td>현대차그룹 뉴스룸 1차</td><td>9/17</td></tr>
+        <tr><td>STT 원가 절감</td><td>자체 파이프라인 PoC</td><td>M1–3</td></tr>
+      </table></div>
+    </div>
+  </div>
+  <p class="src">모델·계산식: deck/arca-zer01ne-fund3-financials.md · 이 덱 v0.5 · 2026-09-10</p>
 </section>
 
 </main>
@@ -544,12 +721,15 @@ table.t td.blank{text-align:right}
   var initialHash=location.hash;
   var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
   var dots=document.getElementById('dots'), counter=document.getElementById('counter'), progress=document.getElementById('progress');
-  slides.forEach(function(s,i){var b=document.createElement('button');b.setAttribute('aria-label','슬라이드 '+(i+1));b.onclick=function(){s.scrollIntoView({behavior:'smooth'});};dots.appendChild(b);});
+  slides.forEach(function(s,i){var b=document.createElement('button');b.setAttribute('aria-label','슬라이드 '+(i+1));if(s.classList.contains('ap')||s.id==='a0')b.classList.add('ap');b.onclick=function(){s.scrollIntoView({behavior:'smooth'});};dots.appendChild(b);});
+  function placeRing(){document.querySelectorAll('.ring').forEach(function(r){var R=r.clientWidth*0.5;r.querySelectorAll('.node').forEach(function(n){var a=n.style.getPropertyValue('--a')||'0deg';n.style.transform='rotate('+a+') translate('+R+'px) rotate(calc(-1 * '+a+'))';});});}
+  placeRing();addEventListener('resize',placeRing);
   var idx=0;
   function setIdx(i){idx=i;counter.textContent=(i+1)+' / '+slides.length;Array.prototype.forEach.call(dots.children,function(b,j){b.classList.toggle('on',j===i);});
     if(history.replaceState){history.replaceState(null,'','#'+slides[i].id);}
-    counter.style.color=slides[i].classList.contains('dark')?'rgba(255,255,255,.7)':'';document.querySelector('.brand').style.color=counter.style.color;}
-  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');setIdx(slides.indexOf(e.target));}});},{root:deck,threshold:.55});
+    var dark=slides[i].classList.contains('dark');counter.style.color=dark?'rgba(255,255,255,.7)':'';document.querySelector('.brand').style.color=counter.style.color;}
+  function countUp(el){if(el.dataset.done)return;el.dataset.done='1';var target=parseInt(el.dataset.count,10);if(!target){el.textContent=el.dataset.count;return;}var t0=null;function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/1100);var e=1-Math.pow(1-p,3);el.textContent=Math.round(target*e);if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');setIdx(slides.indexOf(e.target));e.target.querySelectorAll('[data-count]').forEach(countUp);}});},{root:deck,threshold:.5});
   slides.forEach(function(s){io.observe(s);});
   deck.addEventListener('scroll',function(){var max=deck.scrollHeight-deck.clientHeight;progress.style.width=(max>0?deck.scrollTop/max*100:0)+'%';},{passive:true});
   addEventListener('keydown',function(e){
@@ -558,8 +738,7 @@ table.t td.blank{text-align:right}
     else if(['ArrowUp','ArrowLeft','PageUp'].indexOf(e.key)>-1){e.preventDefault();slides[Math.max(0,idx-1)].scrollIntoView({behavior:'smooth'});}
     else if(e.key==='Home'){slides[0].scrollIntoView();}else if(e.key==='End'){slides[slides.length-1].scrollIntoView();}
   });
-  if(initialHash&&/^#s\d+$/.test(initialHash)){var t=document.querySelector(initialHash);if(t){deck.style.scrollBehavior='auto';t.scrollIntoView();requestAnimationFrame(function(){deck.style.scrollBehavior='';});}}
-  // hero eyes follow the pointer (cheap: two CSS vars)
+  if(initialHash&&/^#(s|a)\d+$/.test(initialHash)){var t=document.querySelector(initialHash);if(t){deck.style.scrollBehavior='auto';t.scrollIntoView();requestAnimationFrame(function(){deck.style.scrollBehavior='';});}}
   var hero=document.getElementById('heroSpirit');
   if(hero&&matchMedia('(pointer:fine)').matches){addEventListener('mousemove',function(e){var r=hero.getBoundingClientRect();var cx=r.left+r.width/2,cy=r.top+r.height/2;
     var ex=Math.max(-5,Math.min(5,(e.clientX-cx)/40)),ey=Math.max(-4,Math.min(4,(e.clientY-cy)/40));hero.style.setProperty('--ex',ex+'px');hero.style.setProperty('--ey',ey+'px');},{passive:true});}
