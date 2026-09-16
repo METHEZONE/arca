@@ -9,6 +9,12 @@ export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const requiredToken = hardwareIngestToken();
+  if (!requiredToken && (process.env.NODE_ENV === "production" || process.env.VERCEL)) {
+    return NextResponse.json(
+      { error: "ARCA hardware ingest is disabled until ARCA_INGEST_TOKEN is configured." },
+      { status: 503 },
+    );
+  }
   if (requiredToken) {
     const provided =
       request.headers.get("x-arca-device-token") ??

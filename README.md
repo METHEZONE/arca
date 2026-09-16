@@ -56,7 +56,8 @@ cp .env.local.example .env.local
 | Obsidian sync | `OBSIDIAN_VAULT_PATH` | local/synced vault folder |
 | Notion sync | `NOTION_API_KEY` + `NOTION_DATABASE_ID` | Notion API |
 | Slack sync | `SLACK_WEBHOOK_URL` or `SLACK_BOT_TOKEN` + `SLACK_CHANNEL` | Slack |
-| Hardware ingest token | `ARCA_INGEST_TOKEN` | optional shared secret |
+| Hardware ingest token | `ARCA_INGEST_TOKEN` | required on Vercel/production; optional only for local development |
+| Durable ARCA storage | `DATABASE_URL` | Postgres/Neon; required for cold-start-safe hardware chunk retries on Vercel |
 
 `AUTO_PUSH_TARGETS=obsidian,notion,slack` controls which destinations receive a
 memory automatically after each recording. It defaults to every configured
@@ -69,7 +70,7 @@ target; set `none` to disable.
 ARCA is designed so today's recorder can stay simple:
 
 ```
-button -> record WAV to microSD -> Wi-Fi multipart upload -> ARCA pipeline
+button -> record WAV to microSD -> Wi-Fi chunk upload -> durable audio + ARCA memory
 ```
 
 The hardware endpoint is:
@@ -77,7 +78,7 @@ The hardware endpoint is:
 ```http
 POST /api/hardware/ingest
 Content-Type: multipart/form-data
-x-arca-device-token: <ARCA_INGEST_TOKEN, optional>
+x-arca-device-token: <ARCA_INGEST_TOKEN; required outside local development>
 ```
 
 Multipart fields:
@@ -99,8 +100,18 @@ curl -X POST http://localhost:4174/api/hardware/ingest \
   -F "deviceId=arca-core-v0"
 ```
 
-If `ARCA_INGEST_TOKEN` is empty, the endpoint accepts local uploads without a
-token. Set it before exposing ARCA through a tunnel, cloud host, or shared Wi-Fi.
+If `ARCA_INGEST_TOKEN` is empty, only local development accepts uploads without
+a token. Vercel and production deployments fail closed with HTTP 503.
+
+ARCA Core v1 uses `POST /api/hardware/session/chunk` for recordings of any
+length. Each accepted WAV chunk is retained byte-for-byte before transcription.
+An authenticated client can list or download the retained source chunks:
+
+```http
+GET /api/hardware/session/audio?sessionId=<id>&deviceId=<id>
+GET /api/hardware/session/audio?sessionId=<id>&deviceId=<id>&seq=0
+x-arca-device-token: <ARCA_INGEST_TOKEN>
+```
 
 ---
 
@@ -149,8 +160,12 @@ examples/
   esp32-s3-upload/             # hardware upload sketch
 ```
 
-The second brain is plain JSON on disk (`data/`, gitignored). Memories carry the
-full diarized transcript, the analysis, tags such as `hardware` and
+With `DATABASE_URL`, the second brain, original WAV chunks, in-flight transcript
+state, and completed session receipts live in Postgres. That makes Vercel cold
+starts and lost HTTP responses safe: the device can retry without losing audio
+or creating a second memory. Local zero-setup development falls back to files
+under `data/` (gitignored). Memories carry the full diarized transcript, the
+analysis, retained-audio metadata, tags such as `hardware` and
 `device:arca-core-v0`, and per-target sync status.
 
 ---

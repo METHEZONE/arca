@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "bsp_board_extra.h"
@@ -36,6 +37,7 @@ static volatile arca_rec_mode_t s_mode = ARCA_REC_IDLE;
 static volatile uint32_t s_data_bytes;
 static uint32_t          s_marks[MAX_MARKS];
 static volatile uint32_t s_mark_count;
+static volatile bool     s_write_error;
 
 static FILE *s_file;
 static char  s_path[256];
@@ -167,7 +169,20 @@ static void audio_task(void *arg)
 
         if (++level_divider >= 4) {
             level_divider = 0;
-            arca_state_set_level(level_db_of(mono, n));
+            const int16_t db = level_db_of(mono, n);
+            arca_state_set_level(db);
+
+            // Every ~5 s, put the level on the wire. Speech should read about
+            // -35..-25 dBFS; anything near -60 means the PGA gain is too low.
+            static int log_div = 0;
+            static int16_t worst = -90;
+            if (db > worst) worst = db;
+            if (++log_div >= 38) {
+                log_div = 0;
+                ESP_LOGI(TAG, "mic level: now %d dBFS, loudest %d dBFS (rec=%d)",
+                         db, worst, s_recording ? 1 : 0);
+                worst = -90;
+            }
         }
     }
 }
@@ -191,6 +206,10 @@ static void writer_task(void *arg)
             if (fwrite(block, 1, len, s_file) != len) {
                 ESP_LOGE(TAG, "write failed - card gone?");
                 arca_state_set_status("SD write error");
+                if (!s_write_error) {
+                    s_write_error = true;
+                    xEventGroupSetBits(arca_events(), ARCA_EVT_REC_STOP);
+                }
             } else {
                 s_data_bytes += (uint32_t)len;
             }
@@ -234,6 +253,33 @@ static void writer_task(void *arg)
 }
 
 // ---------------------------------------------------------------- session ---
+
+// RTC time has one-second resolution. A quick stop/start in the same second,
+// or a clock that reset to 1970, must never reopen an existing WAV with "wb".
+static bool choose_recording_path(const char *stamp)
+{
+    for (int collision = 0; collision < 1000; collision++) {
+        if (s_part > 0) {
+            if (collision == 0) {
+                snprintf(s_path, sizeof(s_path), "%s/%s_p%d.wav",
+                         ARCA_DIR_QUEUE, stamp, s_part + 1);
+            } else {
+                snprintf(s_path, sizeof(s_path), "%s/%s_p%d_%d.wav",
+                         ARCA_DIR_QUEUE, stamp, s_part + 1, collision + 1);
+            }
+        } else if (collision == 0) {
+            snprintf(s_path, sizeof(s_path), "%s/%s.wav", ARCA_DIR_QUEUE, stamp);
+        } else {
+            snprintf(s_path, sizeof(s_path), "%s/%s_%d.wav",
+                     ARCA_DIR_QUEUE, stamp, collision + 1);
+        }
+
+        struct stat existing;
+        if (stat(s_path, &existing) != 0) return true;
+    }
+    ESP_LOGE(TAG, "could not find a unique filename for %s", stamp);
+    return false;
+}
 
 static void write_sidecar(uint32_t duration_s)
 {
@@ -290,10 +336,10 @@ bool arca_recorder_begin(arca_rec_mode_t mode)
 
     xSemaphoreTake(s_session_lock, portMAX_DELAY);
 
-    if (s_part > 0) {
-        snprintf(s_path, sizeof(s_path), "%s/%s_p%d.wav", ARCA_DIR_QUEUE, stamp, s_part + 1);
-    } else {
-        snprintf(s_path, sizeof(s_path), "%s/%s.wav", ARCA_DIR_QUEUE, stamp);
+    if (!choose_recording_path(stamp)) {
+        xSemaphoreGive(s_session_lock);
+        arca_state_set_status("filename error");
+        return false;
     }
 
     s_file = fopen(s_path, "wb");
@@ -306,20 +352,40 @@ bool arca_recorder_begin(arca_rec_mode_t mode)
 
     uint8_t hdr[ARCA_WAV_HEADER_BYTES];
     arca_wav_build_header(hdr, ARCA_SAMPLE_RATE, ARCA_STORE_CHANNELS, ARCA_BITS_PER_SAMPLE, 0);
-    fwrite(hdr, 1, sizeof(hdr), s_file);
+    if (fwrite(hdr, 1, sizeof(hdr), s_file) != sizeof(hdr)) {
+        ESP_LOGE(TAG, "cannot write WAV header to %s", s_path);
+        fclose(s_file);
+        s_file = NULL;
+        unlink(s_path);
+        xSemaphoreGive(s_session_lock);
+        arca_state_set_status("SD write failed");
+        return false;
+    }
 
     s_data_bytes = 0;
     s_mark_count = 0;
+    s_write_error = false;
 
     // Prepend the pre-roll: the seconds you already spoke before pressing.
     uint8_t *pre = heap_caps_malloc(ARCA_PREROLL_BYTES, MALLOC_CAP_SPIRAM);
     if (pre) {
         const size_t n = preroll_snapshot(pre, ARCA_PREROLL_BYTES);
         if (n) {
-            fwrite(pre, 1, n, s_file);
-            s_data_bytes += (uint32_t)n;
+            const size_t written = fwrite(pre, 1, n, s_file);
+            s_data_bytes += (uint32_t)written;
+            if (written != n) s_write_error = true;
         }
         heap_caps_free(pre);
+    }
+
+    if (s_write_error) {
+        ESP_LOGE(TAG, "cannot write pre-roll to %s", s_path);
+        fclose(s_file);
+        s_file = NULL;
+        unlink(s_path);
+        xSemaphoreGive(s_session_lock);
+        arca_state_set_status("SD write failed");
+        return false;
     }
 
     s_recording = true;
@@ -428,9 +494,13 @@ bool arca_recorder_start(void)
         ESP_LOGE(TAG, "codec init failed - ES8311/ES7210 not answering on I2C");
         return false;
     }
-    // Mic-only capture. The BSP defaults to 2 channels because that is what the
-    // ES7210 array presents; we downmix in software.
-    bsp_extra_codec_set_fs(ARCA_SAMPLE_RATE, ARCA_BITS_PER_SAMPLE, I2S_SLOT_MODE_STEREO);
+    // bsp_extra_codec_init() already opens the ES7210 at our 16 kHz stereo
+    // capture format. Calling set_fs() a second time closes and reopens paired
+    // I2S channels and makes the IDF report an invalid disable operation.
+    // Apply gain after init, while the record handle is open.
+    const esp_err_t gain = bsp_extra_codec_set_in_gain(ARCA_MIC_GAIN_DB);
+    ESP_LOGI(TAG, "mic PGA gain %.1f dB: %s", (double)ARCA_MIC_GAIN_DB,
+             gain == ESP_OK ? "ok" : esp_err_to_name(gain));
 
     // Audio on core 0 at high priority: it must never miss an I2S block.
     xTaskCreatePinnedToCore(audio_task,  "arca_audio",  4096, NULL, 21, NULL, 0);

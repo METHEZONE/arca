@@ -2,12 +2,22 @@ import { mkdir, readFile, writeFile, unlink, readdir, access } from "node:fs/pro
 import { isAbsolute, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { dataDir } from "@/lib/config";
+import {
+  durableStoreConfigured,
+  kvDelete,
+  kvGet,
+  kvIsTombstoned,
+  kvList,
+  kvPut,
+  kvTombstone,
+} from "@/lib/persistence/kv";
 import type { Memory, MemorySummary, ActionStatus } from "@/lib/types";
 import { toMemorySummary } from "@/lib/types";
 import { getShowcaseMemory, isShowcaseId, showcaseMemories } from "./showcase";
 
 const ID_RE = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_DATA_DIR = "data";
+const MEMORY_NAMESPACE = "memory";
 
 function memoriesDir(): string {
   const configured = dataDir();
@@ -43,6 +53,9 @@ function tombstonePath(id: string): string {
 }
 
 async function isTombstoned(id: string): Promise<boolean> {
+  if (durableStoreConfigured()) {
+    return kvIsTombstoned(MEMORY_NAMESPACE, id);
+  }
   try {
     await access(tombstonePath(id));
     return true;
@@ -53,12 +66,22 @@ async function isTombstoned(id: string): Promise<boolean> {
 
 export async function saveMemory(memory: Memory): Promise<void> {
   validateId(memory.id);
+  if (durableStoreConfigured()) {
+    await kvPut(MEMORY_NAMESPACE, memory.id, memory);
+    return;
+  }
   await ensureDir();
   await writeFile(memoryPath(memory.id), JSON.stringify(memory, null, 2), "utf-8");
 }
 
 export async function getMemory(id: string): Promise<Memory | null> {
   validateId(id);
+  if (durableStoreConfigured()) {
+    const stored = await kvGet<Memory>(MEMORY_NAMESPACE, id);
+    if (stored) return stored;
+    if (isShowcaseId(id) && !(await isTombstoned(id))) return getShowcaseMemory(id);
+    return null;
+  }
   try {
     const raw = await readFile(memoryPath(id), "utf-8");
     return JSON.parse(raw) as Memory;
@@ -72,6 +95,21 @@ export async function getMemory(id: string): Promise<Memory | null> {
 }
 
 export async function listMemories(): Promise<MemorySummary[]> {
+  if (durableStoreConfigured()) {
+    const stored = await kvList<Memory>(MEMORY_NAMESPACE);
+    const summaries = stored.map(({ value }) => toMemorySummary(value));
+    const storedIds = new Set(stored.map(({ key }) => key));
+
+    for (const memory of showcaseMemories()) {
+      if (storedIds.has(memory.id)) continue;
+      if (await isTombstoned(memory.id)) continue;
+      summaries.push(toMemorySummary(memory));
+    }
+
+    summaries.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+    return summaries;
+  }
+
   await ensureDir();
   let entries: string[] = [];
   try {
@@ -143,6 +181,15 @@ export async function setActionItemStatus(
 
 export async function deleteMemory(id: string): Promise<boolean> {
   validateId(id);
+  if (durableStoreConfigured()) {
+    let removed = await kvDelete(MEMORY_NAMESPACE, id);
+    if (isShowcaseId(id) && getShowcaseMemory(id) && !(await isTombstoned(id))) {
+      await kvTombstone(MEMORY_NAMESPACE, id);
+      removed = true;
+    }
+    return removed;
+  }
+
   let removed = false;
   try {
     await unlink(memoryPath(id));

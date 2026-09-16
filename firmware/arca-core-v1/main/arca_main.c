@@ -6,7 +6,7 @@
 //   LEFT button (BOOT)   hold  = push-to-talk clip
 //                        click = long session, click again to stop
 //                        hold during a session = highlight marker
-//   RIGHT button (PWR)   short press = wake screen / toggle stats view
+//   RIGHT button (PWR)   short press = wake screen / return to ARCA home
 //                        long press  = sync to cloud now
 //
 // The right button is not a GPIO - it is on the AXP2101's PWRON pin and is read
@@ -115,7 +115,7 @@ void app_main(void)
 
     if (arca_storage_mount()) {
         arca_storage_repair_queue();
-        arca_state_set_flags(true, false, false);
+        arca_state_set_sd_ready(true);
         arca_state_set_queue(arca_storage_queue_count(), 0);
         xEventGroupSetBits(arca_events(), ARCA_EVT_SD_READY);
     } else {
@@ -135,12 +135,17 @@ void app_main(void)
     arca_ble_start();
     arca_buttons_start();
 
+    // The touch controller can emit a pressed edge while the UI is still
+    // booting. Never turn a stale startup gesture into a zero-second session.
+    xEventGroupClearBits(arca_events(), ARCA_EVT_REC_START_PTT |
+                         ARCA_EVT_REC_START_TOGGLE | ARCA_EVT_REC_STOP |
+                         ARCA_EVT_MARK);
     xTaskCreatePinnedToCore(event_task, "arca_evt", 4096, NULL, 8, NULL, 1);
 
     if (healthy) {
         arca_state_set_face(ARCA_FACE_IDLE);
         arca_state_set_status("ready");
     }
-    ESP_LOGI(TAG, "%s. left=record  right=screen/mark/sync",
+    ESP_LOGI(TAG, "%s. left=record  right=home/sync/power",
              healthy ? "ready" : "started with errors");
 }

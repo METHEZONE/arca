@@ -1,15 +1,13 @@
 /**
  * Owner notification for ARCA Core recordings.
  *
- * On Vercel the memory store is /tmp, which forgets everything on the next cold
- * start, so a finished recording is mailed to the owner the moment it is
- * analyzed. No new credentials: the Composio project key is already in the
- * environment and the owner's Gmail is already connected under
+ * A finished recording can also be mailed to the owner after it is analyzed.
+ * No new credentials: the Composio project key is already in the environment
+ * and the owner's Gmail is already connected under
  * ARCA_HARDWARE_MAIL_USER (the same connection the Mac app uses).
  *
- * ponytail: transcript + notes in the body, no audio attachment. The WAV stays
- * on the card in /arca/uploaded. Add Composio's presigned upload when audio in
- * the mail matters.
+ * ponytail: transcript + notes in the body, no audio attachment. Source WAV
+ * chunks remain on the card and are retained in the authenticated ARCA backend.
  */
 
 import type { Memory } from "@/lib/types";

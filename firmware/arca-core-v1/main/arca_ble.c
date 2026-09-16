@@ -5,6 +5,7 @@
 #include "arca_recorder.h"
 #include "arca_state.h"
 #include "arca_storage.h"
+#include "arca_uploader.h"
 
 #include <string.h>
 
@@ -33,6 +34,7 @@ static const char *TAG = "arca-ble";
 static uint16_t s_conn = BLE_HS_CONN_HANDLE_NONE;
 static uint16_t s_status_handle;
 static uint16_t s_audio_handle;
+static uint16_t s_wifi_status_handle;
 static bool     s_streaming;
 static uint8_t  s_own_addr_type;
 
@@ -53,6 +55,8 @@ static const ble_uuid128_t kSvcUuid    = ARCA_UUID128(0x0000);
 static const ble_uuid128_t kStatusUuid = ARCA_UUID128(0x0001);
 static const ble_uuid128_t kCtrlUuid   = ARCA_UUID128(0x0002);
 static const ble_uuid128_t kAudioUuid  = ARCA_UUID128(0x0003);
+static const ble_uuid128_t kWifiSetupUuid  = ARCA_UUID128(0x0004);
+static const ble_uuid128_t kWifiStatusUuid = ARCA_UUID128(0x0005);
 
 // ---------------------------------------------------------------- status ----
 
@@ -72,6 +76,18 @@ static void fill_status(arca_ble_status_t *out)
     out->queued_files    = (uint16_t)st.queued_files;
     out->battery_pct     = st.battery_pct < 0 ? 255 : (uint8_t)(st.battery_pct * 100.0f);
     out->level_db        = (int8_t)(st.level_db < -128 ? -128 : st.level_db);
+}
+
+static void fill_wifi_status(arca_ble_wifi_status_t *out)
+{
+    memset(out, 0, sizeof(*out));
+    out->version = 1;
+    out->state = (uint8_t)arca_uploader_wifi_state();
+    out->saved_networks = (uint8_t)arca_uploader_network_count();
+    out->rssi = arca_uploader_wifi_rssi();
+    const char *ssid = arca_uploader_ssid();
+    out->ssid_len = (uint8_t)strnlen(ssid, sizeof(out->ssid));
+    memcpy(out->ssid, ssid, out->ssid_len);
 }
 
 // ---------------------------------------------------------------- audio -----
@@ -186,6 +202,51 @@ static int ctrl_access(uint16_t conn, uint16_t attr, struct ble_gatt_access_ctxt
     return 0;
 }
 
+static int wifi_setup_access(uint16_t conn, uint16_t attr,
+                             struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    (void)conn; (void)attr; (void)arg;
+    if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR) return BLE_ATT_ERR_UNLIKELY;
+
+    // A full SSID + WPA2 password is at most 99 bytes including this header.
+    // Copy into a fixed local buffer, validate every length, queue the join,
+    // then wipe the password before returning from the BLE host task.
+    uint8_t packet[100] = {0};
+    uint16_t len = 0;
+    if (ble_hs_mbuf_to_flat(ctxt->om, packet, sizeof(packet), &len) != 0 || len < 3) {
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+    const uint8_t version = packet[0];
+    const uint8_t ssid_len = packet[1];
+    const uint8_t password_len = packet[2];
+    if (version != 1 || ssid_len == 0 || ssid_len > 32 || password_len > 63 ||
+        len != (uint16_t)(3 + ssid_len + password_len)) {
+        memset(packet, 0, sizeof(packet));
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+
+    char ssid[33] = {0};
+    char password[65] = {0};
+    memcpy(ssid, packet + 3, ssid_len);
+    memcpy(password, packet + 3 + ssid_len, password_len);
+    arca_uploader_join_request(ssid, password);
+    ESP_LOGI(TAG, "Wi-Fi setup received from phone for \"%s\"", ssid);
+    memset(password, 0, sizeof(password));
+    memset(packet, 0, sizeof(packet));
+    return 0;
+}
+
+static int wifi_status_access(uint16_t conn, uint16_t attr,
+                              struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    (void)conn; (void)attr; (void)arg;
+    if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR) return BLE_ATT_ERR_UNLIKELY;
+    arca_ble_wifi_status_t st;
+    fill_wifi_status(&st);
+    return os_mbuf_append(ctxt->om, &st, sizeof(st)) == 0
+        ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+}
+
 static const struct ble_gatt_svc_def kServices[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -200,13 +261,30 @@ static const struct ble_gatt_svc_def kServices[] = {
             {
                 .uuid      = &kCtrlUuid.u,
                 .access_cb = ctrl_access,
-                .flags     = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
+                // Recording and live-audio commands are private. Requiring an
+                // encrypted link also ensures a nearby stranger cannot start
+                // streaming the microphones without first owning the bond.
+                .flags     = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP |
+                             BLE_GATT_CHR_F_WRITE_ENC,
             },
             {
                 .uuid       = &kAudioUuid.u,
                 .access_cb  = status_access,   // notify-only; read returns status
                 .flags      = BLE_GATT_CHR_F_NOTIFY,
                 .val_handle = &s_audio_handle,
+            },
+            {
+                .uuid      = &kWifiSetupUuid.u,
+                .access_cb = wifi_setup_access,
+                // Credentials are never accepted over an unencrypted link.
+                // NimBLE initiates Secure Connections pairing on first write.
+                .flags     = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_ENC,
+            },
+            {
+                .uuid       = &kWifiStatusUuid.u,
+                .access_cb  = wifi_status_access,
+                .flags      = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
+                .val_handle = &s_wifi_status_handle,
             },
             { 0 },
         },
@@ -223,7 +301,7 @@ static int gap_event(struct ble_gap_event *event, void *arg)
         case BLE_GAP_EVENT_CONNECT:
             if (event->connect.status == 0) {
                 s_conn = event->connect.conn_handle;
-                arca_state_set_flags(arca_storage_ready(), false, true);
+                arca_state_set_ble_linked(true);
                 xEventGroupSetBits(arca_events(), ARCA_EVT_BLE_LINKED);
                 ESP_LOGI(TAG, "phone connected");
                 // Ask for the fastest interval iOS will grant. This is what
@@ -244,7 +322,7 @@ static int gap_event(struct ble_gap_event *event, void *arg)
             ESP_LOGI(TAG, "phone gone (reason 0x%x)", event->disconnect.reason);
             s_conn      = BLE_HS_CONN_HANDLE_NONE;
             s_streaming = false;
-            arca_state_set_flags(arca_storage_ready(), false, false);
+            arca_state_set_ble_linked(false);
             advertise();
             return 0;
 
@@ -320,6 +398,11 @@ static void status_notify_task(void *arg)
         fill_status(&st);
         struct os_mbuf *om = ble_hs_mbuf_from_flat(&st, sizeof(st));
         if (om) ble_gatts_notify_custom(s_conn, s_status_handle, om);
+
+        arca_ble_wifi_status_t wifi;
+        fill_wifi_status(&wifi);
+        om = ble_hs_mbuf_from_flat(&wifi, sizeof(wifi));
+        if (om) ble_gatts_notify_custom(s_conn, s_wifi_status_handle, om);
     }
 }
 

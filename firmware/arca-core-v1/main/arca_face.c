@@ -33,7 +33,7 @@ static const char *TAG = "arca-face";
 // Idle = a life loop: glance, blink, hop, code, snack, music, tv, stretch.
 //
 // The FACE AREA is a record button (same grammar as BOOT). The top-right GEAR
-// and the PWR short-press open the control panel: Wi-Fi, storage, sync/free.
+// opens the control panel: Wi-Fi, storage, sync/free. PWR always goes home.
 // All motion is a function of wall-clock time, so a slow frame skips ahead.
 // ---------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ static const char *TAG = "arca-face";
 #define REC_ZONE_TOP  56          // face touch starts below the chrome strip
 #define TICK_MS       33
 
-typedef enum { VIEW_FACE = 0, VIEW_PANEL } view_t;
+typedef enum { VIEW_FACE = 0, VIEW_PANEL, VIEW_WIFI, VIEW_WIFI_PW } view_t;
 typedef enum { EYES_DOME, EYES_ARCS } eyes_t;
 typedef enum { ACT_NONE = 0, ACT_GLANCE, ACT_BLINK2, ACT_HOP, ACT_CODE, ACT_SNACK,
                ACT_MUSIC, ACT_TV, ACT_STRETCH, ACT_COUNT } act_t;
@@ -88,12 +88,23 @@ static lv_obj_t *s_cookie, *s_note1, *s_note2, *s_tv;
 static lv_obj_t *s_hint_l, *s_hint_r, *s_topmid, *s_rec_dot, *s_status_lbl;
 // control panel
 static lv_obj_t *s_panel, *s_wifi_lbl, *s_store_lbl, *s_store_bar, *s_store_fill, *s_panel_msg;
+// Wi-Fi setup, on the device: pick from a scan list, type the password.
+static lv_obj_t *s_wifi_scr, *s_wifi_list, *s_wifi_status;
+static lv_obj_t *s_pw_scr, *s_pw_ssid, *s_pw_ta, *s_pw_kb;
+static char      s_sel_ssid[33];
+static bool      s_sel_locked;
+static uint32_t  s_shown_gen = 0xFFFFFFFF;
+// A device with no saved network should lead with setup instead of expecting
+// the owner to discover a small gear icon. Back dismisses this for the rest of
+// the boot; Settings > Wi-Fi always remains available afterwards.
+static bool      s_wifi_first_run = true;
 
 static view_t  s_view = VIEW_FACE;
 static int64_t s_last_activity;
 static int     s_backlight = ARCA_BL_ACTIVE;
 static bool    s_panel_on = true;
 static bool    s_touch_wake_only = false;
+static volatile bool s_home_requested = false;
 
 static float s_eye_h  = (float)EYE_H_OPEN;
 static float s_eye_dx = 0.0f, s_fin_dy = 0.0f, s_hop = 0.0f;
@@ -161,7 +172,13 @@ static void set_backlight(int pct)
     if (pct == s_backlight) return;
     s_backlight = pct;
     if (pct <= 0) { bsp_display_backlight_off(); s_panel_on = false; }
-    else { bsp_display_brightness_set(pct); bsp_display_backlight_on(); s_panel_on = true; }
+    else {
+        // brightness_set() already enables PWM at the requested level. Calling
+        // backlight_on() afterwards forced it straight back to 100%, defeating
+        // both the active and dim levels.
+        bsp_display_brightness_set(pct);
+        s_panel_on = true;
+    }
 }
 static float ease(float cur, float target, float k) { return cur + (target - cur) * k; }
 static float clamp01(float v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
@@ -210,7 +227,7 @@ static void draw_arc_eye(lv_obj_t *a, int cx, float dy)
 // on a sleeping panel only wakes it, and never records while the panel is open.
 static void on_touch(lv_event_t *e)
 {
-    if (s_view == VIEW_PANEL) return;
+    if (s_view != VIEW_FACE) return;
     switch (lv_event_get_code(e)) {
         case LV_EVENT_PRESSED:
             if (!s_panel_on) { s_touch_wake_only = true; arca_face_note_activity(); return; }
@@ -226,8 +243,47 @@ static void on_touch(lv_event_t *e)
     }
 }
 
-static void open_panel(void)  { s_view = VIEW_PANEL; show(s_panel, true);  arca_face_note_activity(); }
-static void close_panel(void) { s_view = VIEW_FACE;  show(s_panel, false); arca_face_note_activity(); }
+// The Waveshare BSP registers CST816 touch in interrupt-only mode.  A missed
+// INT edge then makes the entire UI look dead even though the controller is
+// still readable over I2C.  We run the input device in LVGL's timer mode below
+// and keep this small trace so a real-board tap proves both the raw coordinate
+// and the active screen before any widget-specific callback is involved.
+static void on_pointer_event(lv_event_t *e)
+{
+    lv_indev_t *indev = lv_event_get_target(e);
+    if (!indev) return;
+
+    lv_point_t p;
+    lv_indev_get_point(indev, &p);
+    const char *view = s_view == VIEW_FACE ? "face" :
+                       s_view == VIEW_PANEL ? "panel" :
+                       s_view == VIEW_WIFI ? "wifi" : "wifi-password";
+    ESP_LOGI(TAG, "touch %s at (%ld,%ld) view=%s",
+             lv_event_get_code(e) == LV_EVENT_PRESSED ? "down" : "up",
+             (long)p.x, (long)p.y, view);
+    arca_face_note_activity();
+}
+
+static lv_obj_t *panel_button(lv_obj_t *parent, const char *txt, uint32_t color,
+                              lv_event_cb_t cb, int x, int y, int w);
+
+static void show_view(view_t view)
+{
+    s_view = view;
+    show(s_panel,    view == VIEW_PANEL);
+    show(s_wifi_scr, view == VIEW_WIFI);
+    show(s_pw_scr,   view == VIEW_WIFI_PW);
+    if (view == VIEW_PANEL) lv_obj_move_foreground(s_panel);
+    if (view == VIEW_WIFI) lv_obj_move_foreground(s_wifi_scr);
+    if (view == VIEW_WIFI_PW) lv_obj_move_foreground(s_pw_scr);
+    arca_face_note_activity();
+}
+
+static void open_panel(void) { show_view(VIEW_PANEL); }
+static void close_panel(void)
+{
+    show_view(VIEW_FACE);
+}
 
 static void on_gear(lv_event_t *e)   { (void)e; if (s_panel_on) open_panel(); }
 static void on_close(lv_event_t *e)  { (void)e; close_panel(); }
@@ -235,7 +291,7 @@ static void on_sync(lv_event_t *e)
 {
     (void)e;
     if (arca_storage_queue_count() == 0) { panel_note("nothing to sync"); return; }
-    if (arca_uploader_network_count() == 0) { panel_note("no Wi-Fi set (card)"); return; }
+    if (arca_uploader_network_count() == 0) { panel_note("set Wi-Fi on device first"); return; }
     arca_uploader_request_sync();
     panel_note("syncing...");
 }
@@ -249,11 +305,212 @@ static void on_free(lv_event_t *e)
     panel_note(m);
 }
 
-// Face <-> control panel. No-op while the panel is asleep (that press wakes).
-void arca_face_toggle_view(void)
+void arca_face_show_home(void)
 {
-    if (!s_panel_on) return;
-    if (s_view == VIEW_FACE) open_panel(); else close_panel();
+    s_home_requested = true;
+}
+
+// --------------------------------------------------------------- wi-fi ------
+
+static void wifi_show(view_t v)
+{
+    show_view(v);
+}
+
+static void on_ap_click(lv_event_t *e)
+{
+    arca_scan_ap_t *ap = lv_event_get_user_data(e);
+    if (!ap) return;
+    snprintf(s_sel_ssid, sizeof(s_sel_ssid), "%s", ap->ssid);
+    s_sel_locked = ap->locked;
+    ESP_LOGI(TAG, "selected Wi-Fi \"%s\" (%s)", s_sel_ssid,
+             ap->locked ? "password required" : "open");
+
+    if (!ap->locked) {                      // open network: nothing to type
+        arca_uploader_join_request(s_sel_ssid, "");
+        panel_note("connecting...");
+        wifi_show(VIEW_PANEL);
+        return;
+    }
+    lv_label_set_text(s_pw_ssid, s_sel_ssid);
+    lv_textarea_set_text(s_pw_ta, "");
+    wifi_show(VIEW_WIFI_PW);
+    lv_obj_add_state(s_pw_ta, LV_STATE_FOCUSED);
+    lv_keyboard_set_textarea(s_pw_kb, s_pw_ta);
+}
+
+static void on_ap_delete(lv_event_t *e)
+{
+    free(lv_event_get_user_data(e));
+}
+
+static void on_rescan(lv_event_t *e)
+{
+    (void)e;
+    s_shown_gen = 0xFFFFFFFF;
+    arca_uploader_scan_request();
+    arca_face_note_activity();
+}
+
+static void on_wifi_back(lv_event_t *e)
+{
+    (void)e;
+    s_wifi_first_run = false;
+    wifi_show(VIEW_PANEL);
+}
+
+static void on_pw_ready(lv_event_t *e)
+{
+    (void)e;
+    const char *password = lv_textarea_get_text(s_pw_ta);
+    if (s_sel_locked && password[0] == '\0') {
+        lv_textarea_set_placeholder_text(s_pw_ta, "password required");
+        lv_obj_add_state(s_pw_ta, LV_STATE_FOCUSED);
+        lv_keyboard_set_textarea(s_pw_kb, s_pw_ta);
+        ESP_LOGW(TAG, "join blocked: protected Wi-Fi needs a password");
+        arca_face_note_activity();
+        return;
+    }
+    ESP_LOGI(TAG, "joining selected Wi-Fi; password length=%u",
+             (unsigned)strlen(password));
+    arca_uploader_join_request(s_sel_ssid, password);
+    lv_textarea_set_text(s_pw_ta, "");
+    panel_note("connecting...");
+    wifi_show(VIEW_PANEL);
+}
+
+static void on_pw_cancel(lv_event_t *e) { (void)e; lv_textarea_set_text(s_pw_ta, ""); wifi_show(VIEW_WIFI); }
+
+static void on_pw_changed(lv_event_t *e)
+{
+    (void)e;
+    ESP_LOGI(TAG, "Wi-Fi password edited; length=%u",
+             (unsigned)strlen(lv_textarea_get_text(s_pw_ta)));
+    arca_face_note_activity();
+}
+
+static void on_wifi_open(lv_event_t *e)
+{
+    (void)e;
+    s_wifi_first_run = false;
+    s_shown_gen = 0xFFFFFFFF;
+    arca_uploader_scan_request();
+    wifi_show(VIEW_WIFI);
+}
+
+// Rebuilds the list only when a new scan has landed, not every frame.
+static void update_wifi_screen(void)
+{
+    const arca_wifi_state_t st = arca_uploader_wifi_state();
+    if (st == ARCA_WIFI_SCANNING) {
+        lv_label_set_text(s_wifi_status, "scanning...");
+        return;
+    }
+    const bool scan_failed = st == ARCA_WIFI_SCAN_FAIL;
+
+    const uint32_t gen = arca_uploader_scan_generation();
+    if (gen == s_shown_gen) return;
+    s_shown_gen = gen;
+
+    lv_obj_clean(s_wifi_list);
+    const int n = arca_uploader_scan_count();
+    if (n == 0) {
+        lv_label_set_text(s_wifi_status, scan_failed ? "scan failed - tap Scan"
+                                                   : "no networks - tap Scan");
+        return;
+    }
+    char status[32];
+    snprintf(status, sizeof(status), "%d found - tap one", n);
+    lv_label_set_text(s_wifi_status, status);
+
+    for (int i = 0; i < n; i++) {
+        arca_scan_ap_t *ap = malloc(sizeof(*ap));
+        if (!ap || !arca_uploader_scan_get(i, ap)) {
+            free(ap);
+            break;
+        }
+        lv_obj_t *b = lv_button_create(s_wifi_list);
+        lv_obj_remove_style_all(b);
+        // 38 px is a dependable finger target on the 1.83-inch panel. The
+        // list scrolls, so this is preferable to squeezing every AP at once.
+        lv_obj_set_size(b, ARCA_SCREEN_W - 24, 38);
+        lv_obj_set_style_bg_color(b, lv_color_hex(CARD_BG), 0);
+        lv_obj_set_style_bg_opa(b, LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_opa(b, LV_OPA_70, LV_STATE_PRESSED);
+        lv_obj_set_style_radius(b, 8, 0);
+        lv_obj_add_event_cb(b, on_ap_click, LV_EVENT_CLICKED, ap);
+        lv_obj_add_event_cb(b, on_ap_delete, LV_EVENT_DELETE, ap);
+
+        char line[64];
+        // Keep the useful diagnostics from the board's factory Wi-Fi Analyzer:
+        // RSSI and 2.4 GHz channel make a real scan immediately verifiable.
+        snprintf(line, sizeof(line), "%s %ddBm ch%u  %.20s",
+                 ap->locked ? LV_SYMBOL_WIFI : LV_SYMBOL_OK,
+                 ap->rssi, ap->channel, ap->ssid);
+        lv_obj_t *l = label(b, &lv_font_montserrat_14, 0xF5E6D3, line);
+        lv_obj_align(l, LV_ALIGN_LEFT_MID, 10, 0);
+    }
+}
+
+static void build_wifi_screens(void)
+{
+    // --- pick a network ---
+    s_wifi_scr = plain(s_root, ARCA_SCREEN_W, ARCA_SCREEN_H, PANEL_BG);
+    lv_obj_set_pos(s_wifi_scr, 0, 0);
+    lv_obj_add_flag(s_wifi_scr, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_t *t = label(s_wifi_scr, &lv_font_montserrat_16, 0xF5E6D3, "Wi-Fi");
+    lv_obj_set_pos(t, 14, 8);
+    s_wifi_status = label(s_wifi_scr, &lv_font_montserrat_14, ARCA_COL_FACE_DIM, "scanning...");
+    lv_obj_set_pos(s_wifi_status, 60, 10);
+    panel_button(s_wifi_scr, "Scan",  0x477EE9, on_rescan,    ARCA_SCREEN_W - 128, 4, 56);
+    panel_button(s_wifi_scr, "Back",  0x3A363F, on_wifi_back, ARCA_SCREEN_W - 66,  4, 56);
+
+    s_wifi_list = lv_obj_create(s_wifi_scr);
+    lv_obj_remove_style_all(s_wifi_list);
+    lv_obj_set_size(s_wifi_list, ARCA_SCREEN_W - 16, ARCA_SCREEN_H - 42);
+    lv_obj_set_pos(s_wifi_list, 8, 40);
+    lv_obj_set_flex_flow(s_wifi_list, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_row(s_wifi_list, 5, 0);
+    lv_obj_set_scroll_dir(s_wifi_list, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(s_wifi_list, LV_SCROLLBAR_MODE_AUTO);
+
+    show(s_wifi_scr, false);
+
+    // --- type the password ---
+    s_pw_scr = plain(s_root, ARCA_SCREEN_W, ARCA_SCREEN_H, PANEL_BG);
+    lv_obj_set_pos(s_pw_scr, 0, 0);
+    lv_obj_add_flag(s_pw_scr, LV_OBJ_FLAG_CLICKABLE);
+
+    s_pw_ssid = label(s_pw_scr, &lv_font_montserrat_14, 0x8AB4FF, "");
+    lv_obj_set_pos(s_pw_ssid, 12, 4);
+
+    s_pw_ta = lv_textarea_create(s_pw_scr);
+    lv_obj_set_size(s_pw_ta, ARCA_SCREEN_W - 92, 32);
+    lv_obj_set_pos(s_pw_ta, 12, 24);
+    lv_textarea_set_one_line(s_pw_ta, true);
+    lv_textarea_set_max_length(s_pw_ta, 64);
+    // Keep credentials masked on the device. Input progress is still visible
+    // through the textarea cursor and never logged beyond its length.
+    lv_textarea_set_password_mode(s_pw_ta, true);
+    lv_textarea_set_placeholder_text(s_pw_ta, "password");
+    lv_obj_set_style_text_font(s_pw_ta, &lv_font_montserrat_16, 0);
+    lv_obj_add_event_cb(s_pw_ta, on_pw_changed, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // Do not rely on the keyboard's small checkmark alone. A full labeled
+    // button makes the submit action unambiguous on the 1.83-inch display.
+    panel_button(s_pw_scr, "Join", 0x2F7D5B, on_pw_ready,
+                 ARCA_SCREEN_W - 72, 23, 62);
+
+    s_pw_kb = lv_keyboard_create(s_pw_scr);
+    lv_obj_set_size(s_pw_kb, ARCA_SCREEN_W, ARCA_SCREEN_H - 62);
+    lv_obj_set_pos(s_pw_kb, 0, 62);
+    lv_keyboard_set_textarea(s_pw_kb, s_pw_ta);
+    lv_keyboard_set_mode(s_pw_kb, LV_KEYBOARD_MODE_TEXT_LOWER);
+    lv_obj_add_event_cb(s_pw_kb, on_pw_ready,  LV_EVENT_READY,  NULL);
+    lv_obj_add_event_cb(s_pw_kb, on_pw_cancel, LV_EVENT_CANCEL, NULL);
+
+    show(s_pw_scr, false);
 }
 
 // ---------------------------------------------------------------- panel -----
@@ -269,6 +526,7 @@ static lv_obj_t *panel_button(lv_obj_t *parent, const char *txt, uint32_t color,
     lv_obj_set_style_bg_color(b, lv_color_hex(color), 0);
     lv_obj_set_style_bg_opa(b, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_opa(b, LV_OPA_80, LV_STATE_PRESSED);
+    lv_obj_add_flag(b, LV_OBJ_FLAG_PRESS_LOCK);
     lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, NULL);
     lv_obj_t *l = label(b, &lv_font_montserrat_14, 0xFFFFFF, txt);
     lv_obj_center(l);
@@ -299,10 +557,13 @@ static void build_panel(void)
     s_panel_msg = label(s_panel, &lv_font_montserrat_14, 0xFF8A3D, "");
     lv_obj_set_pos(s_panel_msg, 16, 116);
 
+    // Close gets a full-size target of its own instead of sharing the cramped
+    // four-button bottom row at the least accurate edge of the touch panel.
+    panel_button(s_panel, "Close", 0x3A363F, on_close, ARCA_SCREEN_W - 84, 4, 68);
     const int y = ARCA_SCREEN_H - 44, w = (ARCA_SCREEN_W - 16 * 2 - 8 * 2) / 3;
-    panel_button(s_panel, "Sync",  0x477EE9, on_sync,  16,                 y, w);
-    panel_button(s_panel, "Free",  0x8A6E3D, on_free,  16 + w + 8,         y, w);
-    panel_button(s_panel, "Close", 0x3A363F, on_close, 16 + (w + 8) * 2,   y, w);
+    panel_button(s_panel, "Wi-Fi", 0x2F7D5B, on_wifi_open, 16,                 y, w);
+    panel_button(s_panel, "Sync",  0x477EE9, on_sync,      16 + w + 8,         y, w);
+    panel_button(s_panel, "Free",  0x8A6E3D, on_free,      16 + (w + 8) * 2,   y, w);
 
     show(s_panel, false);
 }
@@ -312,7 +573,7 @@ static void update_panel(const arca_status_t *st)
     char line[64];
     const char *ssid = arca_uploader_ssid();
     if (arca_uploader_network_count() == 0) {
-        lv_label_set_text(s_wifi_lbl, "Wi-Fi: not set (edit card)");
+        lv_label_set_text(s_wifi_lbl, "Wi-Fi: not set - tap Wi-Fi");
         lv_obj_set_style_text_color(s_wifi_lbl, lv_color_hex(ARCA_COL_FACE_DIM), 0);
     } else {
         const bool up = arca_uploader_wifi_up();
@@ -334,6 +595,16 @@ static void update_panel(const arca_status_t *st)
     lv_obj_set_width(s_store_fill, fw);
     lv_obj_set_style_bg_color(s_store_fill,
         lv_color_hex(pct >= 92 ? ARCA_COL_REC : pct >= 75 ? ARCA_COL_ACCENT : 0x7BD88F), 0);
+
+    // A join finishes in the uploader task; the panel is where the answer lands.
+    static arca_wifi_state_t last_wifi = ARCA_WIFI_IDLE;
+    const arca_wifi_state_t wstate = arca_uploader_wifi_state();
+    if (wstate != last_wifi) {
+        if (wstate == ARCA_WIFI_OK)   panel_note("connected & saved");
+        if (wstate == ARCA_WIFI_SAVE_FAIL) panel_note("connected; save failed");
+        if (wstate == ARCA_WIFI_FAIL) panel_note("could not join - password?");
+        last_wifi = wstate;
+    }
 
     if (s_panel_note[0] && now_ms() < s_panel_note_until) {
         lv_label_set_text(s_panel_msg, s_panel_note);
@@ -440,7 +711,7 @@ static void build_ui(void)
     // Chrome: tiny and dim. ARCA is the product; the labels are a footnote.
     s_hint_l = label(s_root, &lv_font_montserrat_14, ARCA_COL_FACE_DIM, "REC");
     lv_obj_align(s_hint_l, LV_ALIGN_TOP_LEFT, 13, 9);
-    s_hint_r = label(s_root, &lv_font_montserrat_14, ARCA_COL_FACE_DIM, "SYNC");
+    s_hint_r = label(s_root, &lv_font_montserrat_14, ARCA_COL_FACE_DIM, "HOME");
     lv_obj_align(s_hint_r, LV_ALIGN_TOP_RIGHT, -40, 9);
     s_topmid = label(s_root, &lv_font_montserrat_14, ARCA_COL_FACE_DIM, "");
     lv_obj_align(s_topmid, LV_ALIGN_TOP_MID, 0, 9);
@@ -460,6 +731,7 @@ static void build_ui(void)
     lv_obj_center(gi);
 
     build_panel();
+    build_wifi_screens();
 }
 
 // ---------------------------------------------------------------- life -------
@@ -681,10 +953,27 @@ static void apply_chrome(const arca_status_t *st)
 static void face_tick(lv_timer_t *timer)
 {
     (void)timer;
+    if (s_home_requested) {
+        s_home_requested = false;
+        close_panel();
+    }
     const float t = tnow();
 
     arca_status_t st;
     arca_state_get(&st);
+
+    // First boot is a setup flow, not a scavenger hunt. The uploader primes a
+    // scan when NVS has no saved network; once that scan publishes a snapshot,
+    // bring it to the foreground automatically. Do this only once per boot so
+    // Back remains meaningful even if another background scan completes.
+    if (s_wifi_first_run && s_view == VIEW_FACE &&
+        arca_uploader_network_count() == 0 &&
+        arca_uploader_scan_generation() > 0) {
+        s_wifi_first_run = false;
+        s_shown_gen = 0xFFFFFFFF;
+        wifi_show(VIEW_WIFI);
+        ESP_LOGI(TAG, "first-run Wi-Fi picker opened automatically");
+    }
 
     if (st.face == ARCA_FACE_IDLE && s_act == ACT_NONE) {
         if (s_blink_frame >= 0) {
@@ -698,7 +987,11 @@ static void face_tick(lv_timer_t *timer)
     // closing it is instant, but skip the life caption while it is open.
     static arca_face_state_t last_face = ARCA_FACE_SLEEP;
     show(s_gear, s_view == VIEW_FACE);
-    if (s_view == VIEW_PANEL) {
+    if (s_view == VIEW_WIFI) {
+        update_wifi_screen();
+    } else if (s_view == VIEW_WIFI_PW) {
+        /* the keyboard owns the screen */
+    } else if (s_view == VIEW_PANEL) {
         update_panel(&st);
     } else {
         pose_t p;
@@ -708,6 +1001,12 @@ static void face_tick(lv_timer_t *timer)
         apply_chrome(&st);
     }
     last_face = st.face;
+
+    // Never dim mid-setup: the keyboard taps go to LVGL, not to our handler, so
+    // the idle timer would otherwise put the screen to sleep while typing.
+    if (s_view != VIEW_FACE || st.rec_mode != ARCA_REC_IDLE) {
+        s_last_activity = now_ms();
+    }
 
     const int64_t idle_ms = now_ms() - s_last_activity;
     if (idle_ms > ARCA_SCREEN_OFF_MS) {
@@ -748,6 +1047,19 @@ void arca_face_start(void)
     lv_display_set_rotation(lv_display_get_default(), LV_DISPLAY_ROTATION_270);
 #endif
     build_ui();
+
+    lv_indev_t *touch = bsp_display_get_input_dev();
+    if (touch) {
+        // Polling is deliberately used instead of the BSP's interrupt-only
+        // mode.  It costs one tiny touch-controller read per LVGL tick and
+        // removes a single missed GPIO edge as a total UI failure mode.
+        lv_indev_set_mode(touch, LV_INDEV_MODE_TIMER);
+        lv_indev_add_event_cb(touch, on_pointer_event, LV_EVENT_PRESSED, NULL);
+        lv_indev_add_event_cb(touch, on_pointer_event, LV_EVENT_RELEASED, NULL);
+        ESP_LOGI(TAG, "touch input ready in polling mode");
+    } else {
+        ESP_LOGE(TAG, "touch input device unavailable");
+    }
     lv_timer_create(face_tick, TICK_MS, NULL);
     bsp_display_unlock();
 

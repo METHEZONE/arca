@@ -52,6 +52,10 @@ struct SettingsView: View {
         Form {
             accountSection
 
+            #if os(iOS)
+            ArcaCoreSettingsSection()
+            #endif
+
             Section {
                 NavigationLink {
                     ConnectorsView()

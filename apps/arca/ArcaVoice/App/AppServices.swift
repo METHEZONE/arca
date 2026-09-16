@@ -10,6 +10,9 @@ final class AppServices {
     static let shared = AppServices()
 
     let coordinator = RecordingCoordinator()
+    #if os(iOS)
+    let coreLink = ArcaCoreLink.shared
+    #endif
     private(set) var container: ModelContainer?
     /// Set by ambient surfaces (notch/island) to ask the main UI to open a session.
     var sessionToOpen: RecordingSession?
@@ -67,6 +70,7 @@ final class AppServices {
             ownerName: { [weak self] in self?.ownerName ?? "Me" },
             languageHints: { TranscriptionPrefs.languageHints })
         #if os(iOS)
+        coreLink.start()
         // Dynamic Island buttons post this; LiveActivityIntents run in-process.
         NotificationCenter.default.addObserver(
             forName: .arcaToggleRecording, object: nil, queue: .main

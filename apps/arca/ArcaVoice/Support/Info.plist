@@ -39,6 +39,8 @@
 	<string>15.0</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>ARCA connects to your ARCA Core to control recording, show device status, and securely configure Wi-Fi.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>ARCA adds events you approve from captured screens.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -57,6 +59,7 @@
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
+		<string>bluetooth-central</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

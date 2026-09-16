@@ -29,7 +29,7 @@ Hold the device with **USB-C and both buttons along the top edge**:
 | **LEFT — BOOT (GPIO0)** | **hold** | push-to-talk. Records while held, stops on release |
 | | **click** | starts a long session. Click again to stop |
 | | hold during a session | drops a highlight marker |
-| **RIGHT — PWR (AXP2101 PWRON)** | short press | wake screen, then toggle face ↔ stats |
+| **RIGHT — PWR (AXP2101 PWRON)** | short press | wake screen and return to the ARCA home face |
 | | long press | sync to cloud now |
 | | hold ~6 s | ⚠️ AXP2101 cuts power **in hardware**. Firmware cannot veto it |
 | **Touch** | tap | wake / switch view only. Never starts or stops recording |
@@ -115,6 +115,9 @@ pass. Side benefits:
 - each chunk stays inside OpenAI's 25 MB per-request audio limit
 - a dropped connection costs one chunk, not the whole session
 - transcription runs while the device is still uploading
+- Postgres-backed chunk state survives Vercel cold starts and instance changes
+- a missing earlier chunk returns HTTP 409, so the device keeps the WAV queued
+- completion receipts make a lost-response retry return the same Memory id
 
 Chunks stream off the card 4 KB at a time, so RAM use is flat no matter how long
 the recording is.
@@ -137,9 +140,11 @@ Throughput decides the design. Real ESP32-S3 ↔ iPhone BLE runs ~8–50 KB/s:
 
 So:
 
-- **BLE → control, status, and LIVE audio streaming.** Phone as the uplink,
-  instant capture anywhere. Frames are 20 ms of IMA-ADPCM at 66 kbps, 166 bytes
-  each so they fit even a conservative 185-byte ATT MTU.
+- **BLE → control, status, hotspot setup, and LIVE audio streaming.** The
+  iPhone app discovers ARCA Core, sends hotspot credentials over an encrypted
+  characteristic, and then shows recording, battery, SD, Wi-Fi, and upload
+  queue status. Frames are 20 ms of IMA-ADPCM at 66 kbps, 166 bytes each so
+  they fit even a conservative 185-byte ATT MTU.
 
   Each frame header carries an ADPCM state snapshot (step index + predictor)
   taken before that frame was encoded, exactly like WAV's own ADPCM block
@@ -148,10 +153,10 @@ So:
   notification costs one 20 ms frame and the next frame is already clean.
   Verified against an independent decoder on a 2 s speech-like signal:
   **34.3 dB SNR carrying state vs 16.7 dB resetting per frame.**
-- **Wi-Fi → bulk backlog.** Point `config.json` at your **iPhone Personal
-  Hotspot** and the device drains the queue over LTE. Zero app code, and it is
-  by far the cheapest "works anywhere" path. Turn the hotspot on, the device
-  joins and empties itself.
+- **Wi-Fi → bulk backlog.** Open **Settings → Wi-Fi** on the device, scan, pick
+  a 2.4 GHz network, and enter its password. The device remembers it in internal
+  NVS and drains the queue automatically; Wi-Fi credentials never live on the
+  SD card. For iPhone Personal Hotspot, enable **Maximize Compatibility**.
 
 ### GATT layout
 
@@ -160,8 +165,10 @@ Service `7a9c0000-a5c1-4b2e-9d31-0a5c41524341` (last 4 bytes spell `ARCA`)
 | Char | UUID suffix | Props | Payload |
 |---|---|---|---|
 | STATUS | `0001` | read + notify (1 Hz) | packed `arca_ble_status_t` |
-| CTRL | `0002` | write | 1 byte command |
+| CTRL | `0002` | write + encrypted | 1 byte command |
 | AUDIO | `0003` | notify | `[seq:u16][flags:u8][stepIdx:u8][predictor:i16][adpcm:160B]` = 166 B |
+| WIFI SETUP | `0004` | write + encrypted | `[v=1][ssidLen][passwordLen][ssid][password]` |
+| WIFI STATUS | `0005` | read + notify (1 Hz) | packed `arca_ble_wifi_status_t` |
 
 Commands: `0x01` start PTT · `0x02` start long session · `0x03` stop · `0x04`
 mark · `0x05` sync now · `0x10` stream on · `0x11` stream off · `0x12` wake screen.
@@ -280,19 +287,20 @@ cd firmware/arca-core-v1
 ### 3. microSD
 
 Format **FAT32** (not exFAT), Class 10, 32 GB or smaller. Then create
-`/arca/config.json` on the card:
+`/arca/config.json` on the card with only the cloud destination:
 
 ```json
 {
-  "ssid": "your-wifi-or-iphone-hotspot",
-  "password": "...",
   "baseUrl": "https://thezonebio.com",
   "token": "<ARCA_INGEST_TOKEN>",
   "deviceId": "arca-core-v1-01"
 }
 ```
 
-Credentials live on the card, never in the firmware image.
+The upload token lives on the card, never in the firmware image. Wi-Fi networks
+are selected on the device and saved in internal NVS. Early firmware cards with
+`ssid`, `password`, or `networks` fields have those fields ignored and removed;
+the user selects a network again on the device.
 
 ### 4. Build and flash
 
@@ -505,12 +513,11 @@ You could port it. You would be reimplementing a working driver for no reason.
   request, so a multi-chunk session labels speakers per part rather than
   pretending speaker_0 is the same person throughout. Fixing that needs voice
   embeddings, which is a server-side job.
-- **Session scratch state is ephemeral on Vercel.** `lib/hardware/session.ts`
-  writes to the same store as memories, which resolves to `/tmp` on Vercel and is
-  per-instance. Chunks of one session normally land on the same warm instance so
-  it works, but for real durability move it (and
-  `lib/secondbrain/store.ts`, which has the same issue today) onto Vercel Blob
-  or Upstash.
+- **Raw WAV has two retained copies.** The device moves an acknowledged source
+  file to `/arca/uploaded`; the server retains every original WAV chunk plus its
+  transcript/analysis memory and idempotency receipt in Postgres when
+  `DATABASE_URL` is configured. The authenticated
+  `/api/hardware/session/audio` endpoint lists and returns those source chunks.
 - **Korean on screen.** LVGL has no Korean font built in. On-screen strings are
   ASCII for now; adding Korean means generating a Pretendard subset with
   `lv_font_conv` (project convention: Pretendard with tightened letter-spacing,
@@ -520,12 +527,14 @@ You could port it. You would be reimplementing a working driver for no reason.
   the register is being read correctly, but no press has been observed yet.
   `key_tick()` logs the raw latch (`PWRON latch 0x..`) precisely so one press
   confirms or corrects the two constants.
-- **Mic gain and the face are unverified by eye.** The ES7210 configures and the
-  capture task reports `16000 Hz mono, 6 s pre-roll, 8 s ring`, and the face
-  reports `284x240 landscape rot270`, but nobody has looked at the screen or
-  listened to a recording yet.
-- **SD has never been exercised.** Every bench boot so far ran with no card, so
-  the queue, rollover and crash-repair code paths are untested on real media.
+- **Wi-Fi join still needs a known credential in the final enclosure test.** A
+  real board scan found nearby 2.4 GHz networks and the password/join UI is in
+  the flashed image. Before shipment, join a known AP, reboot, and confirm the
+  NVS-saved network reconnects and drains one queued WAV.
+
+The current bench board has mounted a 29,787 MB card, initialized the ES7210 at
+16 kHz mono / 34.5 dB gain, and created a 9-second WAV through a real BLE record
+start/stop. Boot-time Wi-Fi scan found seven nearby networks.
 
   Note that **the card is not optional**: `arca_recorder_begin()` refuses
   outright when storage is not ready, so with no card in the slot every press of

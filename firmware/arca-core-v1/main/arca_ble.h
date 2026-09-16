@@ -15,10 +15,9 @@
 // So the split is:
 //   BLE        -> control, status, and LIVE audio streaming (ADPCM).
 //                 Instant capture anywhere, with the phone as the uplink.
-//   Wi-Fi      -> bulk backlog upload. Point config.json at your iPhone's
-//                 Personal Hotspot and the device drains the queue over LTE
-//                 with no BLE involved at all. This is the cheapest possible
-//                 "works anywhere" path and needs zero app code.
+//   Wi-Fi      -> bulk backlog upload. Pick a 2.4 GHz network or compatible
+//                 iPhone Personal Hotspot from Settings > Wi-Fi on the device;
+//                 no Wi-Fi credentials are read from the SD card.
 //
 // The phone side needs the `bluetooth-central` UIBackgroundMode to keep
 // receiving while ARCA is backgrounded. It reconnects on its own once the
@@ -32,6 +31,9 @@
 //     0003    AUDIO    notify          [seq:u16][flags:u8][stepIdx:u8]
 //                                      [predictor:i16][adpcm:160B] = 166 bytes
 //                                      320 samples (20 ms) per frame, 66 kbps
+//     0004    WIFI SETUP write+enc     [version=1][ssidLen][passwordLen]
+//                                      [ssid UTF-8][password UTF-8]
+//     0005    WIFI STATUS read+notify  packed arca_ble_wifi_status_t
 //
 // The audio frame header carries an ADPCM state snapshot (step index +
 // predictor) taken BEFORE that frame was encoded. The encoder never resets, so
@@ -63,6 +65,15 @@ typedef struct __attribute__((packed)) {
     uint8_t  battery_pct;    // 0-100, 255 = unknown
     int8_t   level_db;
 } arca_ble_status_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t version;        // 1
+    uint8_t state;          // arca_wifi_state_t
+    uint8_t saved_networks;
+    int8_t  rssi;           // dBm, INT8_MIN when unavailable
+    uint8_t ssid_len;
+    char    ssid[32];       // not NUL terminated; use ssid_len
+} arca_ble_wifi_status_t;
 
 void arca_ble_start(void);
 bool arca_ble_linked(void);

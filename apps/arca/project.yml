@@ -36,6 +36,7 @@ targets:
       properties:
         CFBundleDisplayName: ARCA
         NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
+        NSBluetoothAlwaysUsageDescription: ARCA connects to your ARCA Core to control recording, show device status, and securely configure Wi-Fi.
         NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
         NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
         NSSupportsLiveActivities: true
@@ -46,7 +47,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice
             CFBundleURLSchemes: [arca]
-        UIBackgroundModes: [audio, fetch]
+        UIBackgroundModes: [audio, fetch, bluetooth-central]
         BGTaskSchedulerPermittedIdentifiers: [com.thezone.arca.voice.relaysync]
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

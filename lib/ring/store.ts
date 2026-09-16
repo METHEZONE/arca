@@ -52,7 +52,7 @@ function ringDir(): string {
       ? join("/tmp", configured)
       : isAbsolute(configured)
         ? configured
-        : join(process.cwd(), configured);
+        : join(/* turbopackIgnore: true */ process.cwd(), configured);
   return join(base, "ring");
 }
 

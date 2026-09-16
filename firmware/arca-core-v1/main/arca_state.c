@@ -49,12 +49,24 @@ void arca_state_set_rec(arca_rec_mode_t mode, uint32_t seconds)
     UNLOCK();
 }
 
-void arca_state_set_flags(bool sd_ready, bool wifi_up, bool ble_linked)
+void arca_state_set_sd_ready(bool ready)
 {
     LOCK();
-    s_status.sd_ready   = sd_ready;
-    s_status.wifi_up    = wifi_up;
-    s_status.ble_linked = ble_linked;
+    s_status.sd_ready = ready;
+    UNLOCK();
+}
+
+void arca_state_set_wifi_up(bool up)
+{
+    LOCK();
+    s_status.wifi_up = up;
+    UNLOCK();
+}
+
+void arca_state_set_ble_linked(bool linked)
+{
+    LOCK();
+    s_status.ble_linked = linked;
     UNLOCK();
 }
 

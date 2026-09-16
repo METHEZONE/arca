@@ -23,10 +23,17 @@
  * Auth: same as /api/hardware/ingest - x-arca-device-token or Bearer.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 import { hardwareIngestToken } from "@/lib/config";
-import { ingestSessionChunk, SessionError, pruneStaleSessions } from "@/lib/hardware/session";
+import { durableStoreConfigured } from "@/lib/persistence/kv";
+import {
+  IncompleteSessionError,
+  deliverCompletedMemory,
+  ingestSessionChunk,
+  SessionError,
+  pruneStaleSessions,
+} from "@/lib/hardware/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +45,18 @@ const MAX_CHUNK_BYTES = 4 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   const requiredToken = hardwareIngestToken();
+  if (!requiredToken && (process.env.NODE_ENV === "production" || process.env.VERCEL)) {
+    return NextResponse.json(
+      { error: "ARCA hardware ingest is disabled until ARCA_INGEST_TOKEN is configured." },
+      { status: 503 },
+    );
+  }
+  if (!durableStoreConfigured() && (process.env.NODE_ENV === "production" || process.env.VERCEL)) {
+    return NextResponse.json(
+      { error: "ARCA hardware ingest is disabled until DATABASE_URL is configured." },
+      { status: 503 },
+    );
+  }
   if (requiredToken) {
     const provided =
       request.headers.get("x-arca-device-token") ??
@@ -76,7 +95,7 @@ export async function POST(request: NextRequest) {
   }
 
   const seq = int(formData, "seq", 0);
-  const totalChunks = Math.max(1, int(formData, "totalChunks", 1));
+  const totalChunks = int(formData, "totalChunks", 1);
   const offsetSec = int(formData, "offsetSec", 0);
   const final = text(formData, "final") === "true";
 
@@ -103,7 +122,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Opportunistic cleanup; never blocks the response path on failure.
-    void pruneStaleSessions().catch(() => {});
+    void pruneStaleSessions().catch((cause) => {
+      console.error("[hardware-session-prune]", cause);
+    });
+    if (result.needsDelivery) after(() => deliverCompletedMemory(result.memory));
 
     return NextResponse.json({
       ok: true,
@@ -114,8 +136,22 @@ export async function POST(request: NextRequest) {
       durationSec: result.memory.durationSec,
       createdAt: result.memory.createdAt,
       integrations: result.memory.integrations,
+      audio: result.memory.audio,
     });
   } catch (cause) {
+    if (cause instanceof IncompleteSessionError) {
+      return NextResponse.json(
+        {
+          error: cause.message,
+          status: "incomplete",
+          received: cause.received,
+          totalChunks: cause.totalChunks,
+          missing: cause.missing,
+          retryable: true,
+        },
+        { status: 409 },
+      );
+    }
     if (cause instanceof SessionError) {
       return NextResponse.json({ error: cause.message }, { status: 400 });
     }
@@ -136,6 +172,6 @@ function text(formData: FormData, key: string): string | undefined {
 function int(formData: FormData, key: string, fallback: number): number {
   const raw = text(formData, key);
   if (!raw) return fallback;
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }

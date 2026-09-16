@@ -14,10 +14,9 @@
 //     click               : starts a long session. Next click stops it.
 //     hold during session : drops a highlight marker.
 //
-//   RIGHT = PWR (GPIO41)   -> SCREEN / MARK / SYNC
-//     click               : wake screen, then cycle face -> stats -> last upload
-//     double click        : drop a highlight marker
-//     hold ~1.2 s         : sync to cloud now
+//   RIGHT = PWR (AXP2101 PWRON) -> HOME / SYNC / POWER
+//     click               : wake screen and return to the ARCA home face
+//     hold ~1.5 s         : sync to cloud now
 //     hold ~6 s           : AXP2101 kills power in hardware. Avoid.
 //
 // Why record is on the LEFT and not the RIGHT: push-to-talk means holding the

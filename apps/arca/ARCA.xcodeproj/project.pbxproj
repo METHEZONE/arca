@@ -16,6 +16,7 @@
 		09FE18A010B9AF50B4B39575 /* ArcaShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */; };
 		0BA6B4B26E4010E08C2A9E74 /* TodoColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */; };
 		0C61FE1EF50879DB5BC6DCDD /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
+		0C9ED9713FDFD78EFD602EA7 /* ArcaCoreLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */; };
 		0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		0E92345997357839377901B4 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		103900A43A7B7901C8143B0C /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
@@ -144,6 +145,8 @@
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		6352533A67B7DEF20EF3A650 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
+		635A9C3DD846791DC6A7768F /* ArcaCoreSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA34AE43C631313842375E0 /* ArcaCoreSettingsSection.swift */; };
+		638A4B7BD1FE7DB1220F4659 /* ArcaCoreSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA34AE43C631313842375E0 /* ArcaCoreSettingsSection.swift */; };
 		63D78D050554D0EC405A5598 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		643572A87436F0C521F11054 /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		644FFA60D7949368499BCC8A /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
@@ -341,6 +344,7 @@
 		D17554AFD89FA3DEBC8A4457 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
 		D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		D250D75DEF42750AB474C7CB /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
+		D441699F6EC8CD76A0B90B56 /* ArcaCoreLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */; };
 		D470D8A3A70E7B441C9E5D8B /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
 		D4A342E948D858AE87794949 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
 		D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
@@ -348,11 +352,13 @@
 		D718F4321CE32D322F74B3E4 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
 		D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
+		D9971BCED8E25C321296276F /* ArcaCoreSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA34AE43C631313842375E0 /* ArcaCoreSettingsSection.swift */; };
 		D9E9F969F6196BB8D0F1F738 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
 		DBD984802091724B3C097A09 /* ArcaEdition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0965856119018122EAA4BBDC /* ArcaEdition.swift */; };
 		DC4A25D9832A91BE21AAF6FA /* NotificationBell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54488392E83C5D2F055F1BF /* NotificationBell.swift */; };
 		DCAEEBEB8BBA40678F030042 /* WatchLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD2C83E58AEB77B8852236DB /* WatchLocalization.swift */; };
 		DD5284EEA3864A8B74D5EBD5 /* NotchAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */; };
+		DDAAB0E9501520B09441EE24 /* ArcaCoreLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */; };
 		DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AF3176B12884BB78616861 /* SummaryListView.swift */; };
 		DF6017CBB997D00A88012188 /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
@@ -487,6 +493,7 @@
 		45667ADF4278F8378B7393B0 /* BrainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainView.swift; sourceTree = "<group>"; };
 		45CA137F6F45E228FF0612F1 /* ArcaVoiceWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaVoiceWatchApp.swift; sourceTree = "<group>"; };
 		46563D0E0437DC570089BD7E /* ArcaVoiceShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ArcaVoiceShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaCoreLink.swift; sourceTree = "<group>"; };
 		488E853E67519340E1F4AD47 /* CodexBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexBridge.swift; sourceTree = "<group>"; };
 		4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaClipboard.swift; sourceTree = "<group>"; };
 		4A507775C5099D33DEF92A0E /* ChatSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSession.swift; sourceTree = "<group>"; };
@@ -540,6 +547,7 @@
 		9B747507721FFF3DF877DF6C /* VoiceTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTalk.swift; sourceTree = "<group>"; };
 		9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProposalEngine.swift; sourceTree = "<group>"; };
 		9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDeepMeasure.swift; sourceTree = "<group>"; };
+		9EA34AE43C631313842375E0 /* ArcaCoreSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaCoreSettingsSection.swift; sourceTree = "<group>"; };
 		A2F819D6795C53B655D03603 /* CallLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallLabApp.swift; sourceTree = "<group>"; };
 		A56B192B6C772E42CB6713D0 /* TaskEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskEngine.swift; sourceTree = "<group>"; };
 		A682151C405E802D8E34197D /* RecordingIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingIntents.swift; sourceTree = "<group>"; };
@@ -767,6 +775,15 @@
 			path = ArcaVoiceWidgets;
 			sourceTree = "<group>";
 		};
+		4840F1EA0A18CADB2CC8B1E8 /* Hardware */ = {
+			isa = PBXGroup;
+			children = (
+				46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */,
+				9EA34AE43C631313842375E0 /* ArcaCoreSettingsSection.swift */,
+			);
+			path = Hardware;
+			sourceTree = "<group>";
+		};
 		4916CE8C0B17107E799E0745 /* ArcaVoiceWatch */ = {
 			isa = PBXGroup;
 			children = (
@@ -889,6 +906,7 @@
 				39AE5DBE4F858B2DD0811736 /* Context */,
 				777BAFDA4BFAC1D3184DA6E0 /* DayLog */,
 				632E7A904AF9EF072996355D /* Growth */,
+				4840F1EA0A18CADB2CC8B1E8 /* Hardware */,
 				939C2A8AB291BE3AB3858574 /* Home */,
 				70A024142A5E9463B9366A50 /* Meeting */,
 				3A9B6FDC56236805F429F191 /* Notch */,
@@ -1331,6 +1349,8 @@
 				35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */,
 				BA2A47750E904DB8E7D8E69F /* AppServices.swift in Sources */,
 				22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */,
+				DDAAB0E9501520B09441EE24 /* ArcaCoreLink.swift in Sources */,
+				D9971BCED8E25C321296276F /* ArcaCoreSettingsSection.swift in Sources */,
 				B411D228C6EB91621320182B /* ArcaEdition.swift in Sources */,
 				587B3698CDE73F54CDA387CB /* ArcaLanguage.swift in Sources */,
 				7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */,
@@ -1464,6 +1484,8 @@
 				F336100BAB08C31DD593C25F /* AmbientOps.swift in Sources */,
 				2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */,
 				9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */,
+				0C9ED9713FDFD78EFD602EA7 /* ArcaCoreLink.swift in Sources */,
+				635A9C3DD846791DC6A7768F /* ArcaCoreSettingsSection.swift in Sources */,
 				23508B446043F29680AC05FD /* ArcaEdition.swift in Sources */,
 				10BE6349CD3B3EC0D122D986 /* ArcaLanguage.swift in Sources */,
 				2B68D00D73DECB51BCB675E6 /* ArcaMarkdown.swift in Sources */,
@@ -1586,6 +1608,8 @@
 				786B1AC912D50EF59A2C67A5 /* AmbientOps.swift in Sources */,
 				6BA5C40615E34C8B4F6ECB99 /* AppServices.swift in Sources */,
 				94A8065ADFDE3C4E2E7943CC /* ArcaClipboard.swift in Sources */,
+				D441699F6EC8CD76A0B90B56 /* ArcaCoreLink.swift in Sources */,
+				638A4B7BD1FE7DB1220F4659 /* ArcaCoreSettingsSection.swift in Sources */,
 				DBD984802091724B3C097A09 /* ArcaEdition.swift in Sources */,
 				D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */,
 				56F7E007A00D1DEB56DD25D7 /* ArcaMarkdown.swift in Sources */,

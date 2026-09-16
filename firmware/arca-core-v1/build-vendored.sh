@@ -22,6 +22,7 @@ export IDF_PATH="${IDF_PATH:-$HOME/esp/esp-idf}"
 export IDF_TOOLS_PATH="${IDF_TOOLS_PATH:-$HOME/.espressif}"
 export IDF_PYTHON_ENV_PATH="${IDF_PYTHON_ENV_PATH:-$(ls -d "$IDF_TOOLS_PATH"/python_env/idf*_env | tail -1)}"
 export IDF_COMPONENT_MANAGER=0
+export ESP_IDF_VERSION="${ESP_IDF_VERSION:-5.5}"
 export ESP_ROM_ELF_DIR="$(ls -d "$IDF_TOOLS_PATH"/tools/esp-rom-elfs/*/ | tail -1)"
 
 TOOLCHAIN="$(ls -d "$IDF_TOOLS_PATH"/tools/xtensa-esp-elf/*/xtensa-esp-elf/bin | tail -1)"

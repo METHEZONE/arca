@@ -55,6 +55,13 @@
 // responsive without thrashing.
 #define ARCA_I2S_FRAMES_PER_READ 512
 
+// ES7210 PGA gain, in dB. THIS IS A CALIBRATION KNOB - the useful steps the
+// driver quantises to are 30, 34.5, 36 and 37.5 dB. At the driver default the
+// board recorded speech at about -64 dBFS, which is the noise floor, and the
+// transcript came back as Whisper's silence hallucination. Raise it if a room
+// records too quietly, lower it if loud speech clips.
+#define ARCA_MIC_GAIN_DB        34.5f
+
 // PSRAM ring buffer between the audio task and the SD writer task.
 // 8 s of mono audio = 256 KB. Absorbs any FATFS write stall.
 #define ARCA_RING_SECONDS       8
@@ -142,8 +149,11 @@
 // dims hard and then sleeps the panel entirely.
 #define ARCA_BL_ACTIVE          70
 #define ARCA_BL_DIM             12
-#define ARCA_SCREEN_DIM_MS      12000
-#define ARCA_SCREEN_OFF_MS      25000
+// A 25-second blackout looked like a dead unit during first-time setup. Keep
+// the idle face visible long enough to be discoverable; setup and recording
+// refresh the activity timer continuously and therefore never auto-blackout.
+#define ARCA_SCREEN_DIM_MS      30000
+#define ARCA_SCREEN_OFF_MS      120000
 
 // Palette. Deep charcoal ground so the warm face reads as a light source,
 // carried over from the v0 mono-OLED look.

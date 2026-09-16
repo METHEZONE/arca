@@ -63,7 +63,12 @@ void arca_state_get(arca_status_t *out);
 
 void arca_state_set_face(arca_face_state_t face);
 void arca_state_set_rec(arca_rec_mode_t mode, uint32_t seconds);
-void arca_state_set_flags(bool sd_ready, bool wifi_up, bool ble_linked);
+// Each transport owns only its own flag.  Keeping these setters separate is
+// important: BLE connect/disconnect and Wi-Fi connect/disconnect happen on
+// different tasks and must not erase one another's state.
+void arca_state_set_sd_ready(bool ready);
+void arca_state_set_wifi_up(bool up);
+void arca_state_set_ble_linked(bool linked);
 void arca_state_set_queue(uint32_t queued, uint32_t upload_pct);
 void arca_state_set_power(float battery_pct, bool charging);
 void arca_state_set_level(int16_t level_db);

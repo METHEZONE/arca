@@ -107,6 +107,14 @@ export type Memory = {
   transcript: Transcript;
   analysis: MemoryAnalysis;
   integrations: IntegrationResult[];
+  /** Durable source audio, when the ingest path retains the original bytes. */
+  audio?: {
+    kind: "hardware-session";
+    sessionId: string;
+    deviceId?: string;
+    chunkCount: number;
+    contentType: string;
+  };
   /** True when any layer ran in demo (no-key) mode. */
   isDemo: boolean;
 };
