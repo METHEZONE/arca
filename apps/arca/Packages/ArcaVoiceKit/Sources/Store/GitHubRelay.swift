@@ -38,6 +38,10 @@ public struct GitHubRelay: Sendable {
     private func request(_ path: String, method: String = "GET") -> URLRequest {
         var r = URLRequest(url: URL(string: "https://api.github.com/repos/\(repo)/contents/\(path)")!)
         r.httpMethod = method
+        // GitHub answers with `Cache-Control: max-age=60`; a cached GET hands
+        // back the sha from before our own last push, and the next push then
+        // 409s against ourselves ("Relay conflict — retrying" every minute).
+        r.cachePolicy = .reloadIgnoringLocalCacheData
         r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         r.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         r.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")

@@ -546,4 +546,28 @@ enum FinalPassRunner {
         BrainClient.track("meeting_captured")
         DebugTrace.log("meeting memories: \(extracted.count) from \(record.directoryName)")
     }
+
+    /// Meetings synced in over the relay, or recorded before meeting→memory
+    /// extraction existed, have a summary but `note.memoryExtractedAt == nil` —
+    /// exactly what `rememberFromMeeting`'s own guard is for, just with nobody
+    /// ever having called it. Distills a few per heartbeat until every
+    /// summarized meeting has been read once.
+    static func backfillMemoriesIfNeeded(context: ModelContext, batch: Int = 4) async {
+        guard ArcaCloud.anthropicKey?.isEmpty == false else { return }
+        let descriptor = FetchDescriptor<RecordingSession>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
+        let pending = ((try? context.fetch(descriptor)) ?? []).filter {
+            $0.note?.memoryExtractedAt == nil && $0.note?.summaryMarkdown?.isEmpty == false
+        }
+        guard !pending.isEmpty else { return }
+        for record in pending.prefix(batch) {
+            guard let note = record.note, let summary = note.summaryMarkdown else { continue }
+            let notes = MeetingNotes(
+                title: record.title, summaryMarkdown: summary,
+                decisions: MeetingNoteMarkdown.decodeDecisions(from: note.decisionsJSON),
+                actionItems: MeetingNoteMarkdown.decodeActionItems(from: note.actionItemsJSON)
+                    .map { MeetingNotes.ActionItem(text: $0) })
+            await rememberFromMeeting(record: record, notes: notes)
+        }
+        DebugTrace.log("memory backfill: \(min(batch, pending.count)) meetings, \(max(0, pending.count - batch)) left")
+    }
 }

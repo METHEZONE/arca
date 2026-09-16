@@ -135,8 +135,11 @@ final class ParticipantPrep {
     /// and silently returning nothing would read as "nobody is in the meeting".
     func pullFromScreen(ownerName: String) async {
         guard MacPermission.screenRecording.isGranted else {
-            status = L("화면에서 읽으려면 화면 기록 권한이 필요해요 (설정 → 권한).",
-                       "Reading the screen needs Screen Recording permission (Settings → Permissions).")
+            // macOS only applies a Screen Recording grant to processes launched
+            // after the grant — a long-running ARCA still reads as ungranted
+            // even right after the user flips it on in Settings.
+            status = L("화면 기록 권한이 필요해요. 설정 → 권한에서 이미 켜져 있다면 ARCA를 껐다 다시 켜보세요.",
+                       "Screen Recording permission is needed. If it's already on in Settings → Permissions, quit and reopen ARCA.")
             return
         }
         isPulling = true
