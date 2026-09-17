@@ -11,7 +11,7 @@ typealias CompanionHomeMode = ArcaSection
 enum CompanionHomeViewModel {
     static func ownerDisplayName(_ raw: String) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != "Me" else { return "민성님" }
+        guard !trimmed.isEmpty, !["Me", "나", "You"].contains(trimmed) else { return "" }
         return trimmed.hasSuffix("님") ? trimmed : "\(trimmed)님"
     }
 
@@ -24,7 +24,8 @@ enum CompanionHomeViewModel {
         case 17..<22: timeWord = L("좋은 저녁이에요", "Good evening")
         default: timeWord = L("고요한 밤이에요", "Quiet night")
         }
-        return "\(timeWord), \(ownerDisplayName(ownerName))"
+        let name = ownerDisplayName(ownerName)
+        return name.isEmpty ? timeWord : "\(timeWord), \(name)"
     }
 
     static func earliestDate(sessions: [RecordingSession],
@@ -61,7 +62,7 @@ struct CompanionHomeView: View {
     @State private var showRecorder = false
     @State private var showSettings = false
     @State private var showSkins = false
-    @State private var showRightRail = true
+    @State private var showRightRail = false
     @State private var memorySearch = ""
     @State private var remark = MemoryRemarkProvider()
     @State private var projectDialogConversationId: String?
@@ -279,25 +280,6 @@ struct CompanionHomeView: View {
             DevicePresenceBar()
                 .padding(.horizontal, 16)
 
-            HStack {
-                Text(L("채팅", "Chats"))
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.45))
-                Spacer()
-                Button {
-                    startEmptyChat()
-                } label: {
-                    Label(L("새 채팅", "New chat"), systemImage: "plus")
-                        .labelStyle(.titleAndIcon)
-                        .font(.caption.weight(.semibold))
-                }
-                .buttonStyle(.arcaPress)
-                .foregroundStyle(ArcaSkins.current.hi)
-            }
-            .padding(.horizontal, 16)
-
-            chatList
-
             Spacer()
 
             AccountChip()
@@ -325,7 +307,7 @@ struct CompanionHomeView: View {
             // repeated clicks never feel like they're waiting on the UI.
             withAnimation(.spring(duration: 0.18)) {
                 mode = item
-                if item != .home { activeConversationId = nil }
+                if item != .chat { activeConversationId = nil }
             }
         } label: {
             HStack(spacing: 10) {
@@ -334,11 +316,11 @@ struct CompanionHomeView: View {
                 Text(item.title)
                 Spacer()
             }
-            .font(.system(.callout, design: .rounded, weight: .semibold))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .padding(.horizontal, 12)
-            .padding(.vertical, 9)
+            .padding(.vertical, 10)
             .background(self.mode == item ? .white.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 12))
-            .foregroundStyle(self.mode == item ? .white : .white.opacity(0.68))
+            .foregroundStyle(self.mode == item ? .white : .white.opacity(0.75))
         }
         .buttonStyle(.arcaPress)
     }
@@ -349,8 +331,8 @@ struct CompanionHomeView: View {
                 ForEach(projectGroups, id: \.name) { group in
                     VStack(alignment: .leading, spacing: 5) {
                         Text(group.name)
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.white.opacity(0.35))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white.opacity(0.55))
                             .padding(.horizontal, 16)
                         ForEach(group.conversations) { conversation in
                             conversationButton(conversation)
@@ -368,12 +350,12 @@ struct CompanionHomeView: View {
         } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(conversation.title)
-                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .font(.system(.callout, design: .rounded, weight: .semibold))
                     .lineLimit(1)
                 Text(L("\(conversation.count)턴 · \(conversation.lastAt.formatted(date: .omitted, time: .shortened))",
                        "\(conversation.count) turns · \(conversation.lastAt.formatted(date: .omitted, time: .shortened))"))
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.38))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.55))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
@@ -403,17 +385,15 @@ struct CompanionHomeView: View {
     private var centerPane: some View {
         switch mode {
         case .home:
-            if activeConversationId != nil {
-                CompanionChatThread(chat: chat, onBack: endActiveConversation)
-            } else {
-                homeHero
-            }
+            homeHero
+        case .chat:
+            chatPane
         case .condition:
             VitalsView()
         case .tasks:
-            // Todos live in the permanent right-hand rail on the Mac; this only
-            // fires if the sidebar list ever grows to include the section.
             CompanionTodoRail()
+                .padding(.horizontal, 24)
+                .frame(maxWidth: 760)
         case .memory:
             memoryPane
         case .day:
@@ -430,7 +410,6 @@ struct CompanionHomeView: View {
             SkillsView { prompt in
                 // "Try it" drops the sample request into a fresh chat and sends it.
                 startEmptyChat()
-                mode = .home
                 chat.draftText = prompt
                 chat.send()
             }
@@ -479,36 +458,68 @@ struct CompanionHomeView: View {
                      ? L("오늘도 당신의 기억을 지키고 있어요.", "I'm keeping your memories safe today too.")
                      : remark.text)
                     .font(.system(.headline, design: .rounded, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(.white.opacity(0.78))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 18)
-            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 28)
+            .padding(.vertical, 20)
+            .frame(maxWidth: 560)
+            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18))
 
             recordCTA
-            statsRow
-
-            // Same two cards the iPhone home shows, from the same data. The Beta
-            // edition has no body tracking, so it shows neither.
-            if !ArcaEdition.isBeta {
-                HStack(alignment: .top, spacing: ArcaSpacing.md) {
-                    MorningMomentCard { mode = .condition }
-                    RecoveredTimeCard()
-                }
-                .frame(maxWidth: 760)
-            }
-
-            recentHighlights
-            Spacer(minLength: 18)
-            CompanionDraftComposer(placeholder: L("ARCA에게 말 걸기…", "Talk to ARCA…")) { text in
-                startNewConversation(text: text)
-            }
-            .padding(.horizontal, 34)
-            .padding(.bottom, 22)
+            Spacer(minLength: 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 24)
+    }
+
+    /// 채팅: 왼쪽에 대화 목록, 오른쪽에 대화 하나. 아이폰 채팅 탭과 같은 자리.
+    private var chatPane: some View {
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(L("채팅", "Chats"))
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+                    Spacer()
+                    Button {
+                        startEmptyChat()
+                    } label: {
+                        Label(L("새 채팅", "New chat"), systemImage: "plus")
+                            .labelStyle(.titleAndIcon)
+                            .font(.system(.callout, design: .rounded, weight: .semibold))
+                    }
+                    .buttonStyle(.arcaPress)
+                    .foregroundStyle(ArcaSkins.current.hi)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 18)
+                chatList
+            }
+            .frame(width: 280)
+            .background(Color.black.opacity(0.12))
+            Divider().overlay(.white.opacity(0.08))
+            if activeConversationId != nil {
+                CompanionChatThread(chat: chat, onBack: endActiveConversation)
+            } else {
+                VStack(spacing: 16) {
+                    Spacer()
+                    ArcaEmptyState(
+                        title: L("무엇이든 물어보세요", "Ask me anything"),
+                        message: L("회의, 할 일, 오늘 컨디션까지 — ARCA가 기억한 것으로 답해요.",
+                                   "Meetings, to-dos, how you're doing today — answered from what ARCA remembers."))
+                        .frame(maxHeight: 360)
+                    Spacer()
+                    CompanionDraftComposer(placeholder: L("ARCA에게 말 걸기…", "Talk to ARCA…")) { text in
+                        startNewConversation(text: text)
+                    }
+                    .padding(.horizontal, 34)
+                    .padding(.bottom, 22)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
     }
 
     /// 홈 정중앙의 녹음 시작 버튼 — 핵심 기능은 첫 화면에서 한 번에.
@@ -654,7 +665,7 @@ struct CompanionHomeView: View {
         chat.endConversation()
         chat = ChatSession()
         activeConversationId = chat.conversationId
-        mode = .home
+        mode = .chat
     }
 
     private func startNewConversation(text: String) {
@@ -662,7 +673,7 @@ struct CompanionHomeView: View {
         let next = ChatSession()
         chat = next
         activeConversationId = next.conversationId
-        mode = .home
+        mode = .chat
         next.draftText = text
         next.send()
     }
@@ -673,7 +684,7 @@ struct CompanionHomeView: View {
         next.restore(from: chatLog.filter { $0.conversationId == id })
         chat = next
         activeConversationId = id
-        mode = .home
+        mode = .chat
     }
 
     private func endActiveConversation() {

@@ -78,10 +78,10 @@ public enum TaskUrgency: String, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .now: return "NOW"
-        case .today: return "TODAY"
-        case .soon: return "SOON"
-        case .someday: return "SOMEDAY"
+        case .now: return L("지금", "NOW")
+        case .today: return L("오늘", "TODAY")
+        case .soon: return L("곧", "SOON")
+        case .someday: return L("언젠가", "SOMEDAY")
         }
     }
 }

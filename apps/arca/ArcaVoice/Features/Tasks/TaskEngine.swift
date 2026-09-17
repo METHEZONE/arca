@@ -106,9 +106,10 @@ final class TaskEngine {
 
     private func runWithClaude(_ task: TodoTask) async throws -> String {
         guard let key = anthropicKey else { throw TaskError.noKey }
+        let language = ArcaLanguageResolver.isKorean ? "In Korean." : "In English."
         let prompt = task.actionKind == .draft
-            ? "Write the deliverable for the following task (email/message/document draft) so it's ready to use as-is. In English. Title: \(task.title). Description: \(task.detail)"
-            : "Research and summarize the following task, distilling just the key points. In English. Title: \(task.title). Description: \(task.detail)"
+            ? "Write the deliverable for the following task (email/message/document draft) so it's ready to use as-is. \(language) Title: \(task.title). Description: \(task.detail)"
+            : "Research and summarize the following task, distilling just the key points. \(language) Title: \(task.title). Description: \(task.detail)"
         let messages = [ChatMessage(role: .user, parts: [.text(prompt)])]
         return try await ClaudeChat(apiKey: key, model: model).reply(to: messages, maxTokens: 1200)
     }

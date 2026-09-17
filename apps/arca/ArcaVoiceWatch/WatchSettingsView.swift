@@ -10,15 +10,15 @@ struct WatchSettingsView: View {
     var body: some View {
         Form {
             Section(L("언어", "Language")) {
-                Picker(L("워치 언어", "Watch language"), selection: $language) {
+                Picker(L("언어", "Language"), selection: $language) {
                     Text("한국어").tag("korean")
                     Text("English").tag("english")
-                    Text(L("시스템 따라가기", "Follow system")).tag("system")
+                    Text(L("시스템", "System")).tag("system")
                 }
             }
             Section(L("대화", "Talk")) {
-                Toggle(L("ARCA 음성으로 답하기", "ARCA answers out loud"), isOn: $voiceReplies)
-                Toggle(L("진동 피드백", "Haptics"), isOn: $haptics)
+                Toggle(L("음성 답변", "Voice replies"), isOn: $voiceReplies)
+                Toggle(L("진동", "Haptics"), isOn: $haptics)
             }
             Section {
                 Text(L("탭 — 대화 · 두 번 탭 — 녹음 · 꾹 — 빠른 메모",

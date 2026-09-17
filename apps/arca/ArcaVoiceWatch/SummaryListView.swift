@@ -22,6 +22,9 @@ struct SummaryListView: View {
                 .padding()
             } else {
                 List {
+                    Text(L("요약", "Summaries"))
+                        .font(.system(.headline, design: .rounded, weight: .bold))
+                        .listRowBackground(Color.clear)
                     if inFlight {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -52,7 +55,6 @@ struct SummaryListView: View {
                 }
             }
         }
-        .navigationTitle(L("요약", "Summaries"))
         .onAppear { store.markRead() }
     }
 }

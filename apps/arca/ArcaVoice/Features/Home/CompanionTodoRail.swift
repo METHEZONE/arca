@@ -33,13 +33,9 @@ struct CompanionTodoRail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label(L("투두", "To-dos"), systemImage: "checklist")
-                    .font(.system(.headline, design: .rounded, weight: .bold))
+                Label(L("할 일", "To-dos"), systemImage: "checklist")
+                    .font(.system(.title3, design: .rounded, weight: .bold))
                 Spacer()
-                Text(level.label)
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.42))
-                    .lineLimit(1)
             }
 
             quickAdd

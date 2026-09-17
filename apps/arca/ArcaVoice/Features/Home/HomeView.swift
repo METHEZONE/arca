@@ -225,7 +225,7 @@ struct HomeView: View {
             SkillsView()
         case .shop:
             ShopView()
-        case .home, .tasks, .memory, .library:
+        case .home, .chat, .tasks, .memory, .library:
             // Reached only if the card list grows; these have their own tabs.
             VitalsView()
         }

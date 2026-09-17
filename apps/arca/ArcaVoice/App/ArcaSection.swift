@@ -14,6 +14,7 @@ import ArcaVoiceKit
 /// exist and what they're called.
 enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     case home
+    case chat
     case condition
     case tasks
     case memory
@@ -28,6 +29,7 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .home: return L("홈", "Home")
+        case .chat: return L("채팅", "Chat")
         case .condition: return L("컨디션", "Condition")
         case .tasks: return L("할 일", "Tasks")
         case .memory: return L("메모리", "Memory")
@@ -42,6 +44,7 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     var symbol: String {
         switch self {
         case .home: return "sparkles"
+        case .chat: return "bubble.left.and.text.bubble.right"
         case .condition: return "bolt.heart"
         case .tasks: return "checklist"
         case .memory: return "point.3.connected.trianglepath.dotted"
@@ -57,6 +60,7 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     var blurb: String {
         switch self {
         case .home: return L("ARCA에게 말 걸고, 바로 녹음하기", "Talk to ARCA, or start recording")
+        case .chat: return L("ARCA와 나눈 대화", "Your conversations with ARCA")
         case .condition: return L("몰입 준비도·수면·스트레스", "Readiness · Sleep · Stress")
         case .tasks: return L("ARCA가 처리 중인 것과 남은 것", "What ARCA is handling, and what's left")
         case .memory: return L("ARCA가 당신에 대해 아는 것", "What ARCA knows about you")
@@ -78,7 +82,7 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .day: return .macOnly
         case .condition: return .phoneOnly
-        case .home, .tasks, .memory, .wiki, .library, .skills, .shop: return .everywhere
+        case .home, .chat, .tasks, .memory, .wiki, .library, .skills, .shop: return .everywhere
         }
     }
 
@@ -117,11 +121,11 @@ enum ArcaSection: String, CaseIterable, Identifiable, Sendable {
     /// identically, and showing the same data as on the Mac.
     static let phoneSecondary: [ArcaSection] = [.day, .wiki]
 
-    /// The Mac sidebar order. Todos keep their permanent right-hand rail there,
-    /// which is why `.tasks` isn't in the list.
+    /// The Mac sidebar: the iPhone's five tabs first, in the same order, then
+    /// the Mac-only places. Same names, same order, same app.
     static var macSidebar: [ArcaSection] {
         ArcaEdition.isBeta
-            ? [.home, .memory, .day, .wiki, .library]
-            : [.home, .condition, .memory, .day, .wiki, .library, .skills, .shop]
+            ? [.home, .chat, .tasks, .memory, .library, .day, .wiki]
+            : [.home, .chat, .tasks, .memory, .library, .day, .wiki, .condition, .skills, .shop]
     }
 }

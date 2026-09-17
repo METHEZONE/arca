@@ -185,6 +185,8 @@ struct FaceRecordView: View {
                 Text(dozing ? "zzz" : L("탭 대화 · 두 번 녹음 · 꾹 메모", "Tap talk · 2× record · hold memo"))
                     .font(.system(.caption2, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
                 if case .failed(let message) = talk.phase {
                     Text(message).font(.caption2).foregroundStyle(.orange).lineLimit(3)
                         .multilineTextAlignment(.center)
