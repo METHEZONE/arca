@@ -1,3 +1,4 @@
+import Accelerate
 import Foundation
 import AVFoundation
 import ArcaVoiceCore
@@ -32,6 +33,19 @@ final class MicCapture: @unchecked Sendable {
     /// configuration-change) into one rebuild.
     private var recoveryGeneration = 0
 
+    /// Dead-input watchdog. A real microphone never delivers exact zeros — even
+    /// a muted room has a noise floor — so a run of digitally silent buffers
+    /// means the device behind the engine isn't a microphone at all: a virtual
+    /// loopback (BlackHole, Zoom/Teams audio device) nobody is feeding, or an
+    /// aggregate with no live input. A 66-minute call once recorded 3,993 s of
+    /// zeros this way and nobody knew until the transcript came back empty.
+    private var silentSeconds: Double = 0
+    private var silenceEscalated = false
+    private var silenceNotified = false
+    private var pinnedToBuiltIn = false
+    private static let digitalSilenceThreshold: Float = 1e-6
+    private static let silenceGrace: Double = 6
+
     /// ~4.5 minutes of retrying before declaring the recording dead. The budget
     /// resets on every fresh event, so a 20-minute phone call still resumes:
     /// its `.ended` interruption arms a brand-new budget.
@@ -65,24 +79,17 @@ final class MicCapture: @unchecked Sendable {
         #if os(macOS)
         // A Bluetooth speaker as default input drags the whole system into
         // 16kHz HFP call mode the moment we record (music turns to walkie-
-        // talkie) and its far-away mic records garbage. Pin the engine's
-        // input unit to the built-in mic (system default switch alone gets
-        // reverted by macOS's BT preference), then reset so the node's
-        // format reflects the real device.
-        if let builtin = Self.builtInInputDevice(),
-           Self.defaultInputTransport() == kAudioDeviceTransportTypeBluetooth {
-            previousDefaultInput = Self.currentDefaultInput()
-            if !Self.setDefaultInput(builtin) { previousDefaultInput = nil }
-            var deviceID = builtin
-            if let unit = input.audioUnit {
-                let err = AudioUnitSetProperty(
-                    unit, kAudioOutputUnitProperty_CurrentDevice,
-                    kAudioUnitScope_Global, 0,
-                    &deviceID, UInt32(MemoryLayout<AudioDeviceID>.size))
-                CaptureTrace.log("mic: pin input unit to built-in → \(err == noErr ? "ok" : "err \(err)")")
-            }
-            engine.reset()
-            Thread.sleep(forTimeInterval: 0.25) // let CoreAudio settle the switch
+        // talkie) and its far-away mic records garbage. A virtual device
+        // (BlackHole, ZoomAudioDevice, Teams Audio) or an aggregate as default
+        // input is worse: nothing feeds it, so it records exact digital
+        // silence for the whole meeting. In both cases pin the engine's input
+        // unit to the built-in mic (system default switch alone gets reverted
+        // by macOS's BT preference), then reset so the node's format reflects
+        // the real device.
+        let transport = Self.defaultInputTransport()
+        CaptureTrace.log("mic: default input '\(Self.currentDefaultInput().map(Self.deviceName) ?? "?")' transport \(Self.transportLabel(transport))")
+        if Self.transportNeedsBuiltInPin(transport) {
+            pinToBuiltIn()
         }
         #endif
         var format = input.outputFormat(forBus: 0)
@@ -143,14 +150,117 @@ final class MicCapture: @unchecked Sendable {
         guard format.sampleRate > 0 else { throw CaptureError.formatUnavailable }
         input.removeTap(onBus: 0)
         let handler = onBuffer
-        input.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
             if let captured = writer.write(buffer) {
                 handler?(captured)
             }
+            self?.observeLevel(buffer)
         }
         engine.prepare()
         try engine.start()
     }
+
+    // MARK: - Dead-input watchdog
+
+    /// Runs on the render thread: one peak scan per buffer, nothing else.
+    private func observeLevel(_ buffer: AVAudioPCMBuffer) {
+        guard !silenceEscalated, let channels = buffer.floatChannelData else { return }
+        let frames = vDSP_Length(buffer.frameLength)
+        guard frames > 0 else { return }
+        var peak: Float = 0
+        for channel in 0..<Int(buffer.format.channelCount) {
+            var channelPeak: Float = 0
+            vDSP_maxmgv(channels[channel], 1, &channelPeak, frames)
+            peak = max(peak, channelPeak)
+        }
+        if peak > Self.digitalSilenceThreshold {
+            silentSeconds = 0
+            if silenceNotified {
+                silenceNotified = false
+                queue.async { [self] in report(.capturing) }
+            }
+            return
+        }
+        silentSeconds += Double(buffer.frameLength) / buffer.format.sampleRate
+        guard silentSeconds >= Self.silenceGrace else { return }
+        silenceEscalated = true
+        queue.async { [self] in handleDeadInput() }
+    }
+
+    /// Must only run on `queue`. First strike: switch to the built-in mic and
+    /// rebuild into the same file. Second strike (already built-in, still
+    /// zeros): tell the user, once, and keep recording — it might be a hardware
+    /// mute that they can lift.
+    private func handleDeadInput() {
+        guard isRunning else { return }
+        #if os(macOS)
+        if !pinnedToBuiltIn, Self.builtInInputDevice() != nil {
+            let previousName = Self.currentDefaultInput().map(Self.deviceName) ?? "?"
+            CaptureTrace.log("mic: \(Int(Self.silenceGrace))s of digital silence from '\(previousName)' — switching to built-in")
+            report(.interrupted(
+                reason: "'\(previousName)'에서 소리가 전혀 안 들어와서 내장 마이크로 바꿨어요"))
+            engine.inputNode.removeTap(onBus: 0)
+            if engine.isRunning { engine.stop() }
+            pinToBuiltIn()
+            silentSeconds = 0
+            silenceEscalated = false
+            recovery(resetEngine: true)
+            return
+        }
+        #endif
+        guard !silenceNotified else { return }
+        silenceNotified = true
+        silentSeconds = 0
+        silenceEscalated = false
+        CaptureTrace.log("mic: still digital silence on the active input — notifying")
+        report(.interrupted(
+            reason: "마이크에서 소리가 들어오지 않아요 — 시스템 설정 › 사운드 › 입력을 확인해주세요"))
+    }
+
+    #if os(macOS)
+    /// Points the engine's input unit at the built-in microphone (and makes it
+    /// the system default for the duration, restored on stop).
+    private func pinToBuiltIn() {
+        guard let builtin = Self.builtInInputDevice() else { return }
+        if previousDefaultInput == nil {
+            previousDefaultInput = Self.currentDefaultInput()
+            if !Self.setDefaultInput(builtin) { previousDefaultInput = nil }
+        }
+        var deviceID = builtin
+        if let unit = engine.inputNode.audioUnit {
+            let err = AudioUnitSetProperty(
+                unit, kAudioOutputUnitProperty_CurrentDevice,
+                kAudioUnitScope_Global, 0,
+                &deviceID, UInt32(MemoryLayout<AudioDeviceID>.size))
+            CaptureTrace.log("mic: pin input unit to built-in → \(err == noErr ? "ok" : "err \(err)")")
+        }
+        engine.reset()
+        Thread.sleep(forTimeInterval: 0.25) // let CoreAudio settle the switch
+        pinnedToBuiltIn = true
+    }
+
+    private static func transportNeedsBuiltInPin(_ transport: UInt32) -> Bool {
+        transport == kAudioDeviceTransportTypeBluetooth
+            || transport == kAudioDeviceTransportTypeBluetoothLE
+            || transport == kAudioDeviceTransportTypeVirtual
+            || transport == kAudioDeviceTransportTypeAggregate
+    }
+
+    private static func transportLabel(_ transport: UInt32) -> String {
+        switch transport {
+        case kAudioDeviceTransportTypeBuiltIn: return "built-in"
+        case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE: return "bluetooth"
+        case kAudioDeviceTransportTypeVirtual: return "virtual"
+        case kAudioDeviceTransportTypeAggregate: return "aggregate"
+        case kAudioDeviceTransportTypeUSB: return "usb"
+        default: return String(transport)
+        }
+    }
+
+    private static func deviceName(_ deviceID: AudioDeviceID) -> String {
+        AudioObjectID(deviceID).readName()
+    }
+    #endif
 
     #if os(iOS)
     private func activateSession() throws {
@@ -271,6 +381,8 @@ final class MicCapture: @unchecked Sendable {
         engine.inputNode.removeTap(onBus: 0)
         if engine.isRunning { engine.stop() }
         if resetEngine { engine.reset() }
+        silentSeconds = 0
+        silenceEscalated = false
         do {
             try startEngine()
             recoveryAttempts = 0
