@@ -32,6 +32,14 @@ export function composioEntity(email: string): string {
   return "arca-b-" + createHash("sha256").update(email.toLowerCase()).digest("hex").slice(0, 10);
 }
 
+/// Free-tier grants are minted per device (see /api/arca/cloud/enroll), not
+/// per person — recognisable by this pseudo-domain.
+export const FREE_TIER_DOMAIN = "@arca.device";
+
+export function isFreeTier(email: string): boolean {
+  return email.toLowerCase().endsWith(FREE_TIER_DOMAIN);
+}
+
 export function inviteCode(email: string, exp: number, sig: string): string {
   return `${email.toLowerCase()}.${exp}.${sig}`;
 }

@@ -44,9 +44,11 @@ final class AppServices {
 
     /// The name ARCA addresses the user by. Lives here rather than in a
     /// Mac-only view model so both apps greet them identically.
+    /// "민성님" when a name is set; empty when it isn't — greetings then drop
+    /// the name rather than address a stranger by a placeholder.
     var ownerDisplayName: String {
         let trimmed = ownerName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != "Me" else { return "민성님" }
+        guard !trimmed.isEmpty, !["Me", "나", "You"].contains(trimmed) else { return "" }
         return trimmed.hasSuffix("님") ? trimmed : "\(trimmed)님"
     }
 
@@ -60,6 +62,9 @@ final class AppServices {
         DebugTrace.install()
         CaptureTrace.sink = { message in DebugTrace.log("capture: \(message)") }
         RelaySync.shared.configure(container: container)
+        // No key, no code → a free-tier grant on THE ZONE's key, so the first
+        // chat and the first summary just work. No-op once anything is set.
+        Task { await ArcaCloud.enrollIfNeeded() }
         // Traction: one row per launch → WAU / D1·D7 on /arca/metrics.
         BrainClient.track("app_open")
         // Capture can die in a way it cannot recover from (the mic never comes

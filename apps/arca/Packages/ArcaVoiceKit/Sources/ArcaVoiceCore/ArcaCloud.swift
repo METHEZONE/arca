@@ -87,6 +87,54 @@ public enum ArcaCloud {
         return nil
     }
 
+    // MARK: - Free tier
+
+    /// Anyone who installs ARCA can use it on THE ZONE's key without asking for
+    /// a code: the app enrolls its device once and gets a signed grant back.
+    /// Free-tier grants are per device, last a year, and the server pins them
+    /// to Sonnet. A key of the user's own, or a personal invite, always wins.
+    public static var isFreeTier: Bool { inviteEmail?.hasSuffix("@arca.device") == true }
+
+    public static var deviceId: String {
+        let key = "arcaDeviceId"
+        if let id = UserDefaults.standard.string(forKey: key), !id.isEmpty { return id }
+        let id = UUID().uuidString.lowercased()
+        UserDefaults.standard.set(id, forKey: key)
+        return id
+    }
+
+    /// True when the app can reach a model afterwards (own key, invite, or a
+    /// fresh free-tier grant). Safe to call on every launch — it's a no-op once
+    /// anything is configured, and a failure just leaves things as they were.
+    @discardableResult
+    public static func enrollIfNeeded() async -> Bool {
+        if KeychainStore.get(.anthropic)?.isEmpty == false { return true }
+        if inviteToken != nil { return true }
+        var request = URLRequest(url: baseURL.appendingPathComponent("enroll"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.timeoutInterval = 15
+        #if os(macOS)
+        let platform = "mac"
+        #elseif os(iOS)
+        let platform = "ios"
+        #else
+        let platform = "other"
+        #endif
+        guard let payload = try? JSONSerialization.data(withJSONObject: ["deviceId": deviceId, "platform": platform]) else {
+            return false
+        }
+        do {
+            let (data, response) = try await uploadBody(URLSession.shared, for: request, body: payload)
+            guard (response as? HTTPURLResponse)?.statusCode == 200,
+                  let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let code = json["code"] as? String else { return false }
+            return setInviteToken(code) != nil
+        } catch {
+            return false
+        }
+    }
+
     /// The same derivation the server uses: one connector identity per email.
     public static func composioEntity(for email: String) -> String {
         let digest = SHA256.hash(data: Data(email.lowercased().utf8))

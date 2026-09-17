@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-import { authorizeInvite, composioEntity } from "@/lib/cloud";
+import { authorizeInvite, composioEntity, isFreeTier } from "@/lib/cloud";
 
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS_CAP = 8192;
@@ -27,6 +27,8 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ type: "error", error: { type: "invalid_request_error", message: "model not allowed" } }, { status: 400 });
   }
   body.max_tokens = Math.min(Number(body.max_tokens ?? 4096), MAX_TOKENS_CAP);
+  // Free-tier devices ride THE ZONE's key on Sonnet, whatever the app asked for.
+  if (isFreeTier(auth.email)) body.model = "claude-sonnet-5";
   // Anthropic wants an opaque id here, not an email — reuse the entity hash.
   body.metadata = { user_id: composioEntity(auth.email) };
 
