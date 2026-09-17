@@ -7,7 +7,7 @@ struct BriefingCard: View {
     @Environment(\.modelContext) private var context
     @State private var ops = AmbientOps.shared
     // Unused in the body; forces a re-render when the app language changes.
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
     var compact = false
 
     var body: some View {
@@ -108,7 +108,7 @@ struct ReplyApprovalRow: View {
     @Environment(\.modelContext) private var context
     // Unused in the body, but its presence re-renders the row when the user
     // switches the app language in Settings.
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
     @State private var sending = false
     @State private var revising = false
     @State private var showDraft = false

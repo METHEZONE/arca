@@ -266,9 +266,9 @@ private struct SharedOfferBanner: View {
 
     private var label: String {
         switch item.kind {
-        case .image: return "Read the shared image and turn it into an action plan?"
-        case .url: return "Organize the shared link into an action plan?"
-        case .text: return "Turn the shared content into an action plan?"
+        case .image: return L("공유한 이미지를 읽어 액션 플랜으로 만들까요?", "Read the shared image and turn it into an action plan?")
+        case .url: return L("공유한 링크를 액션 플랜으로 정리할까요?", "Organize the shared link into an action plan?")
+        case .text: return L("공유한 내용을 액션 플랜으로 만들까요?", "Turn the shared content into an action plan?")
         }
     }
 
@@ -284,9 +284,9 @@ private struct SharedOfferBanner: View {
             if isWorking {
                 ProgressView()
             } else {
-                Button("Later", action: onDismiss)
+                Button(L("나중에", "Later"), action: onDismiss)
                     .buttonStyle(.bordered)
-                Button("Create it", action: onGenerate)
+                Button(L("만들기", "Create it"), action: onGenerate)
                     .buttonStyle(.borderedProminent)
             }
         }

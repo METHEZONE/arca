@@ -371,7 +371,7 @@ private struct FocusBodyPage: View {
                 }
                 OnboardingCTA(title: L("계속", "Continue"), action: action)
             } else {
-                OnboardingCTA(title: isRequesting ? "Opening Health…" : "Connect Apple Health") {
+                OnboardingCTA(title: isRequesting ? L("건강 앱 여는 중…", "Opening Health…") : L("Apple 건강 연결", "Connect Apple Health")) {
                     guard !isRequesting else { return }
                     isRequesting = true
                     Task {
@@ -380,7 +380,7 @@ private struct FocusBodyPage: View {
                         action()
                     }
                 }
-                Button("Not now", action: action)
+                Button(L("나중에", "Not now"), action: action)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.5))
             }

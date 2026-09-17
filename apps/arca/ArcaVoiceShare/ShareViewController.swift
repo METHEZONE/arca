@@ -34,7 +34,7 @@ final class ShareViewController: UIViewController {
         checkmark.contentMode = .scaleAspectFit
         checkmark.translatesAutoresizingMaskIntoConstraints = false
 
-        label.text = "Got it — open ARCA"
+        label.text = L("받았어요 — ARCA 열기", "Got it — open ARCA")
         label.textColor = .white
         label.font = .systemFont(ofSize: 15, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false

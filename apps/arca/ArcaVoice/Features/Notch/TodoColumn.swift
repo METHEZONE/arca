@@ -18,7 +18,7 @@ struct TodoColumn: View {
     @Query private var sentProposals: [ReplyProposal]
     @AppStorage("autonomyLevel") private var autonomyRaw = AutonomyLevel.readOnly.rawValue
     // Unused in the body; forces a re-render when the app language changes.
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
     @State private var draft = ""
     @State private var showSuggestions = false
 

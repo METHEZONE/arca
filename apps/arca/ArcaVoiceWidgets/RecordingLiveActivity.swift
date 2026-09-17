@@ -72,7 +72,7 @@ struct RecordingLiveActivity: Widget {
                         if context.state.isRecording {
                             Image(systemName: "waveform")
                                 .foregroundStyle(.green)
-                            Text(context.state.isPaused ? "Paused — tap to continue" : "ARCA is listening")
+                            Text(context.state.isPaused ? WidgetCopy.pick("일시정지 — 탭하면 계속", "Paused — tap to continue") : WidgetCopy.pick("ARCA가 듣고 있어요", "ARCA is listening"))
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.85))
                             Spacer()
@@ -88,7 +88,7 @@ struct RecordingLiveActivity: Widget {
                             Image(systemName: context.state.detail == nil ? "sparkles" : "brain.head.profile")
                                 .foregroundStyle(Color(red: 1.0, green: 0.478, blue: 0.102))
                                 .symbolEffect(.pulse, isActive: context.state.detail != nil)
-                            Text(context.state.detail ?? "ARCA is with you")
+                            Text(context.state.detail ?? WidgetCopy.pick("ARCA가 곁에 있어요", "ARCA is with you"))
                                 .font(.caption)
                                 .lineLimit(1)
                                 .foregroundStyle(.white.opacity(0.85))

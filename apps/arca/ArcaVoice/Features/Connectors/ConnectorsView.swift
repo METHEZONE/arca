@@ -998,7 +998,7 @@ private struct NotionDBConnectorRow: View {
         } detail: {
             // Saved on every edit, not just on Enter — a pasted URL the user
             // clicks away from must not be lost.
-            TextField("Notion 데이터베이스 주소 붙여넣기", text: $databaseRef)
+            TextField(L("Notion 데이터베이스 주소 붙여넣기", "Paste the Notion database URL"), text: $databaseRef)
                 .textFieldStyle(.plain)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
