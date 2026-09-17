@@ -43,8 +43,9 @@ final class SystemAudioTap: @unchecked Sendable {
         tapID = newTapID
         streamDescription = try tapID.readTapStreamDescription()
 
-        let outputID = try AudioObjectID.readDefaultSystemOutputDevice()
+        let outputID = try AudioObjectID.readTapAnchorOutputDevice()
         let outputUID = try outputID.readDeviceUID()
+        CaptureTrace.log("tap: anchored on output '\(outputID.readName())'")
 
         let aggregateDescription: [String: Any] = [
             kAudioAggregateDeviceNameKey: "ARCA Tap",
