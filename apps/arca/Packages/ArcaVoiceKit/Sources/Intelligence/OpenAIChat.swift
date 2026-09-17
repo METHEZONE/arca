@@ -36,19 +36,25 @@ public struct OpenAIChat: Sendable {
     }
 
     static func wireMessage(_ message: ChatMessage) -> [String: Any] {
+        // The Responses API types content by who said it: what the user sent
+        // is `input_text`/`input_image`, what the model said is `output_text`.
+        // Replaying an assistant turn as `input_text` is a 400 on the second
+        // message of every conversation.
+        let isAssistant = message.role.rawValue == "assistant"
+        let textType = isAssistant ? "output_text" : "input_text"
         var content: [[String: Any]] = message.parts.compactMap { part in
             switch part.kind {
             case .text:
-                return ["type": "input_text", "text": part.text ?? ""]
-            case .image:
+                return ["type": textType, "text": part.text ?? ""]
+            case .image where !isAssistant:
                 let mediaType = part.mediaType ?? "image/jpeg"
                 let base64 = (part.imageData ?? Data()).base64EncodedString()
                 return ["type": "input_image", "image_url": "data:\(mediaType);base64,\(base64)"]
-            case .thought, .tool:
+            case .image, .thought, .tool:
                 return nil
             }
         }
-        if content.isEmpty { content = [["type": "input_text", "text": " "]] }
+        if content.isEmpty { content = [["type": textType, "text": " "]] }
         return ["role": message.role.rawValue, "content": content]
     }
 

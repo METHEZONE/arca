@@ -163,8 +163,16 @@ final class ChatSession {
                         raw = try await runClaudeAgent(apiKey: apiKey, model: model, system: memoryBlock,
                                                        history: history, liveID: liveID)
                     } catch {
+                        DebugTrace.log("chat: claude failed — \(error)")
                         guard let apiKey = openAIKey, !apiKey.isEmpty else { throw error }
-                        raw = try await OpenAIChat(apiKey: apiKey).reply(to: history)
+                        do {
+                            raw = try await OpenAIChat(apiKey: apiKey).reply(to: history)
+                        } catch let fallbackError {
+                            // The user asked Claude; when the fallback also dies,
+                            // the Claude failure is the one worth reading.
+                            DebugTrace.log("chat: openai fallback failed — \(fallbackError)")
+                            throw error
+                        }
                     }
                 } else if let apiKey = openAIKey, !apiKey.isEmpty {
                     raw = try await OpenAIChat(apiKey: apiKey).reply(to: history)
