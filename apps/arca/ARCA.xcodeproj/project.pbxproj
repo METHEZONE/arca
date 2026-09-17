@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0112BC917961D27794B1D5A1 /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
 		015EF5966CA5EF443795CFCF /* ParticipantPrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80718C2481B20CF410C64A36 /* ParticipantPrep.swift */; };
+		0362EF4669D047F9D82042FF /* ArcaEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */; };
 		04EDBCB9B2E22FD136ED4521 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
 		059A055C3247CBCFDC13E4D8 /* MeetingRosterWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE576032F6A653F04F32AC7 /* MeetingRosterWatcher.swift */; };
 		060CAEF2921DAFE944676E2B /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
@@ -183,6 +184,7 @@
 		73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
 		744C52DB68A38DC3A355E0D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */; };
 		749CA50C862CDD124258506C /* PassRetryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */; };
+		74A66672981A8BB0C8BD3561 /* ArcaEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */; };
 		74BA45C70823032010E1CE9E /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		75A2C962704E733B29979FAB /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		782EFC269E0629B7DCECAF4E /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
@@ -275,6 +277,7 @@
 		A48DE84ABEA45864A315A78B /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		A4B0ACB2CDFA39E6E4F96151 /* ParticipantsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */; };
 		A4C04AAB3DB114A755857E1B /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
+		A6FD42E60BAB114271DE66D7 /* ArcaEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */; };
 		A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		A7E568DBA52765B84E8DE21A /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
 		A8F968B50847620BF10146A7 /* ObsidianAutoImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9F4A10CE0D04110189D99C /* ObsidianAutoImport.swift */; };
@@ -575,6 +578,7 @@
 		AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWikiView.swift; sourceTree = "<group>"; };
 		AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatchOnboardingView.swift; sourceTree = "<group>"; };
 		AD204029AF2329934E3322BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaEmptyState.swift; sourceTree = "<group>"; };
 		B9EE7FD61A7FCB124D824768 /* OpsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsViews.swift; sourceTree = "<group>"; };
 		BC278547B59354CA3624B45D /* ChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanel.swift; sourceTree = "<group>"; };
 		BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionGenesis.swift; sourceTree = "<group>"; };
@@ -878,6 +882,7 @@
 			isa = PBXGroup;
 			children = (
 				4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */,
+				B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */,
 				123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */,
 				9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */,
 				3FA024F3A5A5113B70C6C446 /* CalendarEventCreator.swift */,
@@ -1367,6 +1372,7 @@
 				22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */,
 				BE6F31DB848A6150B17383D9 /* ArcaCloudSection.swift in Sources */,
 				B411D228C6EB91621320182B /* ArcaEdition.swift in Sources */,
+				A6FD42E60BAB114271DE66D7 /* ArcaEmptyState.swift in Sources */,
 				587B3698CDE73F54CDA387CB /* ArcaLanguage.swift in Sources */,
 				7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */,
 				D15B3BBB53917611EFD193F5 /* ArcaSection.swift in Sources */,
@@ -1505,6 +1511,7 @@
 				9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */,
 				2AD9043B5E625172D3567A2B /* ArcaCloudSection.swift in Sources */,
 				23508B446043F29680AC05FD /* ArcaEdition.swift in Sources */,
+				0362EF4669D047F9D82042FF /* ArcaEmptyState.swift in Sources */,
 				10BE6349CD3B3EC0D122D986 /* ArcaLanguage.swift in Sources */,
 				2B68D00D73DECB51BCB675E6 /* ArcaMarkdown.swift in Sources */,
 				816ABA846AA793CC5178F403 /* ArcaSection.swift in Sources */,
@@ -1632,6 +1639,7 @@
 				94A8065ADFDE3C4E2E7943CC /* ArcaClipboard.swift in Sources */,
 				85E856C0C3173F5CED295670 /* ArcaCloudSection.swift in Sources */,
 				DBD984802091724B3C097A09 /* ArcaEdition.swift in Sources */,
+				74A66672981A8BB0C8BD3561 /* ArcaEmptyState.swift in Sources */,
 				D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */,
 				56F7E007A00D1DEB56DD25D7 /* ArcaMarkdown.swift in Sources */,
 				BE0B01AB120BA8117E65483C /* ArcaSection.swift in Sources */,

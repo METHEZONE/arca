@@ -41,7 +41,11 @@ struct RootView: View {
                 Label(L("할 일", "Tasks"), systemImage: "checklist")
             }
             Tab(value: AppTab.brain) {
-                NavigationStack { BrainView() }
+                NavigationStack {
+                    BrainView()
+                        .navigationTitle(L("메모리", "Memory"))
+                        .navigationBarTitleDisplayMode(.inline)
+                }
             } label: {
                 Label(L("메모리", "Brain"), systemImage: "brain.head.profile")
             }
@@ -51,6 +55,10 @@ struct RootView: View {
                 Label(L("라이브러리", "Library"), systemImage: "waveform")
             }
         }
+        // ARCA is a night creature: the home is painted dark, so every other
+        // tab follows or the app looks like two apps. One accent everywhere.
+        .preferredColorScheme(.dark)
+        .tint(ArcaFace.ember)
         .task {
             presentPendingContextIfNeeded()
             await RelaySync.shared.syncNow()
@@ -181,7 +189,10 @@ struct RootView: View {
     private var library: some View {
         NavigationSplitView {
             SessionListView(selection: $selectedSession)
-                .navigationTitle("ARCA")
+                .navigationTitle(L("라이브러리", "Library"))
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
                     ToolbarItem {
                         Button {

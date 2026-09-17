@@ -57,19 +57,12 @@ struct TaskListView: View {
             }
             .navigationTitle(L("할 일", "Tasks"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Text(level.label)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-            }
         }
     }
 
     private var quickAddBar: some View {
         HStack(spacing: 10) {
-            TextField(L("퀘스트를 맡겨 주세요…", "Toss me a quest…"), text: $draftTitle)
+            TextField(L("할 일을 적어주세요…", "Add a to-do…"), text: $draftTitle)
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -241,21 +234,10 @@ struct TaskListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            SpiritFace(mood: .idle, size: 90)
-            Text(L("아직 퀘스트가 없어요.", "No quests yet."))
-                .font(.headline)
-                .foregroundStyle(.white)
-            Text(L("하나 추가해 보세요 — 제가 직접 할 수 있는 일에는 Toss 버튼이 붙어요.",
-                   "Add one — anything I can do myself gets a Toss button."))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            Spacer()
-            Spacer()
-        }
+        ArcaEmptyState(
+            title: L("아직 할 일이 없어요", "Nothing to do yet"),
+            message: L("위에 적어두면 ARCA가 기억하고, 혼자 할 수 있는 일은 '맡기기'로 대신 처리해요.",
+                       "Write one above — ARCA keeps it, and anything it can do alone gets a Toss button."))
     }
 
     private func addTask() {

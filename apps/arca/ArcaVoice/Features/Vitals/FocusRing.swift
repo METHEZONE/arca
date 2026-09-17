@@ -37,9 +37,10 @@ struct FocusRing: View {
                             radius: isLive && breathing ? 14 : 6)
                     .animation(.spring(duration: 0.6), value: score)
             } else {
+                // Not measured yet: a quiet solid track, not a dashed one — the
+                // dashes read as a loading spinner that never finishes.
                 Circle()
-                    .stroke(.white.opacity(0.20),
-                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, dash: [3, 7]))
+                    .stroke(.white.opacity(0.14), lineWidth: lineWidth)
             }
         }
         .onAppear { syncBreathing() }

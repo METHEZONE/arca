@@ -29,11 +29,12 @@ struct MorningMomentCard: View {
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: .now)
         let name = services.ownerDisplayName
+        let suffix = name.isEmpty ? "" : ", \(name)"
         switch hour {
-        case 5..<11: return L("좋은 아침이에요, \(name)", "Good morning, \(name)")
-        case 11..<17: return L("좋은 오후예요, \(name)", "Good afternoon, \(name)")
-        case 17..<22: return L("좋은 저녁이에요, \(name)", "Good evening, \(name)")
-        default: return L("고요한 밤이에요, \(name)", "Quiet night, \(name)")
+        case 5..<11: return L("좋은 아침이에요\(suffix)", "Good morning\(suffix)")
+        case 11..<17: return L("좋은 오후예요\(suffix)", "Good afternoon\(suffix)")
+        case 17..<22: return L("좋은 저녁이에요\(suffix)", "Good evening\(suffix)")
+        default: return L("고요한 밤이에요\(suffix)", "Quiet night\(suffix)")
         }
     }
 
@@ -44,11 +45,12 @@ struct MorningMomentCard: View {
                     Text(greeting)
                         .font(.system(.headline, design: .rounded, weight: .bold))
                     Text(headline)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.62))
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.78))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
+                if vitals.ringScore != nil {
                 Button {
                     onOpenCondition?()
                 } label: {
@@ -56,12 +58,13 @@ struct MorningMomentCard: View {
                         FocusRing(score: vitals.ringScore, isLive: vitals.ringIsLive,
                                   lineWidth: 5, trackOpacity: 0.10)
                             .frame(width: 46, height: 46)
-                        Text(vitals.ringScore.map(String.init) ?? "—")
+                        Text(vitals.ringScore.map(String.init) ?? "")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                     }
                 }
                 .buttonStyle(.arcaPress)
                 .disabled(onOpenCondition == nil)
+                }
             }
 
             Divider().overlay(.white.opacity(0.07))
@@ -162,18 +165,16 @@ struct RecoveredTimeCard: View {
     private var ledger: FocusLedger { trend.current }
 
     var body: some View {
+        if !ledger.isEmpty { card }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: ArcaSpacing.md) {
             Label(L("ARCA가 해낸 것", "What ARCA did"), systemImage: "shield.lefthalf.filled")
                 .font(.system(.caption, design: .rounded, weight: .bold))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.65))
 
-            if ledger.isEmpty {
-                Text(L("ZONE을 한 번 켜보면 여기에 되찾은 시간이 쌓여요.",
-                       "Turn on the ZONE once and the time you got back shows up here."))
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
+            do {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(VitalsFormat.hoursMinutes(ledger.zoneMinutes))
                         .font(.system(size: 28, weight: .bold, design: .rounded))
@@ -208,8 +209,8 @@ struct RecoveredTimeCard: View {
                 if let best = ledger.bestDay {
                     Text(L("가장 깊었던 날 \(best.day) · \(VitalsFormat.hoursMinutes(best.minutes))",
                            "Deepest day \(best.day) · \(VitalsFormat.hoursMinutes(best.minutes))"))
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.32))
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
                 }
             }
         }
@@ -242,8 +243,8 @@ struct RecoveredTimeCard: View {
                 .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundStyle(tint)
             Text(title)
-                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.4))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.6))
         }
     }
 }

@@ -199,8 +199,8 @@ struct HomeView: View {
                 if !readingShot {
                     Text(L("회의, 아이디어, 무엇이든요. 전사하고 기억해 둘게요.",
                            "Meetings, ideas, anything. I transcribe and remember."))
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.45))
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
                 }
             }
         }
@@ -245,7 +245,7 @@ struct HomeView: View {
                          : L("준비도 \(score)", "Readiness \(score)"))
                         .font(.system(.caption, design: .rounded, weight: .bold))
                     Text("·")
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(.white.opacity(0.5))
                     Text(vitals.ringLabel)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
@@ -255,8 +255,8 @@ struct HomeView: View {
                         .foregroundStyle(.white.opacity(0.8))
                 }
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.5))
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
