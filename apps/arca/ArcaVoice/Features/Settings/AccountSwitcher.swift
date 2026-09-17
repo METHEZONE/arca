@@ -58,22 +58,30 @@ struct AccountChip: View {
                 Label(L("로그아웃 (새 시작)", "Log out (fresh start)"), systemImage: "rectangle.portrait.and.arrow.right")
             }
         } label: {
+            // Same shape as the 설정 button below it, so the sidebar footer reads as one group.
             HStack(spacing: 8) {
                 ZStack {
-                    Circle().fill(ArcaSkins.current.mid.opacity(0.25)).frame(width: 24, height: 24)
+                    Circle().fill(ArcaSkins.current.mid.opacity(0.25)).frame(width: 22, height: 22)
                     Text(String(current.displayName.prefix(1)))
-                        .font(.system(.caption, design: .rounded, weight: .bold))
+                        .font(.system(.caption2, design: .rounded, weight: .bold))
                 }
                 Text(current.displayName)
                     .font(.system(.callout, design: .rounded, weight: .semibold))
                     .lineLimit(1)
-                Spacer()
-                Image(systemName: "chevron.up.chevron.down").font(.caption2).foregroundStyle(.white.opacity(0.4))
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .opacity(0.5)
             }
-            .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+            .foregroundStyle(.white.opacity(0.85))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12).padding(.vertical, 9)
+            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+            .contentShape(RoundedRectangle(cornerRadius: 12))
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
         .confirmationDialog(L("로그아웃할까요?", "Log out?"), isPresented: $confirmLogout) {
             Button(L("로그아웃하고 새로 시작", "Log out and start fresh"), role: .destructive) {
                 AccountSwitcher.logOutToFreshAccount()

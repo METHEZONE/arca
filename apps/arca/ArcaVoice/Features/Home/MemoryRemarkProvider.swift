@@ -61,7 +61,7 @@ final class MemoryRemarkProvider {
                     .replacingOccurrences(of: "\n", with: " ")
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !line.isEmpty else { return }
-                text = CompanionHomeLogic.clipped(line, maxCharacters: 48)
+                text = line   // the card wraps up to three lines; clipping here left a "…" mid-sentence
                 UserDefaults.standard.set(text, forKey: key)
             } catch {
                 text = fallback

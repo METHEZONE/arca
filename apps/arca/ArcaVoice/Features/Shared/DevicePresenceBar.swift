@@ -54,12 +54,9 @@ struct DevicePresenceBar: View {
                     .foregroundStyle(.orange)
                     .lineLimit(2)
             } else if let at = relay.lastSyncAt, !compact {
-                // `\(date, style:)` is a `LocalizedStringKey` interpolation, so it
-                // can't go through `L(_:_:)` (which deals in plain `String`) —
-                // branch on the language and keep the self-updating Text.
-                (ArcaLanguage.isKorean
-                    ? Text("\(at, style: .relative) 전에 맞춰봤어요")
-                    : Text("Synced \(at, style: .relative) ago"))
+                // `\(date, style: .relative)` follows the OS locale ("14 sec"),
+                // so go through the ARCA-language formatter instead.
+                Text(L("\(Self.relativeLabel(at)) 맞춰봤어요", "Synced \(Self.relativeLabel(at))"))
                     .font(.system(size: 10, design: .rounded))
                     .foregroundStyle(.white.opacity(0.28))
             }
@@ -103,6 +100,7 @@ struct DevicePresenceBar: View {
 
     /// "3분 전" / "3 minutes ago", in whichever language ARCA is speaking.
     static func relativeLabel(_ date: Date, relativeTo now: Date = .now) -> String {
+        if abs(now.timeIntervalSince(date)) < 60 { return L("방금", "just now") }
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = Locale(identifier: ArcaLanguage.isKorean ? "ko_KR" : "en_US")
         return formatter.localizedString(for: date, relativeTo: now)
