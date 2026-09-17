@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:brain": "node --experimental-strip-types --test lib/brain/logic.test.ts lib/brain/metrics.test.ts",
     "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
-    "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
+    "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs",
+    "test:a2a": "node --experimental-strip-types --test lib/a2a-demo/core.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
