@@ -25,20 +25,30 @@ struct RootView: View {
     var body: some View {
         #if os(iOS)
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "sparkles", value: AppTab.home) {
+            Tab(value: AppTab.home) {
                 HomeView()
+            } label: {
+                Label(L("홈", "Home"), systemImage: "sparkles")
             }
-            Tab("Chat", systemImage: "bubble.left.and.text.bubble.right", value: AppTab.chat) {
+            Tab(value: AppTab.chat) {
                 ChatTabView()
+            } label: {
+                Label(L("채팅", "Chat"), systemImage: "bubble.left.and.text.bubble.right")
             }
-            Tab("Tasks", systemImage: "checklist", value: AppTab.tasks) {
+            Tab(value: AppTab.tasks) {
                 TaskListView()
+            } label: {
+                Label(L("할 일", "Tasks"), systemImage: "checklist")
             }
-            Tab("Brain", systemImage: "brain.head.profile", value: AppTab.brain) {
+            Tab(value: AppTab.brain) {
                 NavigationStack { BrainView() }
+            } label: {
+                Label(L("메모리", "Brain"), systemImage: "brain.head.profile")
             }
-            Tab("Library", systemImage: "waveform", value: AppTab.library) {
+            Tab(value: AppTab.library) {
                 library
+            } label: {
+                Label(L("라이브러리", "Library"), systemImage: "waveform")
             }
         }
         .task {
@@ -177,7 +187,7 @@ struct RootView: View {
                         Button {
                             showSettings = true
                         } label: {
-                            Label("Settings", systemImage: "gearshape")
+                            Label(L("설정", "Settings"), systemImage: "gearshape")
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
@@ -185,7 +195,7 @@ struct RootView: View {
                             selectedSession = nil
                             showRecorder = true
                         } label: {
-                            Label("New Recording", systemImage: "mic.badge.plus")
+                            Label(L("새 녹음", "New Recording"), systemImage: "mic.badge.plus")
                         }
                         .keyboardShortcut("n", modifiers: .command)
                     }
@@ -200,9 +210,9 @@ struct RootView: View {
                 SessionDetailView(session: selectedSession)
             } else {
                 ContentUnavailableView(
-                    "Select a recording or start a new one",
+                    L("녹음을 고르거나 새로 시작하세요", "Select a recording or start a new one"),
                     systemImage: "waveform.badge.mic",
-                    description: Text("Press ⌘N to start recording right away.")
+                    description: Text(L("⌘N을 누르면 바로 녹음이 시작돼요.", "Press ⌘N to start recording right away."))
                 )
             }
         }

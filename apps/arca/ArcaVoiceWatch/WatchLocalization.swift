@@ -16,7 +16,10 @@ enum WatchLanguage {
         switch UserDefaults.standard.string(forKey: defaultsKey) {
         case "korean": return true
         case "english": return false
-        default: return (Locale.preferredLanguages.first ?? "en").hasPrefix("ko")
+        case "system": return (Locale.preferredLanguages.first ?? "en").hasPrefix("ko")
+        // Korean-first, like the phone: ARCA launches in Korea first, and the
+        // wrist shouldn't speak English just because the Watch's OS does.
+        default: return true
         }
     }
 }

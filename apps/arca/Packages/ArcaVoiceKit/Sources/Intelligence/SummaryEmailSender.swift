@@ -270,8 +270,8 @@ public struct ComposioEmailSender: Sendable {
 
     static func html(sessionTitle: String, notes: MeetingNotes, date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
-        formatter.dateFormat = "MMM d, yyyy (E) HH:mm"
+        formatter.locale = Locale(identifier: ArcaLanguageResolver.isKorean ? "ko_KR" : "en_US")
+        formatter.dateFormat = ArcaLanguageResolver.isKorean ? "yyyy년 M월 d일 (E) HH:mm" : "MMM d, yyyy (E) HH:mm"
 
         func escape(_ text: String) -> String {
             text.replacingOccurrences(of: "&", with: "&amp;")
@@ -300,18 +300,18 @@ public struct ComposioEmailSender: Sendable {
         <div style="font-family:-apple-system,sans-serif;max-width:640px">
         <h2 style="margin-bottom:2px">\(escape(notes.title.isEmpty ? sessionTitle : notes.title))</h2>
         <p style="color:#777;margin-top:0">\(formatter.string(from: date)) · ARCA</p>
-        <h3>Summary</h3>\(paragraphs(notes.summaryMarkdown))
+        <h3>\(L("요약", "Summary"))</h3>\(paragraphs(notes.summaryMarkdown))
         """
         if let enhanced = notes.enhancedNotesMarkdown, !enhanced.isEmpty {
-            html += "<h3>My Notes (finalized)</h3>\(paragraphs(enhanced))"
+            html += "<h3>\(L("내 메모 (정리됨)", "My Notes (finalized)"))</h3>\(paragraphs(enhanced))"
         }
         if !notes.decisions.isEmpty {
-            html += "<h3>Decisions</h3><ul>"
+            html += "<h3>\(L("결정", "Decisions"))</h3><ul>"
                 + notes.decisions.map { "<li>\(escape($0))</li>" }.joined()
                 + "</ul>"
         }
         if !notes.actionItems.isEmpty {
-            html += "<h3>Action Plan</h3><ul>"
+            html += "<h3>\(L("액션 플랜", "Action Plan"))</h3><ul>"
             for item in notes.actionItems {
                 var line = escape(item.text)
                 if let assignee = item.assigneeName { line += " — <b>\(escape(assignee))</b>" }
@@ -319,7 +319,7 @@ public struct ComposioEmailSender: Sendable {
             }
             html += "</ul>"
         }
-        html += "<p style=\"color:#aaa;font-size:12px\">This email was sent automatically by ARCA.</p></div>"
+        html += "<p style=\"color:#aaa;font-size:12px\">\(L("이 메일은 ARCA가 자동으로 보냈어요.", "This email was sent automatically by ARCA."))</p></div>"
         return html
     }
 

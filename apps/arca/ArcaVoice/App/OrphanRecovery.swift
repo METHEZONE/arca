@@ -160,7 +160,7 @@ enum OrphanRecovery {
     private static func recoveredTitle(created: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "'복구된 녹음' MMM d, HH:mm"
+        formatter.dateFormat = "'복구된 녹음' M월 d일 HH:mm"
         return formatter.string(from: created)
     }
 }

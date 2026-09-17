@@ -64,6 +64,9 @@ public enum ArcaLanguageResolver {
 
     public static func apply(_ choice: ArcaLanguageChoice) {
         UserDefaults.standard.set(choice.rawValue, forKey: defaultsKey)
+        // Widgets run in their own process and can't see this process's
+        // defaults; the shared group is how they follow the same choice.
+        UserDefaults(suiteName: SharedInbox.appGroupID)?.set(choice.rawValue, forKey: defaultsKey)
         cachedIsKorean = resolve(choice)
     }
 

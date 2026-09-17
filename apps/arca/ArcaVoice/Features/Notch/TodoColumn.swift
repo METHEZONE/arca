@@ -380,7 +380,7 @@ struct TodoTaskRow: View {
             Button {
                 TaskEngine.shared.toss(task)
             } label: {
-                Text("Toss")
+                Text(L("맡기기", "Toss"))
                     .font(.caption2.weight(.bold))
                     .padding(.horizontal, 9).padding(.vertical, 4)
                     .background(ArcaTheme.idle, in: Capsule())

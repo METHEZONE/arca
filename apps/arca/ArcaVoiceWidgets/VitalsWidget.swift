@@ -27,9 +27,8 @@ struct VitalsWidget: Widget {
     /// The widget gallery is rendered by the system outside the app, so the app's
     /// language helper isn't loaded — resolve from the locale directly.
     private var widgetDescription: String {
-        (Locale.preferredLanguages.first ?? "en").hasPrefix("ko")
-            ? "몰입 준비도와 다음 골든타임을 한눈에."
-            : "Your readiness for deep work, and the next good hour for it."
+        WidgetCopy.pick("몰입 준비도와 다음 골든타임을 한눈에.",
+                        "Your readiness for deep work, and the next good hour for it.")
     }
 }
 
@@ -60,11 +59,16 @@ struct VitalsTimelineProvider: TimelineProvider {
     }
 }
 
-/// Copy resolved from the locale, since the widget extension runs without the
-/// app's language setting loaded.
+/// Korean-first, like the app. The app mirrors its language choice into the
+/// shared App Group so the widget (a separate process) agrees with it;
+/// with nothing mirrored yet, Korean — ARCA launches in Korea first.
 enum WidgetCopy {
     static var isKorean: Bool {
-        (Locale.preferredLanguages.first ?? "en").hasPrefix("ko")
+        switch UserDefaults(suiteName: SharedInbox.appGroupID)?.string(forKey: "appLanguage") {
+        case "english", "en": return false
+        case "system": return (Locale.preferredLanguages.first ?? "en").hasPrefix("ko")
+        default: return true
+        }
     }
 
     static func pick(_ ko: String, _ en: String) -> String { isKorean ? ko : en }

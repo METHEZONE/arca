@@ -19,8 +19,8 @@ struct RecordingLiveActivity: Widget {
                         .font(.headline)
                         .lineLimit(1)
                     Text(context.state.isRecording
-                         ? (context.state.isPaused ? "Paused" : "Listening")
-                         : (context.state.detail ?? "With you — tap to record"))
+                         ? (context.state.isPaused ? WidgetCopy.pick("일시정지", "Paused") : WidgetCopy.pick("듣고 있어요", "Listening"))
+                         : (context.state.detail ?? WidgetCopy.pick("곁에 있어요 — 탭하면 녹음", "With you — tap to record")))
                         .font(.caption)
                         .lineLimit(1)
                         .foregroundStyle(context.state.isRecording ? Color.green : Color(red: 1.0, green: 0.478, blue: 0.102))
