@@ -341,11 +341,11 @@ private struct FocusBodyPage: View {
             }
 
             VStack(spacing: 10) {
-                Text("I can tell when you're sharpest")
+                Text(L("당신이 가장 또렷한 순간을 알아요", "I can tell when you're sharpest"))
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                Text("Your Watch already logs your sleep, HRV and heart rate. Let me read it and I'll tell you when to do the hard thing — and when to stop.")
+                Text(L("워치가 이미 수면·HRV·심박을 기록하고 있어요. 읽게 해주시면 어려운 일을 언제 하고 언제 멈출지 알려드릴게요.", "Your Watch already logs your sleep, HRV and heart rate. Let me read it and I'll tell you when to do the hard thing — and when to stop."))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -353,9 +353,9 @@ private struct FocusBodyPage: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                BodyBullet(symbol: "battery.100", text: "Costs no battery — I read what your Watch already wrote.")
-                BodyBullet(symbol: "lock.fill", text: "Stays on your devices. Nothing goes to a server of ours.")
-                BodyBullet(symbol: "hand.raised.fill", text: "No score until I've watched you for a few days. I won't guess.")
+                BodyBullet(symbol: "battery.100", text: L("배터리를 안 써요 — 워치가 이미 적어둔 걸 읽을 뿐이에요.", "Costs no battery — I read what your Watch already wrote."))
+                BodyBullet(symbol: "lock.fill", text: L("기기 안에만 있어요. 저희 서버로는 아무것도 안 가요.", "Stays on your devices. Nothing goes to a server of ours."))
+                BodyBullet(symbol: "hand.raised.fill", text: L("며칠은 지켜본 뒤에만 점수를 내요. 추측하지 않아요.", "No score until I've watched you for a few days. I won't guess."))
             }
             .padding(.horizontal, 34)
 
@@ -365,13 +365,13 @@ private struct FocusBodyPage: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(ArcaTheme.pixel)
-                    Text("Apple Health connected")
+                    Text(L("Apple 건강 연결됨", "Apple Health connected"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.85))
                 }
-                OnboardingCTA(title: "Continue", action: action)
+                OnboardingCTA(title: L("계속", "Continue"), action: action)
             } else {
-                OnboardingCTA(title: isRequesting ? "Opening Health…" : "Connect Apple Health") {
+                OnboardingCTA(title: isRequesting ? L("건강 앱 여는 중…", "Opening Health…") : L("Apple 건강 연결", "Connect Apple Health")) {
                     guard !isRequesting else { return }
                     isRequesting = true
                     Task {
@@ -380,7 +380,7 @@ private struct FocusBodyPage: View {
                         action()
                     }
                 }
-                Button("Not now", action: action)
+                Button(L("나중에", "Not now"), action: action)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.5))
             }

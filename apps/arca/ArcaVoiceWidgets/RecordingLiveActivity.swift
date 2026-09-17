@@ -19,8 +19,8 @@ struct RecordingLiveActivity: Widget {
                         .font(.headline)
                         .lineLimit(1)
                     Text(context.state.isRecording
-                         ? (context.state.isPaused ? "Paused" : "Listening")
-                         : (context.state.detail ?? "With you — tap to record"))
+                         ? (context.state.isPaused ? WidgetCopy.pick("일시정지", "Paused") : WidgetCopy.pick("듣고 있어요", "Listening"))
+                         : (context.state.detail ?? WidgetCopy.pick("곁에 있어요 — 탭하면 녹음", "With you — tap to record")))
                         .font(.caption)
                         .lineLimit(1)
                         .foregroundStyle(context.state.isRecording ? Color.green : Color(red: 1.0, green: 0.478, blue: 0.102))
@@ -72,7 +72,7 @@ struct RecordingLiveActivity: Widget {
                         if context.state.isRecording {
                             Image(systemName: "waveform")
                                 .foregroundStyle(.green)
-                            Text(context.state.isPaused ? "Paused — tap to continue" : "ARCA is listening")
+                            Text(context.state.isPaused ? WidgetCopy.pick("일시정지 — 탭하면 계속", "Paused — tap to continue") : WidgetCopy.pick("ARCA가 듣고 있어요", "ARCA is listening"))
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.85))
                             Spacer()
@@ -88,7 +88,7 @@ struct RecordingLiveActivity: Widget {
                             Image(systemName: context.state.detail == nil ? "sparkles" : "brain.head.profile")
                                 .foregroundStyle(Color(red: 1.0, green: 0.478, blue: 0.102))
                                 .symbolEffect(.pulse, isActive: context.state.detail != nil)
-                            Text(context.state.detail ?? "ARCA is with you")
+                            Text(context.state.detail ?? WidgetCopy.pick("ARCA가 곁에 있어요", "ARCA is with you"))
                                 .font(.caption)
                                 .lineLimit(1)
                                 .foregroundStyle(.white.opacity(0.85))

@@ -28,6 +28,7 @@
 		178024833E6E9B7725E84324 /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19E5C51A1863C1860E4F6A3C /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
+		1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1A9E34AF467D6004D2D63347 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		1AFE0013D06EB360A29C7129 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C67787A4026B8F5719B5BB /* WatchRecorder.swift */; };
@@ -35,8 +36,10 @@
 		1BB78D5658CB29EA71E55CA2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		1BF4B10888A1054050274B6C /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DDCF20A4A4EA9B0B6B9FD0 /* ShareViewController.swift */; };
 		1E176E2D8C6CFEFCAC5A3911 /* VitalsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AF49E49651BBE466E45012 /* VitalsEngine.swift */; };
+		1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1ECB9FEBD66AAE8BC7CA2521 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
 		1FBD7E6F7531639BD4B0C00C /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
+		205A3B96E3E33A4201AA81DF /* WatchSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4BCF223BBD9E7947283A45 /* WatchSettingsView.swift */; };
 		2148DA949AB84FB8392F1DAB /* ArcaVoiceKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6214BB03BF1DE4EC38C39C93 /* ArcaVoiceKit */; };
 		21912877959F3E63A51EF6C0 /* HotkeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69B74064D232506B6F096FF /* HotkeyMonitor.swift */; };
 		22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969DB3DB0D7100E819714DC /* ArcaClipboard.swift */; };
@@ -60,6 +63,7 @@
 		2B6E9833A44618B9E564D671 /* HealthVitals.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2BBCB0EF5ECC4481A98E4D /* HealthVitals.swift */; };
 		2D9A8B3174F06DC9B68D91FA /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
 		2EDB367F3BEA7B63C4885D07 /* Info-Beta.plist in Resources */ = {isa = PBXBuildFile; fileRef = 141CCF2F66F97F549D01285B /* Info-Beta.plist */; };
+		30118C57BC6AF36A3E1E1208 /* WatchLiveTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD2CAB5CC2603C71EBA8A0F /* WatchLiveTalk.swift */; };
 		30DC4A93431EFB7D0473B1B1 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
 		3183F8E4165DF3D2BDEB5797 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		31E2B8888A98B97DEEAC9B3A /* ScreenGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944F799FBFBD4F5DCE3019C7 /* ScreenGrab.swift */; };
@@ -141,6 +145,7 @@
 		61963EE7F217ED4FBB78BC6F /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
 		619AEF1295DEC7DE4574355C /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
 		6210A8679715F8C495AA112F /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
+		6222A68E146C04CC480C85FA /* RealtimeSecretMinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */; };
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		6352533A67B7DEF20EF3A650 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
@@ -190,6 +195,7 @@
 		7D0054A8227A9A4818BDF47E /* CompanionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799893AA765465142E125D54 /* CompanionProgress.swift */; };
 		7D8A5BFDE07CEFF22C0C9B9C /* SpiritFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */; };
 		7DC818AE12E1F68F4A76023C /* FloatingCompanion.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */; };
+		7E7CC7577CE2CC6717BC8503 /* WatchTodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B965481A000F53C052B305F /* WatchTodoStore.swift */; };
 		7EAAF899DF032819FA040603 /* CrashNoteSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914353E9DD58C9EB466CC22C /* CrashNoteSync.swift */; };
 		7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
 		7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
@@ -349,12 +355,14 @@
 		D15B3BBB53917611EFD193F5 /* ArcaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251782279561DB97C74E91BD /* ArcaSection.swift */; };
 		D17480663134EF0142D22EA8 /* DayLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53522C2C5C3826D2AFB9F83B /* DayLogView.swift */; };
 		D17554AFD89FA3DEBC8A4457 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
+		D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		D250D75DEF42750AB474C7CB /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		D470D8A3A70E7B441C9E5D8B /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
 		D4A342E948D858AE87794949 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
 		D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
 		D6AA177F3790247AF6F1BCEA /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
 		D718F4321CE32D322F74B3E4 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
+		D8061F03884D9242ACE246C5 /* RealtimeSecretMinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */; };
 		D86438E55D509DB70F3E420A /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */; };
 		D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
 		D9E9F969F6196BB8D0F1F738 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
@@ -392,6 +400,7 @@
 		F77A7408E4C0900D683633F5 /* BrowserAgentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69C443D872DC2F85C9D8C9D /* BrowserAgentWindow.swift */; };
 		F7AD10DA730B6B756F6A2B4C /* UserWikiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */; };
 		F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
+		F96AB07911307CA3A07C314D /* RealtimeSecretMinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */; };
 		F9CECD0F66B2E95393C1A5F2 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
 		FA77563C23A0863D16CBA20D /* SkillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB81A6577D769549369CE27 /* SkillsView.swift */; };
 		FA8D01FEB53E5285127B5344 /* StorageJanitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */; };
@@ -509,6 +518,7 @@
 		5544B905C9F4B84834415444 /* NightlyDigest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightlyDigest.swift; sourceTree = "<group>"; };
 		5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionTodoRail.swift; sourceTree = "<group>"; };
 		57B78FC7A082E747229B19B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		59B31B9C3656C6518CDFCCED /* BundledKeys.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = BundledKeys.plist; sourceTree = "<group>"; };
 		59E1551A8B3072F0E9D0ED7F /* OrphanRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrphanRecovery.swift; sourceTree = "<group>"; };
 		5C85B6787FFA1E9297B85F5A /* Info-Test.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Test.plist"; sourceTree = "<group>"; };
 		5E20975BF767500024D5E80F /* DebugTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTrace.swift; sourceTree = "<group>"; };
@@ -518,6 +528,8 @@
 		64DC3EBEA6736025A0FFAE93 /* ArcaVoiceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaVoiceWidgetsBundle.swift; sourceTree = "<group>"; };
 		66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPermissionCoach.swift; sourceTree = "<group>"; };
 		680F23C0E945A90AD4D6CE3B /* ArcaVoiceWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ArcaVoiceWidgets.entitlements; sourceTree = "<group>"; };
+		6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeSecretMinter.swift; sourceTree = "<group>"; };
+		6F4BCF223BBD9E7947283A45 /* WatchSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSettingsView.swift; sourceTree = "<group>"; };
 		702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaLanguage.swift; sourceTree = "<group>"; };
 		71690C5DDCBB80162041242A /* RelaySync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelaySync.swift; sourceTree = "<group>"; };
 		7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSpeakerStyle.swift; sourceTree = "<group>"; };
@@ -549,6 +561,7 @@
 		9A455369D5DD48B9F437A391 /* MorningMoment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningMoment.swift; sourceTree = "<group>"; };
 		9B5BD3B94498FDBA634993D3 /* StorageJanitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageJanitor.swift; sourceTree = "<group>"; };
 		9B747507721FFF3DF877DF6C /* VoiceTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTalk.swift; sourceTree = "<group>"; };
+		9B965481A000F53C052B305F /* WatchTodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTodoStore.swift; sourceTree = "<group>"; };
 		9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProposalEngine.swift; sourceTree = "<group>"; };
 		9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchDeepMeasure.swift; sourceTree = "<group>"; };
 		A2F819D6795C53B655D03603 /* CallLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallLabApp.swift; sourceTree = "<group>"; };
@@ -575,6 +588,7 @@
 		C8A2E73A6DB6F112E58F3F5A /* BrainEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainEntry.swift; sourceTree = "<group>"; };
 		CB356FCDCAA7ACF45363761F /* BrainEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainEngine.swift; sourceTree = "<group>"; };
 		CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CCD2CAB5CC2603C71EBA8A0F /* WatchLiveTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLiveTalk.swift; sourceTree = "<group>"; };
 		CD2C83E58AEB77B8852236DB /* WatchLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLocalization.swift; sourceTree = "<group>"; };
 		D1E297C0A34F32907C8096A8 /* EngineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineFactory.swift; sourceTree = "<group>"; };
 		D22851F7BFFF353A5775CEA3 /* ContextEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextEngine.swift; sourceTree = "<group>"; };
@@ -789,10 +803,13 @@
 				F78A32E703ECAAC127268AFC /* FaceRecordView.swift */,
 				78AF3176B12884BB78616861 /* SummaryListView.swift */,
 				9DD164BB91D6FD54D99D543D /* WatchDeepMeasure.swift */,
+				CCD2CAB5CC2603C71EBA8A0F /* WatchLiveTalk.swift */,
 				CD2C83E58AEB77B8852236DB /* WatchLocalization.swift */,
 				08C67787A4026B8F5719B5BB /* WatchRecorder.swift */,
+				6F4BCF223BBD9E7947283A45 /* WatchSettingsView.swift */,
 				10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */,
 				289DDA43D652B1B04FDB7252 /* WatchSync.swift */,
+				9B965481A000F53C052B305F /* WatchTodoStore.swift */,
 				9527B3DD12757C9FACAC0868 /* Support */,
 			);
 			path = ArcaVoiceWatch;
@@ -977,6 +994,7 @@
 				59E1551A8B3072F0E9D0ED7F /* OrphanRecovery.swift */,
 				D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */,
 				DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */,
+				6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */,
 				71690C5DDCBB80162041242A /* RelaySync.swift */,
 				DA2108C8890C2111D74F4D45 /* RootView.swift */,
 				0AA434C8AF00098C130A7852 /* SessionPaths.swift */,
@@ -1034,6 +1052,7 @@
 			children = (
 				DE2E70D6F63358C5E15E5E24 /* ArcaVoice-iOS.entitlements */,
 				836495A6A9F0B481863F388F /* ArcaVoice-macOS.entitlements */,
+				59B31B9C3656C6518CDFCCED /* BundledKeys.plist */,
 				141CCF2F66F97F549D01285B /* Info-Beta.plist */,
 				5C85B6787FFA1E9297B85F5A /* Info-Test.plist */,
 				0573ECA9B3866ACA5804292D /* Info.plist */,
@@ -1298,6 +1317,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D5139B23D64B467DA16DDB6 /* Assets.xcassets in Resources */,
+				1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */,
 				ACF819F7C62A22544A104409 /* Info-Beta.plist in Resources */,
 				5AAB5C7AA3094B769F88D2C1 /* Info.plist in Resources */,
 			);
@@ -1308,6 +1328,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				959D1987E74A9D396A90C815 /* Assets.xcassets in Resources */,
+				1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */,
 				54CD21FB990F9C8385062CF1 /* Info-Test.plist in Resources */,
 				C995BE6CACCAEE8ABBAC9222 /* Info.plist in Resources */,
 			);
@@ -1326,6 +1347,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5CD2B3DF6CF7561DA7509A3A /* Assets.xcassets in Resources */,
+				D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */,
 				2EDB367F3BEA7B63C4885D07 /* Info-Beta.plist in Resources */,
 				F5A711151F5B285CB3F7CC40 /* Info-Test.plist in Resources */,
 			);
@@ -1419,6 +1441,7 @@
 				749CA50C862CDD124258506C /* PassRetryScheduler.swift in Sources */,
 				AE7C5FE0B3D368F697B59A47 /* PhoneWatchSync.swift in Sources */,
 				4ABD1B8AAFC88AC21B5DF3FB /* ProposalEngine.swift in Sources */,
+				6222A68E146C04CC480C85FA /* RealtimeSecretMinter.swift in Sources */,
 				6210A8679715F8C495AA112F /* RecordView.swift in Sources */,
 				0112BC917961D27794B1D5A1 /* RecordingActivityController.swift in Sources */,
 				B6650B3E271636127A4DD2A3 /* RecordingCoordinator.swift in Sources */,
@@ -1556,6 +1579,7 @@
 				9A3735F4D5405FD96636A84F /* PassRetryScheduler.swift in Sources */,
 				C9BD0AA34B19377BDD2E1EA2 /* PhoneWatchSync.swift in Sources */,
 				6352533A67B7DEF20EF3A650 /* ProposalEngine.swift in Sources */,
+				D8061F03884D9242ACE246C5 /* RealtimeSecretMinter.swift in Sources */,
 				5344C4ECAD2A231EB74F0EF1 /* RecordView.swift in Sources */,
 				4FAA38A921A476952656A6C5 /* RecordingActivityController.swift in Sources */,
 				876B935C1FABD5AD0EB2E807 /* RecordingCoordinator.swift in Sources */,
@@ -1682,6 +1706,7 @@
 				4116A32396F23A0D8E4D49F0 /* PassRetryScheduler.swift in Sources */,
 				41CB42C5D90DBA0BCE45B9F6 /* PhoneWatchSync.swift in Sources */,
 				F9CECD0F66B2E95393C1A5F2 /* ProposalEngine.swift in Sources */,
+				F96AB07911307CA3A07C314D /* RealtimeSecretMinter.swift in Sources */,
 				86BF5DC3BA73F1C9FCF6015A /* RecordView.swift in Sources */,
 				86048B969598C0854E74B66E /* RecordingActivityController.swift in Sources */,
 				D9E9F969F6196BB8D0F1F738 /* RecordingCoordinator.swift in Sources */,
@@ -1741,10 +1766,13 @@
 				C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */,
 				DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */,
 				2A81322A19E2615CB0446F3C /* WatchDeepMeasure.swift in Sources */,
+				30118C57BC6AF36A3E1E1208 /* WatchLiveTalk.swift in Sources */,
 				DCAEEBEB8BBA40678F030042 /* WatchLocalization.swift in Sources */,
 				1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */,
+				205A3B96E3E33A4201AA81DF /* WatchSettingsView.swift in Sources */,
 				A9ABA645516A7134E2BDC255 /* WatchSummaryStore.swift in Sources */,
 				B7D0D1A766334C1C56D7EC5E /* WatchSync.swift in Sources */,
+				7E7CC7577CE2CC6717BC8503 /* WatchTodoStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

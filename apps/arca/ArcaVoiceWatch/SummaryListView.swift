@@ -14,7 +14,7 @@ struct SummaryListView: View {
                     Image(systemName: "text.bubble")
                         .font(.title3)
                         .foregroundStyle(.secondary)
-                    Text("Summaries land here after ARCA finishes on your iPhone.")
+                    Text(L("아이폰에서 ARCA가 정리를 끝내면 여기로 와요.", "Summaries land here after ARCA finishes on your iPhone."))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -26,8 +26,8 @@ struct SummaryListView: View {
                         HStack(spacing: 8) {
                             ProgressView()
                             Text(transfers.sending > 0
-                                 ? "Sending to iPhone…"
-                                 : "Processing on your iPhone…")
+                                 ? L("아이폰으로 보내는 중…", "Sending to iPhone…")
+                                 : L("아이폰에서 정리하는 중…", "Processing on your iPhone…"))
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
@@ -52,7 +52,7 @@ struct SummaryListView: View {
                 }
             }
         }
-        .navigationTitle("Summaries")
+        .navigationTitle(L("요약", "Summaries"))
         .onAppear { store.markRead() }
     }
 }
@@ -72,7 +72,7 @@ struct SummaryDetailView: View {
 
                 if !item.actions.isEmpty {
                     Divider()
-                    Text("ACTIONS")
+                    Text(L("액션", "ACTIONS"))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                     ForEach(Array(item.actions.enumerated()), id: \.offset) { _, action in

@@ -485,8 +485,8 @@ final class RecordingCoordinator {
 
     private static func defaultTitle(startedAt: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "'Recording' MMM d, HH:mm"
+        formatter.locale = Locale(identifier: ArcaLanguageResolver.isKorean ? "ko_KR" : "en_US")
+        formatter.dateFormat = ArcaLanguageResolver.isKorean ? "'녹음' M월 d일 HH:mm" : "'Recording' MMM d, HH:mm"
         return formatter.string(from: startedAt)
     }
 }

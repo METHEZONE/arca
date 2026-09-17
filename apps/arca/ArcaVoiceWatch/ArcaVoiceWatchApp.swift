@@ -12,8 +12,9 @@ struct ArcaVoiceWatchApp: App {
             NavigationStack {
                 TabView {
                     FaceRecordView()
-                    DeepMeasureView()
+                    TodoListView()
                     SummaryListView()
+                    DeepMeasureView()
                 }
                 .tabViewStyle(.verticalPage)
             }

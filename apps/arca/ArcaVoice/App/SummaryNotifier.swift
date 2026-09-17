@@ -28,14 +28,14 @@ enum SummaryNotifier {
 
         Task { @MainActor in
             #if os(macOS)
-            AppServices.shared.notch.celebrate("Notes ready — \(title)")
+            AppServices.shared.notch.celebrate(L("회의록 준비됨 — \(title)", "Notes ready — \(title)"))
             #endif
             guard await ensurePermission() else { return }
             let content = UNMutableNotificationContent()
-            content.title = "✅ Notes ready"
+            content.title = L("✅ 회의록이 준비됐어요", "✅ Notes ready")
             content.body = actionCount > 0
-                ? "\(title) — summary + \(actionCount) action\(actionCount == 1 ? "" : "s")"
-                : "\(title) — summary is in your library"
+                ? L("\(title) — 요약 + 액션 \(actionCount)개", "\(title) — summary + \(actionCount) action\(actionCount == 1 ? "" : "s")")
+                : L("\(title) — 요약이 라이브러리에 있어요", "\(title) — summary is in your library")
             content.sound = .default
             content.userInfo = ["sessionUID": uid]
             let request = UNNotificationRequest(
@@ -50,7 +50,7 @@ enum SummaryNotifier {
         Task { @MainActor in
             guard await ensurePermission() else { return }
             let content = UNMutableNotificationContent()
-            content.title = "⚠️ Recording saved, processing failed"
+            content.title = L("⚠️ 녹음은 저장됐지만 처리에 실패했어요", "⚠️ Recording saved, processing failed")
             content.body = "\(title) — \(message)"
             content.sound = .default
             content.userInfo = ["sessionUID": uid]

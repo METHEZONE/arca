@@ -38,7 +38,7 @@ struct SettingsView: View {
     @AppStorage("dayTrackerSnapshots") private var dayTrackerSnapshots = true
     @AppStorage("dayTrackerIntervalMin") private var dayTrackerIntervalMin = 5
     @AppStorage("dayTrackerDigestHour") private var dayTrackerDigestHour = 21
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
     @AppStorage(DocumentVault.defaultsKey) private var documentVaultPath = ""
     @State private var emailRecipient = "me@thezonebio.com"
     @State private var obsidianVaultPath = ""

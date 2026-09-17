@@ -4,6 +4,9 @@ import WatchConnectivity
 /// Ships finished recordings to the paired iPhone. WCSession file transfers
 /// queue and survive the app closing — but the wrist deserves to know where
 /// its recording is, so every transfer reports into `WatchTransferStatus`.
+///
+/// Also the wrist's line to the phone for everything that needs the phone's
+/// keys or store: live-talk secrets, to-dos, and conversation transcripts.
 final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
     static let shared = WatchSync()
 
@@ -16,10 +19,13 @@ final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         session.activate()
     }
 
-    func send(file: URL, duration: TimeInterval, createdAt: Date) {
+    /// `kind` tells the phone how to title it: a meeting recording or a quick
+    /// held-button memo.
+    func send(file: URL, duration: TimeInterval, createdAt: Date, kind: String = "meeting") {
         WCSession.default.transferFile(file, metadata: [
             "duration": duration,
             "createdAt": createdAt.timeIntervalSince1970,
+            "kind": kind,
         ])
         Task { @MainActor in WatchTransferStatus.shared.began() }
     }
@@ -47,6 +53,55 @@ final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         return true
     }
 
+    /// A finished live conversation, for the phone's chat history.
+    func send(talk turns: [[String: String]], startedAt: Date) {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        WCSession.default.transferUserInfo([
+            "type": "watchTalk",
+            "turns": turns,
+            "at": startedAt.timeIntervalSince1970,
+        ])
+    }
+
+    /// A to-do ticked off on the wrist. Queued, so it lands even out of range.
+    func send(todoDone uid: String) {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        WCSession.default.transferUserInfo(["type": "todoDone", "uid": uid])
+    }
+
+    /// Asks the phone for a short-lived Realtime client secret. Needs the phone
+    /// reachable right now — a live conversation can't wait for a queue.
+    func requestRealtimeSecret() async throws -> String {
+        let session = WCSession.default
+        guard WCSession.isSupported(), session.activationState == .activated, session.isReachable else {
+            throw LiveTalkError.phoneUnreachable
+        }
+        return try await withCheckedThrowingContinuation { continuation in
+            session.sendMessage(["type": "realtimeSecret"], replyHandler: { reply in
+                if let secret = reply["secret"] as? String, !secret.isEmpty {
+                    continuation.resume(returning: secret)
+                } else {
+                    continuation.resume(throwing: LiveTalkError.phone(
+                        (reply["error"] as? String) ?? L("아이폰이 대화 세션을 못 열었어요", "Your iPhone couldn't open a talk session")))
+                }
+            }, errorHandler: { error in
+                continuation.resume(throwing: LiveTalkError.phone(error.localizedDescription))
+            })
+        }
+    }
+
+    /// Pulls the open to-do list when the page appears; the phone also pushes
+    /// it as application context, so this is freshness, not the only source.
+    func requestTodos() {
+        let session = WCSession.default
+        guard WCSession.isSupported(), session.activationState == .activated, session.isReachable else { return }
+        session.sendMessage(["type": "todos"], replyHandler: { reply in
+            guard let raw = reply["todos"] as? [[String: Any]] else { return }
+            let items = raw.compactMap(Self.todoItem)
+            Task { @MainActor in WatchTodoStore.shared.receive(items) }
+        }, errorHandler: { _ in })
+    }
+
     /// The iPhone asking the wrist to measure. Only arrives while the Watch app
     /// is open — WatchConnectivity can't launch it — which is why the phone's UI
     /// falls back to telling the user to open it.
@@ -56,21 +111,39 @@ final class WatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         WatchDeepMeasure.shared.start(seconds: seconds)
     }
 
-    /// The body read the phone computed. Application context is "latest value
-    /// wins", which is exactly right for a summary, and it's delivered on the
-    /// next launch even if the Watch app wasn't running when it was set.
+    /// Latest-value state from the phone: the body read, and the open to-dos.
+    /// One dictionary carries both so neither overwrites the other; the old
+    /// single-purpose `type: vitals` shape is still understood.
     func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
-        applyVitals(context)
+        applyContext(context)
     }
 
     /// Picks up whatever the phone last set, so the wrist isn't blank on launch.
     func loadLatestVitals() {
         guard WCSession.isSupported() else { return }
-        applyVitals(WCSession.default.receivedApplicationContext)
+        applyContext(WCSession.default.receivedApplicationContext)
+    }
+
+    private func applyContext(_ context: [String: Any]) {
+        if let vitals = context["vitals"] as? [String: Any] {
+            applyVitals(vitals)
+        } else if (context["type"] as? String) == "vitals" {
+            applyVitals(context)
+        }
+        if let raw = context["todos"] as? [[String: Any]] {
+            let items = raw.compactMap(Self.todoItem)
+            Task { @MainActor in WatchTodoStore.shared.receive(items) }
+        }
+    }
+
+    /// Decoded here so only a Sendable value crosses to the main actor.
+    private static func todoItem(_ raw: [String: Any]) -> WatchTodoStore.Item? {
+        guard let id = raw["id"] as? String, let title = raw["title"] as? String else { return nil }
+        let due = (raw["due"] as? Double).map(Date.init(timeIntervalSince1970:))
+        return WatchTodoStore.Item(id: id, title: title, due: due)
     }
 
     private func applyVitals(_ context: [String: Any]) {
-        guard (context["type"] as? String) == "vitals" else { return }
         let score = context["ringScore"] as? Int
         let isLive = (context["isLive"] as? Bool) ?? false
         let label = (context["label"] as? String) ?? ""

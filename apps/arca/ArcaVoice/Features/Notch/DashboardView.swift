@@ -15,7 +15,7 @@ struct DashboardView: View {
     @State private var vitals = VitalsEngine.shared
     @State private var usageSnapshot = AIUsageSnapshot.loading
     // Unused in the body; forces a re-render when the app language changes.
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
 
     var body: some View {
         VStack(spacing: 0) {

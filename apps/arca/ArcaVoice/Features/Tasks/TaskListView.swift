@@ -362,7 +362,7 @@ private struct QuestRow: View {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 TaskEngine.shared.toss(task)
             } label: {
-                Text("Toss")
+                Text(L("맡기기", "Toss"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12)

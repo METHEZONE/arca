@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import ArcaVoiceKit
 
 /// A compact "Memory Brain" teaser for a home/dashboard screen — a small
 /// live preview of the graph (no gestures, just the drift), with a title,
@@ -31,7 +32,7 @@ struct BrainPreviewCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Memory Brain")
+                    Text(L("메모리 브레인", "Memory Brain"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text("\(totalNodeCount) notes · \(totalEdgeCount) links")
