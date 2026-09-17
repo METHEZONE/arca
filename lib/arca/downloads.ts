@@ -37,8 +37,14 @@ export function artifactUrl(target: Exclude<DownloadTarget, "beta-signed">): str
   switch (target) {
     case "mac-dmg":
       return betaDmgUrl();
-    case "mac-zip":
-      return betaZipUrl();
+    case "mac-zip": {
+      // Production's ARCA_BETA_ZIP_URL currently points at the DMG; keep the
+      // zip button honest by falling back to the zip asset in that case.
+      const configured = betaZipUrl();
+      return /\.zip($|\?)/i.test(configured)
+        ? configured
+        : "https://github.com/METHEZONE/arca/releases/latest/download/ARCA-Beta-mac-arm64.zip";
+    }
     case "ios-testflight":
       return TESTFLIGHT_URL;
   }
