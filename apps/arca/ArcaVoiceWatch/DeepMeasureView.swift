@@ -43,20 +43,8 @@ struct DeepMeasureView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(red: 0.32, green: 0.91, blue: 0.90))
-
-                    Text(L("평소에는 아무것도 재지 않아요. 누른 이 시간만 심박을 봅니다.",
-                           "Nothing is measured the rest of the time. Only the minutes you ask for."))
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
                 }
 
-                if let label = status.lastDepthLabel {
-                    Label(label, systemImage: "checkmark.circle")
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(.green)
-                        .multilineTextAlignment(.center)
-                }
                 if let error = status.errorMessage {
                     Text(error)
                         .font(.system(size: 11, design: .rounded))
@@ -133,8 +121,8 @@ struct DeepMeasureView: View {
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .contentTransition(.numericText())
                     }
-                    Text("bpm")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    Text(L("회/분", "bpm"))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                 } else if status.isMeasuring {
                     Text(L("측정 준비…", "Getting ready…"))
@@ -145,7 +133,7 @@ struct DeepMeasureView: View {
                         .font(.system(size: 24))
                         .foregroundStyle(Color(red: 0.32, green: 0.91, blue: 0.90).opacity(0.8))
                     Text(L("대기 중", "Idle"))
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
 

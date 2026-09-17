@@ -70,6 +70,9 @@ struct TodoListView: View {
                 .padding()
             } else {
                 List {
+                    Text(L("할 일", "To-do"))
+                        .font(.system(.headline, design: .rounded, weight: .bold))
+                        .listRowBackground(Color.clear)
                     ForEach(store.open) { item in
                         Button {
                             withAnimation(.snappy) { store.complete(item.id) }
@@ -96,7 +99,8 @@ struct TodoListView: View {
                 }
             }
         }
-        .navigationTitle(L("할 일", "To-do"))
+        // No navigation title on a paged screen: watchOS puts it top-right,
+        // straight over the page dots.
         .onAppear { WatchSync.shared.requestTodos() }
     }
 }
