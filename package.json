@@ -10,10 +10,12 @@
     "typecheck": "tsc --noEmit",
     "test:brain": "node --experimental-strip-types --test lib/brain/logic.test.ts lib/brain/metrics.test.ts",
     "slack-agent:smoke": "node scripts/slack-agent-smoke.mjs",
-    "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs"
+    "slack-agent:smoke:owner-mention": "SLACK_AGENT_SMOKE_SCENARIO=owner-mention node scripts/slack-agent-smoke.mjs",
+    "test:a2a": "node --experimental-strip-types --test lib/a2a-demo/core.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
+    "@fontsource-variable/noto-sans-kr": "^5.3.0",
     "@neondatabase/serverless": "^1.1.0",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.41.0",
