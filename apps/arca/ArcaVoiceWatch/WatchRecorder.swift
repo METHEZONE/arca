@@ -19,8 +19,11 @@ import WatchKit
 @MainActor
 @Observable
 final class WatchRecorder {
+    enum Kind: String { case meeting, memo }
+
     private(set) var isRecording = false
     private(set) var startedAt: Date?
+    private(set) var kind: Kind = .meeting
     var errorMessage: String?
 
     private var recorder: AVAudioRecorder?
@@ -35,12 +38,13 @@ final class WatchRecorder {
         }
     }
 
-    func start() async {
+    func start(kind: Kind = .meeting) async {
         guard !isRecording else { return }
         errorMessage = nil
+        self.kind = kind
 
         guard await AVAudioApplication.requestRecordPermission() else {
-            errorMessage = "Microphone permission is required"
+            errorMessage = L("마이크 권한이 필요해요", "Microphone permission is required")
             return
         }
 
@@ -87,10 +91,10 @@ final class WatchRecorder {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
 
         if !userInitiated {
-            errorMessage = "Watch runtime ended — recording saved"
+            errorMessage = L("워치가 잠들어 녹음을 저장했어요", "Watch runtime ended — recording saved")
         }
         WKInterfaceDevice.current().play(userInitiated ? .click : .notification)
-        WatchSync.shared.send(file: fileURL, duration: duration, createdAt: started)
+        WatchSync.shared.send(file: fileURL, duration: duration, createdAt: started, kind: kind.rawValue)
         self.fileURL = nil
     }
 }
