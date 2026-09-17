@@ -1,6 +1,6 @@
 # ARCA A2A promise demo
 
-A default-off, isolated vertical slice proving one thing end to end: two personal ARCA endpoints establish a trusted connection, privately compute one availability intersection, exchange signed least-privilege envelopes and a Promise Packet, collect both approvals, create an event through an idempotent demo adapter, and close only after evidence exists.
+A default-off, isolated vertical slice proving one thing end to end: two personal ARCA endpoints establish a trusted connection, privately compute one availability intersection, exchange signed least-privilege envelopes and a Promise Packet, collect both approvals, observe a normal PR through an idempotent GitHub evidence adapter, and close only after evidence exists.
 
 ## Run
 
@@ -17,7 +17,7 @@ No model key or real calendar credential is required. Data is process-memory onl
 - Identity confusion: endpoint IDs are bound into peer-specific derived signing keys.
 - Tampering: canonical HMAC signatures cover packets and permission envelopes; verification uses timing-safe comparison.
 - Over-disclosure: the public snapshot exposes window counts and the chosen intersection, never raw calendars.
-- Overreach: envelopes allow only `intersection-only` disclosure and `create-demo-calendar-event`.
+- Overreach: envelopes allow only `intersection-only` disclosure and `observe-github-pr-evidence`.
 - Wrong peer, expiry, replay: recipient bindings and 15-minute expiries are verified before each transition; nonces are consumed before adapter execution.
 - Premature action: both exact-slot approvals are required before execution.
 - Duplicate effects: adapter calls use a stable idempotency key and return the original evidence on retries.
@@ -29,7 +29,7 @@ The bundled key fallback is intentionally labeled local-demo-only. Shared demos 
 
 1. Persist trusted connections, nonces, packets, approvals, evidence, and an audit log in dedicated Postgres tables with transactional uniqueness constraints.
 2. Replace HMAC endpoint derivation with device-held asymmetric keys, rotation, revocation, and portable trust attestations.
-3. Add real Google/Microsoft calendar adapters through existing account auth, with read-back and compensation paths.
+3. Add real GitHub webhook verification, then Google/Microsoft calendar adapters through existing account auth, with read-back and compensation paths.
 4. Use secure multi-party availability protocols or policy-filtered broker queries for larger groups.
 5. Add durable workflow retries/timeouts and more evidence adapters. Keep models behind existing provider abstractions; none is needed for this deterministic safety path.
 6. Score κ-A2A across recall, intervention, authorization, action, verification, latency, disclosure, and failure recovery.
