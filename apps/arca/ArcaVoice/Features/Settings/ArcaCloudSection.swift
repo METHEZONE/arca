@@ -33,6 +33,11 @@ struct ArcaCloudSection: View {
 
     var body: some View {
         Section {
+            if ArcaCloud.isFreeTier {
+                Label(L("무료 크레딧으로 사용 중 — THE ZONE 제공, Claude Sonnet", "On free credits — provided by THE ZONE, Claude Sonnet"),
+                      systemImage: "gift.fill")
+                    .foregroundStyle(.orange)
+            }
             statusRow
 
             if let code {

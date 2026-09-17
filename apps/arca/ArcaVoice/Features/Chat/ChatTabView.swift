@@ -23,7 +23,8 @@ struct ChatTabView: View {
                 }
                 inputBar
             }
-            .navigationTitle("ARCA")
+            .background(ArcaTheme.spiritNight.ignoresSafeArea())
+            .navigationTitle(L("채팅", "Chat"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -218,12 +219,30 @@ struct ChatTabView: View {
             }
             .overlay {
                 if chat.messages.isEmpty && activeLog.isEmpty {
-                    ContentUnavailableView(
-                        L("ARCA와 대화해 보세요", "Talk to ARCA"),
-                        systemImage: "bubble.left.and.text.bubble.right",
-                        description: Text(L("무엇이든 물어보세요 — 중요한 건 ARCA가 기억해요.",
-                                            "Ask anything — ARCA remembers what matters."))
-                    )
+                    VStack(spacing: 18) {
+                        ArcaEmptyState(
+                            title: L("무엇이든 물어보세요", "Ask me anything"),
+                            message: L("회의, 할 일, 오늘 컨디션까지 — ARCA가 기억한 것으로 답해요.",
+                                       "Meetings, to-dos, how you're doing today — answered from what ARCA remembers."))
+                            .frame(maxHeight: 320)
+                        VStack(spacing: 8) {
+                            ForEach([L("오늘 뭐 했는지 정리해줘", "Sum up what I did today"),
+                                     L("이번 주 할 일 중 급한 것부터 알려줘", "What's most urgent this week?"),
+                                     L("최근 회의에서 결정된 것들 알려줘", "What was decided in recent meetings?")], id: \.self) { prompt in
+                                Button {
+                                    chat.draftText = prompt
+                                    chat.send()
+                                } label: {
+                                    Text(prompt)
+                                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.9))
+                                        .padding(.horizontal, 16).padding(.vertical, 10)
+                                        .background(.white.opacity(0.08), in: Capsule())
+                                }
+                                .buttonStyle(.arcaPress)
+                            }
+                        }
+                    }
                 }
             }
         }

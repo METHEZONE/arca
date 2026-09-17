@@ -646,12 +646,14 @@ private struct PowerCard: View {
         switch power {
         case .brain where status != .awake && ArcaCloud.anthropicKey == nil:
             VStack(alignment: .leading, spacing: 4) {
-                SecureField(L("초대 코드 또는 Anthropic API 키", "Invite code or Anthropic API key"), text: $anthropicKey)
+                Text(status == .waking
+                     ? L("ARCA 무료 크레딧으로 연결하는 중…", "Connecting on ARCA's free credits…")
+                     : L("키 없이 바로 써요 — ARCA가 무료 크레딧으로 연결해요. 본인 키(sk-ant-…)나 초대 코드가 있으면 아래에 넣어도 돼요.",
+                         "Works without a key — ARCA connects on free credits. Your own key (sk-ant-…) or an invite code goes below if you have one."))
+                    .font(.caption).foregroundStyle(.white.opacity(0.6))
+                SecureField(L("선택: 내 Anthropic 키 또는 초대 코드", "Optional: your Anthropic key or invite code"), text: $anthropicKey)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 360)
-                Text(L("초대 메일에 있는 코드를 붙여 넣으면 키 없이 바로 써요. 본인 키(sk-ant-…)가 있으면 그걸 넣어도 돼요.",
-                       "Paste the code from your invite mail to use ARCA without a key — or your own key (sk-ant-…)."))
-                    .font(.caption).foregroundStyle(.white.opacity(0.45))
                 if status == .needsSettings {
                     Text(L("코드 모양이 맞지 않아요 — 메일의 코드를 그대로 붙여 넣어 주세요.", "That doesn't look like a code — paste it exactly as in the mail."))
                         .font(.caption).foregroundStyle(.orange)
@@ -700,6 +702,12 @@ private struct PowerCard: View {
     private func autoWake() {
         switch power {
         case .brain where ArcaCloud.anthropicKey != nil: wake()
+        case .brain:
+            // Nothing configured: enroll this device on the free tier, then wake.
+            status = .waking
+            Task { @MainActor in
+                if await ArcaCloud.enrollIfNeeded() { wake() } else { status = .locked }
+            }
         case .ears where MicrophonePermission.isGranted: saveOpenAI(); wake()
         case .eyes where MacPermission.screenRecording.isGranted: enableDayLog(); wake()
         case .wiki: wake()

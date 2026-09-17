@@ -118,7 +118,11 @@ public struct ClaudeAgent: Sendable {
             "stream": true,
             "system": system,
             "messages": messages,
-            "thinking": ["type": "enabled", "budget_tokens": thinkingBudget],
+            // Adaptive is the only thinking mode Sonnet 5 / Opus 5 / Fable accept —
+            // a fixed budget is a 400 ("thinking.type.enabled is not supported"),
+            // which silently sent every chat turn to the OpenAI fallback.
+            // `summarized` keeps the thought bubbles populated (default is omitted).
+            "thinking": ["type": "adaptive", "display": "summarized"],
         ]
         if !toolDefs.isEmpty { body["tools"] = toolDefs }
 
@@ -128,7 +132,6 @@ public struct ClaudeAgent: Sendable {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         // Lets the model think between tool calls, not only before the first one.
-        request.setValue("interleaved-thinking-2025-05-14", forHTTPHeaderField: "anthropic-beta")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 

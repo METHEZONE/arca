@@ -368,10 +368,12 @@ struct BrainView: View {
                     .buttonStyle(.arcaPress)
                 }
             }
-            Text(L("연결 \(engine.edges.count)", "\(engine.edges.count) links"))
-                .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(.white.opacity(0.45))
-                .padding(.leading, 4)
+            if engine.edges.count > 0 {
+                Text(L("연결 \(engine.edges.count)개", "\(engine.edges.count) links"))
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.leading, 4)
+            }
         }
     }
 
@@ -394,7 +396,7 @@ struct BrainView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles")
-                        Text(engine.isWeaving ? L("엮는 중…", "Weaving…") : L("인사이트 엮기", "Weave insights"))
+                        Text(engine.isWeaving ? L("정리하는 중…", "Connecting…") : L("기억 정리하기", "Connect the dots"))
                             .font(.system(.caption, design: .rounded, weight: .semibold))
                     }
                     .padding(.horizontal, 14).padding(.vertical, 8)
@@ -558,10 +560,13 @@ struct BrainView: View {
                     ThoughtShapeIcon(kind: kind, size: 34, face: true)
                 }
             }
-            Text(L("아직 생각이 하나도 없어요 — 녹음하고, 대화하고, 연결해 보세요. 배운 것들이 여기서 살아가요.",
-                   "No thoughts yet — record, chat, connect. What ARCA learns lives here."))
-                .font(.system(.callout, design: .rounded))
-                .foregroundStyle(.white.opacity(0.55))
+            Text(L("아직 기억이 없어요", "No memories yet"))
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(.white)
+            Text(L("녹음하거나 대화하면 ARCA가 배운 것들이 여기에 캐릭터로 살아요.",
+                   "Record or chat, and what ARCA learns lives here as characters."))
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.white.opacity(0.72))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             Button {
