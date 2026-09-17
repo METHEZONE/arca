@@ -1,5 +1,6 @@
 "use client";
 import { useEffect,useState } from "react";
+import "@fontsource-variable/noto-sans-kr";
 import "./style.css";
 type Data={commitment:null|{state:string;packet:{payload:{title:string;slot:{start:string;end:string};expiresAt:string;nonce:string};signature:string};envelopes:{payload:{issuer:string;recipient:string;disclose:string[];actions:string[]}}[];approvals:Record<string,string>;evidence?:{externalId:string;digest:string;observedAt:string};events:{stage:string;ok:boolean;detail:string}[]};endpoints:{id:string;label:string;availabilityCount:number}[];rawCalendarsDisclosed:boolean};
 const labels:Record<string,string>={proposed:"제안됨",agreed:"시간 합의",authorized:"양쪽 승인",verified:"증거 완결",failed:"안전 중단"};
