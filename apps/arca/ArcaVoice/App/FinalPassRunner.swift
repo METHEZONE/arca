@@ -32,6 +32,19 @@ enum FinalPassRunner {
             return
         }
 
+        // Nothing to transcribe if nothing was captured. A meeting recorded off
+        // a virtual input (BlackHole, a Zoom/Teams audio device) is exact
+        // zeros end to end; sending an hour of that to the cloud costs money
+        // and comes back as hallucinated captions. Say what happened instead.
+        if isDigitallySilent(files: Array(files.values), duration: record.duration) {
+            record.state = .ready
+            record.qualityPassPending = false
+            record.processingError = Self.silentRecordingMessage
+            try? record.modelContext?.save()
+            DebugTrace.log("final pass: \(record.directoryName) is digital silence (\(Int(record.duration))s) — not transcribing")
+            return
+        }
+
         // Claimed up front, not on failure: if the app is quit or crashes while
         // the upload is in flight, this is the only thing left saying the
         // recording is still owed a transcript.
@@ -353,12 +366,56 @@ enum FinalPassRunner {
     /// that never happened, and offering to "recover" it would be a false
     /// promise.
     static func hasRecoverableAudio(_ record: RecordingSession) -> Bool {
-        record.audioAssets.contains { asset in
-            let url = SessionPaths.resolve(relativePath: asset.relativePath)
-            let size = (try? FileManager.default
-                .attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
-            return size > 4096
+        let urls = record.audioAssets.map { SessionPaths.resolve(relativePath: $0.relativePath) }
+        let hasBytes = urls.contains { fileSize($0) > 4096 }
+        return hasBytes && !isDigitallySilent(files: urls, duration: record.duration)
+    }
+
+    static let silentRecordingMessage = L(
+        "녹음에 소리가 전혀 들어오지 않았어요. 맥의 입력 장치가 가상 장치(BlackHole·Zoom/Teams 오디오 등)로 잡혀 있었을 가능성이 커요 — 시스템 설정 › 사운드 › 입력을 확인해주세요. 이 녹음은 복구할 수 없어요.",
+        "No sound reached this recording. The Mac's input device was most likely a virtual one (BlackHole, a Zoom/Teams audio device) — check System Settings › Sound › Input. This recording can't be recovered.")
+
+    /// Recordings that are exact digital zeros on every channel.
+    ///
+    /// No decoding needed: AAC spends ~2–3 kbps on pure silence against the
+    /// ~40 kbps the writer targets per channel, so bits-per-second alone
+    /// separates "nothing was captured" from "quiet room" by an order of
+    /// magnitude. (Three silent meetings this week measured 2.2–3.1 kbps;
+    /// the quietest real one, 105 kbps.)
+    static func isDigitallySilent(files: [URL], duration: TimeInterval) -> Bool {
+        guard duration > 2 else { return false }
+        let sizes = files.map(fileSize).filter { $0 > 0 }
+        guard !sizes.isEmpty else { return false }
+        return sizes.allSatisfy { Double($0) * 8 / duration < 8_000 }
+    }
+
+    /// A finished session whose audio is digital silence (and whose live pass,
+    /// at most, hallucinated a few captions over it).
+    static func isDigitallySilent(_ record: RecordingSession) -> Bool {
+        guard record.state != .recording, record.state != .processing,
+              record.segments.count <= 4 else { return false }
+        let urls = record.audioAssets.map { SessionPaths.resolve(relativePath: $0.relativePath) }
+        return urls.contains { fileSize($0) > 4096 }
+            && isDigitallySilent(files: urls, duration: record.duration)
+    }
+
+    /// Relabels sessions recorded before the silence check existed, so their
+    /// detail view says "nothing was captured" instead of "no speech found".
+    /// Cheap (file attributes only for sessions with ≤4 segments); rides the
+    /// Mac heartbeat.
+    static func markSilentRecordings(context: ModelContext) {
+        let sessions = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
+        var changed = false
+        for record in sessions where isDigitallySilent(record) && record.processingError != silentRecordingMessage {
+            record.processingError = silentRecordingMessage
+            record.qualityPassPending = false
+            changed = true
         }
+        if changed { try? context.save() }
+    }
+
+    private static func fileSize(_ url: URL) -> Int {
+        (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
     }
 
     /// Recordings whose transcript is missing but whose audio is still here, so

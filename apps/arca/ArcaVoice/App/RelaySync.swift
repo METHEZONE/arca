@@ -41,6 +41,7 @@ final class RelaySync {
                     // writes the evening day note once past the digest hour.
                     await NightlyDigest.shared.runIfDue(context: context)
                     await FinalPassRunner.backfillMemoriesIfNeeded(context: context)
+                    FinalPassRunner.markSilentRecordings(context: context)
                 }
                 // Crashes from the phone can only reach the vault via the Mac.
                 await CrashNoteSync.runIfDue()

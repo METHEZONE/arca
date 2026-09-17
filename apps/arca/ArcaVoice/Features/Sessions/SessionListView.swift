@@ -18,10 +18,28 @@ struct SessionListView: View {
             .filter(FinalPassRunner.hasRecoverableAudio)
     }
 
+    /// Recordings that captured nothing at all — not recoverable, so they get
+    /// an explanation instead of a rebuild button.
+    private var silent: [RecordingSession] {
+        sessions.filter(FinalPassRunner.isDigitallySilent)
+    }
+
     var body: some View {
         List(selection: $selection) {
             if !recoverable.isEmpty {
                 recoveryBanner
+            }
+            if !silent.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(L("소리가 없는 녹음 \(silent.count)개", "\(silent.count) recordings captured no sound"),
+                          systemImage: "speaker.slash")
+                        .font(.headline)
+                    Text(FinalPassRunner.silentRecordingMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 6)
             }
             ForEach(sessions) { session in
                 VStack(alignment: .leading, spacing: 4) {
