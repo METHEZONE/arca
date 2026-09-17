@@ -36,6 +36,13 @@
       "when": 1788985952737,
       "tag": "0004_traction_events",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789622829633,
+      "tag": "0005_downloads",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,21 @@ export default function ArcaDash() {
   const [phase, setPhase] = useState<"idle" | "busy" | "error">("idle");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [dl, setDl] = useState<DownloadSummary | null>(null);
+  const [dlError, setDlError] = useState("");
+
+  async function loadDownloads() {
+    setDlError("");
+    window.localStorage.setItem("arcadash-token", token);
+    try {
+      const res = await fetch("/api/arca/beta/downloads", { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      setDl(data as DownloadSummary);
+    } catch (err) {
+      setDlError((err as Error).message);
+    }
+  }
 
   useEffect(() => {
     setToken(window.localStorage.getItem("arcadash-token") ?? "");
@@ -105,14 +120,80 @@ export default function ArcaDash() {
           </div>
         )}
 
+        <div style={{ display: "grid", gap: 10, background: "rgba(255,255,255,0.05)", padding: 18, borderRadius: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <h2 style={{ fontSize: 18, margin: 0 }}>다운로드 기록</h2>
+            <button type="button" onClick={loadDownloads} disabled={!token} style={btnStyle}>불러오기</button>
+          </div>
+          <p style={{ opacity: 0.6, margin: 0, fontSize: 13, lineHeight: 1.6 }}>
+            /download·랜딩·서명 링크의 모든 클릭이 <code>downloads</code> 테이블에 남습니다 (대상, 이메일(있으면), 국가/도시, 기기, 유입 경로).
+          </p>
+          {dlError && <p style={{ color: "#ffb36b", margin: 0 }}>{dlError}</p>}
+          {dl && (
+            <>
+              <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 13 }}>
+                <span>총 <b>{dl.total}</b></span>
+                <span>고유 기기 <b>{dl.uniqueMachines}</b></span>
+                <span>이메일 식별 <b>{dl.withEmail}</b></span>
+                {Object.entries(dl.byTarget).map(([k, v]) => (
+                  <span key={k}>{k} <b>{v}</b></span>
+                ))}
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ opacity: 0.6, textAlign: "left" }}>
+                      <th style={thStyle}>시각</th><th style={thStyle}>대상</th><th style={thStyle}>이메일</th><th style={thStyle}>위치</th><th style={thStyle}>유입</th><th style={thStyle}>기기</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dl.recent.map((r, i) => (
+                      <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        <td style={tdStyle}>{new Date(r.at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</td>
+                        <td style={tdStyle}>{r.target}</td>
+                        <td style={tdStyle}>{r.email ?? "—"}</td>
+                        <td style={tdStyle}>{[r.city, r.country].filter(Boolean).join(", ") || "—"}</td>
+                        <td style={tdStyle}>{r.source ?? "—"}</td>
+                        <td style={{ ...tdStyle, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.userAgent ?? ""}>{shortUA(r.userAgent)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+
         <div style={{ opacity: 0.55, fontSize: 13, lineHeight: 1.7 }}>
+          <p style={{ margin: 0 }}>공개 다운로드 페이지: /download (DMG · zip · TestFlight, 전부 추적 링크)</p>
           <p style={{ margin: 0 }}>iPhone/Watch는 승인 없이 TestFlight 공개 링크로: https://testflight.apple.com/join/U78MNCxj</p>
-          <p style={{ margin: 0 }}>Mac 빌드 파일은 ARCA_BETA_ZIP_URL(GitHub Releases)에서 내려갑니다. 새 빌드를 올리면 링크는 그대로 최신을 가리킵니다.</p>
+          <p style={{ margin: 0 }}>Mac 빌드 파일은 ARCA_BETA_DMG_URL / ARCA_BETA_ZIP_URL(GitHub Releases latest)에서 내려갑니다. 새 릴리스를 올리면 링크는 그대로 최신을 가리킵니다.</p>
         </div>
       </div>
     </main>
   );
 }
+
+type DownloadSummary = {
+  total: number;
+  uniqueMachines: number;
+  withEmail: number;
+  byTarget: Record<string, number>;
+  recent: Array<{ at: string; target: string; email: string | null; source: string | null; country: string | null; city: string | null; userAgent: string | null; referer: string | null }>;
+};
+
+function shortUA(ua: string | null): string {
+  if (!ua) return "—";
+  if (/iPhone/.test(ua)) return "iPhone";
+  if (/iPad/.test(ua)) return "iPad";
+  if (/Macintosh/.test(ua)) return /Safari/.test(ua) && !/Chrome/.test(ua) ? "Mac · Safari" : "Mac · " + (/Chrome/.test(ua) ? "Chrome" : "browser");
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Android/.test(ua)) return "Android";
+  return ua.slice(0, 40);
+}
+
+const thStyle: React.CSSProperties = { padding: "6px 8px", fontWeight: 600 };
+const tdStyle: React.CSSProperties = { padding: "6px 8px", verticalAlign: "top" };
 
 const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.06)",

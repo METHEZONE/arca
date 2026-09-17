@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createMagicLink } from "@/lib/arca/magiclink";
 import { deviceIdFromRequest } from "@/lib/arca/device";
 import { hasDatabase } from "@/lib/db/client";
+import { sendMail } from "@/lib/mail/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,22 +55,13 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true, ...(devLink ? { devLink } : {}) });
 }
 
+// Resend when configured, otherwise the owner's Gmail via Composio (see
+// lib/mail/send.ts). Production had no RESEND_API_KEY, which used to make
+// email sign-in silently return { ok: true } with no mail ever sent.
 async function sendMagicLinkEmail(email: string, link: string): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY?.trim();
-  if (!key) return false;
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: process.env.RING_FROM_EMAIL?.trim() || "ARCA <onboarding@resend.dev>",
-        to: [email],
-        subject: "Sign in to ARCA",
-        html: `<p>Tap to sign in to ARCA. This link expires in 15 minutes.</p><p><a href="${link}">${link}</a></p>`,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  return sendMail({
+    to: email,
+    subject: "Sign in to ARCA",
+    html: `<p>Tap to sign in to ARCA. This link expires in 15 minutes.</p><p><a href="${link}">${link}</a></p><p style="color:#888;font-size:12px">If you didn't request this, ignore it.</p>`,
+  });
 }

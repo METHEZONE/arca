@@ -777,7 +777,7 @@ export default function ArcaLanding() {
             Bring your own Anthropic key. Your recordings and memory stay on your Mac. Apple silicon, macOS 26+.
           </p>
           <div className="a-hero-ctas" style={{ justifyContent: "center", marginBottom: 22 }}>
-            <a className="a-btn-ghost" href="https://testflight.apple.com/join/U78MNCxj" target="_blank" rel="noreferrer">
+            <a className="a-btn-ghost" href={`${base()}/api/arca/download?t=ios-testflight&src=landing-beta`} target="_blank" rel="noreferrer">
               iPhone · TestFlight →
             </a>
           </div>

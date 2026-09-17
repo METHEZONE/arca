@@ -196,3 +196,33 @@ export const memoryRuns = pgTable("memory_runs", {
   ok: boolean("ok").notNull().default(false),
   error: text("error"),
 });
+
+/** Every build download or TestFlight hand-off that went through
+ *  /api/arca/download or a signed beta link. Who (email when known), from
+ *  where (Vercel geo headers, hashed IP), on what (user agent), and which
+ *  artifact — the answer to "누가 어떻게 다운로드했나". */
+export const downloads = pgTable(
+  "downloads",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    /** mac-dmg | mac-zip | ios-testflight | beta-signed */
+    target: text("target").notNull(),
+    /** Resolved artifact URL at the time of the redirect. */
+    url: text("url").notNull(),
+    /** Known for signed beta links and signed-in web sessions; null otherwise. */
+    email: text("email"),
+    userId: uuid("user_id").references(() => users.id),
+    deviceId: text("device_id"),
+    /** ?src= on the link (landing section, email, tweet, ...). */
+    source: text("source"),
+    referer: text("referer"),
+    userAgent: text("user_agent"),
+    /** sha256(ip + daily salt) — enough to count unique machines, not to identify one. */
+    ipHash: text("ip_hash"),
+    country: text("country"),
+    region: text("region"),
+    city: text("city"),
+  },
+  (table) => [index("downloads_at_idx").on(table.at), index("downloads_email_idx").on(table.email)],
+);

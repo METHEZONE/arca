@@ -7,9 +7,11 @@ export const metadata: Metadata = {
     "Get the real ARCA build: the native macOS companion (direct download), the iOS + watchOS build on TestFlight, and the web dashboard.",
 };
 
-const MAC_ZIP =
-  "https://github.com/METHEZONE/arca/releases/download/mac-v1.0.1/ARCA-1.0-mac-arm64.zip";
-const TESTFLIGHT = "https://testflight.apple.com/join/U78MNCxj";
+// Every button goes through the tracked hand-off (lib/arca/downloads.ts):
+// one `downloads` row per click, then a redirect to the artifact itself.
+const MAC_DMG = "/api/arca/download?t=mac-dmg&src=download-page";
+const MAC_ZIP = "/api/arca/download?t=mac-zip&src=download-page";
+const TESTFLIGHT = "/api/arca/download?t=ios-testflight&src=download-page";
 
 export default function DownloadPage() {
   return (
@@ -35,22 +37,28 @@ export default function DownloadPage() {
         <section className="dl-card">
           <div className="dl-card-top">
             <h2>macOS companion</h2>
-            <span className="dl-meta">v1.0 · Apple silicon · 3.0 MB</span>
+            <span className="dl-meta">Beta · Apple silicon · macOS 15+ · notarized DMG</span>
           </div>
           <p>
             The full companion: notch face, meeting detection, mic + system-audio
             capture, diarized transcripts, memory feed, screenshot to task or calendar
             event, and the &ldquo;arca it&rdquo; delegation loop with its own report.
           </p>
-          <a className="dl-btn" href={MAC_ZIP}>
-            Download for Mac
+          <a className="dl-btn" href={MAC_DMG}>
+            Download for Mac (.dmg)
           </a>
           <p className="dl-note">
-            Heads up, and I&apos;d rather say it here than surprise you: this build is
-            signed with a development certificate and is not notarized yet, so macOS
-            will warn you on first launch. Right-click the app, choose Open, then allow
-            it once in System Settings → Privacy &amp; Security. Requires macOS 15+ on
-            Apple silicon.
+            Open the DMG, drag ARCA into Applications, launch it. Developer ID signed and
+            notarized, so no Gatekeeper dance. Prefer a plain zip?{" "}
+            <a href={MAC_ZIP}>Download the .zip instead</a>. On first launch ARCA asks
+            for microphone and screen recording (that is how it hears system audio); if you
+            grant screen recording after the fact, quit and reopen once.
+          </p>
+          <p className="dl-note">
+            Keys: the build ships with none of mine. Paste your own OpenAI and/or
+            Anthropic key in Settings (stored in your Keychain only), or sign in to ARCA
+            Cloud from <a href="/arca/onboarding">the onboarding page</a> and link the app
+            with the code in Settings to run keyless on the shared beta budget.
           </p>
         </section>
 
@@ -67,10 +75,10 @@ export default function DownloadPage() {
             Join on TestFlight
           </a>
           <p className="dl-note">
-            The public TestFlight link opens as soon as Apple&apos;s beta review clears.
-            If it says the beta is full or unavailable, email{" "}
-            <a href="mailto:me@thezonebio.com">me@thezonebio.com</a> and I will add you
-            to the tester group within minutes.
+            The public TestFlight link is live (Apple beta review cleared). Install
+            TestFlight first if you don&apos;t have it. If it ever says the beta is full,
+            email <a href="mailto:me@thezonebio.com">me@thezonebio.com</a> and I will add
+            you to the tester group within minutes.
           </p>
         </section>
 
@@ -102,12 +110,14 @@ export default function DownloadPage() {
           <li>&ldquo;arca it&rdquo; delegation: recall → reason → draft → file → report back</li>
           <li>Connectors: Obsidian, Notion, Slack, Gmail</li>
           <li>Apple Watch capture, widgets and Live Activity / Dynamic Island</li>
-          <li>Runs with zero API keys in demo mode; add your own keys to go live</li>
+          <li>Bring your own OpenAI / Anthropic keys, or sign in to ARCA Cloud and run keyless</li>
+          <li>ARCA Cloud account (Google or email sign-in), device link, server-side memory across Mac / iPhone / Watch</li>
         </ul>
 
         <h3 className="dl-h3">Not there yet, honestly</h3>
         <ul className="dl-list">
-          <li>Notarized Mac release and a public App Store build</li>
+          <li>A public App Store build (Mac is notarized DMG, iOS is TestFlight)</li>
+          <li>Paid plans are not self-serve yet; picking one emails me</li>
           <li>HRV / sleep layer from the Watch and the ring (designed, not wired)</li>
           <li>ARCA Core, the carry-everywhere device with a face, is at printed prototype stage</li>
         </ul>

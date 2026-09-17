@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { betaZipUrl, verifyGrant } from "@/lib/beta";
+import { recordDownload } from "@/lib/arca/downloads";
 
 // The link a tester receives. Valid signature + not expired → the build.
 export async function GET(req: Request): Promise<NextResponse> {
@@ -23,5 +24,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }
-  return NextResponse.redirect(betaZipUrl(), 302);
+  const dest = betaZipUrl();
+  await recordDownload({ request: req, target: "beta-signed", url: dest, email, source: "beta-link" });
+  return NextResponse.redirect(dest, 302);
 }
