@@ -182,150 +182,39 @@
   }
 }
 
-/* ── First Contact moment (docs/ARCA-FIRST-CONTACT.md) ── */
+/* ── First Contact · native-feeling desktop workspace ── */
 
-.onb-moment-reading .onb-sub {
-  margin-bottom: 28px;
-}
-
-.onb-scan {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.onb-scan-line {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ter);
-  font-size: 13.5px;
-  font-weight: 600;
-  opacity: 0;
-  animation: onb-scan-in 1.6s ease-in-out infinite;
-}
-
-.onb-scan-line::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-@keyframes onb-scan-in {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .onb-scan-line { animation: none; opacity: 1; }
-}
-
-.onb-chat {
-  margin-bottom: 16px;
-}
-
-.onb-agent-badge {
-  display: inline-block;
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ter);
-}
-
-.onb-bubble {
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 16px 16px 16px 4px;
-  background: var(--field);
-  font-size: 14px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: keep-all;
-}
-
-.onb-sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.onb-source {
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--canvas);
-  color: var(--sub);
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.onb-source:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.onb-commitment {
-  margin-bottom: 16px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--canvas);
-  box-shadow: var(--shadow-card);
-}
-
-.onb-ptag {
-  display: inline-block;
-  margin-bottom: 10px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--tint);
-  color: var(--accent);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.onb-ptag-accepted {
-  background: #e8f7ee;
-  color: #1c8a4a;
-}
-
-.onb-commitment h3 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  letter-spacing: -0.01em;
-}
-
-.onb-why {
-  margin: 0 0 10px;
-  color: var(--sub);
-  font-size: 13.5px;
-}
-
-.onb-commitment ul {
-  margin: 0 0 14px;
-  padding-left: 18px;
-  color: var(--ink);
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-
-.onb-cactions {
-  display: flex;
-  gap: 8px;
-}
-
-.onb-cactions .a-btn,
-.onb-cactions .a-btn-ghost {
-  flex: 1;
-  text-align: center;
-}
-
-.onb-moment-continue {
-  width: 100%;
-}
+.onb-card:has(.arca-desktop-wrap) { max-width: none; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.onb-card:has(.arca-desktop-wrap) > .onb-logo { display: none; }
+.onb-root:has(.arca-desktop-wrap) { padding: 0; align-items: stretch; background: #d8d5d1; }
+.arca-desktop-wrap { width: 100%; min-height: 100dvh; padding: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 0%, #f4f1ee 0, #dedbd6 58%, #cfcbc5 100%); }
+.arca-desktop { width: min(1480px, 100%); height: min(900px, calc(100dvh - 72px)); min-height: 680px; overflow: hidden; border: 1px solid rgba(42, 37, 33, .22); border-radius: 14px; background: #f8f7f5; box-shadow: 0 30px 80px rgba(28, 23, 18, .24), 0 3px 16px rgba(28, 23, 18, .16); color: #262321; }
+.arca-titlebar { height: 50px; display: grid; grid-template-columns: 220px minmax(140px, 1fr) auto; align-items: center; border-bottom: 1px solid #d9d6d2; background: rgba(248, 247, 245, .95); -webkit-app-region: drag; user-select: none; }
+.arca-traffic { display: flex; gap: 8px; padding-left: 17px; }
+.arca-traffic i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 1px rgba(0,0,0,.09); }
+.arca-traffic i:nth-child(2) { background: #febc2e; }.arca-traffic i:nth-child(3) { background: #28c840; }
+.arca-window-title { justify-self: center; display: flex; align-items: center; gap: 8px; font-size: 12px; }.arca-window-title b { font-size: 13px; letter-spacing: -.02em; }.arca-window-title span { padding: 3px 7px; border-radius: 5px; background: #ebe8e4; color: #756f69; }
+.arca-statusbar { display: flex; align-items: center; gap: 8px; padding-right: 12px; -webkit-app-region: no-drag; }
+.arca-status, .arca-agent-live, .arca-record { height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid #dedbd7; border-radius: 7px; background: rgba(255,255,255,.7); color: #6c6762; font: inherit; font-size: 11px; font-weight: 650; }
+.arca-status i, .arca-agent-live i, .arca-sidebar-bottom i, .arca-inspector-foot i { width: 6px; height: 6px; border-radius: 50%; background: #a9a39d; }.is-online { background: #46a168 !important; box-shadow: 0 0 0 3px rgba(70,161,104,.1); }
+.arca-record { cursor: pointer; }.arca-record i { width: 7px; height: 7px; border-radius: 50%; background: #ef5c4a; }.arca-record.is-active { color: #9f3328; border-color: #efb1aa; background: #fff0ee; }.arca-record kbd { margin-left: 2px; }
+kbd { padding: 1px 4px; border: 1px solid rgba(0,0,0,.12); border-bottom-width: 2px; border-radius: 4px; color: inherit; background: rgba(255,255,255,.6); font: 9px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.arca-mobile-menu { display: none; }
+.arca-workspace { height: calc(100% - 50px); display: grid; grid-template-columns: 220px minmax(440px, 1fr) 312px; }
+.arca-sidebar { position: relative; z-index: 5; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid #d9d6d2; background: #eeece9; }
+.arca-profile { height: 69px; display: grid; grid-template-columns: 34px minmax(0,1fr) 24px; align-items: center; gap: 9px; padding: 0 13px; border-bottom: 1px solid #dedbd7; }.arca-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: white; background: #262321; font-size: 11px; font-weight: 750; }.arca-profile div { min-width: 0; }.arca-profile strong,.arca-profile small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.arca-profile strong { font-size: 12px; }.arca-profile small { margin-top: 3px; color: #827b75; font-size: 10px; }.arca-profile button { border: 0; background: none; color: #817a74; cursor: pointer; }
+.arca-sidebar nav { padding: 15px 10px; }.arca-sidebar nav p,.arca-sidebar-bottom p { margin: 0 8px 7px; color: #97918b; font-size: 9px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }.arca-sidebar nav button { width: 100%; height: 34px; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; padding: 0 9px; border: 0; border-radius: 7px; background: transparent; color: #59544f; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }.arca-sidebar nav button:hover { background: rgba(255,255,255,.65); }.arca-sidebar nav button.is-active { color: #262321; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.07); font-weight: 700; }.arca-nav-icon { color: #817a74; font-size: 14px; }.arca-sidebar nav em { min-width: 18px; padding: 2px 5px; border-radius: 9px; background: #e2dfdb; color: #766f69; font-size: 9px; font-style: normal; text-align: center; }.arca-sidebar nav button.is-active em { color: #fff; background: #f15a3c; }
+.arca-sidebar-bottom { margin-top: auto; padding: 14px 10px 16px; border-top: 1px solid #dedbd7; }.arca-sidebar-bottom span,.arca-sidebar-bottom button { height: 27px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: #6f6963; font-size: 10.5px; }.arca-sidebar-bottom button { width: 100%; border: 0; background: transparent; cursor: pointer; }.arca-sidebar-scrim { display: none; }
+.arca-timeline { min-width: 0; display: flex; flex-direction: column; background: #fbfaf8; }
+.arca-pane-head { height: 69px; flex: 0 0 69px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; border-bottom: 1px solid #e3e0dc; }.arca-eyebrow { color: #8b847e; font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }.arca-pane-head h1 { margin: 2px 0 0; font-size: 17px; line-height: 1.1; letter-spacing: -.02em; }.arca-pane-actions { display: flex; gap: 5px; }.arca-pane-actions button { width: 30px; height: 30px; border: 1px solid #dedbd7; border-radius: 7px; background: #fff; color: #6d6762; cursor: pointer; }
+.arca-feed { flex: 1; overflow-y: auto; padding: 18px clamp(22px, 4vw, 54px) 40px; scrollbar-width: thin; scrollbar-color: #d6d2ce transparent; }.arca-day-rule { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; color: #98918b; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }.arca-day-rule::before,.arca-day-rule::after { content:""; flex: 1; height: 1px; background: #e5e2df; }
+.arca-event { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 14px; }.arca-event + .arca-event { margin-top: 2px; }.arca-event-rail { display: flex; flex-direction: column; align-items: center; }.arca-event-rail > i { flex: 1; width: 1px; min-height: 26px; background: #dedbd7; }.arca-orb,.arca-state-dot { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; color: #fff; background: #24211f; font-size: 11px; font-weight: 750; }.arca-state-dot { color: #fa5a3c; background: #fff; border: 1px solid #fa8a74; }.arca-state-dot.is-accepted { color: white; background: #46a168; border-color: #46a168; }.arca-event-content { min-width: 0; padding-bottom: 25px; }.arca-event-meta { height: 30px; display: flex; align-items: center; gap: 7px; font-size: 10px; }.arca-event-meta strong { font-size: 11px; }.arca-event-meta span { color: #99928c; }.arca-event-meta em { padding: 2px 6px; border-radius: 5px; color: #b74833; background: #fff0ed; font-size: 8px; font-style: normal; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+.arca-message { max-width: 720px; white-space: pre-line; color: #48433f; font-size: 13px; line-height: 1.65; word-break: keep-all; }.arca-inline-sources { display: flex; align-items: center; gap: 6px; margin-top: 11px; font-size: 9px; }.arca-inline-sources span { color: #98918b; }.arca-inline-sources a { padding: 4px 7px; border: 1px solid #dedbd7; border-radius: 5px; color: #625c57; background: #fff; text-decoration: none; }.arca-inline-sources a:hover { color: #e34f32; border-color: #e7a699; }
+.arca-commit-card { max-width: 720px; overflow: hidden; border: 1px solid #ddd8d3; border-radius: 11px; background: #fff; box-shadow: 0 5px 15px rgba(36,31,27,.055); }.arca-commit-card.is-accepted { border-color: #abcdb7; }.arca-commit-top { min-height: 36px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border-bottom: 1px solid #ebe8e5; background: #faf8f6; }.arca-commit-top span { padding: 3px 7px; border-radius: 5px; color: #b2442f; background: #ffebe7; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }.is-accepted .arca-commit-top span { color: #2c7044; background: #e5f3ea; }.arca-commit-top small { color: #817a74; font-size: 9px; }.arca-commit-card h2 { margin: 14px 15px 2px; font-size: 15px; letter-spacing: -.02em; }.arca-commit-card > p { margin: 0 15px 13px; color: #89827c; font-size: 10.5px; }.arca-action-list { margin: 0 15px 14px; border: 1px solid #e6e2de; border-radius: 8px; }.arca-action-list > div { height: 37px; display: grid; grid-template-columns: 23px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 0 10px; }.arca-action-list > div + div { border-top: 1px solid #eeeae7; }.arca-action-list span { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 5px; color: #918a84; background: #f2efec; font-size: 8px; }.arca-action-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.5px; font-weight: 600; }.arca-action-list em { color: #918a84; font-size: 8px; font-style: normal; }.arca-commit-actions { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-top: 1px solid #ebe8e5; }.arca-commit-actions button { height: 29px; padding: 0 12px; border: 1px solid #ddd8d3; border-radius: 6px; background: #fff; color: #5d5752; font: inherit; font-size: 9.5px; font-weight: 700; cursor: pointer; }.arca-commit-actions .arca-primary { color: #fff; border-color: #eb573b; background: #f15a3c; }.arca-commit-actions span { margin-left: auto; color: #96908a; font-size: 8.5px; }.arca-accepted-row { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-top: 1px solid #e4eee7; color: #317047; background: #f5fbf7; font-size: 10px; font-weight: 700; }.arca-accepted-row button { border: 0; background: transparent; color: #5d685f; font: inherit; font-size: 9px; text-decoration: underline; cursor: pointer; }
+.arca-thinking { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 14px; padding-top: 8px; }.arca-thinking .arca-orb { position: relative; }.arca-thinking .arca-orb i { width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: arca-pulse 1.2s infinite; }.arca-thinking strong { display:block; margin: 5px 0 4px; font-size: 12px; }.arca-thinking p { margin: 0 0 15px; color: #7e7771; font-size: 11px; }.arca-scan { display: flex; gap: 7px; flex-wrap: wrap; }.arca-scan span { padding: 5px 8px; border: 1px solid #e2deda; border-radius: 6px; color: #817a74; background: #fff; font-size: 9px; animation: arca-scan 1.6s ease-in-out infinite; }.arca-scan span:nth-child(2){animation-delay:.3s}.arca-scan span:nth-child(3){animation-delay:.6s}@keyframes arca-pulse{50%{opacity:.35;transform:scale(.7)}}@keyframes arca-scan{50%{border-color:#ef907c;color:#b64b35}}
+.arca-composer { min-height: 54px; display: grid; grid-template-columns: 28px minmax(0,1fr) 28px; align-items: center; gap: 7px; margin: 0 18px 14px; padding: 6px 8px; border: 1px solid #dcd8d4; border-radius: 10px; background: #fff; box-shadow: 0 3px 10px rgba(36,31,27,.05); }.arca-composer > button { width: 27px; height: 27px; border: 0; border-radius: 6px; background: #f1eeeb; color: #746e68; cursor: pointer; }.arca-composer div { min-width: 0; display: flex; align-items: center; justify-content: space-between; color: #aaa39d; font-size: 10.5px; }.arca-composer small { font-size: 8px; }.arca-composer .arca-voice { color: #fff; background: #f15a3c; }
+.arca-inspector { min-width: 0; display: flex; flex-direction: column; border-left: 1px solid #d9d6d2; background: #f4f2ef; }.arca-inspector-head { height: 69px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid #dedbd7; }.arca-inspector-head span,.arca-inspector-head strong { display: block; }.arca-inspector-head span { margin-bottom: 3px; color: #968f89; font-size: 8px; text-transform: uppercase; letter-spacing: .09em; }.arca-inspector-head strong { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }.arca-inspector-head button { border: 0; background: none; color: #938c86; cursor:pointer; }.arca-inspector-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 10px 12px 0; padding: 3px; border-radius: 7px; background: #e7e3df; }.arca-inspector-tabs button { height: 26px; border: 0; border-radius: 5px; background: transparent; color: #827b75; font: inherit; font-size: 9px; font-weight: 650; cursor: pointer; }.arca-inspector-tabs button[aria-selected="true"] { color: #342f2c; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }.arca-inspector-body { flex: 1; overflow-y: auto; padding: 4px 14px 20px; }.arca-inspector-body section { padding: 15px 0; border-bottom: 1px solid #dfdcd8; }.arca-inspector-body label { display:block; margin-bottom: 10px; color: #918a84; font-size: 8px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }.arca-inspector-body p { margin:0; color: #756e68; font-size: 10px; line-height: 1.55; }.arca-lifecycle { position:relative; display: flex; flex-direction: column; gap: 12px; }.arca-lifecycle::before { content:""; position:absolute; left:4px; top:7px; bottom:7px; width:1px; background:#d5d0cb; }.arca-lifecycle span { position:relative; padding-left:17px; color:#9a938d; font-size:9.5px; }.arca-lifecycle span::before { content:""; position:absolute; z-index:1; left:1px; top:3px; width:7px; height:7px; border:2px solid #f4f2ef; border-radius:50%; background:#c8c2bd; }.arca-lifecycle span.is-done { color:#3d3936; font-weight:650; }.arca-lifecycle span.is-done::before { background:#f15a3c; }.arca-permission { min-height: 29px; display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #e3dfdc; font-size:9.5px; }.arca-permission b { color:#77706a; font-size:8px; font-weight:650; }.arca-evidence { display:block; padding:10px; border:1px solid #dedad6; border-radius:7px; background:#fff; color:#544e49; text-decoration:none; }.arca-evidence span,.arca-evidence strong,.arca-evidence small { display:block; }.arca-evidence span { color:#99918b; font-size:8px; text-transform:uppercase; }.arca-evidence strong { margin:4px 0 7px; font-size:10px; }.arca-evidence small { color:#e5573b; font-size:8px; }.arca-inspector-foot { min-height:49px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; border-top:1px solid #d9d6d2; color:#756e68; font-size:9px; }.arca-inspector-foot span { display:flex; align-items:center; gap:6px; }.arca-inspector-foot small { color:#a19a94; font-size:8px; }
+.arca-demo-continue { margin-top: 9px; border: 0; background: transparent; color: #665f5a; font: inherit; font-size: 10px; font-weight: 650; cursor: pointer; }
+@media (max-width: 1040px) { .arca-workspace { grid-template-columns: 200px minmax(420px,1fr) 270px; }.arca-titlebar { grid-template-columns:200px 1fr auto}.arca-status { display:none; } }
+@media (max-width: 820px) { .arca-desktop-wrap { padding: 0; justify-content: flex-start; background:#fbfaf8; }.arca-desktop { height:100dvh; min-height:620px; border:0; border-radius:0; box-shadow:none; }.arca-titlebar { height:48px; grid-template-columns:48px 1fr auto; }.arca-traffic { display:none; }.arca-mobile-menu { display:block; width:32px; height:32px; margin-left:8px; border:0; border-radius:7px; background:#edeae6; color:#5d5752; }.arca-window-title { justify-self:start; }.arca-window-title span,.arca-agent-live,.arca-record kbd { display:none; }.arca-statusbar { padding-right:8px; }.arca-workspace { height:calc(100% - 48px); grid-template-columns:minmax(0,1fr); }.arca-sidebar { position:absolute; top:48px; bottom:0; left:0; width:240px; transform:translateX(-100%); transition:transform .18s ease; box-shadow:12px 0 30px rgba(0,0,0,.16); }.arca-sidebar.is-open { transform:translateX(0); }.arca-sidebar-scrim { display:block; position:absolute; z-index:4; inset:48px 0 0 0; border:0; background:rgba(25,22,19,.28); }.arca-inspector { display:none; }.arca-pane-head { height:60px; flex-basis:60px; padding:0 14px; }.arca-feed { padding:16px 14px 28px; }.arca-message { font-size:12px; }.arca-event { grid-template-columns:28px minmax(0,1fr); gap:10px; }.arca-orb,.arca-state-dot { width:27px;height:27px;border-radius:8px}.arca-commit-card { width:calc(100vw - 66px); }.arca-commit-actions { flex-wrap:wrap; }.arca-commit-actions span { width:100%; margin-left:0; }.arca-composer { margin:0 10px 10px; }.arca-demo-continue { position:fixed; right:10px; bottom:6px; z-index:10; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,.88); }}
+@media (prefers-reduced-motion: reduce) { .arca-scan span,.arca-thinking .arca-orb i { animation:none; } .arca-sidebar { transition:none; } }
