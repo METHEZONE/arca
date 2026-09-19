@@ -51,7 +51,7 @@ cp .env.local.example .env.local
 
 | Capability | Env | Provider |
 |---|---|---|
-| Transcription + speakers | `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` | OpenAI diarized STT first, ElevenLabs Scribe fallback |
+| Transcription + speakers | `ASSEMBLYAI_API_KEY`, `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` | AssemblyAI (speaker diarization) first, then OpenAI diarized STT, then ElevenLabs Scribe fallback |
 | Notes & action plans | `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` | Claude / OpenAI |
 | Obsidian sync | `OBSIDIAN_VAULT_PATH` | local/synced vault folder |
 | Notion sync | `NOTION_API_KEY` + `NOTION_DATABASE_ID` | Notion API |

@@ -1,4 +1,4 @@
-import { assemblyAiKey, assemblyAiSpeechModel } from "@/lib/config";
+import { assemblyAiKey, assemblyAiSpeechModels } from "@/lib/config";
 import type { SpeakerSummary, Transcript, TranscriptSegment } from "@/lib/types";
 
 const BASE_URL = "https://api.assemblyai.com/v2";
@@ -52,7 +52,7 @@ async function requestTranscript(
     body: JSON.stringify({
       audio_url: audioUrl,
       speaker_labels: true,
-      speech_model: assemblyAiSpeechModel(),
+      speech_models: assemblyAiSpeechModels(),
     }),
   });
   if (!res.ok) {

@@ -52,9 +52,11 @@ export function assemblyAiKey(): string | undefined {
   return env("ASSEMBLYAI_API_KEY");
 }
 
-/** "best" (Universal / highest accuracy) or "nano" (fast, cheap). */
-export function assemblyAiSpeechModel(): string {
-  return env("ASSEMBLYAI_SPEECH_MODEL") ?? "best";
+/** Ranked fallback list of AssemblyAI speech models to try, highest accuracy first. */
+export function assemblyAiSpeechModels(): string[] {
+  const raw = env("ASSEMBLYAI_SPEECH_MODELS");
+  if (raw) return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return ["universal-3-5-pro", "universal-2"];
 }
 
 /* ------------------------------- Analysis -------------------------------- */
@@ -219,7 +221,7 @@ export function capabilities(): Capabilities {
         transcriptionProvider() === "demo"
           ? "Demo"
           : assemblyAiKey()
-            ? `AssemblyAI ${assemblyAiSpeechModel()}`
+            ? `AssemblyAI ${assemblyAiSpeechModels()[0]}`
             : openAiKey()
               ? `OpenAI ${openAiTranscriptionModel()}`
               : elevenLabsKey()
