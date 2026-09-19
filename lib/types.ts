@@ -2,7 +2,7 @@
 // Every layer (transcription, analysis, second brain, integrations, API, UI)
 // speaks in these types. Keep this file dependency-free.
 
-export type Provider = "elevenlabs" | "claude" | "openai" | "demo";
+export type Provider = "elevenlabs" | "claude" | "openai" | "assemblyai" | "demo";
 
 /* ---------------------------------------------------------------- *
  * Transcription + speaker diarization
@@ -19,7 +19,7 @@ export type TranscriptSegment = {
 };
 
 export type Transcript = {
-  provider: Extract<Provider, "elevenlabs" | "openai" | "demo">;
+  provider: Extract<Provider, "elevenlabs" | "openai" | "assemblyai" | "demo">;
   language: string;
   durationSec: number;
   /** Speaker-prefixed plain text, good for reading and for LLM context. */

@@ -15,12 +15,18 @@ function env(name: string): string | undefined {
 
 /* ----------------------------- Transcription ----------------------------- */
 
-export type TranscriptionProvider = "auto" | "openai" | "elevenlabs" | "demo";
+export type TranscriptionProvider =
+  | "auto"
+  | "assemblyai"
+  | "openai"
+  | "elevenlabs"
+  | "demo";
 
 export function transcriptionProvider(): TranscriptionProvider {
   const forced = env("TRANSCRIPTION_PROVIDER")?.toLowerCase();
   if (
     forced === "auto" ||
+    forced === "assemblyai" ||
     forced === "openai" ||
     forced === "elevenlabs" ||
     forced === "demo"
@@ -40,6 +46,15 @@ export function elevenLabsModel(): string {
 
 export function openAiTranscriptionModel(): string {
   return env("OPENAI_TRANSCRIPTION_MODEL") ?? "gpt-4o-transcribe-diarize";
+}
+
+export function assemblyAiKey(): string | undefined {
+  return env("ASSEMBLYAI_API_KEY");
+}
+
+/** "best" (Universal / highest accuracy) or "nano" (fast, cheap). */
+export function assemblyAiSpeechModel(): string {
+  return env("ASSEMBLYAI_SPEECH_MODEL") ?? "best";
 }
 
 /* ------------------------------- Analysis -------------------------------- */
@@ -199,19 +214,21 @@ export function capabilities(): Capabilities {
     {
       key: "transcription",
       label: "Transcription + Speakers",
-      configured: Boolean(openAiKey() || elevenLabsKey()),
+      configured: Boolean(assemblyAiKey() || openAiKey() || elevenLabsKey()),
       provider:
         transcriptionProvider() === "demo"
           ? "Demo"
-          : openAiKey()
-            ? `OpenAI ${openAiTranscriptionModel()}`
-            : elevenLabsKey()
-              ? `ElevenLabs ${elevenLabsModel()}`
-              : undefined,
+          : assemblyAiKey()
+            ? `AssemblyAI ${assemblyAiSpeechModel()}`
+            : openAiKey()
+              ? `OpenAI ${openAiTranscriptionModel()}`
+              : elevenLabsKey()
+                ? `ElevenLabs ${elevenLabsModel()}`
+                : undefined,
       detail:
-        openAiKey() || elevenLabsKey()
+        assemblyAiKey() || openAiKey() || elevenLabsKey()
           ? "Speaker-diarized transcripts with provider fallback."
-          : "Set OPENAI_API_KEY or ELEVENLABS_API_KEY for real diarized transcripts.",
+          : "Set ASSEMBLYAI_API_KEY, OPENAI_API_KEY or ELEVENLABS_API_KEY for real diarized transcripts.",
     },
     {
       key: "analysis",
@@ -255,7 +272,7 @@ export function capabilities(): Capabilities {
   ];
 
   return {
-    demoMode: provider === "demo" && !(openAiKey() || elevenLabsKey()),
+    demoMode: provider === "demo" && !(assemblyAiKey() || openAiKey() || elevenLabsKey()),
     analysisProvider: provider,
     autoPushTargets: autoPushTargets(),
     items,
