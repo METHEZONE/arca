@@ -432,6 +432,10 @@ function MomentStep({ onContinue }: { onContinue: () => void }) {
   const [phase, setPhase] = useState<"reading" | "reveal">("reading");
   const [moment, setMoment] = useState<ClientMoment | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [activeNav, setActiveNav] = useState("Moments");
+  const [inspectorTab, setInspectorTab] = useState<"scope" | "evidence">("scope");
+  const [recording, setRecording] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const lang: "ko" | "en" =
@@ -457,9 +461,7 @@ function MomentStep({ onContinue }: { onContinue: () => void }) {
       })
       .finally(() => {
         if (cancelled) return;
-        // Let the reading phase breathe even when the answer was instant —
-        // the point of the scene is that ARCA went and looked.
-        const wait = Math.max(0, 1800 - (Date.now() - started));
+        const wait = Math.max(0, 1400 - (Date.now() - started));
         setTimeout(() => {
           if (!cancelled) setPhase("reveal");
         }, wait);
@@ -470,67 +472,158 @@ function MomentStep({ onContinue }: { onContinue: () => void }) {
     };
   }, []);
 
-  if (phase === "reading" || !moment) {
-    return (
-      <div className="onb-step onb-moment-reading">
-        <h1>ARCA is reading up on you.</h1>
-        <p className="onb-sub">Nothing to connect. Nothing to set up.</p>
-        <div className="onb-scan">
-          <span className="onb-scan-line" style={{ animationDelay: "0s" }}>Public writing</span>
-          <span className="onb-scan-line" style={{ animationDelay: "0.45s" }}>Upcoming events</span>
-          <span className="onb-scan-line" style={{ animationDelay: "0.9s" }}>Public profiles</span>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() === "r" && !event.metaKey && !event.ctrlKey) {
+        const target = event.target as HTMLElement | null;
+        if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+        setRecording((value) => !value);
+      }
+      if (event.key.toLowerCase() === "a" && !event.metaKey && !event.ctrlKey) {
+        const target = event.target as HTMLElement | null;
+        if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+        setAccepted(true);
+      }
+      if (event.key === "Escape") setSidebarOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-  const c = moment.commitment;
+  const c = moment?.commitment ?? null;
+  const navItems = [
+    { label: "Moments", icon: "✦", count: 1 },
+    { label: "Commitments", icon: "✓", count: accepted ? 1 : 0 },
+    { label: "Memory", icon: "◫" },
+    { label: "People", icon: "◎" },
+  ];
+
   return (
-    <div className="onb-step onb-moment">
-      <div className="onb-chat">
-        <span className="onb-agent-badge">ARCA · first contact</span>
-        <div className="onb-bubble">{moment.message}</div>
-        {moment.sources.length > 0 && (
-          <div className="onb-sources">
-            {moment.sources.map((s) => (
-              <a key={s.url} className="onb-source" href={s.url} target="_blank" rel="noreferrer">
-                {s.title}
-              </a>
-            ))}
+    <div className="arca-desktop-wrap">
+      <div className="arca-desktop" aria-label="ARCA desktop workspace">
+        <header className="arca-titlebar">
+          <div className="arca-traffic" aria-hidden="true"><i /><i /><i /></div>
+          <button className="arca-mobile-menu" type="button" onClick={() => setSidebarOpen((v) => !v)} aria-label="Toggle sidebar">☰</button>
+          <div className="arca-window-title"><b>ARCA</b><span>Personal</span></div>
+          <div className="arca-statusbar">
+            <span className="arca-status"><i className="is-online" /> Synced now</span>
+            <button className={recording ? "arca-record is-active" : "arca-record"} type="button" onClick={() => setRecording((v) => !v)} aria-pressed={recording} title="Toggle recording (R)">
+              <i /> {recording ? "Recording" : "Record"}<kbd>R</kbd>
+            </button>
+            <span className="arca-agent-live"><i /> Agent online</span>
           </div>
-        )}
-      </div>
+        </header>
 
-      {c && (
-        <div className="onb-commitment">
-          <span className={accepted ? "onb-ptag onb-ptag-accepted" : "onb-ptag"}>
-            {accepted
-              ? "Accepted — ARCA works inside this scope and reports back with evidence"
-              : "Proposed — nothing runs until you say yes"}
-          </span>
-          <h3>{c.title}</h3>
-          <p className="onb-why">{c.whyNow}</p>
-          <ul>
-            {c.suggestedActions.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-          {!accepted && (
-            <div className="onb-cactions">
-              <button className="a-btn" type="button" onClick={() => setAccepted(true)}>
-                Hand it off
-              </button>
-              <button className="a-btn-ghost" type="button" onClick={() => setAccepted(false)}>
-                Later
-              </button>
+        <div className="arca-workspace">
+          <aside className={sidebarOpen ? "arca-sidebar is-open" : "arca-sidebar"}>
+            <div className="arca-profile">
+              <span className="arca-avatar">MP</span>
+              <div><strong>Minsung&apos;s ARCA</strong><small>Private workspace</small></div>
+              <button type="button" aria-label="Workspace menu">···</button>
             </div>
-          )}
-        </div>
-      )}
+            <nav aria-label="Workspace">
+              <p>Workspace</p>
+              {navItems.map((item) => (
+                <button key={item.label} type="button" className={activeNav === item.label ? "is-active" : ""} onClick={() => { setActiveNav(item.label); setSidebarOpen(false); }}>
+                  <span className="arca-nav-icon">{item.icon}</span>{item.label}
+                  {item.count !== undefined && <em>{item.count}</em>}
+                </button>
+              ))}
+            </nav>
+            <div className="arca-sidebar-bottom">
+              <p>Connected</p>
+              <span><i className="is-online" /> MacBook Pro</span>
+              <span><i /> Calendar</span>
+              <button type="button">＋ Add source</button>
+            </div>
+          </aside>
+          {sidebarOpen && <button className="arca-sidebar-scrim" type="button" aria-label="Close sidebar" onClick={() => setSidebarOpen(false)} />}
 
-      <button className="a-btn onb-moment-continue" type="button" onClick={onContinue}>
-        Continue
-      </button>
+          <main className="arca-timeline">
+            <div className="arca-pane-head">
+              <div><span className="arca-eyebrow">Today · First contact</span><h1>{activeNav}</h1></div>
+              <div className="arca-pane-actions"><button type="button" title="Search">⌕</button><button type="button" title="More">•••</button></div>
+            </div>
+
+            <div className="arca-feed">
+              <div className="arca-day-rule"><span>Today</span></div>
+              {phase === "reading" || !moment ? (
+                <div className="arca-thinking">
+                  <span className="arca-orb" aria-hidden="true"><i /></span>
+                  <div><strong>ARCA is reading up on you</strong><p>No setup needed. I&apos;m checking public signals for something worth acting on.</p>
+                    <div className="arca-scan"><span>Public writing</span><span>Upcoming events</span><span>Public profiles</span></div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <article className="arca-event">
+                    <div className="arca-event-rail"><span className="arca-orb">A</span><i /></div>
+                    <div className="arca-event-content">
+                      <div className="arca-event-meta"><strong>ARCA</strong><span>just now</span><em>Proactive</em></div>
+                      <div className="arca-message">{moment.message}</div>
+                      <div className="arca-inline-sources">
+                        <span>Found from</span>
+                        {moment.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">↗ {source.title}</a>)}
+                      </div>
+                    </div>
+                  </article>
+
+                  {c && (
+                    <article className="arca-event arca-event-commitment">
+                      <div className="arca-event-rail"><span className={accepted ? "arca-state-dot is-accepted" : "arca-state-dot"}>✓</span><i /></div>
+                      <div className="arca-event-content">
+                        <div className="arca-event-meta"><strong>Commitment detected</strong><span>now</span></div>
+                        <section className={accepted ? "arca-commit-card is-accepted" : "arca-commit-card"}>
+                          <div className="arca-commit-top">
+                            <span>{accepted ? "Accepted" : "Proposed"}</span>
+                            <small>{accepted ? "Work can begin in the scope below" : "Nothing runs until you say yes"}</small>
+                          </div>
+                          <h2>{c.title}</h2><p>{c.whyNow}</p>
+                          <div className="arca-action-list">
+                            {c.suggestedActions.map((action, index) => <div key={action}><span>{index + 1}</span><strong>{action}</strong><em>{accepted ? index === 0 ? "Queued" : "Watching" : "Ready"}</em></div>)}
+                          </div>
+                          {!accepted ? (
+                            <div className="arca-commit-actions">
+                              <button className="arca-primary" type="button" onClick={() => setAccepted(true)}>Hand it off <kbd>A</kbd></button>
+                              <button type="button">Later</button>
+                              <span>ARCA will report back with evidence.</span>
+                            </div>
+                          ) : (
+                            <div className="arca-accepted-row"><span>✓ Scope accepted</span><button type="button" onClick={() => setAccepted(false)}>Review permission</button></div>
+                          )}
+                        </section>
+                      </div>
+                    </article>
+                  )}
+                </>
+              )}
+            </div>
+            <footer className="arca-composer"><button type="button">＋</button><div><span>Ask ARCA or drop a commitment…</span><small>⌘ ↵ to send</small></div><button className="arca-voice" type="button" onClick={() => setRecording((v) => !v)}>{recording ? "■" : "◉"}</button></footer>
+          </main>
+
+          <aside className="arca-inspector">
+            <div className="arca-inspector-head"><div><span>Inspector</span><strong>{c?.title ?? "First contact"}</strong></div><button type="button" aria-label="Close inspector">×</button></div>
+            <div className="arca-inspector-tabs" role="tablist">
+              <button type="button" role="tab" aria-selected={inspectorTab === "scope"} onClick={() => setInspectorTab("scope")}>Permission</button>
+              <button type="button" role="tab" aria-selected={inspectorTab === "evidence"} onClick={() => setInspectorTab("evidence")}>Evidence</button>
+            </div>
+            {inspectorTab === "scope" ? (
+              <div className="arca-inspector-body">
+                <section><label>Lifecycle</label><div className="arca-lifecycle"><span className="is-done">Detected</span><span className="is-done">Proposed</span><span className={accepted ? "is-done" : ""}>Accepted</span><span>In progress</span><span>Verified</span></div></section>
+                <section><label>Allowed now</label><div className="arca-permission"><span>Read public source</span><b>Allowed</b></div><div className="arca-permission"><span>Draft checklist</span><b>{accepted ? "Allowed" : "Needs approval"}</b></div><div className="arca-permission"><span>Change calendar</span><b>Ask every time</b></div></section>
+                <section><label>Privacy</label><p>Conversation and memory stay off-chain. Only a minimal completion proof can be anchored.</p></section>
+              </div>
+            ) : (
+              <div className="arca-inspector-body">
+                <section><label>Source</label>{moment?.sources.map((source) => <a className="arca-evidence" key={source.url} href={source.url} target="_blank" rel="noreferrer"><span>Public writing</span><strong>{source.title}</strong><small>Open original ↗</small></a>)}</section>
+                <section><label>Completion evidence</label><p>No evidence yet. ARCA will close this only when the calendar block or checklist can be verified.</p></section>
+              </div>
+            )}
+            <div className="arca-inspector-foot"><span><i className="is-online" /> Local memory</span><small>Last sync: now</small></div>
+          </aside>
+        </div>
+      </div>
+      <button className="arca-demo-continue" type="button" onClick={onContinue}>Finish demo →</button>
     </div>
   );
 }
