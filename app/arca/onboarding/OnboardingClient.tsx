@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getDeviceToken } from "@/lib/arca/deviceClient";
 import { arcaBase } from "@/lib/arca/origin";
 
-type Step = "signin" | "sent" | "device" | "plan" | "done";
+type Step = "signin" | "sent" | "device" | "plan" | "moment" | "done";
 
 const ERROR_COPY: Record<string, string> = {
   missing_token: "That link is missing its token — try requesting a new one.",
@@ -29,7 +29,10 @@ export default function OnboardingClient({ googleEnabled }: { googleEnabled: boo
   const initialStep = (params.get("step") as Step | null) ?? "signin";
 
   const [step, setStep] = useState<Step>(
-    initialStep === "device" || initialStep === "plan" || initialStep === "done"
+    initialStep === "device" ||
+      initialStep === "plan" ||
+      initialStep === "moment" ||
+      initialStep === "done"
       ? initialStep
       : "signin",
   );
@@ -152,7 +155,9 @@ export default function OnboardingClient({ googleEnabled }: { googleEnabled: boo
           />
         )}
 
-        {step === "plan" && <PlanStep onPick={() => setStep("done")} />}
+        {step === "plan" && <PlanStep onPick={() => setStep("moment")} />}
+
+        {step === "moment" && <MomentStep onContinue={() => setStep("done")} />}
 
         {step === "done" && <DoneStep />}
       </div>
@@ -366,6 +371,166 @@ function DoneStep() {
       <a className="onb-skip-link" href="/download">
         Don&apos;t have the app installed? Download it →
       </a>
+    </div>
+  );
+}
+
+
+/* ---------------------------------------------------------------- *
+ * First Contact — the moment ARCA speaks first (docs/ARCA-FIRST-CONTACT.md)
+ * ---------------------------------------------------------------- */
+
+type ClientCommitment = {
+  state: "proposed";
+  title: string;
+  whyNow: string;
+  suggestedActions: string[];
+  evidence: string[];
+};
+
+type ClientMoment = {
+  message: string;
+  commitment: ClientCommitment | null;
+  sources: Array<{ title: string; url: string }>;
+  lang: "ko" | "en";
+};
+
+/** Offline/zero-identity fallback — the demo floor, same shape the API
+ *  returns. A first hello that arrives beats one that waits on a session. */
+function sampleMoment(lang: "ko" | "en"): ClientMoment {
+  if (lang === "ko") {
+    return {
+      lang,
+      message:
+        "처음 뵙겠습니다. 연결 설정은 하지 않으셔도 괜찮아요. 공개된 글에서 「9월 서울 북토크」 소식을 봤습니다 (출처: https://ianpark.vc/p/instinct-10b).\n11일 남았습니다. 지금 제가 제안드릴 수 있는 건 \"9월 서울 북토크\" 준비입니다: 일정 블록 잡기, 준비 체크리스트 초안, 관련 후속 약속 감지하기. 맡기시겠어요? 동의하시기 전까지는 아무것도 실행하지 않습니다.",
+      commitment: {
+        state: "proposed",
+        title: "9월 서울 북토크",
+        whyNow: "11일 남았습니다.",
+        suggestedActions: ["일정 블록 잡기", "준비 체크리스트 초안", "관련 후속 약속 감지하기"],
+        evidence: ["https://ianpark.vc/p/instinct-10b"],
+      },
+      sources: [{ title: "이안의 주간 실리콘밸리", url: "https://ianpark.vc/p/instinct-10b" }],
+    };
+  }
+  return {
+    lang,
+    message:
+      "Hello. No setup needed — you don't have to connect anything. I saw \"September Seoul book talk\" in your public writing (source: https://ianpark.vc/p/instinct-10b).\n11 days out. What I can propose now is preparing for it: block the date, draft a prep checklist, watch for related follow-ups. Want me to take it? Nothing runs until you say yes.",
+    commitment: {
+      state: "proposed",
+      title: "September Seoul book talk",
+      whyNow: "11 days out.",
+      suggestedActions: ["Block the date", "Draft a prep checklist", "Watch for related follow-ups"],
+      evidence: ["https://ianpark.vc/p/instinct-10b"],
+    },
+    sources: [{ title: "Ian Park's newsletter", url: "https://ianpark.vc/p/instinct-10b" }],
+  };
+}
+
+function MomentStep({ onContinue }: { onContinue: () => void }) {
+  const [phase, setPhase] = useState<"reading" | "reveal">("reading");
+  const [moment, setMoment] = useState<ClientMoment | null>(null);
+  const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    const lang: "ko" | "en" =
+      typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("ko")
+        ? "ko"
+        : "en";
+    let cancelled = false;
+    const started = Date.now();
+
+    fetch(`${arcaBase()}/api/arca/moments/first-contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ lang, signals: [] }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setMoment(data?.moment ?? sampleMoment(lang));
+      })
+      .catch(() => {
+        if (!cancelled) setMoment(sampleMoment(lang));
+      })
+      .finally(() => {
+        if (cancelled) return;
+        // Let the reading phase breathe even when the answer was instant —
+        // the point of the scene is that ARCA went and looked.
+        const wait = Math.max(0, 1800 - (Date.now() - started));
+        setTimeout(() => {
+          if (!cancelled) setPhase("reveal");
+        }, wait);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (phase === "reading" || !moment) {
+    return (
+      <div className="onb-step onb-moment-reading">
+        <h1>ARCA is reading up on you.</h1>
+        <p className="onb-sub">Nothing to connect. Nothing to set up.</p>
+        <div className="onb-scan">
+          <span className="onb-scan-line" style={{ animationDelay: "0s" }}>Public writing</span>
+          <span className="onb-scan-line" style={{ animationDelay: "0.45s" }}>Upcoming events</span>
+          <span className="onb-scan-line" style={{ animationDelay: "0.9s" }}>Public profiles</span>
+        </div>
+      </div>
+    );
+  }
+
+  const c = moment.commitment;
+  return (
+    <div className="onb-step onb-moment">
+      <div className="onb-chat">
+        <span className="onb-agent-badge">ARCA · first contact</span>
+        <div className="onb-bubble">{moment.message}</div>
+        {moment.sources.length > 0 && (
+          <div className="onb-sources">
+            {moment.sources.map((s) => (
+              <a key={s.url} className="onb-source" href={s.url} target="_blank" rel="noreferrer">
+                {s.title}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {c && (
+        <div className="onb-commitment">
+          <span className={accepted ? "onb-ptag onb-ptag-accepted" : "onb-ptag"}>
+            {accepted
+              ? "Accepted — ARCA works inside this scope and reports back with evidence"
+              : "Proposed — nothing runs until you say yes"}
+          </span>
+          <h3>{c.title}</h3>
+          <p className="onb-why">{c.whyNow}</p>
+          <ul>
+            {c.suggestedActions.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+          {!accepted && (
+            <div className="onb-cactions">
+              <button className="a-btn" type="button" onClick={() => setAccepted(true)}>
+                Hand it off
+              </button>
+              <button className="a-btn-ghost" type="button" onClick={() => setAccepted(false)}>
+                Later
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <button className="a-btn onb-moment-continue" type="button" onClick={onContinue}>
+        Continue
+      </button>
     </div>
   );
 }
