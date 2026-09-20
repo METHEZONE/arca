@@ -175,8 +175,15 @@ struct RootView: View {
     /// jumps straight into the context flow for the newest shared item.
     private func presentPendingContextIfNeeded() {
         let group = UserDefaults(suiteName: SharedInbox.appGroupID)
-        guard group?.bool(forKey: "pendingContext") == true,
-              let latest = SharedInbox.pending().first else { return }
+        guard group?.bool(forKey: "pendingContext") == true else { return }
+        let pending = SharedInbox.pending()
+        for item in pending where !SharedInbox.hasValidPayload(item) {
+            SharedInbox.remove(item)
+        }
+        guard let latest = SharedInbox.pending().first else {
+            group?.set(false, forKey: "pendingContext")
+            return
+        }
         group?.set(false, forKey: "pendingContext")
         services.pendingChatShare = latest
         selectedTab = .chat

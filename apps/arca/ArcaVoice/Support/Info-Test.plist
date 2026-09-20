@@ -43,5 +43,9 @@
 	<string>ARCA reads the screenshot you just took to draft an action plan.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>ARCA transcribes your recordings on-device.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.thezone.arca.voice.screenshot-review</string>
+	</array>
 </dict>
 </plist>

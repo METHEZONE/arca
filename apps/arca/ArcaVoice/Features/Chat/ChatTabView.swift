@@ -96,7 +96,13 @@ struct ChatTabView: View {
         var image: Data?
         if item.kind == .image {
             guard let url = SharedInbox.imageURL(for: item),
-                  let data = try? Data(contentsOf: url) else { return }
+                  FileManager.default.fileExists(atPath: url.path),
+                  let data = try? Data(contentsOf: url), !data.isEmpty else {
+                // Never leave a broken manifest blocking the inbox forever.
+                SharedInbox.remove(item)
+                advancePendingShare()
+                return
+            }
             image = data
         }
         voice.stopSpeaking()
@@ -120,10 +126,22 @@ struct ChatTabView: View {
         let saved = (try? context.fetch(FetchDescriptor<ChatLogEntry>(
             predicate: #Predicate { $0.conversationId == id }))) ?? []
         if !saved.isEmpty { SharedInbox.remove(item) }
-        UserDefaults(suiteName: SharedInbox.appGroupID)?.set(
-            !SharedInbox.pending().isEmpty, forKey: "pendingContext")
-        AppServices.shared.pendingChatShare = nil
+        advancePendingShare()
         inputFocused = true
+    }
+
+    private func advancePendingShare() {
+        let next = SharedInbox.pending().first
+        let defaults = UserDefaults(suiteName: SharedInbox.appGroupID)
+        defaults?.set(next != nil, forKey: "pendingContext")
+        AppServices.shared.pendingChatShare = nil
+        guard let next else { return }
+        // Let SwiftUI finish clearing the current item before delivering the
+        // next one, so the onChange handler cannot re-enter on the old id.
+        Task { @MainActor in
+            await Task.yield()
+            AppServices.shared.pendingChatShare = next
+        }
     }
 
     private var conversations: [ConversationSummary] {

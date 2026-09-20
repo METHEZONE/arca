@@ -115,7 +115,9 @@ final class ShareViewController: UIViewController {
 
         group.notify(queue: .main) { [weak self] in
             guard let self else { return }
-            guard SharedInbox.pending().contains(where: { $0.createdAt >= now }) else {
+            guard SharedInbox.pending().contains(where: {
+                $0.createdAt >= now && SharedInbox.hasValidPayload($0)
+            }) else {
                 self.label.text = "Couldn't save this screenshot. Close and try sharing again."
                 self.checkmark.image = UIImage(systemName: "exclamationmark.triangle")
                 return

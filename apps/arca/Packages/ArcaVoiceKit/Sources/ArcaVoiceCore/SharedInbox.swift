@@ -75,6 +75,16 @@ public enum SharedInbox {
         return dir.appendingPathComponent(fileName)
     }
 
+    public static func hasValidPayload(_ item: Item) -> Bool {
+        switch item.kind {
+        case .image:
+            guard let url = imageURL(for: item) else { return false }
+            return FileManager.default.fileExists(atPath: url.path)
+        case .text, .url:
+            return !(item.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        }
+    }
+
     public static func remove(_ item: Item) {
         guard let dir = inboxDir else { return }
         try? FileManager.default.removeItem(at: dir.appendingPathComponent("\(item.id.uuidString).json"))

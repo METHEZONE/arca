@@ -97,6 +97,8 @@ targets:
         NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
         NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSUserActivityTypes:
+          - com.thezone.arca.voice.screenshot-review
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.beta
             CFBundleURLSchemes: [arca-beta]
@@ -136,6 +138,8 @@ targets:
         NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
         NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
         NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSUserActivityTypes:
+          - com.thezone.arca.voice.screenshot-review
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice.test
             CFBundleURLSchemes: [arca-test]
