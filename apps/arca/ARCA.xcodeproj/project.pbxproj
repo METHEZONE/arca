@@ -17,6 +17,7 @@
 		0BA6B4B26E4010E08C2A9E74 /* TodoColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80C9B515768F69F1D21F6D2 /* TodoColumn.swift */; };
 		0C61FE1EF50879DB5BC6DCDD /* VitalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543C02423F6F88E226119621 /* VitalsStore.swift */; };
 		0C9ED9713FDFD78EFD602EA7 /* ArcaCoreLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C5FAED2D42591C2C995FCA /* ArcaCoreLink.swift */; };
+		0DE7133C78E79515180C6571 /* ScreenshotHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80305D1AE4F7C4CA6658C4C1 /* ScreenshotHandoff.swift */; };
 		0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		0E92345997357839377901B4 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */; };
 		103900A43A7B7901C8143B0C /* TranscriptionPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC4336384285DD9ED9D8280 /* TranscriptionPrefs.swift */; };
@@ -28,6 +29,7 @@
 		169285183B6242F055AB5960 /* VitalsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AF49E49651BBE466E45012 /* VitalsEngine.swift */; };
 		178024833E6E9B7725E84324 /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1933CC2A5924C053D826CA6E /* ScreenshotHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80305D1AE4F7C4CA6658C4C1 /* ScreenshotHandoff.swift */; };
 		19E5C51A1863C1860E4F6A3C /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
 		1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1A9E34AF467D6004D2D63347 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
@@ -201,6 +203,7 @@
 		821322D39F0C0A6B069DFB72 /* TaskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56B192B6C772E42CB6713D0 /* TaskEngine.swift */; };
 		8215C5E22B581C5DD5D11057 /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
 		821675514E0AF335504778BC /* ArcaVoiceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B238B02822DC0AE2DDFFD8 /* ArcaVoiceApp.swift */; };
+		8249B938551EA7616F935AE9 /* ScreenshotHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80305D1AE4F7C4CA6658C4C1 /* ScreenshotHandoff.swift */; };
 		832FD3FFDA572363F224694F /* MeetingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CFD7C8B31277977558BF94E /* MeetingDetector.swift */; };
 		83533E48AC7218E00331343A /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
 		83EF008D7767609011EB35EB /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4641A269CC7CD4159C61976 /* StorageSettingsView.swift */; };
@@ -529,6 +532,7 @@
 		7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopView.swift; sourceTree = "<group>"; };
 		7D040B49523067F15BC91CA7 /* ChatTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTabView.swift; sourceTree = "<group>"; };
 		7FC68367DF6F2A00E8819A7B /* CompanionTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionTour.swift; sourceTree = "<group>"; };
+		80305D1AE4F7C4CA6658C4C1 /* ScreenshotHandoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotHandoff.swift; sourceTree = "<group>"; };
 		80718C2481B20CF410C64A36 /* ParticipantPrep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantPrep.swift; sourceTree = "<group>"; };
 		82731CD2C6E93B4C80F2272C /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		836495A6A9F0B481863F388F /* ArcaVoice-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ArcaVoice-macOS.entitlements"; sourceTree = "<group>"; };
@@ -997,6 +1001,7 @@
 				5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */,
 				1BE75340E0AD5143C9876E8A /* HomeView.swift */,
 				7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */,
+				80305D1AE4F7C4CA6658C4C1 /* ScreenshotHandoff.swift */,
 				AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */,
 			);
 			path = Home;
@@ -1431,6 +1436,7 @@
 				6F5C3824266A4A13181C143C /* RootView.swift in Sources */,
 				B6154A18A13B1A951464411C /* ScreenCapturePermission.swift in Sources */,
 				5006E0E4F2E47958AFB01670 /* ScreenGrab.swift in Sources */,
+				0DE7133C78E79515180C6571 /* ScreenshotHandoff.swift in Sources */,
 				8796EF58C9B6E368F9016DBC /* ScreenshotWatcher.swift in Sources */,
 				F881568DC59052E883C15CF7 /* SessionAudioBar.swift in Sources */,
 				CD1002CA56927BF8FE91D31A /* SessionDetailView.swift in Sources */,
@@ -1566,6 +1572,7 @@
 				C8186E58CBF6F0D18271714D /* RootView.swift in Sources */,
 				B136378A7C63A0BEEB5D06B2 /* ScreenCapturePermission.swift in Sources */,
 				31E2B8888A98B97DEEAC9B3A /* ScreenGrab.swift in Sources */,
+				1933CC2A5924C053D826CA6E /* ScreenshotHandoff.swift in Sources */,
 				9B0D129AF4F7844EAFD7F6A6 /* ScreenshotWatcher.swift in Sources */,
 				651725966B3E7D1B8EEE0C9F /* SessionAudioBar.swift in Sources */,
 				525AE78151032FF12256D55E /* SessionDetailView.swift in Sources */,
@@ -1690,6 +1697,7 @@
 				B8FCF809382DEDEDFF8692F3 /* RootView.swift in Sources */,
 				11BF81810E16C348426F48C9 /* ScreenCapturePermission.swift in Sources */,
 				EB2B7D8092776D72356B639F /* ScreenGrab.swift in Sources */,
+				8249B938551EA7616F935AE9 /* ScreenshotHandoff.swift in Sources */,
 				A48445E622E6D989A5AF0C01 /* ScreenshotWatcher.swift in Sources */,
 				872D1CA1ED0F00FBFD26EC39 /* SessionAudioBar.swift in Sources */,
 				5807F9D46013C68B817CF6EA /* SessionDetailView.swift in Sources */,

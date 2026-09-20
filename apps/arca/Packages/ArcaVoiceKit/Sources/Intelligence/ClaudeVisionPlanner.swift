@@ -17,6 +17,18 @@ public struct CapturePlan: Sendable, Codable {
         self.actionItems = actionItems
         self.offerLine = offerLine
     }
+
+    /// True when at least one action item has a concrete date — the signal
+    /// the Mac/phone handoff review uses to decide whether to offer
+    /// "create the schedule now?" at all, instead of always showing it.
+    public var needsSchedule: Bool {
+        actionItems.contains { $0.due != nil }
+    }
+
+    /// Action items worth turning into calendar events right now.
+    public var schedulableActionItems: [MeetingNotes.ActionItem] {
+        actionItems.filter { $0.due != nil }
+    }
 }
 
 /// Reads an image with Claude vision and produces an action plan.
@@ -51,7 +63,7 @@ public struct ClaudeVisionPlanner: Sendable {
 
     public func plan(imageData: Data, mediaType: String, context: String? = nil) async throws -> CapturePlan {
         Self.trace?("plan() entered, image=\(imageData.count) bytes")
-        var userText = "Read this image, figure out what it is, and create an actionable action plan. Accurately extract the text, schedule, to-dos, and numbers on screen, and write it in English."
+        var userText = "Read this image, figure out what it is, and create an actionable action plan. Accurately extract the text, schedule, to-dos, and numbers on screen, and write it in English. If any item has a concrete date/time visible or clearly implied (a meeting invite, event flyer, deadline, reservation, appointment confirmation), fill in its due field with a real ISO 8601 date-time — that is what turns it into a calendar event, so do not skip it when the image gives you a date."
         if let context, !context.isEmpty {
             userText += "\n\nAdditional context: \(context)"
         }
@@ -85,6 +97,7 @@ public struct ClaudeVisionPlanner: Sendable {
                             "properties": [
                                 "text": ["type": "string"],
                                 "assigneeName": ["type": "string"],
+                                "due": ["type": "string", "description": "ISO 8601 date-time if this item has a concrete date/deadline/event time visible or clearly implied in the image — omit only when the image genuinely gives no date"],
                             ],
                             "required": ["text"],
                         ],
@@ -133,14 +146,17 @@ public struct ClaudeVisionPlanner: Sendable {
             var title: String
             var insightMarkdown: String
             var offerLine: String
-            struct Item: Decodable { var text: String; var assigneeName: String? }
+            struct Item: Decodable { var text: String; var assigneeName: String?; var due: String? }
             var actionItems: [Item]
         }
         let wire = try JSONDecoder().decode(Wire.self, from: inputData)
         return CapturePlan(
             title: wire.title,
             insightMarkdown: wire.insightMarkdown,
-            actionItems: wire.actionItems.map { MeetingNotes.ActionItem(text: $0.text, assigneeName: $0.assigneeName) },
+            actionItems: wire.actionItems.map {
+                MeetingNotes.ActionItem(text: $0.text, assigneeName: $0.assigneeName,
+                                        due: ClaudeSummarizer.parseDate($0.due))
+            },
             offerLine: wire.offerLine)
     }
 

@@ -22,6 +22,8 @@ struct NotchView: View {
         case screenshotPrompt(URL)
         case readingCapture
         case planReady(String)
+        case handoffReview(title: String, hasSchedule: Bool)
+        case creatingSchedule
         case notice(String)
         case celebrate(String)
         case chat
@@ -41,6 +43,8 @@ struct NotchView: View {
             case .screenshotPrompt(let url): return .screenshotPrompt(url)
             case .readingCapture: return .readingCapture
             case .planReady(let offer): return .planReady(offer)
+            case .handoffReview(let title, let hasSchedule): return .handoffReview(title: title, hasSchedule: hasSchedule)
+            case .creatingSchedule: return .creatingSchedule
             case .notice(let text): return .notice(text)
             case .celebrate(let title): return .celebrate(title)
             case .chat: return .chat
@@ -93,6 +97,10 @@ struct NotchView: View {
             return CGSize(width: notchW + 330, height: notchH + 54)
         case .planReady:
             return CGSize(width: notchW + 430, height: notchH + 60)
+        case .handoffReview:
+            return CGSize(width: notchW + 430, height: notchH + 60)
+        case .creatingSchedule:
+            return CGSize(width: notchW + 330, height: notchH + 54)
         case .dropTarget:
             return CGSize(width: notchW + 220, height: notchH + 150)
         case .chat:
@@ -371,6 +379,36 @@ struct NotchView: View {
                 subtitle: L("실행 계획을 저장했어요.", "Action plan saved."),
                 acceptTitle: L("열기", "Open"), onAccept: { agent.openPlan() },
                 onDismiss: { agent.dismissScreenshot() })
+
+        case .handoffReview(let title, let hasSchedule):
+            // The phone read a screenshot and handed it here — the summary's
+            // already saved to memory; this is just the "want the schedule
+            // too?" ask, only shown when there's actually a dated item.
+            promptRow(
+                icon: "iphone.and.arrow.forward", tint: .purple,
+                title: title,
+                subtitle: hasSchedule
+                    ? L("휴대폰에서 읽었어요. 지금 일정 만들어줄까요?", "Read on your phone. Create the schedule now?")
+                    : L("휴대폰에서 읽고 메모리에 저장했어요.", "Read on your phone and saved to memory."),
+                acceptTitle: hasSchedule ? L("일정 만들기", "Create schedule") : L("열기", "Open"),
+                onAccept: {
+                    if hasSchedule {
+                        agent.confirmHandoffSchedule()
+                    } else {
+                        agent.openHandoffSession()
+                    }
+                },
+                onDismiss: { agent.dismissHandoffReview() })
+
+        case .creatingSchedule:
+            HStack(spacing: 12) {
+                ProgressView().controlSize(.small).tint(.white)
+                Text(L("일정 만드는 중…", "Creating schedule…"))
+                    .font(.system(.callout, design: .rounded, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                Spacer()
+            }
+            .padding(.horizontal, 18)
 
         case .celebrate(let title):
             HStack(spacing: 10) {

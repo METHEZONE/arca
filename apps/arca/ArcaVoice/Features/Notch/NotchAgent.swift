@@ -15,6 +15,11 @@ final class NotchAgent {
         case screenshotPrompt(URL)
         case readingCapture
         case planReady(String)
+        /// A screenshot read on the phone reached this Mac via Handoff — shows
+        /// the summary and, when `hasSchedule` is true, a "create the schedule
+        /// now?" button instead of just an "open" one.
+        case handoffReview(title: String, hasSchedule: Bool)
+        case creatingSchedule
         case notice(String)
         /// A finished quest — happy face + sparkle, brief.
         case celebrate(String)
@@ -37,6 +42,10 @@ final class NotchAgent {
     /// The window controller hooks this to resize the panel per mode.
     @ObservationIgnored var onModeChange: ((Mode) -> Void)?
     @ObservationIgnored private var pendingPlanSession: RecordingSession?
+    /// The session a Handoff review is currently showing — separate from
+    /// `pendingPlanSession` since the two prompts ("open the plan I just made"
+    /// vs. "review what the phone just read") can never be on screen together.
+    @ObservationIgnored private var pendingHandoffSession: RecordingSession?
     @ObservationIgnored private var autoDismissTask: Task<Void, Never>?
 
     // MARK: - Offers (called by watchers)
@@ -136,6 +145,86 @@ final class NotchAgent {
     func dismissScreenshot() {
         NSLog("[ArcaVoice] notch: screenshot dismissed")
         set(.idle)
+    }
+
+    // MARK: - Handoff (a screenshot read on the phone, continued here)
+
+    /// Called once RootView resolves a continued Handoff activity to an
+    /// actual (now-synced) session. Brings the Mac forward so the review
+    /// isn't just a silent notch change nobody notices.
+    func presentHandoffReview(session: RecordingSession) {
+        DebugTrace.log("handoff: presenting \(session.directoryName.prefix(8))")
+        pendingHandoffSession = session
+        let hasSchedule = !Self.pendingScheduleItems(for: session).isEmpty
+        set(.handoffReview(title: session.title, hasSchedule: hasSchedule),
+            autoDismissAfter: hasSchedule ? nil : 20)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// The response to "지금 일정 만들어줄까?" — creates a calendar event for
+    /// every dated action item the phone's read hasn't already scheduled.
+    func confirmHandoffSchedule() {
+        guard let session = pendingHandoffSession else { return }
+        // Watchdog, same idea as acceptScreenshot's: a stuck EventKit/network
+        // call can't wedge the notch on "creating" forever.
+        set(.creatingSchedule, autoDismissAfter: 60)
+        Task { @MainActor in
+            var items = Self.decodeActionItems(for: session)
+            var created = 0
+            for index in items.indices {
+                guard let due = items[index].due, items[index].calendarEventID == nil else { continue }
+                do {
+                    let eventID = try await CalendarEventCreator.create(
+                        title: items[index].text, start: due,
+                        description: session.note?.summaryMarkdown ?? "")
+                    items[index].calendarEventID = eventID
+                    created += 1
+                } catch {
+                    continue // one bad item shouldn't block the rest
+                }
+            }
+            session.note?.actionItemsJSON = try? JSONEncoder().encode(items)
+            session.touch()
+            try? AppServices.shared.mainContext?.save()
+            RelaySync.shared.scheduleSync()
+            pendingHandoffSession = nil
+            if created > 0 {
+                set(.celebrate(L("일정 \(created)개 추가됨", "\(created) event\(created == 1 ? "" : "s") added")),
+                    autoDismissAfter: 4)
+            } else {
+                set(.notice(L("일정을 만들지 못했어요 — 캘린더 접근을 확인해 주세요",
+                              "Couldn't create the schedule — check calendar access")),
+                    autoDismissAfter: 6)
+            }
+        }
+    }
+
+    func dismissHandoffReview() {
+        pendingHandoffSession = nil
+        set(.idle)
+    }
+
+    /// "열기" on a no-schedule handoff review — opens the saved plan like
+    /// `openPlan()` does for a locally-read screenshot.
+    func openHandoffSession() {
+        if let session = pendingHandoffSession {
+            AppServices.shared.sessionToOpen = session
+        }
+        pendingHandoffSession = nil
+        set(.idle)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private static func decodeActionItems(for session: RecordingSession) -> [MeetingNotes.ActionItem] {
+        guard let data = session.note?.actionItemsJSON,
+              let items = try? JSONDecoder().decode([MeetingNotes.ActionItem].self, from: data) else {
+            return []
+        }
+        return items
+    }
+
+    private static func pendingScheduleItems(for session: RecordingSession) -> [MeetingNotes.ActionItem] {
+        decodeActionItems(for: session).filter { $0.due != nil && $0.calendarEventID == nil }
     }
 
     func openPlan() {

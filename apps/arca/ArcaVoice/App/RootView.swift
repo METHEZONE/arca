@@ -142,6 +142,28 @@ struct RootView: View {
                     break
                 }
             }
+            // A screenshot read on the phone reached this Mac via Handoff —
+            // pull the relay a few times (rather than waiting for the Mac's
+            // own 60s loop) so the review shows up right when it's clicked.
+            .onContinueUserActivity(ArcaHandoff.screenshotReviewActivityType) { activity in
+                guard let sessionUID = activity.userInfo?[ArcaHandoff.sessionUIDKey] as? String else { return }
+                Task { @MainActor in
+                    NSApp.activate(ignoringOtherApps: true)
+                    for attempt in 0..<6 {
+                        await RelaySync.shared.syncNow()
+                        let sessions = (try? modelContext.fetch(FetchDescriptor<RecordingSession>())) ?? []
+                        if let session = sessions.first(where: { $0.directoryName == sessionUID }) {
+                            AppServices.shared.notch.presentHandoffReview(session: session)
+                            return
+                        }
+                        if attempt < 5 { try? await Task.sleep(for: .seconds(2)) }
+                    }
+                    AppServices.shared.notch.showNotice(
+                        L("휴대폰 스크린샷을 아직 못 찾았어요 — 잠시 후 다시 열어주세요.",
+                          "Couldn't find that screenshot yet — try opening it again in a moment."),
+                        seconds: 6)
+                }
+            }
         #endif
     }
 

@@ -15,12 +15,16 @@ struct HomeView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("onboarded") private var onboarded = false
-    @State private var screenshotOffered = false
     /// Shown only when the calendar says this is a meeting — see `tapFace`.
     @State private var showingParticipantPrep = false
     @State private var readingShot = false
     @State private var shotResult: String?
     @State private var shotFailed = false
+    /// Set only when the plan just read had at least one dated action item —
+    /// this is what the "create the schedule now?" prompt keys off of.
+    @State private var scheduleSession: RecordingSession?
+    @State private var creatingSchedule = false
+    @State private var scheduleMessage: String?
     @State private var tapBounce = false
     /// Which section the home is presenting. One piece of state for all of them
     /// so the phone and the Mac reach the same places by the same names.
@@ -81,9 +85,6 @@ struct HomeView: View {
                 if let shotResult {
                     resultCard(shotResult)
                 }
-                if screenshotOffered {
-                    screenshotBanner
-                }
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
@@ -109,12 +110,11 @@ struct HomeView: View {
         }
         .onReceive(NotificationCenter.default.publisher(
             for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+            // No tap needed any more — ARCA reads it right away, saves the
+            // summary to memory, and (via Handoff) offers itself on the Mac
+            // the moment it's ready.
             guard phase == .idle, !readingShot else { return }
-            withAnimation(.spring(duration: 0.35)) { screenshotOffered = true }
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(12))
-                withAnimation { screenshotOffered = false }
-            }
+            readLatestScreenshot()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { RecordingActivityController.shared.startCompanion() }
@@ -267,29 +267,8 @@ struct HomeView: View {
 
     // MARK: - Screenshot flow
 
-    private var screenshotBanner: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "camera.viewfinder")
-                .foregroundStyle(.orange)
-            Text(L("좋은 스크린샷이네요. 읽어볼까요?", "Nice shot. Want me to read it?"))
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.white)
-            Spacer()
-            Button(L("읽어줘", "Read it")) {
-                withAnimation { screenshotOffered = false }
-                readLatestScreenshot()
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(ArcaFace.ember)
-            .controlSize(.small)
-        }
-        .padding(14)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-        .transition(.move(edge: .bottom).combined(with: .opacity))
-    }
-
     private func resultCard(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Label(shotFailed
                         ? L("끝까지 못 갔어요", "Couldn't finish that")
@@ -299,7 +278,11 @@ struct HomeView: View {
                     .foregroundStyle(shotFailed ? .orange : ArcaFace.ember)
                 Spacer()
                 Button {
-                    withAnimation { shotResult = nil }
+                    withAnimation {
+                        shotResult = nil
+                        scheduleSession = nil
+                        scheduleMessage = nil
+                    }
                 } label: {
                     Image(systemName: "xmark").font(.caption2)
                         .foregroundStyle(.white.opacity(0.5))
@@ -309,16 +292,89 @@ struct HomeView: View {
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.85))
                 .lineLimit(4)
+
+            if let scheduleSession {
+                scheduleRow(for: scheduleSession)
+            }
         }
         .padding(14)
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
+    /// The "바로 일정 생성해줄까?" prompt — only shown when the plan actually
+    /// found a dated item worth turning into a calendar event.
+    @ViewBuilder
+    private func scheduleRow(for session: RecordingSession) -> some View {
+        Divider().overlay(.white.opacity(0.1))
+        if let scheduleMessage {
+            Label(scheduleMessage, systemImage: "checkmark.circle.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.green)
+        } else {
+            HStack(spacing: 10) {
+                Image(systemName: "calendar.badge.plus")
+                    .foregroundStyle(.blue)
+                Text(L("날짜가 있는 항목을 찾았어요. 지금 일정 만들어줄까요?",
+                       "Found items with a date. Create the schedule now?"))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.85))
+                Spacer()
+                if creatingSchedule {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Button(L("만들기", "Create")) { createScheduleNow(for: session) }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
+                        .controlSize(.small)
+                }
+            }
+        }
+    }
+
+    /// Turns every dated action item on the saved plan into a real calendar
+    /// event — the button's response to "바로 일정 생성해줄까?".
+    private func createScheduleNow(for session: RecordingSession) {
+        guard !creatingSchedule else { return }
+        creatingSchedule = true
+        Task { @MainActor in
+            defer { creatingSchedule = false }
+            guard let data = session.note?.actionItemsJSON,
+                  var items = try? JSONDecoder().decode([MeetingNotes.ActionItem].self, from: data) else {
+                scheduleMessage = L("일정을 만들지 못했어요", "Couldn't create the schedule")
+                return
+            }
+            var created = 0
+            for index in items.indices {
+                guard let due = items[index].due, items[index].calendarEventID == nil else { continue }
+                do {
+                    let eventID = try await CalendarEventCreator.create(
+                        title: items[index].text, start: due,
+                        description: session.note?.summaryMarkdown ?? "")
+                    items[index].calendarEventID = eventID
+                    created += 1
+                } catch {
+                    continue // one bad item shouldn't block the rest
+                }
+            }
+            session.note?.actionItemsJSON = try? JSONEncoder().encode(items)
+            session.touch()
+            try? context.save()
+            RelaySync.shared.scheduleSync()
+            UINotificationFeedbackGenerator().notificationOccurred(created > 0 ? .success : .warning)
+            scheduleMessage = created > 0
+                ? L("일정 \(created)개를 캘린더에 추가했어요", "Added \(created) event\(created == 1 ? "" : "s") to your calendar")
+                : L("일정을 만들지 못했어요 — 캘린더 접근을 확인해 주세요",
+                    "Couldn't create the schedule — check calendar access")
+        }
+    }
+
     /// Grabs the newest screenshot from Photos and runs the vision pipeline —
     /// same magic as the Mac notch, one tap instead of zero.
     private func readLatestScreenshot() {
         readingShot = true
+        scheduleSession = nil
+        scheduleMessage = nil
         RecordingActivityController.shared.note(
             L("스크린샷을 읽고 있어요…", "Reading your screenshot…"), for: 45)
         Task { @MainActor in
@@ -366,6 +422,13 @@ struct HomeView: View {
                 record.note = note
                 context.insert(record)
                 try? context.save()
+                // Push it now (not the default debounce) — the whole point of
+                // the Handoff icon on the Mac is that this session is already
+                // there to open by the time someone clicks it.
+                RelaySync.shared.scheduleSync(after: 1)
+                ScreenshotHandoff.shared.publish(
+                    sessionUID: record.directoryName, title: plan.title, hasSchedule: plan.needsSchedule)
+                if plan.needsSchedule { scheduleSession = record }
                 showShotResult(plan.offerLine, failed: false)
             } catch {
                 showShotResult(String(UserFacingError.message(for: error).prefix(140)), failed: true)
