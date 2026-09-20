@@ -12,6 +12,7 @@ import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { commitmentNodes, commitments, feedbackEvents, profiles } from "@/lib/db/schema";
 import { draftArtifact, type Extraction } from "./llm";
+import { ensureCommitmentSchema } from "./schema-bootstrap";
 
 export type NodeStatus = "pending" | "running" | "needs_approval" | "blocked" | "done" | "locked" | "rejected";
 
@@ -25,8 +26,13 @@ function need() {
   return database;
 }
 
+async function ready() {
+  await ensureCommitmentSchema();
+  return need();
+}
+
 export async function listCommitments(userId: string): Promise<CommitmentDetail[]> {
-  const database = need();
+  const database = await ready();
   const rows = await database
     .select()
     .from(commitments)
@@ -43,7 +49,7 @@ export async function listCommitments(userId: string): Promise<CommitmentDetail[
 }
 
 export async function getCommitment(userId: string, id: string): Promise<CommitmentDetail | null> {
-  const database = need();
+  const database = await ready();
   const [row] = await database
     .select()
     .from(commitments)
@@ -63,7 +69,7 @@ export async function createFromExtraction(
   extraction: Extraction,
   source: { kind: "text" | "recording"; transcript: string },
 ): Promise<string[]> {
-  const database = need();
+  const database = await ready();
   const ids: string[] = [];
   for (const c of extraction.commitments) {
     const [row] = await database
@@ -91,7 +97,9 @@ export async function createFromExtraction(
         position: i,
         title: n.title,
         kind: n.kind,
-        risky: n.kind === "decision" ? true : n.risky,
+        // Only steps ARCA would *act* on can be boundary questions. The
+        // promise itself, the human approve gate and the outcome never are.
+        risky: n.kind === "decision" ? true : ["draft", "send", "wait"].includes(n.kind) ? n.risky : false,
         question: n.question,
         status: "pending",
       })),
@@ -102,14 +110,14 @@ export async function createFromExtraction(
 }
 
 async function touch(id: string, patch: Partial<typeof commitments.$inferInsert>) {
-  await need()
+  await (await ready())
     .update(commitments)
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(commitments.id, id));
 }
 
 async function patchNode(nodeId: string, patch: Partial<typeof commitmentNodes.$inferInsert>) {
-  await need()
+  await (await ready())
     .update(commitmentNodes)
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(commitmentNodes.id, nodeId));
@@ -148,7 +156,7 @@ export async function runCommitment(userId: string, id: string): Promise<{ detai
   if (c.scopeStart === null || c.scopeEnd === null) {
     return { detail: c, events: [{ position: -1, status: "blocked", note: "위임 범위를 먼저 드래그해 주세요." }] };
   }
-  const database = need();
+  const database = await ready();
   const [profile] = await database.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
 
   if (c.status === "accepted" || c.status === "authorized") await touch(id, { status: "in_progress" });
@@ -259,6 +267,33 @@ export async function actOnNode(userId: string, id: string, nodeId: string, acti
   if (!node) return c;
 
   if (action.type === "approve") {
+    const outside = c.scopeStart === null || c.scopeEnd === null || node.position < c.scopeStart || node.position > c.scopeEnd;
+    if (outside) {
+      // "Yes, keep going" on a boundary node = the user just extended the
+      // delegation scope to include it. Persist that, then let the run
+      // handle the node by its kind (evidence nodes still need evidence).
+      const s = c.scopeStart === null ? node.position : Math.min(c.scopeStart, node.position);
+      const e = c.scopeEnd === null ? node.position : Math.max(c.scopeEnd, node.position);
+      await touch(id, { scopeStart: s, scopeEnd: e });
+      await patchNode(node.id, { status: "pending", risky: false, question: null });
+      return refreshStatus(userId, id);
+    }
+    if (node.kind === "wait" || node.kind === "outcome") {
+      // Approval never substitutes for external evidence.
+      await patchNode(node.id, { status: "pending", risky: false, question: null });
+      return refreshStatus(userId, id);
+    }
+    if (node.kind === "draft" && !node.artifact) {
+      // Boundary question answered "yes" → ARCA may now draft. The draft
+      // itself still comes back for approval before anything moves on.
+      await patchNode(node.id, { status: "pending", risky: false, question: null });
+      return refreshStatus(userId, id);
+    }
+    if (node.kind === "send" && node.status === "needs_approval") {
+      // Approved to send, but no connector exists yet → block honestly.
+      await patchNode(node.id, { status: "pending", risky: false, question: null });
+      return refreshStatus(userId, id);
+    }
     await patchNode(node.id, { status: "done", question: null });
     // Approving a draft also satisfies an immediately following approve gate.
     const next = c.nodes.find((n) => n.position === node.position + 1);
@@ -282,7 +317,7 @@ export async function actOnNode(userId: string, id: string, nodeId: string, acti
 export type Rail = "consent" | "quality";
 
 export async function addFeedback(userId: string, input: { commitmentId?: string; nodeId?: string; rail: Rail; value: string; note?: string }) {
-  await need().insert(feedbackEvents).values({
+  await (await ready()).insert(feedbackEvents).values({
     userId,
     commitmentId: input.commitmentId,
     nodeId: input.nodeId,
@@ -295,7 +330,7 @@ export async function addFeedback(userId: string, input: { commitmentId?: string
 export type TasteModel = { consent: Record<string, number>; quality: Record<string, number>; total: number };
 
 export async function tasteModel(userId: string): Promise<TasteModel> {
-  const rows = await need()
+  const rows = await (await ready())
     .select({ rail: feedbackEvents.rail, value: feedbackEvents.value, n: sql<number>`count(*)::int` })
     .from(feedbackEvents)
     .where(eq(feedbackEvents.userId, userId))
@@ -312,7 +347,7 @@ export async function tasteModel(userId: string): Promise<TasteModel> {
 export async function deleteCommitment(userId: string, id: string): Promise<boolean> {
   const c = await getCommitment(userId, id);
   if (!c) return false;
-  const database = need();
+  const database = await ready();
   await database.delete(feedbackEvents).where(eq(feedbackEvents.commitmentId, id));
   await database.delete(commitmentNodes).where(eq(commitmentNodes.commitmentId, id));
   await database.delete(commitments).where(eq(commitments.id, id));

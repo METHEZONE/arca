@@ -2,12 +2,14 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
 import { profiles, type ProfileSource } from "@/lib/db/schema";
+import { ensureCommitmentSchema } from "./schema-bootstrap";
 
 export type ProfileRow = typeof profiles.$inferSelect;
 
 export async function getProfile(userId: string): Promise<ProfileRow | null> {
   const database = db();
   if (!database) return null;
+  await ensureCommitmentSchema();
   const [row] = await database.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
   return row ?? null;
 }
@@ -25,6 +27,7 @@ export async function confirmProfile(
 ): Promise<ProfileRow> {
   const database = db();
   if (!database) throw new Error("DATABASE_URL is not set.");
+  await ensureCommitmentSchema();
   const values = {
     userId,
     displayName: input.displayName?.slice(0, 120) || null,
@@ -47,5 +50,6 @@ export async function confirmProfile(
 export async function deleteProfile(userId: string): Promise<void> {
   const database = db();
   if (!database) return;
+  await ensureCommitmentSchema();
   await database.delete(profiles).where(eq(profiles.userId, userId));
 }

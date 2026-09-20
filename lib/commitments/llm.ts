@@ -11,7 +11,19 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
-import { analysisProvider, claudeModel, openAiNotesModel } from "@/lib/config";
+import { analysisProvider, anthropicKey, claudeModel, openAiKey, openAiNotesModel } from "@/lib/config";
+
+/** Ordered provider chain: the configured preference first, then whichever
+ *  other key exists. A low-credit Anthropic account must not degrade the
+ *  product to demo output while an OpenAI key is sitting right there. */
+function providerChain(): Array<"claude" | "openai"> {
+  const pref = analysisProvider();
+  const chain: Array<"claude" | "openai"> = [];
+  if (pref === "claude" || (pref === "demo" && anthropicKey())) chain.push("claude");
+  if (pref === "openai" || openAiKey()) chain.push("openai");
+  if (anthropicKey() && !chain.includes("claude")) chain.push("claude");
+  return chain.filter((p, i) => chain.indexOf(p) === i && (p === "claude" ? Boolean(anthropicKey()) : Boolean(openAiKey())));
+}
 
 export const NODE_KINDS = ["start", "draft", "approve", "send", "wait", "decision", "outcome"] as const;
 export type NodeKind = (typeof NODE_KINDS)[number];
@@ -59,40 +71,42 @@ const EXTRACT_SYSTEM = [
 ].join(" ");
 
 export async function extractCommitments(transcript: string): Promise<Extraction> {
-  const provider = analysisProvider();
   const text = transcript.slice(0, 24000);
-  if (provider === "demo") return demoExtraction(text);
-  try {
-    if (provider === "claude") {
-      const client = new Anthropic();
-      const res = await client.messages.parse({
-        model: claudeModel(),
-        max_tokens: 4000,
-        output_config: { format: zodOutputFormat(extractionSchema) },
-        system: EXTRACT_SYSTEM,
-        messages: [{ role: "user", content: `Transcript:\n${text}` }],
+  const errors: string[] = [];
+  for (const provider of providerChain()) {
+    try {
+      if (provider === "claude") {
+        const client = new Anthropic();
+        const res = await client.messages.parse({
+          model: claudeModel(),
+          max_tokens: 4000,
+          output_config: { format: zodOutputFormat(extractionSchema) },
+          system: EXTRACT_SYSTEM,
+          messages: [{ role: "user", content: `Transcript:\n${text}` }],
+        });
+        const parsed = res.parsed_output;
+        if (!parsed) throw new Error("Claude returned no parseable output.");
+        return { ...parsed, provider: "claude" };
+      }
+      const client = new OpenAI();
+      const completion = await client.chat.completions.parse({
+        model: openAiNotesModel(),
+        messages: [
+          { role: "system", content: EXTRACT_SYSTEM },
+          { role: "user", content: `Transcript:\n${text}` },
+        ],
+        response_format: zodResponseFormat(extractionSchema, "arca_commitments"),
       });
-      const parsed = res.parsed_output;
-      if (!parsed) throw new Error("Claude returned no parseable output.");
-      return { ...parsed, provider: "claude" };
+      const parsed = completion.choices[0]?.message.parsed;
+      if (!parsed) throw new Error("OpenAI returned no parseable output.");
+      return { ...parsed, provider: "openai" };
+    } catch (err) {
+      errors.push(`${provider}: ${err instanceof Error ? err.message.slice(0, 140) : "unknown"}`);
     }
-    const client = new OpenAI();
-    const completion = await client.chat.completions.parse({
-      model: openAiNotesModel(),
-      messages: [
-        { role: "system", content: EXTRACT_SYSTEM },
-        { role: "user", content: `Transcript:\n${text}` },
-      ],
-      response_format: zodResponseFormat(extractionSchema, "arca_commitments"),
-    });
-    const parsed = completion.choices[0]?.message.parsed;
-    if (!parsed) throw new Error("OpenAI returned no parseable output.");
-    return { ...parsed, provider: "openai" };
-  } catch (err) {
-    const demo = demoExtraction(text);
-    demo.summary = `${demo.summary} (모델 호출 실패로 데모 추출 사용: ${err instanceof Error ? err.message.slice(0, 120) : "unknown"})`;
-    return demo;
   }
+  const demo = demoExtraction(text);
+  if (errors.length > 0) demo.summary = `${demo.summary} (모델 호출 실패 → 데모 추출: ${errors.join(" | ")})`;
+  return demo;
 }
 
 /** Keyword-only fallback: finds "~까지 ~할게요/드릴게요/보내" style promises. */
@@ -140,7 +154,6 @@ export async function draftArtifact(input: {
   summary: string | null;
   profile: { displayName: string | null; company: string | null; headline: string | null } | null;
 }): Promise<{ text: string; provider: "claude" | "openai" | "demo" }> {
-  const provider = analysisProvider();
   const user = [
     `Node: ${input.nodeTitle}`,
     `Commitment: ${input.commitmentTitle}`,
@@ -151,36 +164,36 @@ export async function draftArtifact(input: {
     `Conversation summary: ${input.summary ?? "(none)"}`,
     `Sender: ${input.profile?.displayName ?? "(user)"}${input.profile?.company ? ` · ${input.profile.company}` : ""}${input.profile?.headline ? ` · ${input.profile.headline}` : ""}`,
   ].join("\n");
-  if (provider === "demo") {
-    return { provider: "demo", text: demoDraft(input) };
-  }
-  try {
-    if (provider === "claude") {
-      const client = new Anthropic();
-      const res = await client.messages.create({
-        model: claudeModel(),
-        max_tokens: 1200,
-        system: DRAFT_SYSTEM,
-        messages: [{ role: "user", content: user }],
+  for (const provider of providerChain()) {
+    try {
+      if (provider === "claude") {
+        const client = new Anthropic();
+        const res = await client.messages.create({
+          model: claudeModel(),
+          max_tokens: 1200,
+          system: DRAFT_SYSTEM,
+          messages: [{ role: "user", content: user }],
+        });
+        const text = res.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+        if (!text) throw new Error("empty");
+        return { provider: "claude", text };
+      }
+      const client = new OpenAI();
+      const completion = await client.chat.completions.create({
+        model: openAiNotesModel(),
+        messages: [
+          { role: "system", content: DRAFT_SYSTEM },
+          { role: "user", content: user },
+        ],
       });
-      const text = res.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+      const text = completion.choices[0]?.message.content?.trim();
       if (!text) throw new Error("empty");
-      return { provider: "claude", text };
+      return { provider: "openai", text };
+    } catch {
+      /* try next provider */
     }
-    const client = new OpenAI();
-    const completion = await client.chat.completions.create({
-      model: openAiNotesModel(),
-      messages: [
-        { role: "system", content: DRAFT_SYSTEM },
-        { role: "user", content: user },
-      ],
-    });
-    const text = completion.choices[0]?.message.content?.trim();
-    if (!text) throw new Error("empty");
-    return { provider: "openai", text };
-  } catch {
-    return { provider: "demo", text: demoDraft(input) };
   }
+  return { provider: "demo", text: demoDraft(input) };
 }
 
 function demoDraft(input: { commitmentTitle: string; counterpart: string | null; due: string | null; outcome: string }): string {

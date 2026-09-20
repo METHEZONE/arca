@@ -74,6 +74,19 @@ export default function CommitmentPage() {
     }
   }
 
+  async function accept() {
+    if (!c) return;
+    setRunning(true);
+    try {
+      const d = await api<{ item: Commitment }>(`/api/arca/commitments/${c.id}`, { method: "PATCH", body: JSON.stringify({ action: "accept" }) });
+      setC(d.item);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "실패했습니다.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
   async function run() {
     if (!c) return;
     setRunning(true);
@@ -162,6 +175,23 @@ export default function CommitmentPage() {
 
       <div className="app-grid">
         <div>
+          {(c.status === "detected" || c.status === "proposed") && (
+            <motion.div className="node-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 22, borderColor: "var(--accent)" }}>
+              <div className="nk">Commitment detected</div>
+              <h4>이 약속, ARCA가 맡을까요?</h4>
+              <p className="q" style={{ color: "var(--ter)" }}>
+                수락하면 Commitment Graph가 열립니다. 아무것도 실행되지 않습니다 — 범위를 드래그하기 전까지는.
+              </p>
+              <div className="row">
+                <button className="a-btn" onClick={() => void accept()} disabled={running}>
+                  ARCA it?
+                </button>
+                <Link className="chip" href="/arca/app">
+                  나중에
+                </Link>
+              </div>
+            </motion.div>
+          )}
           <div className="graph-wrap">
             <svg
               ref={svgRef}
