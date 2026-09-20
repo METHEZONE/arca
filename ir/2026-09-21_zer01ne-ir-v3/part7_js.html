@@ -1,0 +1,390 @@
+
+<script>
+/* ====================== FORMULAS (single source; everything on screen is recomputed) ====================== */
+const F = {
+  price: 12900, months: 12,
+  laborWorld: 3734006209, fitTam: 0.20, fitTamRange: [0.10, 0.20, 0.30],
+  usLabor: 171495000, krEmployed: 29154000, fitSam: 0.15, fitSamRange: [0.10, 0.15, 0.20],
+  ladder: [100, 1000, 10000],
+  minPerDay: 480, days: 30, priceMin: { base: 0.003, cons: 0.006 }, fx: 1400,
+};
+F.annual = F.price * F.months;                                   // 154,800
+F.tam = F.laborWorld * F.fitTam * F.annual;                      // ≈115.6조
+F.samUsers = (F.usLabor + F.krEmployed) * F.fitSam;              // 30,097,350
+F.sam = F.samUsers * F.annual;                                   // ≈4.66조
+F.pct10k = 10000 / F.samUsers;                                   // 0.0332%
+F.min = F.minPerDay * F.days;                                    // 14,400
+F.costBase = F.min * F.priceMin.base; F.costCons = F.min * F.priceMin.cons; // $43.2 / $86.4
+const fmtKRW = v => v >= 1e12 ? (v/1e12).toFixed(v/1e12 >= 100 ? 1 : 2).replace(/\.?0+$/,'') + '조원' : v >= 1e8 ? (v/1e8).toFixed(3).replace(/\.?0+$/,'') + '억원' : v >= 1e4 ? Math.round(v/1e4).toLocaleString() + '만원' : Math.round(v).toLocaleString() + '원';
+const fmtInt = v => Math.round(v).toLocaleString();
+const fmtPct = (v, d=3) => (v*100).toFixed(d) + '%';
+
+/* ====================== APPENDIX DATA (B01–B25) ====================== */
+const GROUPS = [
+  ["Product", ["b3","b5","b6","b7","b8"]],
+  ["Defensibility", ["b1","b2"]],
+  ["Technology", ["b10","b11","b12"]],
+  ["Safety & Agency", ["b4","b9"]],
+  ["Traction", ["b13","b14"]],
+  ["Business & Unit Economics", ["b17","b18","b21"]],
+  ["Market", ["b19","b20"]],
+  ["GTM", ["b15","b16"]],
+  ["Team & Financing", ["b22","b23","b24","b25"]],
+];
+const SRC = {
+  wb: ["World Bank/ILO SL.TLF.TOTL.IN", "https://data.worldbank.org/indicator/SL.TLF.TOTL.IN"],
+  bls: ["BLS Employment Situation Dec 2025", "https://www.dol.gov/newsroom/economicdata/empsit_01092026.pdf"],
+  kr: ["통계청 경제활동인구조사 2025.09", "https://mods.go.kr/board.es?act=view&bid=11732&list_no=438848&mainXml=Y&mid=a20101000000"],
+  oai: ["OpenAI API pricing", "https://developers.openai.com/api/docs/pricing"],
+  instinct: ["instinct.com", "https://instinct.com/"],
+  vellum: ["vellum.ai · Series A", "https://vellum.ai/blog/announcing-our-20m-series-a"],
+  plaud: ["plaud.ai 뉴스룸", "https://www.plaud.ai/blogs/news/plaud-scales-from-1m-to-100m-arr"],
+  plaudtc: ["TechCrunch 2026-06-16", "https://techcrunch.com/2026/06/16/plaud-says-its-software-business-topped-100m-in-arr-after-shipping-over-2m-ai-notetakers/"],
+  otter: ["otter.ai 블로그", "https://otter.ai/blog/otter-ai-caps-transformational-2025-with-100m-arr-milestone-industry-first-ai-meeting-agents-and-global-enterprise-expansion"],
+  granola: ["TechCrunch 2026-03-25", "https://techcrunch.com/2026/03/25/granola-raises-125m-hits-1-5b-valuation-as-it-expands-from-meeting-notetaker-to-enterprise-ai-app/"],
+  tomo: ["Business Wire 2026-06-25", "https://www.morningstar.com/news/business-wire/20260625645270/tomo-is-the-ai-champion-helping-people-bet-on-themselves-emerging-from-stealth-with-5-million"],
+  kaist: ["arXiv:2505.10742", "https://arxiv.org/abs/2505.10742"],
+  hai: ["Stanford HAI AI Index 2026", "https://hai.stanford.edu/ai-index/2026-ai-index-report"],
+  oaiad: ["OpenAI · ChatGPT adoption", "https://openai.com/index/how-chatgpt-adoption-has-expanded/"],
+  internal: ["내부: ARCA master brief · 제품 결정 · 로그 · κ-bench v0.3", null],
+  pr6: ["METHEZONE/arca PR #6 (open · demo-only)", null],
+};
+// label types: m=measured, p=proxy, a=assumption, t=target/plan, c=[확인 필요]
+const B = [
+ {id:"b1", cat:"PRODUCT MOAT", q:"ChatGPT, OpenClaw, Claude가 곧 만들면?", ans:"기능은 복제될 수 있습니다. ARCA의 방어선은 모델이 아니라 권한, 상태 전이, 외부 증거, 실패 복구가 쌓이는 commitment layer입니다.",
+  deeper:["모델은 제안과 추론을 하고, 권한 판정과 상태 전이는 결정론적 코드가 맡습니다.","모델 가격과 성능이 좋아질수록 ARCA의 실행 원가는 내려가지만, 사람별 위임 경계와 완결 이력은 ARCA에 남습니다."],
+  evidence:[["t","Owned layers: sensing · Commitment Graph · delegation policy · personal/org separation · A2A identity/permission · verified closure"],["c","OpenClaw 비교는 발표 직전 최신 공개 포지셔닝 재확인"]],
+  boundary:"“복제 불가” 또는 “세계 최초” 금지. 해자는 제품 구조와 축적 데이터의 가설이며 완결률로 증명해야 함.",
+  followup:"그럼 moat를 언제 숫자로 보여주나? → 반복 위임, evidence-verified completion, recovery success를 100명 코호트로 측정.",
+  motion:"compare", src:["internal"]},
+ {id:"b2", cat:"PRODUCT MOAT", q:"Instinct, Tomo, Vellum과 무엇이 다른가?", ans:"같은 personal-agent 지형을 인정하되, ARCA는 약속을 상태 객체로 만들고 외부 증거가 생길 때까지 닫는 데 제품의 중심을 둡니다.",
+  deeper:["Instinct는 직접 경쟁 맵에 포함합니다. 기능 부재를 추정하지 않고 공개 evidence test로만 비교합니다.","Vellum, Tomo도 이름·포지셔닝·현재 공개 기능을 최신 공식 자료로 확인해야 합니다."],
+  evidence:[["m","비교 축: real-world sensing / commitment object / granular permission / A2A / external-evidence closure · 기준일 2026-09-21 · 공식 공개자료 기준"],["t","ARCA 행의 O는 제품 설계·목표 상태 — CURRENT / PARTIAL / PROTOTYPE / DEMO / TARGET 배지로 구현 상태 분리"]],
+  boundary:"타사 O/X를 단정하지 않음. credible public source 없는 매출·사용자·밸류는 생략.",
+  followup:"왜 지금 이 팀이 이길 수 있나? → lived workflow, owned stack, completion benchmark로 답함.",
+  motion:"compare", src:["instinct","vellum","tomo"]},
+ {id:"b3", cat:"PRODUCT LOOP", q:"Commitment Graph는 정확히 무엇인가?", ans:"대화·캘린더·행동에서 생긴 약속을 사람, 기한, 조건, 권한, 완료 증거가 연결된 살아 있는 상태 그래프로 관리하는 구조입니다.",
+  deeper:["Promise Packet 상태: detected → proposed → accepted → authorized → in_progress → evidence_submitted → verified.","한 약속의 버전과 의존성을 추적하므로 “무슨 일을 했나”보다 “무엇이 아직 닫히지 않았나”를 운영합니다."],
+  evidence:[["t","ARCA product architecture and Promise Packet design"],["c","세부 데이터 스키마는 [확인 필요]"]],
+  boundary:"현재 구현, 설계 완료, 향후 계획을 섞지 않음.",
+  followup:"LLM이 상태를 잘못 바꾸면? → 모델은 제안, 코드가 전이와 권한을 검증.",
+  motion:"graph", src:["internal"]},
+ {id:"b4", cat:"PRODUCT LOOP", q:"드래그해서 맡기는 것은 진짜 자율성인가?", ans:"드래그는 사용자가 위임 범위를 공간적으로 지정하는 행위입니다. orange 영역 안에서만 자동 실행하고 경계에서는 다시 묻습니다.",
+  deeper:["범위 안 자동화와 범위 밖 승인 요청을 분리합니다.","완전 위임 on/off와 사람·프로젝트별 정책은 학습 가능하지만, 사용자가 언제든 끄고 수정할 수 있어야 합니다."],
+  evidence:[["t","Product interaction: drag-bounded delegation region · 웹 프로토타입 thezonebio.com/arca/app"],["c","현재 자동화 범위의 실측 오작동률은 [확인 필요]"]],
+  boundary:"완전 자율 실행을 주장하지 않음.",
+  followup:"사용자가 실수로 넓게 드래그하면? → 고위험 행동(메시지·돈·대표 권한)은 별도 confirmation과 취소 가능성 유지.",
+  motion:"graph", src:["internal"]},
+ {id:"b5", cat:"LEARNING", q:"먼저 묻는 질문이 귀찮아지지 않나?", ans:"질문 수를 늘리는 것이 목표가 아니라, 권한과 품질이 불확실할 때만 가장 짧은 질문으로 실패를 막는 것이 목표입니다.",
+  deeper:["Consent label: 해도 되는가. Quality label: 어떤 결과가 좋은가. 둘을 섞지 않습니다.","반복 피드백은 taste model에 흡수해 같은 질문을 줄이되, 권한은 습관만으로 확대하지 않습니다."],
+  evidence:[["t","Learning targets: extraction, intervention timing, ambiguous evidence, failure recovery"],["c","질문 감소 측정: task당 clarification count와 승인 후 수정률 — 현재 값 [확인 필요]"]],
+  boundary:"동의는 추론으로 생성하지 않음. 권한 원장과 상태 기계는 학습 대상이 아님.",
+  followup:"질문 감소를 어떻게 측정? → task당 clarification count, 승인 후 수정률.",
+  motion:"graph", src:["internal"]},
+ {id:"b6", cat:"TRUST", q:"“완료”를 어떻게 검증하나?", ans:"모델의 “done”을 믿지 않고 회신, 캘린더 이벤트, 결제 영수증, 배송 상태, 전달된 파일처럼 외부 증거가 있을 때만 verified로 닫습니다.",
+  deeper:["각 약속에 완료 조건과 evidence adapter를 먼저 연결합니다.","증거가 애매하면 evidence_submitted에 머물고 사람 또는 검증기가 판정합니다."],
+  evidence:[["t","Promise Packet lifecycle; Gmail / Calendar / Slack / hardware are evidence adapters"],["c","adapter coverage와 정확도 [확인 필요]"]],
+  boundary:"모든 현실 결과를 자동 검증할 수 있다고 주장하지 않음.",
+  followup:"증거가 조작되면? → source binding, hash/log, human review가 필요한 보안 설계. 구현 범위 [확인 필요].",
+  motion:"evidence", src:["internal"]},
+ {id:"b7", cat:"A2A", q:"ARCA끼리 대화하면 무엇이 달라지나?", ans:"사람끼리 반복 조율하는 비용을 줄이되, 각 ARCA는 자신이 대표하는 사람의 승인 범위 안에서만 최소 정보와 행동을 교환합니다.",
+  deeper:["Commitment detection → permission/quality check → minimum request/authority/evidence packet → bilateral alignment → bounded execution → both-side closure.","B2C는 관계의 coordination tax를 줄이고, B2B는 회사 간 execution layer가 됩니다."],
+  evidence:[["m","기술 증거: METHEZONE/arca PR #6 — private-calendar intersection, permission-gated Promise Packet lifecycle, evidence close (PR URL/commit/test pass). open · 미머지 · demo-only"],["t","소비자 UX(캘린더 조율·문서 범위 redaction)는 TARGET"]],
+  boundary:"ARCAs가 사람 대신 자유롭게 결정하지 않음. 공개 A2A 네트워크 완성이나 매출을 주장하지 않음.",
+  followup:"정보가 상대 회사로 새지 않나? → packet 최소화, personal/org separation, 각 인간의 권한 검증.",
+  motion:"graph", src:["pr6"]},
+ {id:"b8", cat:"A2A", q:"Company Brain AX는 B2B 피벗인가?", ans:"아닙니다. ARCA는 개인 소유 Personal Life OS이고, Company Brain AX는 같은 core를 회사 맥락에서 쓰는 첫 Work Shell입니다.",
+  deeper:["개인과 회사 기억은 분리하고 필요한 packet만 조립합니다.","회사 간에는 request·authority·evidence를 표준 packet으로 교환하는 execution layer로 확장합니다."],
+  evidence:[["t","Product decision: Company Brain AX = first Work Shell, not second product"]],
+  boundary:"개인 중심 thesis를 엔터프라이즈 매출 때문에 바꿨다고 말하지 않음.",
+  followup:"두 시장을 동시에 하면 산만하지 않나? → common atom(Promise Packet)과 sequencing으로 답함.",
+  motion:"graph", src:["internal"]},
+ {id:"b9", cat:"SECURITY", q:"개인정보, 환각, 오실행은?", ans:"원문은 기기에 두고, 모르는 것은 실행하지 않으며, 메시지·돈·고위험 행동은 명시적 승인과 외부 증거를 요구합니다.",
+  deeper:["현재 beta: data stays on the user’s Mac; mic/screen/OAuth 권한은 사용자가 부여합니다.","Chain(있다면)은 identity key, packet signature, settlement, hashed evidence만. 대화·메모리·건강·캘린더는 올리지 않습니다."],
+  evidence:[["m","Current beta privacy posture (Mac 로컬 저장)"],["t","Web2.5 architecture decision"],["c","보안 감사, 암호화 세부, retention, incident response는 [확인 필요]"]],
+  boundary:"“절대 안전” 금지.",
+  followup:"서버가 없으면 sync는? → user-owned context store 방향, 구현·정책 [확인 필요].",
+  motion:"evidence", src:["internal"]},
+ {id:"b10", cat:"ARCHITECTURE", q:"기술 구조는?", ans:"Swift sensing/approval clients, TypeScript server, Postgres commitment ledger, Temporal-class workflow engine, swappable model adapters로 나눕니다.",
+  deeper:["Sensing → Context Engine → Commitment Ledger → delegation policy → workflow execution → evidence verification.","모델은 교체 가능한 inner part, 상태와 책임 레이어는 owned infrastructure입니다."],
+  evidence:[["m","Current Swift/TypeScript/ESP32 code: recording · transcription · summary · connectors · Google sign-in · Neon Postgres"],["t","ledger-first target architecture — 6-week rebuild는 계획이었고 연기됨"]],
+  boundary:"target architecture를 shipped로 말하지 않음.",
+  followup:"현재 실제로 어디까지 동작? → recording/transcription/summary 및 connectors(CURRENT)와 target stack(TARGET)을 분리해 답함.",
+  motion:"graph", src:["internal"]},
+ {id:"b11", cat:"ARCHITECTURE", q:"24시간 감지하면 비용이 폭발하지 않나?", ans:"모든 이벤트에 큰 모델을 호출하지 않습니다. 로컬·규칙 기반 필터, 이벤트 압축, candidate gate를 통과한 소수 commitment에만 추론과 실행을 씁니다.",
+  deeper:["Event-driven orchestration: 변화가 있을 때만 깨우고, 장기 대기는 workflow engine이 관리합니다.","Candidate limits: 후보 생성 수, 모델 호출 예산, 재시도와 동시성 상한을 둡니다."],
+  evidence:[["t","Architecture principle: event-driven cost control and deterministic gates"],["c","현재 구현·정확한 limit·벤치마크는 [확인 필요]. 비용 절감률을 발명하지 않음"]],
+  boundary:"비용 절감률 숫자 없음.",
+  followup:"필터가 중요한 약속을 놓치면? → recall / false-intervention을 κ-bench와 cohort logs로 측정.",
+  motion:"evidence", src:["internal","oai"]},
+ {id:"b12", cat:"EVALUATION", q:"κ-bench는 무엇을 증명하나?", ans:"개인 에이전트가 시간에 걸쳐 약속을 지키는지 Recall → Intervene → Authorize → Act → Verify 다섯 게이트로 평가하는 방법론입니다.",
+  deeper:["single-conversation tool execution을 넘어서 long-horizon completion을 봅니다.","scenario families, state machine, κ-score, experiment plan이 v0.3에 정의돼 있습니다."],
+  evidence:[["m","κ-bench v0.3 technical report, 29 primary sources (Drive 보관)"],["t","현재 방법론/실험 설계 단계. 성능 결과나 타사 우위 숫자 없음"]],
+  boundary:"결과·우위 주장 금지.",
+  followup:"왜 자체 benchmark를 믿나? → 공개 가능한 scenarios, baselines, failure traces 계획. 공개 일정 [확인 필요].",
+  motion:"compare", src:["internal"]},
+ {id:"b13", cat:"TRACTION", q:"트랙션인가, 창업자 도그푸딩인가?", ans:"지금은 consumer PMF를 주장하지 않습니다. 도그푸딩 로그와 메커니즘 증거가 있고, 다음 단계는 100명 코호트에서 반복 위임, 완결, 잔존, 지불을 계측하는 것입니다.",
+  deeper:["도그푸딩: 46일 · 57.7h recording · 155건 · 56 액션 후보는 내부 로그 기준(7/3–9/2). 70일과 60–70% 체감 수치는 시점/정의가 달라 분리합니다.","Instinct 사용 강도(351/1,250/10일/55세션)는 ARCA 평균이 아니라 예상 행동의 proxy입니다."],
+  evidence:[["m","녹음 155 · 3,464.5분(57.7h) · 활성 46일 · 액션 후보 56 (수동 20 · 일반 실행 16 · 리서치 11 · 초안 5 · 발송 4) · Gmail 46/56"],["p","Instinct 14일: 사용자 메시지 351 · 전체 1,250 · 활성 10일 · 세션 55/31"],["t","외부 베타 10명 시작(창업자 확인) · WAU · 첫 위임 전환 · 리텐션 [측정 시작] · 로컬 done 16/56은 외부 증거 검증이 없어 verified completion rate로 쓰지 않음"]],
+  boundary:"사용자 PMF, retention, paid conversion으로 확대 해석 금지. 로그 원장 캡처 [확인 필요]. 기존 덱의 “대기 50+”는 원장 확인 전 사용 금지.",
+  followup:"언제 PMF라고 부를 것인가? → “비가역적인 5명”(4주 연속 사용 · 주 3건 이상 ARCA가 완결한 후속) + cohort metrics threshold [확인 필요].",
+  motion:"evidence", src:["internal"]},
+ {id:"b14", cat:"COMMERCIAL PROOF", q:"CherieXX 1.15억, Netty 400만은 매출인가?", ans:"아닙니다. CherieXX는 도입 합의 후 계약 문서화 중, Netty는 pipeline입니다. 서명·발주·입금 전에는 계약 체결이나 확정 매출로 부르지 않습니다.",
+  deeper:["CherieXX safe line: “1억 1,500만 원 규모 ARCA AX 도입에 합의했으며, 계약 문서화가 진행 중입니다.” 구성: 현금 1,500만원 + 지분 1% (100억원 밸류 환산 총 1억 1,500만원) — 항상 분리 표기.","숨고 약 25만 원, 원가 1만 원 미만은 1건의 첫 외부 revenue evidence입니다."],
+  evidence:[["m","도입 확정 = 2026-09-21 창업자 최신 확인"],["c","계약 서명 · 입금 · 매출 인식은 각각 별도 상태 [증빙 확인 필요] · 숨고 정산 기록 [증빙 정리 필요]"]],
+  boundary:"CherieXX 구성·기간·공급 범위 [확인 필요]. Netty는 signed deal 아님. 숨고는 복수 사례 아님. 소급 날짜 문서는 증빙 아님.",
+  followup:"개인 PMF와 무슨 관계? → 조직도 같은 orchestration problem에 돈을 낼 수 있다는 adjacent proof.",
+  motion:"evidence", src:["internal"]},
+ {id:"b15", cat:"GTM", q:"ARCA로 ARCA를 판다는 뜻은?", ans:"ARCA가 lead discovery, 관계 맥락, 개인화 초안, follow-up과 referral 추적을 돕고, 대외 발송은 대표 승인 후에만 나갑니다.",
+  deeper:["“We use ARCA to sell ARCA. Every customer conversation improves both our distribution engine and the product itself.”","측정: lead→conversation, conversation→delegation, referral rate, follow-up completion, CAC, ARCA-handled share."],
+  evidence:[["m","Demonstrated founder workflow"],["t","metrics instrumentation starting — 로그 없는 전환율·CAC·자동화 비율은 [확인 필요]"]],
+  boundary:"Demonstrated workflow와 measured traction 분리.",
+  followup:"그럼 지금 acquisition engine이 검증됐나? → 아직 아니다. cohort instrumentation의 목표와 시점으로 답변.",
+  motion:"graph", src:["internal"]},
+ {id:"b16", cat:"GTM", q:"referral loop가 왜 생기나?", ans:"한 약속을 닫으려면 상대방의 참여가 필요한 순간이 생기고, 그때 상대의 ARCA 연결이 조율 비용을 줄여 제품 사용 이유가 됩니다.",
+  deeper:["B2C: shared commitment closure. B2B: inter-company packet exchange.","관계 기반 closed beta 후 activation·retention이 증명될 때 콘텐츠/paid acquisition을 엽니다."],
+  evidence:[["t","Shared ARCA Moment and visible closed-beta GTM decision"],["c","초대율, 수락률, referral conversion은 [확인 필요]"]],
+  boundary:"“word of mouth는 무조건” 금지.",
+  followup:"스팸이 되지 않나? → scoped invite, consent, no auto-outbound.",
+  motion:"graph", src:["internal"]},
+ {id:"b17", cat:"ECONOMICS", q:"어떻게 돈을 버나?", ans:"초기 중심은 개인 Pro 월 12,900원과 enterprise ARCA AX입니다. marketplace, rebate, hardware는 수요 증명 뒤 확장입니다.",
+  deeper:["Companion free → Pro 12,900원. Company Brain Work Shell / inter-company execution layer.","핵심 원가 단위는 chat이 아니라 evidence-verified completion 한 건입니다."],
+  evidence:[["a","Internal planned pricing 12,900원/월 · 연 154,800원 — realized ARPU 아님"],["c","가격 수용성 [확인 필요] · 광고·revenue share·hardware margin은 현재 실적 아님"]],
+  boundary:"MRR·BEP는 upside scenario. gross margin은 usage distribution과 cost/verified completion 측정 필요.",
+  followup:"12,900원으로 gross margin이 나나? → cost per verified completion 실측 뒤 답.",
+  motion:"formula", src:["internal"],
+  sens:{h:"연간 ARR (operating ladder · forecast 아님)", cons:["100 paid", fmtKRW(F.ladder[0]*F.annual)], base:["1,000 paid", fmtKRW(F.ladder[1]*F.annual)], up:["10,000 paid", fmtKRW(F.ladder[2]*F.annual)]}},
+ {id:"b18", cat:"ECONOMICS", q:"전사와 컴퓨트 비용은?", ans:"공개 API 가격 기준 경량 전사는 분당 $0.003–0.006입니다. 하루 8시간×30일 = 14,400분이면 월 $43.2–86.4, 환율 적용 전입니다.",
+  deeper:["계산: 480분/일 × 30일 = 14,400분 × $0.003 = $43.2 · × $0.006 = $86.4. (구 문서의 43,200분 표기는 오류 — 정정)","모델 추론, storage, workflow, retries를 더한 총 COGS는 usage logs로 산출해야 합니다."],
+  evidence:[["m","OpenAI API: whisper-1 $0.006/분 · gpt-4o-mini-transcribe $0.003/분"],["a","환율 1,400원/$ 가정 → 약 6.0만 / 12.1만원"]],
+  boundary:"기존 “월 약 6만 원”은 환율과 모델에 따라 달라지는 scenario. 하드 코스트 확정치로 말하지 않음.",
+  followup:"heavy user tail은? → caps, local processing, candidate gates, plan tier로 관리. 실제 percentile [확인 필요].",
+  motion:"formula", src:["oai"],
+  sens:{h:"월 전사 원가 (14,400분)", cons:["whisper-1 $0.006", "$"+F.costCons.toFixed(1)+" ≈ "+fmtKRW(F.costCons*F.fx)], base:["gpt-4o-mini-transcribe $0.003", "$"+F.costBase.toFixed(1)+" ≈ "+fmtKRW(F.costBase*F.fx)], up:["로컬 VAD·중복 제거 후", "[측정 시작]"]}},
+ {id:"b19", cat:"MARKET", q:"TAM 115.6조는 어떻게 계산했나?", ans:"3.734B global labor force × screen/knowledge-work fit 20%[가정] × 연 154,800원 = 약 115.6조 원의 scenario입니다.",
+  deeper:["10% = "+fmtKRW(F.laborWorld*0.10*F.annual)+", 20% = "+fmtKRW(F.tam)+", 30% = "+fmtKRW(F.laborWorld*0.30*F.annual)+".","fit 비율은 외부 사실이 아니라 sensitivity input입니다."],
+  evidence:[["m","World Bank/ILO 2025 global labor force 3,734,006,209"],["a","fit 20% · Price 12,900원 × 12 = 154,800원 (KRW scenario, 환율 불필요)"]],
+  boundary:"40억 명은 mission, TAM input 아님.",
+  followup:"왜 노동인구 전체인가? → broad ceiling일 뿐, SAM과 bottom-up으로 좁힘.",
+  motion:"formula", src:["wb"],
+  sens:{h:"TAM scenario · fit 민감도", cons:["fit 10%", fmtKRW(F.laborWorld*0.10*F.annual)], base:["fit 20%", fmtKRW(F.tam)], up:["fit 30%", fmtKRW(F.laborWorld*0.30*F.annual)]}},
+ {id:"b20", cat:"MARKET", q:"SAM과 SOM은?", ans:"SAM scenario는 미국 노동인구 171.495M + 한국 취업자 29.154M에 15%[가정]와 연 154,800원을 곱해 약 4.66조 원입니다. SOM은 acquisition·retention 실측 전 확정하지 않습니다.",
+  deeper:["SAM users: 200.649M × 15% = "+fmtInt(F.samUsers)+"명. 10 / 15 / 20% sensitivity.","Bottom-up: paid 100 / 1k / 10k = ARR "+fmtKRW(100*F.annual)+" / "+fmtKRW(1000*F.annual)+" / "+fmtKRW(10000*F.annual)+". 10k는 SAM-user scenario의 약 "+fmtPct(F.pct10k)+"."],
+  evidence:[["m","BLS Dec 2025 civilian labor force 171.495M · 통계청 2025.09 취업자 29.154M"],["a","fit 15% · 연 154,800원"]],
+  boundary:"100명 cohort ≠ 100 paid users. ladder ≠ forecast.",
+  followup:"12개월 SOM은? → acquisition, activation, retention, ARPU table [확인 필요].",
+  motion:"formula", src:["bls","kr"],
+  sens:{h:"SAM scenario · fit 민감도", cons:["fit 10%", fmtKRW((F.usLabor+F.krEmployed)*0.10*F.annual)], base:["fit 15%", fmtKRW(F.sam)], up:["fit 20%", fmtKRW((F.usLabor+F.krEmployed)*0.20*F.annual)]}},
+ {id:"b21", cat:"PROJECTION", q:"성장 계획과 sensitivity는?", ans:"하키스틱 숫자를 먼저 정하지 않고 acquisition → activation → paid conversion → retention → ARPU의 월별 모델로 계산해야 합니다.",
+  deeper:["Base / conservative / upside는 같은 식에 각 assumption만 바꿉니다.","Revenue_t = active paid_t × ARPU · active paid_t = retained prior + new paid."],
+  evidence:[["c","12-month bottom-up projection table은 현재 [확인 필요] — 가정표(acquisition · activation · retention · ARPU) 작성 전"],["a","MRR·BEP(Pro 12,900원 · BEP 5,100명 · 12개월 1,200명·MRR 1,700만원)는 upside working scenario, 코호트 ARPU·churn 확보 전"]],
+  boundary:"근거 없는 확정 forecast 금지.",
+  followup:"투자자에게 숫자 없이 가능한가? → 100-user proof plan과 milestone-based budget을 제시.",
+  motion:"formula", src:["internal"],
+  sens:{h:"12개월 projection · 세 case", cons:["conservative", "[확인 필요]"], base:["base", "[확인 필요]"], up:["upside", "MRR 1,700만원 (working scenario)"]}},
+ {id:"b22", cat:"EXPANSION", q:"왜 하드웨어까지 하나?", ans:"Software proves demand; hardware increases context bandwidth. 폰이 놓치는 현실 신호를 Core가 보완하지만, 수요 증명 전 두 번째 사업으로 키우지 않습니다.",
+  deeper:["ARCA Core: button, mic, status indicator. Shell: context/taste-specific enclosure(Desk · Keyring · Clip · Character).","Mechanical/embedded capability exists in team; software wedge remains first."],
+  evidence:[["m","Core/Shell roadmap and ESP32-S3 firmware (repo firmware/)"],["c","출시일, BOM, margin, certification, preorder는 [확인 필요]"]],
+  boundary:"하드웨어를 당장의 두 번째 사업처럼 말하지 않는다.",
+  followup:"Plaud와 다른가? → capture device가 목적이 아니라 Commitment Graph의 sensing endpoint.",
+  motion:"graph", src:["internal"]},
+ {id:"b23", cat:"TEAM", q:"3명이 SW와 HW를 다 할 수 있나?", ans:"현재 software는 대표 의존도가 높다는 갭을 인정합니다. 5억의 첫 채용이 SW/UX와 agent reliability 병목을 줄이는 데 쓰입니다.",
+  deeper:["박민성: product·AI·business·distribution, user zero. 박진성: mechanical/DFM. 하승호: embedded, 현재 advisor(향후 CTO).","한 팀이 software-to-hardware를 이해하는 폭은 강점, execution bandwidth는 리스크입니다."],
+  evidence:[["m","Team roles from master brief"],["c","학력·수상 원문 증빙 [확인 필요] · 첫 2명 채용 JD와 시점 [확인 필요]"]],
+  boundary:"하승호의 현재 직함을 advisor로 정확히 표현.",
+  followup:"첫 2명 채용 JD와 시점? → [확인 필요] — 역할(SW/UX · 에이전트 신뢰성)만 확정.",
+  motion:"compare", src:["internal"]},
+ {id:"b24", cat:"FINANCING", q:"5억 SAFE를 어디에 쓰나?", ans:"12개월 동안 개발자 채용, hardware R&D, 초기 사용자 compute에 써서 반복 위임, verified completion, retention, payment 네 지표를 증명합니다.",
+  deeper:["milestone-based allocation이 필요하며 정확한 금액/비율은 [확인 필요].","현대 1억은 조건 확인 전 “라운드 일부가 될 수 있음” 이상 말하지 않습니다."],
+  evidence:[["t","Current ask: 5억 SAFE · 12개월 · 100명 코호트 증명"],["c","SAFE valuation cap, discount, MFN, closing status는 [확인 필요] · YC $500k / a16z $1M은 목표이지 증거 아님"]],
+  boundary:"runway와 월 burn은 hiring plan·compute·hardware budget 원장 [확인 필요].",
+  followup:"runway와 월 burn? → 원장 확정 후 답. 지금은 milestone→지표 매핑만.",
+  motion:"formula", src:["internal"],
+  sens:{h:"사용처 배분 (운영 계획 · 확정 비율 아님)", cons:["개발자 채용 2명", "[확인 필요]"], base:["하드웨어 R&D", "[확인 필요]"], up:["초기 사용자 컴퓨트", "[확인 필요]"]}},
+ {id:"b25", cat:"CLAIMS", q:"accelerator와 referral은 어디까지 말할 수 있나?", ans:"a16z Speedrun SR008은 zerobase referral로 서류 단계를 통과해 인터뷰를 앞둔 상태까지만 말합니다(본편 S3B·S13 표기). 선정·투자·합격으로는 말하지 않습니다.",
+  deeper:["zerobase(a16z Speedrun 소싱 파트너, 2025.10~)의 referral은 application 단계를 건너뛰게 해주는 것 — 그 다음이 인터뷰. accelerator 표준 투자액($500k/$1M)은 ARCA 투자 확정이 아닙니다.","외부 이름은 신뢰를 빌리는 장식이 아니라 검증 가능한 현재 상태만 사용합니다. 창업자 트랙레코드(엑싯·수상)는 사업계획서 v01과 동일하게 말합니다."],
+  evidence:[["c","Original email/document screenshots required: [확인 필요]"],["t","YC $500k · a16z $1M = 목표. 현대 1억 = 조건 미확인"]],
+  boundary:"선정, 투자, 합격, 추천 확정으로 확대 표현 금지.",
+  followup:"원문을 보여달라면? → source excerpt appendix에 verified capture만.",
+  motion:"compare", src:["internal"]},
+];
+const SAFE = "“그 수치는 아직 계측 전입니다. 지금 확인된 것은 [measured 항목]이고, 12개월 100명 코호트에서 [지표]로 답하겠습니다.”";
+const LBL = {m:["m","measured"],p:["p","proxy"],a:["a","assumption"],t:["t","target"],c:["t","확인 필요"]};
+
+/* ====================== BUILD APPENDIX DOM ====================== */
+(function buildAppendix(){
+  const deck=document.getElementById('deck');
+  const idx=document.getElementById('idx');
+  const byId=Object.fromEntries(B.map(b=>[b.id,b]));
+  for(const [g,ids] of GROUPS){
+    const d=document.createElement('div');d.className='grp';d.innerHTML=`<h4>${g}</h4>`+ids.map(id=>{const b=byId[id];return `<a href="#${id}"><b>${id.toUpperCase().replace('B','B0').replace(/B0(\d\d)/,'B$1')}</b>${b.q}</a>`}).join('');
+    idx.appendChild(d);
+  }
+  const anchor=document.getElementById('a1');
+  B.forEach((b,k)=>{
+    const num=b.id.replace('b','').padStart(2,'0');
+    const s=document.createElement('section');s.className='s appx lt';s.id=b.id;s.dataset.title=`B${num} ${b.q}`;s.dataset.motion=b.motion;
+    const prevId = k>0 ? B[k-1].id : 'x0', nextId = k<B.length-1 ? B[k+1].id : 'a1';
+    const ev=b.evidence.map(([t,txt])=>`<li><span class="lbl ${LBL[t][0]}">${LBL[t][1]}</span>${txt}</li>`).join('');
+    const sens=b.sens?`<div class="sens"><div><div class="h">conservative · ${b.sens.cons[0]}</div><div class="v num">${b.sens.cons[1]}</div></div><div class="base"><div class="h">base · ${b.sens.base[0]}</div><div class="v num">${b.sens.base[1]}</div></div><div><div class="h">upside · ${b.sens.up[0]}</div><div class="v num">${b.sens.up[1]}</div></div></div>`:'';
+    const src=b.src.map(k2=>{const [t,u]=SRC[k2];return u?`<a href="${u}" target="_blank" rel="noopener">${t}</a>`:`<span>${t}</span>`}).join('');
+    s.innerHTML=`<div class="abar"><span><span class="qid">B${num}</span> &nbsp; <span class="qcat">${b.cat}</span></span><div class="btns"><a class="abtn back" href="#index">← 직전 질문</a><a class="abtn o" href="#index">Index</a><a class="abtn" href="#${prevId}">‹</a><a class="abtn" href="#${nextId}">›</a></div></div>
+    <h2 class="q an blur" style="--d:0s">${b.q}</h2>
+    <div class="ans an" style="--d:.25s">${b.ans}</div>
+    <div class="layer hidden" data-layer="1"><div class="lt">Deeper answer</div><ul>${b.deeper.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="layer hidden" data-layer="2"><div class="lt">Evidence / calculation <span class="lbl m">measured</span><span class="lbl p">proxy</span><span class="lbl a">assumption</span><span class="lbl t">target · 확인 필요</span></div><ul>${ev}</ul>${sens}</div>
+    <div class="layer hidden bd" data-layer="3"><div class="lt">Claim boundary</div><p>${b.boundary}</p></div>
+    <div class="reveal-hint">→ / 클릭: 다음 레이어 · 3레이어 뒤 다음 질문</div>
+    <div class="srcstrip"><span class="dim">Source</span>${src}<span style="margin-left:auto" class="dim">2026-09-21 · 공식 공개자료 / 내부 원장 기준</span></div>
+    <div class="notes" hidden>${b.ans}|Likely follow-up: ${b.followup}||SAFE: ${SAFE}</div>`;
+    deck.insertBefore(s,anchor);
+  });
+  // A01 formula grid
+  const rows=[
+    ["Annual price", `${F.price.toLocaleString()}원 × ${F.months} = <b>${F.annual.toLocaleString()}원</b>`],
+    ["TAM scenario", `${F.laborWorld.toLocaleString()} × fit ${F.fitTam*100}% × ${F.annual.toLocaleString()}원 = <b>${fmtKRW(F.tam)}</b> <span class="dim">(${F.fitTamRange.map(f=>(f*100)+'% → '+fmtKRW(F.laborWorld*f*F.annual)).join(' · ')})</span>`],
+    ["SAM scenario", `(${(F.usLabor/1e6).toFixed(3)}M + ${(F.krEmployed/1e6).toFixed(3)}M) × fit ${F.fitSam*100}% × ${F.annual.toLocaleString()}원 = <b>${fmtKRW(F.sam)}</b> <span class="dim">(${F.fitSamRange.map(f=>(f*100)+'% → '+fmtKRW((F.usLabor+F.krEmployed)*f*F.annual)).join(' · ')})</span>`],
+    ["SAM users", `${((F.usLabor+F.krEmployed)/1e6).toFixed(3)}M × ${F.fitSam*100}% = <b>${fmtInt(F.samUsers)}명</b>`],
+    ["Operating ladder", F.ladder.map(n=>`${n.toLocaleString()} paid → <b>${fmtKRW(n*F.annual)}</b>`).join(' · ')],
+    ["Cross-check", `10,000 ÷ ${fmtInt(F.samUsers)} = <b>${fmtPct(F.pct10k)}</b> of SAM-user scenario`],
+    ["Transcription", `${F.minPerDay}분/일 × ${F.days}일 = ${F.min.toLocaleString()}분 × $${F.priceMin.base}–${F.priceMin.cons} = <b>$${F.costBase.toFixed(1)}–${F.costCons.toFixed(1)}/월</b> <span class="dim">(환율 ${F.fx.toLocaleString()}원 가정 → ${fmtKRW(F.costBase*F.fx)}–${fmtKRW(F.costCons*F.fx)})</span>`],
+    ["Completion COGS", `(transcription + inference + tools + storage + retries) ÷ verified completions <span class="lbl t">측정 시작</span>`],
+    ["CherieXX 총가치", `현금 15,000,000원 + 지분 1% × 100억원 밸류 = <b>115,000,000원</b> <span class="dim">(항상 분리 표기 · 서명·입금·매출 인식 별도)</span>`],
+    ["North star", `Weekly Verified Outcomes per retained user · 비가역적인 5명 = 4주 연속 사용 · 주 3건 이상 ARCA 완결 후속`],
+  ];
+  document.getElementById('a1grid').innerHTML=rows.map(([k,v],i)=>`<div class="an" style="--d:${.1+i*.08}s;border-top:1px solid var(--line);padding:16px 0"><div style="font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--o)">${k}</div><div style="font-size:21px;color:var(--t1);margin-top:6px;line-height:1.45" class="num">${v}</div></div>`).join('');
+  // A02 source grid
+  const ex=[["hai","생성형 AI 3년 만에 53% 사용 · 조직 88% 도입 — 발표 전 원문 재대조"],["oaiad","6개월 뒤 하루 메시지 +50% · 일 종류 2배"],["kaist","금융 전문가 34명 · AI 유발 작업 전환이 성과 저하의 가장 강한 예측 변수 (초기 연구)"],["wb","2025 global labor force 3,734,006,209"],["bls","US civilian labor force 171.495M (Dec 2025)"],["kr","취업자 29.154M (2025.09)"],["oai","whisper-1 $0.006/분 · gpt-4o-mini-transcribe $0.003/분"],["plaud","Plaud: 1M → $100M ARR (company-reported)"],["plaudtc","Plaud >2M notetakers · $100M ARR 보강"],["otter","Otter $100M ARR (company-reported)"],["granola","Granola $125M @ $1.5B"],["tomo","Tomo $5M seed"],["vellum","Vellum $20M Series A"],["instinct","Instinct official positioning"]];
+  document.getElementById('a2grid').innerHTML=ex.map(([k,t],i)=>{const [n,u]=SRC[k];return `<div class="an" style="--d:${.05+i*.05}s;border-top:1px solid var(--line);padding:12px 0"><div style="color:var(--t1)">${t}</div><a href="${u}" target="_blank" rel="noopener" style="color:var(--dim);font-size:15px;text-decoration:none;border-bottom:1px solid #3a302a;word-break:break-all">${u.replace(/^https?:\/\//,'')}</a></div>`}).join('')+`<div class="an" style="--d:.8s;border-top:1px solid var(--line);padding:12px 0;grid-column:1/-1"><div style="color:var(--t1)">내부 클레임 상태: <span class="lbl m">measured</span>도그푸딩 로그 · κ-bench v0.3 방법론 · Google 로그인/전사/요약(CURRENT) &nbsp; <span class="lbl p">proxy</span>Instinct 14일 &nbsp; <span class="lbl a">assumption</span>fit 20/15% · 환율 · 계획가 &nbsp; <span class="lbl t">확인 필요</span>CherieXX 서명·입금 · 40명 인터뷰 표 · a16z/YC 원문 · 현대 1억 조건 · 12개월 가정표</div></div>`;
+  // main-deck computed values
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('tamv','≈ '+fmtKRW(F.tam)); document.getElementById('tamv').insertAdjacentHTML('beforeend','<span style="font-size:16px;font-weight:700;color:var(--mut)"> /년</span>');
+  set('samv','≈ '+fmtKRW(F.sam)); set('l100',fmtKRW(100*F.annual).replace('원','')); set('l1k',fmtKRW(1000*F.annual).replace('원','')); set('l10k',fmtKRW(10000*F.annual).replace('원',''));
+  set('pctv',fmtPct(F.pct10k)); document.getElementById('pctv').dataset.count=(F.pct10k*100).toFixed(3); set('f1',fmtInt(F.tam)+'원 ≈ '+fmtKRW(F.tam)); set('f2',fmtInt(F.sam)+'원 ≈ '+fmtKRW(F.sam)); set('f3',fmtPct(F.pct10k,4));
+})();
+
+/* ====================== ENGINE ====================== */
+(function(){
+  const slides=[...document.querySelectorAll('section.s')];
+  const main=slides.filter(s=>s.classList.contains('main'));
+  const deck=document.getElementById('deck'), prog=document.getElementById('prog'), nav=document.getElementById('nav'), ttl=document.getElementById('ttl'), tgt=document.getElementById('tgt'), timerEl=document.getElementById('timer'), notesEl=document.getElementById('notes');
+  const idOf=s=>s.id, byId=id=>slides.findIndex(s=>s.id===id);
+  const cum=[];main.reduce((a,s,k)=>{cum[k]=a+(+s.dataset.t||0);return cum[k]},0);
+  const fmt=(v,dec)=>dec?Number(v).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec}):Math.round(v).toLocaleString();
+  const isPrint=location.search.includes('print');
+  let i=0, step=0, hist=[], jumpBuf='', jumpT=null, t0=null, tickT=null;
+
+  function resolveHash(){
+    let h=decodeURIComponent(location.hash.slice(1)).toLowerCase();
+    if(!h) return 'm1';
+    if(h==='index'||h==='appendix'||h==='x0') return 'x0';
+    if(/^\d+$/.test(h)) return 'm'+Math.max(1,Math.min(main.length,+h));
+    if(/^b\d{1,2}$/.test(h)) return 'b'+(+h.slice(1));
+    if(/^a\d$/.test(h)) return h;
+    if(/^m\d{1,2}b?$/.test(h)) return h;
+    return 'm1';
+  }
+  function fit(){const sc=Math.min(innerWidth/1920,innerHeight/1080);deck.style.transform=`scale(${sc})`}
+  function count(el){const to=+el.dataset.count,dec=+el.dataset.dec||0,suf=el.dataset.suffix||'',dur=+el.dataset.dur||1400;const host=el.closest('.an')||el;const dl=(parseFloat((host.style.getPropertyValue('--d')||'0'))||0)*1000;const run=()=>{const s0=performance.now();(function f(t){const p=Math.min(1,(t-s0)/dur);el.textContent=fmt(to*(1-Math.pow(1-p,3)),dec)+suf;if(p<1)requestAnimationFrame(f)})(s0)};el.textContent=fmt(0,dec)+suf;setTimeout(run,dl)}
+  function applySteps(s){
+    const n=+s.dataset.steps||1;
+    s.querySelectorAll('.step').forEach(el=>{const st=+el.dataset.step;const only=el.dataset.only!=null;const until=el.dataset.until!=null?+el.dataset.until:Infinity;const on= only? step===st : (step>=st && step<=until);el.classList.toggle('on',on)});
+    s.querySelectorAll('.step.on [data-count]').forEach(el=>{if(el.dataset.counted===String(step))return;el.dataset.counted=String(step);count(el)});
+    const dots=s.querySelector('.stepdots');if(dots){[...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=step))}
+    // S5 KPI highlight per hold frame
+    if(s.id==='m6'){const map={0:['k1'],1:['k1'],2:['k2'],3:['k3','k4','k5'],4:[],5:['k3']};['k1','k2','k3','k4','k5'].forEach(k=>document.getElementById(k).classList.toggle('hot',(map[step]||[]).includes(k)))}
+    if(s.id==='m17'){s.querySelector('.foot').style.display= step===1?'none':''; s.querySelector('.stepdots').style.display= step===1?'none':''}
+  }
+  function layers(s){return [...s.querySelectorAll('.layer')]}
+  function show(n,opts={}){
+    const prev=slides[i];
+    if(prev&&prev!==slides[n]&&!opts.noHist){hist.push(prev.id);if(hist.length>40)hist.shift()}
+    i=n;step=opts.step||0;
+    slides.forEach((s,k)=>{if(k===n){s.classList.remove('active');void s.offsetWidth;s.classList.add('active')}else s.classList.remove('active')});
+    const s=slides[n];
+    applySteps(s);
+    if(s.classList.contains('appx')){layers(s).forEach(l=>l.classList.add('hidden'))}
+    history.replaceState(null,'','#'+(s.id==='x0'?'index':s.id));
+    const mi=main.indexOf(s);
+    if(mi>=0){prog.style.width=((mi+1)/main.length*100)+'%';nav.textContent=`${mi+1} / ${main.length}`;tgt.textContent=`목표 ${s.dataset.t}s · 누적 ${fmtT(cum[mi])}`}
+    else{prog.style.width='100%';nav.textContent=s.id==='x0'?'Appendix':s.id.toUpperCase();tgt.textContent='Q&A'}
+    ttl.textContent=s.dataset.title||'';
+    s.querySelectorAll('[data-count]').forEach(count);
+    renderNotes(s);
+  }
+  function fmtT(sec){const m=Math.floor(sec/60),s2=Math.round(sec%60);return `${m}:${String(s2).padStart(2,'0')}`}
+  let cutMode=true;
+  function renderNotes(s){const n=s.querySelector('.notes');if(!n){notesEl.innerHTML='';return}const raw=n.innerHTML;const [spoken,bd,safe]=raw.split('|');
+    const plain=(spoken||'').replace(/<cut>[\s\S]*?<\/cut>/g,cutMode?'':'$&').replace(/<[^>]+>/g,'').replace(/\[→\]/g,'').replace(/\s+/g,'');const est=Math.round(plain.length/5.5);
+    const spokenHtml=(spoken||'').replace(/<cut>/g,cutMode?'<span class="cutx" style="display:none">':'<span class="cutx" style="color:#5a4d44;text-decoration:line-through">').replace(/<\/cut>/g,'</span>');
+    let html=`<b>${s.dataset.title||''}</b>`;if(s.dataset.t)html+=` <span class="dim">· 목표 ${s.dataset.t}s · 발화 예상 ~${est}s (${plain.length}자 @330자/분) · ${cutMode?'9:25 컷 스크립트':'전체 스크립트'} (C 전환)</span>`;html+=`<div style="margin-top:6px">${spokenHtml}</div>`;if(bd)html+=`<div class="fu">${bd}</div>`;if(safe)html+=`<div class="safe">${safe}</div>`;notesEl.innerHTML=html}
+  function next(){
+    const s=slides[i];
+    if(s.classList.contains('appx')){
+      const hidden=layers(s).filter(l=>l.classList.contains('hidden'));
+      if(hidden.length){const l=hidden[0];l.classList.remove('hidden');l.classList.add('an');l.style.setProperty('--d','0s');l.querySelectorAll('[data-count]').forEach(count);return}
+      if(s.id==='x0'){show(byId('b1'));return}
+      if(s.id==='a3'){show(byId('x0'));return}
+      show(i+1);return;
+    }
+    const n=+s.dataset.steps||1;
+    if(step<n-1){step++;applySteps(s);return}
+    const mi=main.indexOf(s);
+    if(mi<main.length-1){show(i+1)} else {flashHint('본편 끝 · A 키 = Appendix (자동 진입 안 함)')}
+  }
+  function prev(){
+    const s=slides[i];
+    if(!s.classList.contains('appx')&&step>0){step--;applySteps(s);return}
+    if(s.id==='x0'){show(byId('m17'),{step:1});return}
+    if(s.id==='b1'){show(byId('x0'));return}
+    if(i>0)show(i-1);
+  }
+  function back(){const id=hist.pop();if(id!=null){show(byId(id),{noHist:true})}else show(byId('x0'))}
+  function flashHint(t){const h=document.getElementById('hint');const old=h.textContent;h.textContent=t;h.style.color='#f75b2b';setTimeout(()=>{h.textContent=old;h.style.color=''},2200)}
+  function go(id){const k=byId(id);if(k>=0)show(k)}
+  // jump buffer (digits → Bxx)
+  function jumpKey(d){jumpBuf=(jumpBuf+d).slice(-2);document.body.classList.add('jumping');document.getElementById('jumpv').textContent='B'+jumpBuf.padStart(2,'_');clearTimeout(jumpT);if(jumpBuf.length===2){jumpT=setTimeout(doJump,650)}else jumpT=setTimeout(cancelJump,3000)}
+  function doJump(){const n=+jumpBuf;cancelJump();if(n>=1&&n<=25)go('b'+n);else flashHint('B01–B25만 가능')}
+  function cancelJump(){jumpBuf='';document.body.classList.remove('jumping');clearTimeout(jumpT)}
+  // timer
+  function toggleTimer(){if(t0){t0=null;clearInterval(tickT);document.body.classList.remove('timing');return}t0=performance.now();document.body.classList.add('timing');tickT=setInterval(tick,500)}
+  function tick(){const el=(performance.now()-t0)/1000;const mi=main.indexOf(slides[i]);const target=mi>=0?cum[mi]:cum[main.length-1];timerEl.textContent=` ⏱ ${fmtT(el)} / ${fmtT(target)}`;timerEl.classList.toggle('over',mi>=0&&el>target)}
+  // autoplay (rehearsal): advance per data-t; never enters appendix
+  function autoplay(){let k=0;const run=()=>{const s=main[k];if(!s)return;show(byId(s.id));const n=+s.dataset.steps||1;const per=(+s.dataset.t*1000)/n;let st=0;const iv=setInterval(()=>{st++;if(st<n){step=st;applySteps(s)}else{clearInterval(iv);k++;if(k<main.length)run()}},per)};run()}
+
+  if(isPrint){document.body.classList.add('print');slides.forEach(s=>{s.classList.add('active');const pr=s.dataset.print;s.querySelectorAll('.step').forEach(el=>{const st=+el.dataset.step;el.classList.toggle('on', pr? pr.split(',').includes(String(st)) : (el.dataset.only==null||st===0))});s.querySelectorAll('.layer').forEach(l=>l.classList.remove('hidden'));s.querySelectorAll('[data-count]').forEach(e=>e.textContent=fmt(+e.dataset.count,+e.dataset.dec||0)+(e.dataset.suffix||''));if(s.id==='m6'){['k1','k2','k3'].forEach(k=>document.getElementById(k).classList.add('hot'))}});return}
+  addEventListener('resize',fit);fit();
+  show(byId(resolveHash()),{noHist:true});
+  addEventListener('hashchange',()=>{const id=resolveHash();if(slides[i].id!==id&&!(id==='x0'&&slides[i].id==='x0'))show(byId(id))});
+  addEventListener('keydown',e=>{
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(/^[0-9]$/.test(e.key)){e.preventDefault();jumpKey(e.key);return}
+    if(e.key==='Enter'&&jumpBuf){e.preventDefault();doJump();return}
+    if(e.key==='Escape'){if(jumpBuf){cancelJump();return}if(slides[i].classList.contains('appx')){go('x0')}return}
+    if(['ArrowRight',' ','PageDown','Enter','ArrowDown'].includes(e.key)){e.preventDefault();next()}
+    else if(['ArrowLeft','PageUp','Backspace','ArrowUp'].includes(e.key)){e.preventDefault();prev()}
+    else if(e.key==='Home')go('m1');else if(e.key==='End')go('m17');
+    else if(e.key==='a'||e.key==='A')go('x0');
+    else if(e.key==='n'||e.key==='N')document.body.classList.toggle('notes');
+    else if(e.key==='t'||e.key==='T')toggleTimer();
+    else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
+    else if(e.key==='r'||e.key==='R')show(i,{noHist:true,step});
+    else if(e.key==='b'||e.key==='B')back();
+    else if(e.key==='c'||e.key==='C'){cutMode=!cutMode;renderNotes(slides[i])}
+    else if(e.key==='p'||e.key==='P'){location.search='?print=1'}
+  });
+  addEventListener('click',e=>{
+    const a=e.target.closest('a');
+    if(a){const href=a.getAttribute('href')||'';if(a.classList.contains('back')){e.preventDefault();back();return}if(href.startsWith('#')){e.preventDefault();const id=href.slice(1)==='index'?'x0':href.slice(1);go(id);return}return}
+    if(e.target.closest('#notes,#hud,#rotate'))return;
+    show; e.clientX>innerWidth*0.35?next():prev();
+  });
+  let tx=0,ty=0;addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+  addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy))dx<0?next():prev()});
+  if(location.search.includes('autoplay'))autoplay();
+  if(location.search.includes('notes'))document.body.classList.add('notes');
+  window.__deck={show,go,next,prev,slides,main,F,get i(){return i},get step(){return step}};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,768 @@
+ARCA IR 마스터 스크립트
+
+2026.09.21 10:20 · 드림플러스 강남 · 10분 발표 + 20분 Q&A
+
+9월 21일 새벽 대화에서 잠근 서사, 문장, 클레임 경계를 한 편의 발표 원고와 슬라이드 지시서로 묶었다. 이 문서를 그대로 슬라이드 재구성 작업(Fable)에 전달하면 된다. 기준 디자인은 현행 덱 thezonebio.com/arcair 의 warm black + orange 톤이다.
+
+이 문서를 쓰는 법
+
+각 슬라이드는 다섯 덩어리로 되어 있다.
+
+화면(on-slide): 슬라이드에 실제로 보이는 카피와 비주얼 지시. 한 장에 한 주장, 큰 이미지, 한 문장이 원칙이다.
+스크립트(spoken): 무대에서 말하는 원고 그대로. 이 문장들을 기준으로 화면을 깎는다.
+모션·전환: Fable/HTML 덱에 넣을 애니메이션 지시. 전부 상태 변화나 인과를 보여주는 목적 있는 움직임이며, 정적 폴백을 함께 적었다.
+근거·출처: 그 슬라이드의 숫자와 주장이 기대는 출처.
+클레임 경계 / 확인 필요: 무대에서 절대 넘으면 안 되는 선과, 발표 전 채워야 하는 빈칸.
+서사 척추 — 17장 · 9분 25초
+
+문제로 시작해 실제 제품 작동을 보여주고, 경쟁 속도와 계산 가능한 시장을 거쳐 ARCA Moment로 닫는다. YC 시드 덱 구조는 순서가 아니라 누락 방지 체크리스트로 썼다.
+
+1
+S0 커버 (0:10) — 첫 질문: “오늘 AI에게 일을 시켜보신 분?”
+2
+S1 AI Explosion (0:40) — 역사상 가장 빠른 확산, 맡기는 일의 깊이도 2배
+3
+S2 The Hidden Cost (0:55) — 인간이 모든 AI의 메인 스레드가 됐다
+4
+S3 Founder Insight (0:40) — 이 미래를 먼저 살다가 문제를 발견한 사람
+5
+S4 세 가지 문제 (0:35) — Fragmented Context · Generic Output · Main Thread
+6
+S5 제품 작동 — Commitment Graph (1:25) — 범위를 드래그하고, 경계에서 묻고, 증거로 닫는다
+7
+S6 트랙션 (0:40) — Vitamin → Habit → Dependency
+8
+S6A 경쟁 지형과 성장 속도 (0:45) — ARCA의 자리와 시장의 속도
+9
+S7 Science & Architecture (0:40) — 모델은 교체 가능, 책임 레이어는 ARCA
+10
+S8 비즈니스 모델 · 유닛 이코노믹스 (0:30)
+11
+S9 Commercial Proof (0:25) — 기업도 같은 문제에 돈을 낸다
+12
+S10 GTM (0:25) — 사용이 유통을 만드는 초대 루프
+13
+S11 Expansion (0:15) — software proves demand; hardware increases context bandwidth
+14
+S12 Team (0:15) — 소프트웨어에서 하드웨어까지 한 팀
+15
+S12A TAM · SAM · SOM (0:35) — 가정 공개, top-down과 bottom-up 교차검증
+16
+S13 Financing & Ask (0:20) — 5억 SAFE, 12개월, 네 지표
+17
+S14 Vision Finale (0:40) — ARCA Moment와 주체성의 미래
+
+합계 9:25 + 여유 0:35 = 10:00. 시간이 밀리면 S11을 한 문장으로 접고 S9는 딜 카드만 보여주며, 시장 산식은 숫자보다 결론 한 문장만 말한다. 덱 수정은 이 원고가 잠긴 뒤에만.
+
+디자인 · 모션 원칙
+하우스 톤: thezonebio.com/arcair 의 warm black 배경 + orange 포인트. 이 문서의 화면 지시는 그 톤을 전제로 한다.
+한 장에 한 주장, 큰 이미지 하나, 한 문장. 불릿 나열 금지.
+전체 방향은 motion-heavy다. 커버부터 피날레까지 기본 전환을 모두 살아 있게 두고, black 화면 위 orange 빛·선·영역이 다음 주장으로 이어지게 한다. 얌전하게 줄이지 않는다.
+단, 한 장에 한 주장만 둔다. 모든 움직임은 상태 변화·인과·범위·증거·비교를 설명해야 하며, 아무 뜻 없는 파티클·회전·바운스는 쓰지 않는다.
+공통 모션 문법: 숫자는 검증된 실제 값까지 count-up, Commitment Graph 노드는 순차 점등, 경로는 앞으로 자라며, 현재 실행 중인 노드는 pulse, 완료 노드는 외부 증거가 들어오며 lock된다.
+슬라이드 간 전환도 끊지 않는다. 앞 장의 핵심 orange 선·점·창 하나를 다음 장의 도형으로 morph해 발표 전체가 한 시스템처럼 이어지게 한다. 주요 동작 사이에는 발표자가 멈춰 말할 수 있는 hold frame을 둔다.
+피크 장면은 ① 컨텍스트 스위칭에서 창이 증식하고 화면이 갈라지는 장면(S2) ② 드래그 뒤 orange 위임 영역이 퍼지고 그래프가 실행되는 장면(S5) ③ 경쟁표의 ARCA 행·핵심 열이 마지막에 켜지는 장면(S6A) ④ top-down 원과 bottom-up 막대가 합쳐지는 장면(S12A) ⑤ 한 사람을 중심으로 전체 그래프가 살아 움직이는 ARCA Moment(S14).
+모든 슬라이드는 최종 keyframe 하나만 봐도 주장과 숫자가 읽혀야 한다. PDF·스크린샷·reduced-motion용 정적 폴백을 반드시 같은 장면으로 설계한다.
+숫자 카운터는 출처가 있는 값 또는 명시된 scenario/operating-ladder 값에서 정확히 멈춘다. 없는 숫자를 채우거나 허위 정밀도를 만드는 카운터는 금지.
+Fable 구현 우선순위는 이해도 → 타이밍 → 화려함이다. 화려함은 줄이지 말고, 이해를 방해하는 모션만 고쳐서 설명 모션으로 바꾼다.
+S0 · 커버 · 목표 0:10
+
+첫 문장 전에 청중을 끌어들이는 질문 하나. 화면은 최소한으로.
+
+화면 · ON-SLIDE
+검정 배경에 orange ARCA 워드마크. 그 아래 한 줄: “개인의 약속을 끝까지 책임지는 Personal Life OS”.
+하단 메타: ZER01NE 3호펀드 예비 IR · 2026.09.21 · THE ZONE · 박민성 · me@thezonebio.com.
+스크립트 · SPOKEN
+
+안녕하세요, THE ZONE의 박민성입니다.
+
+시작하기 전에 질문 하나 드리겠습니다. 오늘 AI에게 일을 하나라도 시켜보신 분, 계신가요?
+
+(손을 보고 한 박자) 감사합니다. 그 일은, 어떻게 관리하셨나요?
+
+모션 · 전환
+검정 화면 중앙에서 가느다란 orange 선이 그어지고 ARCA 워드마크가 선 위로 reveal된다. 질문 직전 배경의 희미한 그래프 노드가 한 번 숨 쉬듯 점등해 다음 장으로 이어진다.
+전환: 그 orange 선이 S1의 상승 곡선 축으로 morph한다.
+정적 폴백: 워드마크·키 라인·메타가 완성된 최종 프레임.
+클레임 경계
+청중의 답(시간·횟수)을 대신 정해 말하지 않는다. 손이 안 들어도 다음 문장이 살아 있게 한다.
+S1 · AI Explosion · 목표 0:40
+
+이 문제가 곡선 위에 있다는 것. 역사상 가장 빠르게 커지는 사용자 풀 + 한 사람이 맡기는 일의 깊이가 같이 늘어난다.
+
+화면 · ON-SLIDE
+큰 숫자 하나: 53%. 캡션: “생성형 AI, 3년 만에 전 세계 인구의 53%가 사용 — PC·인터넷보다 빠른 확산”.
+보조 두 개: “조직의 88%가 AI 도입” · “가입 6개월 뒤: 하루 메시지 +50%, 맡기는 일 종류 2배”.
+상승 곡선 하나. 배경에 출처 각주(Stanford AI Index 2026 · OpenAI).
+스크립트 · SPOKEN
+
+생성형 AI는 3년 만에 전 세계 인구의 53%가 쓰는 도구가 됐습니다. PC와 인터넷보다 빠른, 역사적으로 가장 빠른 확산입니다.
+
+그리고 사람 수만 늘어나는 게 아닙니다. 가입 6개월 뒤 사용자는 하루 메시지를 50% 더 보내고, AI에 맡기는 일의 종류는 2배가 됩니다.
+
+우리는 일을 무한정 시킬 수 있는 시대에 이미 들어왔습니다.
+
+모션 · 전환
+곡선이 왼쪽에서 그려지며 카운터가 0에서 53%까지 롤링.
+보조 통계 두 개가 0.3초 간격 순차 페이드.
+정적 폴백: 곡선 + 세 숫자가 한 화면에 모두 보임.
+근거 · 출처
+Stanford HAI, 2026 AI Index Report — https://hai.stanford.edu/ai-index/2026-ai-index-report
+OpenAI, How ChatGPT adoption has expanded — https://openai.com/index/how-chatgpt-adoption-has-expanded/
+클레임 경계
+“기하급수적” 대신 “역사적으로 가장 빠른 확산”이라고 말한다. 방어되는 표현만.
+“모든 사용자가 이미 이 문제를 겪는다”까지는 말하지 않는다. “AI-native 사용자에게 먼저 나타났고, 사용이 깊어질수록 보편화될 문제”가 정확하다.
+확인 필요
+발표 전 AI Index 원문에서 53% 수치와 문구를 한 번 더 대조한다.
+S2 · The Hidden Cost — 메인 스레드 · 목표 0:55
+
+오프닝의 핵심 장면. 실행은 풍부해졌는데 인간의 판단·맥락 복구가 병목이 됐다는 문제 정의. 시그니처 장면 ①.
+
+화면 · ON-SLIDE
+시그니처 장면 ①: 사람 하나가 10개의 AI 창·터미널을 붙잡고 있는 큰 이미지.
+헤드라인 한 문장: “AI는 실행을 대신했지만, 인간은 모든 AI의 메인 스레드가 됐습니다.”
+보조 한 줄: “지식노동자의 68%가 온전한 집중 시간 부족 — Microsoft Work Trend Index(31,000명)”.
+스크립트 · SPOKEN
+
+그 AI를 어떻게 쓰고 계신가요. 일을 하나 시키고, 기다리는 동안 다른 채팅으로 갑니다. 또 일을 시키고, 다른 프로젝트로 갑니다. 결과가 오면 다시 돌아가 맥락을 읽고, 판단하고, 다음 일을 지시합니다. 무한 반복입니다.
+
+개발자들은 이미 이렇게 일합니다. 그리고 모두가 AI-native가 될수록, 이 워크플로는 모두의 일이 됩니다.
+
+AI는 실행 비용을 없앴지만, 새로운 비용을 만들었습니다. 결과를 다시 읽고, 판단하고, 다음 단계를 지시하고, 완결하는 비용입니다. 인간의 뇌는 무한정 생각할 수 없고, 무한정 다음 단계를 지시할 수 없습니다.
+
+문제는 AI의 능력이 아니라, 인간이 그 실행들을 오케스트레이션하는 방식입니다.
+
+모션 · 전환
+AI 창이 하나씩 spawn되다가 속도가 빨라져 화면을 덮는다. 프로젝트를 바꿀 때마다 화면이 세로·가로로 fracture되고, 각 조각 안에 다른 창·대화·터미널이 살아 움직인다.
+창 사이를 이동할 때 직전 창의 맥락 문장이 흐려지고 새 창에서 다시 조립된다. 실타래(thread) 라인들은 모두 중앙의 사람 아이콘으로 수렴해 인간이 메인 스레드라는 원인을 보여준다.
+헤드라인은 창 증식과 화면 분열이 최고조에 이른 뒤 중앙에 snap-in. 이후 창들이 3개 문제 카드의 형태로 정렬되며 다음 장으로 morph한다.
+정적 폴백: 갈라진 창 그리드 + 중앙 인물 + 수렴하는 thread + 헤드라인이 한 화면에 모두 보이는 최종 프레임.
+근거 · 출처
+Microsoft Work Trend Index(31,000명): 68%가 온전한 집중 시간 부족.
+KAIST 김주호 교수팀 preprint “Precision Proactivity”(arXiv:2505.10742v3): 금융 전문가 34명 분석에서 AI가 유발한 작업 전환이 성과 저하의 가장 강한 예측 변수 — https://arxiv.org/abs/2505.10742
+클레임 경계
+“AI가 나를 ADHD로 만든다”는 의학적 주장 금지. “ADHD처럼 주의가 파편화되는 감각”까지만.
+“10분에 컨텍스트 7개” 같은 수치는 개인 체감임을 명시. 시장 통계처럼 말하지 않는다.
+preprint는 소규모·단일 도메인·동료심사 전이므로 “초기 연구” 보조 근거로만.
+S3 · Founder Insight · 목표 0:40
+
+왜 이 창업자인가 — founder-market fit. 시장 조사자가 아니라 이 미래를 먼저 산 사람.
+
+화면 · ON-SLIDE
+창업자의 실제 작업 환경(10개 터미널/에이전트 세션) 사진 또는 일러스트 하나.
+숫자 하나: “40+ AI-native 파운더·개발자 심층 인터뷰”.
+키 문장: “이 시장을 조사하러 들어온 사람이 아니라, 이 미래를 먼저 살다가 문제를 발견한 사람입니다.”
+스크립트 · SPOKEN
+
+저부터 이 문제를 가장 심하게 겪었습니다. 하루에 터미널과 에이전트 세션을 10개씩 오가다 보면, 더 많은 일을 시작할 수는 있지만 끝까지 닫히는 일의 비율은 오히려 떨어졌습니다. 마감 직전에 급하게 끝내거나, 아예 놓치거나, 완성도가 무너졌습니다.
+
+이건 생산성 문제가 아니라 신뢰의 문제였습니다. 상대방은 AI로 대충 만든 결과를 받고 싶지 않습니다. 사업에서 중요한 건 얼마나 많이 시작했는지가 아니라, 약속한 품질로 끝냈는가입니다.
+
+그래서 한국의 AI-native 파운더와 개발자 40명 이상을 몇 시간씩 만나, 어떤 셋업을 쓰고 어디서 맥락을 잃고 무엇이 병목인지 물었습니다. 반복해서 나온 문제는 같았습니다.
+
+저는 이 시장을 조사하러 들어온 사람이 아니라, 이 미래를 먼저 살다가 문제를 발견한 사람입니다.
+
+모션 · 전환
+정지 화면 위로 키 문장만 타이핑 인. 인터뷰 숫자 40+ 카운트업.
+정적 폴백: 사진 + 숫자 + 문장.
+클레임 경계
+“제가 만난 모든 사람이” 같은 표본 일반화 금지. “40명+에게서 반복해서 들은”이 정확하다.
+인터뷰가 수 시간짜리 대화가 맞으므로 “심층 인터뷰” 표현 가능. 단, 대상·날짜·반복 패턴을 기록한 표를 Q&A 대비로 준비한다.
+확인 필요
+40명+ 인터뷰의 원문 집계: 누구·언제·어떤 병목을 몇 명이 자발적으로 말했는지 표로 정리.
+S4 · 세 가지 문제 · 목표 0:35
+
+문제를 세 개의 이름 있는 카드로 고정한다. 뒤의 솔루션 세 전환과 1:1로 대응시키기 위한 구조.
+
+화면 · ON-SLIDE
+카드 3장, 각 한 문장:
+① Fragmented Context — AI 작업이 늘수록 사람이 맥락을 전환하고 전체 그림을 머릿속에서 다시 조립한다.
+② Generic Output — AI가 나의 맥락·취향·품질 기준을 모르기 때문에 “대충 맞는” 결과가 나오고, 결국 사람이 다시 고친다.
+③ Human as the Main Thread — 추적·판단·재시도·완료 확인은 여전히 인간의 몫. 자율 실행이 늘수록 관리 부담도 늘어난다.
+스크립트 · SPOKEN
+
+정리하면 문제는 세 가지입니다.
+
+첫째, 컨텍스트가 찢깁니다. 둘째, AI는 저의 현실 맥락과 품질 기준을 몰라서 sloppy한 결과를 냅니다. 셋째, 실행은 에이전트가 해도 추적과 판단, 완료 확인은 여전히 사람이 합니다.
+
+자율 실행이 늘수록, 관리 부담도 같이 늘어납니다.
+
+모션 · 전환
+카드가 말하는 순서대로 1-2-3 슬라이드 인.
+정적 폴백: 3열 카드 나란히.
+클레임 경계
+카드마다 한 문장만. 여기서 기능 얘기를 시작하지 않는다.
+S5 · 제품 작동 — Commitment Graph · 목표 1:25
+
+기능 목록이 아니라 실제 조작과 권한 경계를 한 장면으로 이해시킨다. Minecraft achievement map의 진행감과 delegation scope를 결합한 시그니처 장면 ②.
+
+화면 · ON-SLIDE
+전 화면에 Minecraft achievement map처럼 이어진 Commitment Graph. 시작 노드는 “회의에서 약속 발생”, 목표 노드는 “고객이 견적 수락”. 중간 노드는 후속 메일 초안 → 승인 → 발송 → 회신 추적 → 수정 → 수락 증거.
+사용자가 시작 노드에서 원하는 현실 결과 노드까지 드래그한다. 드래그한 경로 주위로 orange 반투명 영역이 생기고 라벨 “이번 위임 범위”가 붙는다.
+선택 영역 안의 노드는 자동 실행. 경계에 닿은 노드는 멈추고 질문 카드: “가격을 5% 낮춰도 될까요?” / 승인 · 수정 · 거절.
+완료 노드는 체크가 아니라 외부 증거 아이콘으로 잠긴다: 보낸 메일, 상대 회신, 캘린더 수락, 결제·배송·문서 상태. 마지막 목표 노드가 잠기면 Promise Packet이 verified로 닫힌다.
+우측 하단에 학습 신호를 분리 표시: ① consent feedback: 맡길 것/묻고 할 것/하지 말 것 ② quality feedback: 결과가 내 기준에 맞았는가. 둘을 한 점수로 섞지 않는다.
+그래프가 다른 사람을 필요로 하면 Shared ARCA lane이 열린다: 내 commitment 감지 → 내 권한·품질 기준 확인 → 상대 ARCA와 필요한 정보만 표준 packet으로 교환 → 양쪽 의도·권한·일정·조건 정렬 → 각자 승인 범위 안에서 실행 → 두 사람 모두 외부 증거로 completion node lock.
+상단 미니 KPI: Scope breach 0 · Boundary question rate · Verified completion rate · Intervention-free completion rate · Time-to-verified-outcome.
+스크립트 · SPOKEN
+
+ARCA를 실제로 쓰는 장면은 이렇게 생깁니다. 게임의 어치브먼트 맵처럼, 지금 어디서 시작해 어떤 현실 결과까지 가는지가 하나의 Commitment Graph로 보입니다.
+
+사용자는 시작점에서 원하는 결과까지 드래그합니다. 그러면 이만큼이 이번 위임 범위가 됩니다. ARCA는 그 안의 노드만 자동으로 실행하고, 범위 밖의 판단이 필요해지는 순간 먼저 묻습니다.
+
+예를 들어 고객에게 견적을 보내고 수락받는 데까지는 맡겼지만, 가격을 낮추는 판단은 경계 밖입니다. ARCA는 멈추고 “5% 낮춰도 될까요?”라고 묻습니다. 승인을 받으면 다시 이어갑니다.
+
+진행률은 “메일을 보냈다” 같은 자기 보고가 아닙니다. 상대 회신, 캘린더 수락, 입금, 배송처럼 바깥 세상의 증거가 생길 때마다 노드가 잠기고, 목표 결과가 증명되어야 끝납니다.
+
+그리고 맡길지에 대한 동의 피드백과, 결과가 좋았는지에 대한 품질 피드백을 따로 배웁니다. 그래서 더 많이 자동화하면서도 사용자의 경계를 흐리지 않습니다.
+
+다른 사람이 필요한 약속이라면 두 ARCA가 연결됩니다. 각 ARCA는 자신이 대표하는 사람의 의도와 권한을 먼저 확인하고, 필요한 정보만 교환해 일정과 조건을 맞춘 뒤, 각자의 승인 범위 안에서 실행합니다. 양쪽의 완료 노드가 외부 증거로 잠겨야 공동 약속이 끝납니다.
+
+ARCA가 얼마나 working하는지는 다섯 숫자로 판단합니다. 범위 침범은 0이어야 하고, 검증된 완결률과 무개입 완료율은 올라가야 하며, 경계 질문과 완료 시간은 내려가야 합니다.
+
+모션 · 전환
+1) 어두운 Minecraft achievement map에서 시작 노드가 켜짐 2) 멀리 있는 목표 노드가 orange로 점등 3) 둘 사이의 후보 경로가 가지처럼 순차 성장 4) 커서가 시작→목표를 드래그 5) 드래그 궤적을 중심으로 orange 위임 영역이 잉크처럼 퍼짐 6) 내부 실행 노드가 차례로 pulse 7) 경계에서 경로가 얼고 질문 카드가 전면으로 올라옴 8) 승인 뒤 경로가 다시 성장 9) 외부 증거 토큰이 날아와 완료 노드를 자물쇠처럼 lock 10) 목표 노드와 Promise Packet이 verified로 닫힘. 전체 12~15초.
+피드백 장면: 승인·수정·거절 토큰은 consent rail로, 결과 만족·수정 토큰은 quality rail로 따로 흘러 우측의 taste model에 흡수된다. 두 rail은 끝까지 다른 색조/라벨로 유지해 권한과 취향을 섞지 않음을 보여준다.
+Shared ARCA 장면: 화면이 두 개의 private graph로 나뉜다. 그래프 원문·개인 맥락은 건너지 않고 request / authority / evidence 아이콘이 붙은 최소 packet만 중앙 lane으로 왕복한다. 양쪽 permission gate가 각각 열려야 두 경로가 pulse하며 실행되고, 외부 증거가 도착하면 양쪽 completion node가 동시에 lock된다.
+KPI는 해당 상태 변화가 일어날 때만 count-up/update한다. 예: evidence lock 때 verified completion, 사람 개입 없이 목표가 닫힐 때 intervention-free completion.
+모션 중간마다 화면을 멈춰 말할 수 있게 5개 hold frame: 시작·목표 / 범위 설정 / 경계 질문 / 외부 증거 / 피드백 분리.
+정적 폴백: 전체 그래프 한 장에 orange 위임 영역, 경계 질문 카드, evidence-locked 노드, 5 KPI를 모두 보이게 한다.
+근거 · 출처
+제품 정의·상태 모델: Promise Packet lifecycle — detected → proposed → accepted → authorized → in_progress → evidence_submitted → verified.
+현행 ARCA 제품·아키텍처 범위: sensing → context engine → commitment ledger → delegation policy → evidence-based completion.
+클레임 경계
+현재 구현된 화면과 목표 UX를 구분한다. Commitment Graph drag interaction이 라이브 빌드에 아직 없으면 “제품 설계/다음 핵심 인터랙션”으로 표시하고, 동작 중인 것처럼 녹화 데모를 꾸미지 않는다.
+Scope breach 0은 운영 원칙/목표다. 실측 결과가 없으면 달성 수치처럼 쓰지 않는다.
+“배운다”는 consent/quality 신호를 축적해 다음 제안과 승인 경계를 개선한다는 뜻. 원장·권한·상태 기계 자체를 LLM이 임의 변경한다는 뜻이 아니다.
+ARCA↔ARCA 연결은 자유로운 대리결정이 아니다. 각 공개 정보와 행동은 각 ARCA가 대표하는 사람의 원래 의도·상대·목적·권한 범위 안에 있어야 하고, 필요한 정보만 교환한다.
+확인 필요
+발표용 데모가 live인지 prototype인지 캡션으로 명시.
+5 KPI의 현재값은 베타 로그가 생긴 항목만 표시. 없는 값은 “계측 시작”으로 둔다.
+S6 · 트랙션 — Vitamin → Habit → Dependency · 목표 0:40
+
+“왜 비타민이 아닌가”의 답. 시간이 갈수록 더 많은 권한을 맡기고 개입 없이 끝나는 일이 늘어나는 비가역성을 보여준다.
+
+화면 · ON-SLIDE
+3단 사다리: Vitamin → Habit → Dependency.
+북극성 지표 한 줄: “사용자 개입은 줄어드는데, 현실에서 검증된 완결은 늘어나는가 — Weekly Verified Outcomes”.
+창업자 도그푸딩 실측(7/3–9/2 로컬 스토어): 녹음 155건 · 3,464.5분(57.7h) · 녹음 활성 46일 · 액션 후보 56건(수동 20 · 일반 실행 16 · 리서치 11 · 초안 5 · 발송 4) · 출처 1위 Gmail 46건.
+프록시 박스(라벨 필수): “유사 실행형 에이전트 Instinct 14일(9/4–9/18) 창업자 사용 강도: 사용자 메시지 351 · 전체 메시지 1,250 · 사용자 활성 10일 · 전체 메시지 세션 55(사용자 메시지 세션 31) — ARCA 사용자 평균이 아님”.
+외부 베타: 개인 10명 시작(창업자 확인). WAU · 사용자별 위임 · 리텐션 · 첫 위임 전환율은 [측정 시작].
+상용화 신호: CherieXX 도입 확정(창업자 최신 확인). 조건은 현금 1,500만원 + 지분 1%(100억원 밸류 기준 총 가치 1억 1,500만원); 계약 서명·입금·매출 인식은 별도 [증빙 확인 필요].
+스크립트 · SPOKEN
+
+트랙션은 숫자 하나가 아니라 방향입니다. 이 제품이 비타민이 아니라 습관이 되고, 습관이 의존이 되는가입니다.
+
+ARCA에서는 시간이 갈수록 사용자가 더 많은 실제 권한을 맡기고, 개입 없이 끝나는 일이 늘어납니다. 한번 맡긴 영역은 되돌아가지 않습니다. 이 비가역성이 저희의 트랙션입니다.
+
+북극성 지표는 체류 시간이 아닙니다. 사용자 개입은 줄어드는데, 외부 증거로 검증된 완결은 늘어나는가입니다.
+
+저부터 7월 3일부터 9월 2일까지 46일에 걸쳐 현실 대화 155건, 57.7시간을 기록했고 56개의 액션 후보를 발견했습니다. 개인 베타 10명은 시작했지만 사용자별 활성·위임·리텐션은 지금부터 계측합니다. CherieXX 도입은 확정됐지만 계약 서명·입금·매출 인식과는 구분합니다. 아직 PMF를 주장하지 않습니다. 다음 증명은 반복 위임과 외부 증거 완결입니다.
+
+모션 · 전환
+사다리 3단이 순차 상승. 동시에 “개입” 게이지는 내려가고 “검증된 완결” 카운터는 올라가는 이중 모션.
+정적 폴백: 사다리 + 지표 박스 정지.
+근거 · 출처
+도그푸딩: 2026-09-03 Drive 업로드 창업자 로컬 스토어 스냅샷(관측기간 2026-07-03–09-02). Instinct 프록시: 2026-09-04–09-18 대화 로그 집계. 개인 베타 10명·CherieXX 도입 확정은 창업자 확인이며, 외부 행동지표와 계약·입금·매출 증빙은 별도 상태로 관리.
+클레임 경계
+Instinct 사용 데이터에는 반드시 “ARCA 예상 사용강도 프록시” 라벨. ARCA 트랙션과 섞지 않는다.
+대기자 수·전환율 등 원장에 없는 숫자를 새로 만들지 않는다. 없으면 “베타 설계와 계측 시작”으로 쓴다.
+“PMF 달성” 주장 금지. “strong problem pull + working behavioral proof, 다음 증명은 반복 위임”.
+확인 필요
+베타 코호트 지표(첫 위임까지 시간 · 주간 위임 수 · 승인/수정/거절 비율 · 무개입 완료율 · 외부 증거 완결률)는 계측 결과로 채운다.
+ARCA waitlist · referral · invite→active 전환은 [측정 시작]. 기존 덱의 “대기 50+”는 원장 확인 전 사용 금지.
+S6A 전용 · 트랙션 수치 정의와 클레임 경계
+1
+ARCA 창업자 도그푸딩
+기간 2026-07-03–09-02. 2026-09-03 로컬 스토어 스냅샷: 녹음 155건, 총 3,464.5분(57.7h), 녹음 활성일 46일, 액션 후보 56건. 56 = 수동 20 + 일반 실행 16 + 리서치 11 + 초안 5 + 발송 4. Gmail 출처 46/56. 분모가 없는 사용자 평균·리텐션 수치가 아니다.
+실측
+2
+Verified completion
+로컬 상태 done 16/56은 외부 증거 검증이 없어 verified completion rate로 쓸 수 없다. 슬라이드 표기: ‘외부 증거 완결률 [측정 시작]’.
+측정 시작
+3
+Instinct 사용강도 프록시
+기간 2026-09-04–09-18. 창업자 1인: 사용자 메시지 351, 전체 메시지 1,250(assistant 899), 사용자 활성 10일, 전체 메시지 세션 55, 사용자 메시지 세션 31(30분 간격 정의). ARCA 외부 사용자 통계가 아니다.
+프록시
+4
+ARCA 외부 베타
+개인 10명 시작은 창업자 확인. numerator=10 enrolled; active-user denominator, WAU, first-delegation conversion, weekly delegations, approval/edit/reject, retention은 중앙 로그 부재로 [측정 시작].
+10명 시작
+5
+시장 pull · waitlist · referral
+ARCA waitlist 원장, invite→active 전환, ARCA referral은 현재 확인 가능한 분자/분모 없음. ‘0’이 아니라 [측정 시작]. Instinct early-access 추천 6명은 창업자 개인 트랙레코드일 뿐 ARCA traction에 합산 금지.
+측정 시작
+6
+숨고 경제적 위임 proof
+완료된 외부 작업 1건. 매출 약 250,000원, 실행비 10,000원 미만(창업자 진술). 1건의 proof-of-execution이며 반복 매출, GMV, gross margin, CAC 근거가 아니다. 정산·작업 기록 [증빙 정리 필요].
+1건
+7
+CherieXX 상용화 신호
+도입 확정은 2026-09-21 창업자 최신 확인. 조건: 현금 15,000,000원 + 지분 1%, 100억원 밸류 기준 총 가치 115,000,000원. 계약 서명·입금·매출 인식은 각각 별도 상태이며 [증빙 확인 필요]. ARCA 공급 범위와 total/annual 구분도 확인 전 단정 금지.
+도입 확정
+
+슬라이드용 한 문장: “57.7시간의 현실 맥락에서 56개의 액션 후보를 발견했고, 개인 베타 10명을 시작했으며, CherieXX 도입이 확정됐습니다. 다만 외부 증거 완결률·리텐션·전환율은 이제 계측을 시작합니다.”
+
+S6A · 경쟁 지형과 성장 속도 · 목표 0:45
+
+투자자가 시장을 이미 움직이는 카테고리로 보고, 동시에 ARCA가 어디서 다른지 한눈에 보게 한다. 로고는 각 회사 공식 브랜드 자산 또는 공식 사이트 헤더에서만 가져온다.
+
+화면 · ON-SLIDE
+왼쪽 2×2 competitor map. X축: 기록·응답 → 현실 결과의 verified closure. Y축: 사용자가 부를 때 → 상시 맥락·선제 개입. Capture(Otter·Granola·Plaud)는 좌측, model/execution(ChatGPT·Claude·Codex)는 우하단, personal agents(Instinct·Vellum·Tomo)는 상단, ARCA는 우상단에 orange halo.
+오른쪽 O/△/X table. 열 순서: living context / proactive capture / bounded autonomy / taste learning / verified closure / boundary human escalation. 공식 공개자료 기준 행: Instinct O·O·△·O·△·△ / Vellum O·△·△·O·X·△ / Plaud △·O·X·X·X·X / Granola·Otter △·O·X·X·X·X / ChatGPT·Claude·Codex O·△·△·O·X·△ / ARCA O·O·O·O·O·O(제품 설계; 구현/계측 배지 분리).
+표 범례: O=공식 자료에서 명시, △=부분 기능 또는 종료 조건 불명확, X=검토한 공식 공개자료에서 확인되지 않음. X를 “불가능”으로 읽지 않게 표 바로 아래에 쓴다.
+ARCA 행 전체를 orange로 하이라이트. ARCA: O / O / O / O / O / O는 제품 설계·목표 상태이며, 현재 구현된 항목과 beta 계측 중인 항목에 작은 배지를 붙인다.
+하단 growth strip: Plaud >2M users, $100M ARR in two years(회사 발표; TechCrunch 보강) · Otter $100M ARR(회사 발표) · Granola $125M round, $1.5B valuation(TechCrunch, 2026-03) · Tomo $5M seed(회사 배포자료, 2026-06) · Vellum $20M Series A(공식, 2025-07). Instinct·ARCA의 비공개 성장/밸류는 빈칸 대신 “not publicly disclosed”.
+스크립트 · SPOKEN
+
+이 시장은 이미 빨리 움직이고 있습니다. Plaud와 Otter는 각각 1억 달러 ARR을 공개했고, Granola는 15억 달러 밸류에이션으로 1억 2,500만 달러를 조달했습니다. 개인 에이전트 쪽도 Tomo와 Vellum이 자본을 모으고 있습니다.
+
+하지만 경쟁을 기능 개수로 보면 안 됩니다. 기록 도구는 맥락을 잡지만 대개 요약에서 끝나고, 모델과 실행 도구는 행동하지만 사용자가 계속 불러야 합니다. 개인 에이전트는 상시 맥락과 선제성을 가져옵니다.
+
+ARCA가 차지하려는 자리는 오른쪽 위입니다. 살아 있는 맥락에서 먼저 약속을 잡고, 사용자가 그은 범위 안에서만 움직이며, 현실의 외부 증거로 닫고, 경계에서는 사람에게 다시 올리는 자리입니다.
+
+이 표의 X는 못 한다는 뜻이 아니라, 오늘 확인한 공식 공개 자료에서 그 종료 조건이 확인되지 않았다는 뜻입니다.
+
+모션 · 전환
+공식 로고가 category cluster별로 맵에 등장하고 각 클러스터의 위치까지 짧은 path가 그려진다. 모든 타사 배치가 끝난 마지막에만 ARCA가 우상단으로 이동하며 orange halo가 켜진다.
+O/△/X table은 기능 열이 왼쪽부터 하나씩 점등되어 비교 논리를 만든다. 모든 타사 행이 보인 뒤 ARCA 행이 마지막에 orange로 켜지고, 이어 핵심 열인 verified closure와 boundary human escalation이 세로로 한 번 더 점등된다.
+growth strip의 숫자는 회사별로 한 번만 count-up. 서로 다른 정의의 사용자·ARR·밸류를 한 축 그래프로 그리지 않는다.
+정적 폴백: map + table + growth strip 세 구역이 한 화면에서 읽히게.
+근거 · 출처
+Instinct official positioning — https://instinct.com/
+Vellum official product — https://www.vellum.ai/ ; Series A — https://vellum.ai/blog/announcing-our-20m-series-a
+Plaud official growth — https://www.plaud.ai/blogs/news/plaud-scales-from-1m-to-100m-arr ; TechCrunch corroboration — https://techcrunch.com/2026/06/16/plaud-says-its-software-business-topped-100m-in-arr-after-shipping-over-2m-ai-notetakers/
+Otter official ARR — https://otter.ai/blog/otter-ai-caps-transformational-2025-with-100m-arr-milestone-industry-first-ai-meeting-agents-and-global-enterprise-expansion
+Granola financing/valuation — https://techcrunch.com/2026/03/25/granola-raises-125m-hits-1-5b-valuation-as-it-expands-from-meeting-notetaker-to-enterprise-ai-app/
+Tomo company release — https://www.morningstar.com/news/business-wire/20260625645270/tomo-is-the-ai-champion-helping-people-bet-on-themselves-emerging-from-stealth-with-5-million
+클레임 경계
+로고는 공식 자산만. 검색결과 썸네일·임의 SVG·비슷한 워드마크를 만들지 않는다.
+회사 발표 ARR은 “company-reported”로 표시. 서로 다른 시점·정의의 수치를 직접 성장률 순위로 만들지 않는다.
+Instinct, Vellum, Tomo의 매출·밸류·사용자 수는 credible public source가 없으면 생략. private 숫자를 추정하지 않는다.
+O/X는 기능 부재의 단정이 아니라 공개 evidence test다. 표 각주에 기준일 2026-09-21과 “공식 공개자료 기준”을 쓴다.
+S7 · Science & Architecture · 목표 0:40
+
+“가능하다”가 아니라 “왜 안정적으로 가능해졌는가”. 모델이 아니라 책임 레이어를 소유한다는 기술적 엣지.
+
+화면 · ON-SLIDE
+레이어 스택 다이어그램: 현실 감지(Sensing) → Living Commitment Graph → 권한/품질 라벨 분리 → 이벤트 기반 오케스트레이션 → 외부 증거 검증.
+한 줄: “모델은 교체 가능한 엔진입니다.”
+κ-bench 5게이트: Recall → Intervene → Authorize → Act → Verify.
+스크립트 · SPOKEN
+
+이 구조가 왜 안정적으로 가능한가. 핵심 원칙은 하나입니다. 모델은 제안만 하고, 상태 전이와 권한 판정은 결정론적 코드가 합니다.
+
+약속은 버전이 관리되는 하나의 객체로, detected부터 verified까지 상태 기계를 따라 움직입니다. 완료는 모델의 자기 보고가 아니라 외부 증거 검증기가 닫습니다. 그래서 GPT든 Claude든 갈아끼워도 책임 레이어는 ARCA에 남습니다.
+
+그리고 이 레이어를 재는 자를 직접 만듭니다. κ-bench는 “기억하는가”가 아니라 “약속을 끝까지 지키는가”를 Recall, Intervene, Authorize, Act, Verify 다섯 게이트로 시간에 걸쳐 측정하는 저희의 벤치마크입니다.
+
+모션 · 전환
+레이어가 아래부터 순차 적층. 마지막에 κ-bench 5게이트가 도미노처럼 점등.
+정적 폴백: 스택 다이어그램 + 게이트 5개 나열.
+근거 · 출처
+κ-bench v0.3 기술 보고서(방법론·상태 기계·시나리오 패밀리·κ-score) — Drive 보관.
+클레임 경계
+κ-bench는 방법론 단계. 성능 결과·타사 대비 우위 주장 금지.
+“세계 최초” 금지. A2A·UCAN 등 이미 존재하는 조각들을 소비자 제품의 완결 레이어로 통합한다고 표현한다.
+특허는 “출원 우선 검토 후 공개 범위 결정”이라고만.
+학습 대상 네 가지(약속·조건 추출, 개입 타이밍, 애매한 증거 판정, 실패 복구 선택)와 학습하지 않는 것(원장·권한·상태 기계)을 섞어 말하지 않는다.
+S8 · 비즈니스 모델 · 유닛 이코노믹스 · 목표 0:30
+
+지금 돈 버는 순서만 크게, 나머지는 확장 지도로 작게. 원가 구조의 단순함을 보여준다.
+
+화면 · ON-SLIDE
+크게 두 개: ① 개인 구독 — Companion 무료 → Pro 12,900원 ② ARCA AX — 엔터프라이즈(Company Brain Work Shell + inter-company execution layer).
+작게 확장 지도: 에이전트 스킬 마켓플레이스 수수료 · 쇼핑·여행 리베이트 · 하드웨어 본체+Shell 액세서리.
+유닛 이코노믹스 박스: “하루 8시간을 매일 전사해도 월 약 6만 원 수준(경량 전사 API 기준)” + “진짜 지표: 검증된 완결 1건당 컴퓨트 원가”.
+스크립트 · SPOKEN
+
+수익 모델은 지금 돈 버는 순서만 크게 말씀드리겠습니다. 개인 구독과, 엔터프라이즈용 ARCA AX입니다. 스킬 마켓플레이스, 리베이트, 광고, 하드웨어는 수요가 증명된 뒤의 확장 지도입니다.
+
+원가 구조도 단순합니다. 하루 8시간을 매일 전사해도 월 6만 원 수준이고, 모델과 실행 엔진 가격은 계속 내려갑니다.
+
+저희가 보는 진짜 유닛 이코노믹스는 채팅당 비용이 아니라, 외부 증거로 검증된 완결 1건을 만드는 데 드는 컴퓨트 비용입니다.
+
+B2C에서는 친구·가족·동료 사이의 coordination tax를 줄입니다. B2B에서 Company Brain AX는 별도 제품이 아니라 ARCA의 Work Shell입니다. 회사 간 에이전트가 request·authority·evidence packet을 주고받는 execution layer로 확장됩니다.
+
+모션 · 전환
+두 개의 큰 수익 막대가 먼저 서고, 확장 칩들이 작게 나중에 붙는다(크기=지금 중요도). 개인 구독 쪽의 두 사람 그래프가 packet lane으로 연결된 뒤, 같은 lane이 회사 두 곳의 Company Brain Work Shell 사이로 확장된다.
+정적 폴백: 2대 박스 + 작은 칩 나열.
+근거 · 출처
+OpenAI 전사 API 가격(Whisper $0.006/분 · gpt-4o-mini-transcribe $0.003/분) — https://developers.openai.com/api/docs/pricing
+클레임 경계
+MRR·BEP 시나리오에는 “확정 예측이 아니라 upside 시나리오 — 코호트 실측으로 교체 예정” 라벨 유지.
+A2A는 이미 완성된 공개 네트워크나 매출로 주장하지 않는다. B2C/B2B 확장 구조와 테스트 중인 메커니즘으로만 표현한다.
+프로젝션은 acquisition·activation·retention·ARPU 가정이 있는 bottom-up만. 근거 없는 hockey stick 금지.
+S9 · Commercial Proof · 목표 0:25
+
+개인 PMF 증거가 아니라, 기업도 같은 오케스트레이션 문제에 돈을 낸다는 adjacent commercial proof로 분리해서 보여준다.
+
+화면 · ON-SLIDE
+딜 카드 2 + 사례 1, 각각 상태 배지:
+CherieXX — “1억 1,500만 원 규모 ARCA AX 도입에 합의 · 계약 문서화 진행 중” + 상태 배지 “문서화 중”.
+Netty — “ARCA AX 400만 원 · 체결 예정” + pipeline 배지.
+숨고 — “첫 외부 매출 약 25만 원 · 실행 원가 1만 원 미만 · 1건 — 위임 → 실행 → 완결 → 매출 루프의 첫 외부 증거”.
+스크립트 · SPOKEN
+
+같은 오케스트레이션 문제에 기업도 돈을 냅니다. CherieXX와 1억 1,500만 원 규모 ARCA AX 도입에 합의했으며, 계약 문서화가 진행 중입니다. 두 번째 400만 원 규모 Netty 건은 아직 pipeline입니다.
+
+개인 시장의 PMF 증거로 포장하지 않겠습니다. 다만 기업이 같은 문제에 돈을 낸다는 사실은, 이 완결 레이어가 개인을 넘어 조직으로 확장된다는 것을 보여줍니다.
+
+이 문구는 계약서 서명·발주서와 입금 증빙이 확인되기 전까지 “계약 체결”, “signed deal”, “확정 매출”로 올리지 않습니다.
+
+모션 · 전환
+카드에 상태 스탬프(검토 중 / 체결 예정 / 완료 1건)가 찍히는 모션. 정직함 자체를 시각 장치로 쓴다.
+정적 폴백: 카드 + 배지 정지.
+클레임 경계
+CherieXX 안전 문구를 그대로 유지: “CherieXX와 1억 1,500만 원 규모 ARCA AX 도입에 합의했으며, 계약 문서화가 진행 중입니다.”
+실제 서명 계약서·발주서 확인 전 signed deal / 계약 체결 금지. 입금 증빙 전 확정 매출 / completed sales 금지. 소급 날짜 문서는 증빙으로 쓰지 않는다.
+1억 1,500만 원의 구성·기간·ARCA 공급 범위가 원문 계약에서 확인되기 전 현금/지분 세부를 슬라이드에 추가하지 않는다.
+Netty 400만 원은 pipeline이다. 매출이나 signed deal로 쓰지 않는다.
+숨고는 1건이다. 복수 사례처럼 말하지 않는다.
+S10 · GTM · 목표 0:25
+
+ARCA 자체가 창업자의 영업 운영체계가 되고, 성공한 관계·위임이 다음 관계로 이어지는 founder-led GTM을 보여준다.
+
+화면 · ON-SLIDE
+Founder dogfooding pipeline: lead discovery → 관계 맥락 정리 → 개인화 outreach 초안 → 창업자 승인 후 발송 → follow-up 추적 → referral 조율 → 회신·미팅·위임·계약 상태의 외부 증거 수집.
+키 라인: “We use ARCA to sell ARCA. Every customer conversation improves both our distribution engine and the product itself.”
+계측 패널: lead→conversation · conversation→delegation · referral rate · follow-up completion · CAC · share of GTM steps handled by ARCA. 현재 로그가 없는 값은 빈 숫자 대신 “measurement starting”.
+경로 한 줄: AI-native 파운더 네트워크(보이는 클로즈베타) → 관계 기반 referral loop → 검증 뒤 콘텐츠 시딩·paid acquisition. 배지: Day-1 global · English-first.
+스크립트 · SPOKEN
+
+We use ARCA to sell ARCA. Every customer conversation improves both our distribution engine and the product itself.
+
+ARCA가 잠재 고객을 찾고 관계 맥락을 정리하며 개인화된 outreach와 follow-up을 준비합니다. 하지만 사람에게 나가는 메시지는 대표가 승인한 뒤에만 발송됩니다. 회신, 미팅, 위임, referral과 다음 행동은 외부 증거로 추적합니다.
+
+한 번의 성공한 위임은 그 일을 완결하는 데 필요한 다음 사람과 ARCA를 초대할 이유가 됩니다. B2C에서는 관계의 coordination tax를 줄이는 네트워크 효과이고, B2B에서는 회사 간 실행 packet이 쌓이는 유통 루프입니다.
+
+첫 코호트는 AI-native 파운더와 헤비 유저입니다. 지금은 이 founder-led workflow가 동작하는 것과 실측 traction을 분리합니다. 대화 전환·위임 전환·referral·follow-up 완결·CAC를 로그로 증명한 뒤 확장합니다.
+
+모션 · 전환
+한 명의 lead가 관계 그래프로 들어오고 맥락 카드가 조립된 뒤 outreach 초안이 만들어진다. approval gate에서 멈추고, 승인 뒤에만 send path가 켜진다. 회신·미팅·위임·referral evidence가 차례로 lock되며 다음 lead로 루프가 확장된다.
+ARCA가 처리한 단계는 orange, 창업자 판단 단계는 white gate로 유지한다. 계측값은 실제 로그가 있을 때만 count-up하고 미계측은 “measurement starting”으로 고정한다.
+정적 폴백: founder dogfooding pipeline, approval gate, evidence locks, 계측 패널이 한 화면에서 읽힌다.
+클레임 경계
+“좋은 제품이면 word of mouth는 무조건 된다”는 말 금지. 좋은 제품도 유통 없이 묻힌다. 친구초대는 제품 루프 안의 메커니즘으로만 말한다.
+Instinct 등 타사 사례를 “우리도 폭발적으로 끌어올 수 있다”의 근거로 쓰되, 그들의 성장 수치를 우리 프로젝션처럼 쓰지 않는다.
+lead discovery·drafting·tracking은 demonstrated workflow와 measured traction을 분리한다. 로그 없는 전환율·CAC·자동화 비율은 쓰지 않는다.
+모든 outbound representation은 창업자의 명시적 승인 뒤에만 발송한다. ARCA가 관계 맥락을 안다고 자동 발송 권한이 생기지 않는다.
+S11 · Expansion · 목표 0:15
+
+넓이를 보여주되 한 점으로 수렴. 여러 사업이 아니라 같은 완결 레이어의 범위 확장.
+
+화면 · ON-SLIDE
+한 문장: “Software proves demand. Hardware increases context bandwidth.”
+ARCA Core + Shell(Desk · Keyring · Clip · Character) 이미지.
+스크립트 · SPOKEN
+
+확장은 하나의 논리입니다. 소프트웨어가 수요를 증명하고, 하드웨어가 맥락의 폭을 넓힙니다.
+
+폰이 못 듣는 순간을 ARCA Core가 맡고, 선전 R&D와 Shell 액세서리 생태계가 그 뒤를 잇습니다. 지금 여러 사업을 벌이는 게 아니라, 같은 완결 레이어가 닿는 현실의 범위를 넓히는 겁니다.
+
+모션 · 전환
+폰 화면이 Core 디바이스로 모프되는 짧은 전환.
+정적 폴백: 제품 샷 2개.
+클레임 경계
+Web3(Open Trust & Settlement Rail)는 a16z 성향 질문에 답할 때 한 번, 말로만. 본문이 Web3 피치로 읽히지 않게 한다.
+하드웨어를 당장의 두 번째 사업처럼 말하지 않는다. “software proves demand; hardware increases context bandwidth” 한 줄을 넘지 않는다.
+S12 · Team · 목표 0:15
+
+Personal Life OS에서 하드웨어까지 한 팀에서 닫히는 이유.
+
+화면 · ON-SLIDE
+3인 카드: 박민성 — 제품·AI·사업·유통(사용자 0번 · 커머스 엑싯) / 박진성 — mechanical(서울대 기계공학 · Core enclosure · Shell · DFM) / 하승호 — embedded(ISEF 임베디드 세계 2위 · Caltech · ESP32).
+한 줄: “Personal Life OS에서 하드웨어까지, 한 팀에서 닫힙니다.”
+스크립트 · SPOKEN
+
+왜 저희 셋인가. 저는 제품과 AI, 사업과 유통을 만들고, 지금도 매일 사용자 0번으로 삽니다. 진성이는 Core의 기구와 Shell, 양산 설계를, 승호는 임베디드를 맡습니다.
+
+소프트웨어에서 하드웨어까지 한 팀에서 끝낼 수 있는 조합입니다.
+
+모션 · 전환
+가벼운 페이드인만.
+정적 폴백: 그대로.
+클레임 경계
+하승호는 현재 어드바이저(향후 CTO)라는 표현을 정확히 지킨다.
+“소프트웨어는 아직 대표 혼자”라는 갭을 물으면 숨기지 말고 첫 채용 2명 계획(SW/UX · 에이전트 신뢰성)으로 연결한다.
+S12A · TAM · SAM · SOM — 두 방식으로 계산 · 목표 0:35
+
+큰 숫자를 선언하지 않고, 같은 가격과 공개된 모집단에 명시적 필터를 곱해 투자자가 다시 계산할 수 있게 한다. top-down과 bottom-up이 만나는지 확인한다.
+
+화면 · ON-SLIDE
+Top-down TAM scenario: 2025 global labor force 3.734B(World Bank/ILO) × screen/knowledge-work fit 20%[가정] × Pro 연 154,800원(12,900×12) = 약 115.6조 원/년. 20%는 시장 사실이 아니라 sensitivity input이며 10%/20%/30% 범위를 함께 보인다.
+Top-down SAM scenario: US civilian labor force 171.5M(BLS, Dec 2025) + Korea employed 29.154M(공식 통계, Sep 2025) = 200.65M × AI-heavy early-adopter fit 15%[가정] × 연 154,800원 = 약 4.66조 원/년. 10%/15%/20% 범위 표시.
+Bottom-up operating ladder: 100 / 1,000 / 10,000 유료 사용자 × 연 154,800원 = 1,548만 / 1.548억 / 15.48억 원 ARR. 이것은 forecast가 아니라 규모 감각과 실행 단계.
+Cross-check: 10,000 paid users는 SAM 사용자 scenario 약 30.1M의 0.033%. “점유율을 예측했다”가 아니라, bottom-up 목표가 top-down 모집단에 비해 얼마나 작은지 확인하는 sanity check.
+SOM은 채널별 획득능력·activation·retention이 측정되기 전 확정하지 않는다. 현재 12개월 증명 단위는 100명 코호트이며, paid conversion이 확인된 사용자만 매출 SOM에 넣는다.
+스크립트 · SPOKEN
+
+시장은 위에서 한 번, 아래에서 한 번 계산했습니다. 전 세계 노동인구에 20% 적합 가정을 두면 연 115조 원 규모의 TAM 시나리오가 나옵니다. 미국과 한국의 초기 시장에 15% 적합 가정을 두면 약 4조 7천억 원의 SAM 시나리오입니다.
+
+하지만 이 비율은 사실이 아니라 공개한 가정입니다. 그래서 아래에서 다시 봅니다. 같은 가격으로 유료 사용자 100명은 연 1,548만 원, 1천 명은 1억 5,480만 원, 1만 명은 15억 4,800만 원입니다.
+
+1만 명도 SAM 시나리오의 0.033%입니다. 큰 시장을 말하려는 게 아니라, 첫 12개월에는 100명 코호트에서 획득과 반복 위임, 잔존과 지불을 실제로 계측하겠다는 뜻입니다.
+
+모션 · 전환
+왼쪽에서 top-down 모집단이 큰 원으로 나타나고 fit 가정이 적용되며 동심원이 작아진다. 오른쪽 bottom-up 막대는 100→1k→10k 순서로 자라며 각 ARR 숫자가 정확한 값까지 count-up한다.
+마지막에 top-down 원과 bottom-up 막대가 중앙으로 이동해 겹치고, 10,000 users = SAM scenario의 0.033%라는 sanity-check 점에서 수렴한다. 두 계산이 같은 규모 감각을 교차 확인한다는 것을 움직임으로 보여준다.
+가정 셀(20%, 15%)은 orange outline과 [가정] 배지. 공개 통계와 시나리오 입력을 색으로 분리한다.
+정적 폴백: 모든 산식·단위·기준연도·출처가 한 화면에 읽힌다.
+근거 · 출처
+World Bank/ILO global labor force indicator — https://data.worldbank.org/indicator/SL.TLF.TOTL.IN (2025: 3,734,006,209 in indicator data).
+US Bureau of Labor Statistics, Employment Situation Dec 2025 — https://www.dol.gov/newsroom/economicdata/empsit_01092026.pdf (civilian labor force 171.495M).
+Korea official Economically Active Population Survey, Sep 2025 — https://mods.go.kr/board.es?act=view&bid=11732&list_no=438848&mainXml=Y&mid=a20101000000 (employed 29.154M).
+ARCA planned Pro price 12,900원/month — internal pricing decision; not a current realized ARPU.
+클레임 경계
+TAM/SAM의 20%·15%는 외부 통계가 아니라 공개된 scenario assumptions. “시장이 이만큼 확정”이라고 말하지 않는다.
+100/1,000/10,000 users는 operating ladder, forecast가 아니다. acquisition·activation·retention이 없는 hockey-stick chart 금지.
+100명 코호트와 100명 유료 사용자를 혼동하지 않는다. paid conversion 전에는 ARR로 보고하지 않는다.
+“전 세계 40억 명”은 장기 미션이지 TAM 입력이 아니다.
+S13 · Financing & Ask · 목표 0:20
+
+5억으로 무엇을 언제까지 증명하는가. 목표와 현재 라운드 증거를 분리한다.
+
+화면 · ON-SLIDE
+크게: “5억 원 SAFE · 12개월”.
+사용처 3개: 개발자 채용 · 하드웨어 R&D(선전) · 초기 사용자 컴퓨트.
+12개월 뒤 증명할 네 지표: 반복 위임 · 외부 증거 완결률 · 잔존 · 지불(100명 코호트).
+스크립트 · SPOKEN
+
+저희는 지금 5억 원을 SAFE로 레이즈하고 있습니다. 개발자 채용, 하드웨어 R&D, 초기 사용자 컴퓨트에 씁니다.
+
+12개월 뒤 보여드릴 것은 기능 수가 아니라 네 가지 지표입니다. 반복 위임, 외부 증거로 닫힌 완결률, 잔존, 그리고 지불입니다.
+
+(말로만) 현대의 1억은 이번 전체 라운드의 일부로 들어올 수 있고, 글로벌 VC와 함께 5억까지 채우는 구조입니다.
+
+모션 · 전환
+사용처 막대가 채워지는 정도의 경량 모션.
+정적 폴백: 정지 프레임.
+클레임 경계
+a16z Speedrun(SR008) 서류 통과·인터뷰권은 서류·메일 원문과 정확히 일치하는 범위에서만. 묻기 전에 먼저 꺼내지 않아도 된다.
+YC 제로베이스 referral은 확정 전이다. “예정”이라고도 메인 트랙션에 넣지 않는다.
+YC $500k · a16z $1M은 목표이지 현재 라운드의 증거가 아니다. 슬라이드에 쓰지 않고, 질문에 답할 때만 말한다.
+확인 필요
+현대 1억의 실제 조건(지분·전환·의무) 확인.
+S14 · Vision Finale — ARCA Moment · 목표 0:40
+
+앞의 모든 증거를 한 문장의 결론으로 만든다. 시그니처 장면 ③. 여기서 처음 ARCA moment를 꺼낸다.
+
+화면 · ON-SLIDE
+계보 타임라인: ChatGPT moment — AI became something everyone could talk to → OpenClaw moment — AI gained hands and could act across tools → ARCA moment — AI recognizes what your life needs next, moves it forward within your rules, and stays with it until it is real.
+마지막 프레임 전 화면: “AI가 사람 대신 삶을 선택하는 미래가 아니라, 사람이 원하는 삶을 더 멀리 실행할 수 있는 미래.”
+엔드카드: “arca 해놔.” + THE ZONE · ARCA · thezonebio.com/arca · 연락처.
+스크립트 · SPOKEN
+
+ChatGPT가 AI와 대화하는 시대를 열었고, OpenClaw가 AI에 손을 달아줬습니다. ARCA moment는 그 다음입니다. AI가 명령을 기다리지 않고, 한 사람의 삶 전체를 이해해, 그 사람의 규칙 안에서 먼저 움직이고, 현실이 될 때까지 함께하는 순간입니다.
+
+저희가 만드는 미래는 AI가 사람 대신 삶을 선택하는 미래가 아닙니다. 사람이 원하는 삶을 더 멀리 실행할 수 있는 미래입니다.
+
+혼자일 때는 내 약속을, 연결되면 우리의 약속을 완결합니다. Today, people spend their time coordinating people. In the A2A era, each person’s ARCA coordinates with other ARCAs, while every decision remains bounded by the humans they represent.
+
+ARCA does not replace human relationships. It removes the coordination tax around them.
+
+저희는 5억 원으로 그 첫 12개월의 증거를 만들겠습니다. 감사합니다.
+
+모션 · 전환
+계보 타임라인이 왼쪽에서 스윕된 뒤 모든 선이 화면 중앙의 한 사람에게 수렴한다. 그 사람 주위에서 약속·메일·캘린더·결제·배송·공동 약속 노드가 순차 점등되고, 경로가 사방으로 성장하며 전체 Commitment Graph가 살아 움직인다.
+진행 중 노드는 pulse, 완료 노드는 evidence lock, 공동 약속은 두 사람의 그래프가 연결되며 verified로 닫힌다. 사람은 중앙에 고정되어 AI가 삶을 대신 고르는 것이 아니라 그 사람의 규칙을 중심으로 움직인다는 결론을 시각화한다.
+카메라가 그래프 전체를 한 번 넓게 보여준 뒤 orange 경로만 남고 “arca 해놔.” 엔드카드로 morph한다.
+정적 폴백: 중앙의 한 사람 + 완성된 전체 그래프 + evidence-locked 노드 + 키 라인이 한 프레임에 읽힌다.
+클레임 경계
+타사(ChatGPT·OpenClaw)의 moment 정의는 무대 전 최신 포지셔닝을 다시 확인한다. 메인 슬라이드는 ARCA만 크게 세우고 계보는 말로 보조.
+“40억 명”은 시장 규모 주장이 아니라 장기 북극성(미션)으로만. TAM처럼 쓰면 공격받는다.
+“I have a dream” 오프닝은 해커톤 버전. 이 방에서는 dream은 마지막, 증거가 먼저다.
+전체 클레임 등록부 — 상태별로 쓰는 법
+1
+생성형 AI 3년 만에 53% 사용
+출처 각주와 함께 사용. 발표 전 원문 수치 재대조 권장.
+외부 출처
+2
+OpenAI: 6개월 뒤 메시지 +50% · 일 종류 2배
+그대로 사용.
+외부 출처
+3
+Microsoft: 지식노동자 68% 집중 시간 부족
+31,000명 조사임을 같이 말하면 더 단단하다.
+외부 출처
+4
+KAIST preprint: AI 유발 작업 전환이 성과 저하 예측
+“초기 연구” 보조 근거로만. 34명·단일 도메인·동료심사 전.
+보조 근거
+5
+AI-native 파운더·개발자 40명+ 심층 인터뷰
+원문 집계 표를 Q&A 대비로 준비. “모든 사람” 일반화 금지.
+창업자 확인
+6
+도그푸딩 46일 · 녹음 155건/57.7h · 액션 후보 56
+7/3–9/2 로컬 스토어 실측. 56은 후보 수이며 verified completion 수가 아니다.
+내부 로그
+7
+Instinct 14일 사용 강도
+창업자 1인: 사용자 351 · 전체 1,250 · 활성 10일 · 전체 세션 55/사용자 세션 31. 반드시 프록시 라벨.
+프록시
+8
+숨고 매출 약 25만 원 · 원가 1만 원 미만
+1건의 첫 외부 매출로만. 증빙(작업 기록·정산)은 미정리.
+1건
+9
+CherieXX 도입 확정
+창업자 최신 확인. 조건은 현금 1,500만원 + 지분 1%(100억원 밸류 환산 총 1억1,500만원). 서명·입금·매출 인식은 별도 [증빙 확인 필요].
+도입 확정
+10
+Netty 400만 원
+체결 예정 = pipeline. 매출·signed deal로 쓰지 않는다.
+파이프라인
+11
+a16z Speedrun 서류 통과 · 인터뷰권
+서류·메일 원문과 일치하는 범위만. 먼저 꺼내지 않아도 됨.
+증빙 대조
+12
+YC 제로베이스 referral
+확정 전. 메인 트랙션에 넣지 않는다.
+미확정
+13
+YC $500k · a16z $1M
+목표이지 증거가 아니다. 질문에 답할 때만.
+목표
+14
+현대 1억
+“이번 라운드의 일부가 될 수 있다” 말로만. 조건 미확인.
+미확정
+15
+MRR · BEP 시나리오
+upside 시나리오 라벨 유지. 코호트 실측으로 교체 예정.
+가정
+16
+κ-bench
+방법론·실험 설계 단계. 결과·우위 주장 금지.
+방법론
+17
+특허 · 논문
+“출원 준비 중 · 우선 검토 후 공개 범위 결정”.
+준비 중
+18
+경쟁사 성장 숫자
+각 회사 발표 또는 TechCrunch 등 명시된 출처만. 회사 발표 ARR에는 company-reported 라벨.
+외부 출처
+19
+TAM 115.6조 · SAM 4.66조
+공개 모집단에 20%·15% 적합도 가정을 곱한 시나리오. 확정 시장규모 아님.
+가정 공개
+발표 전 확인해야 할 빈칸
+1
+CherieXX 실제 서명 계약서/발주서와 입금 여부 — 없으면 안전 문구 그대로 유지.
+2
+40명+ 인터뷰의 명단·날짜·반복 패턴 집계 표.
+3
+기존 덱의 traction 숫자(대기 50+ 등) 원장 확인.
+4
+a16z 서류 통과·레퍼럴 메일 원문 캡처.
+5
+YC 제로베이스 referral 확정 여부.
+6
+현대 1억의 조건(지분·전환·의무).
+7
+12개월 bottom-up 프로젝션 가정표(acquisition · activation · retention · ARPU).
+8
+Stanford AI Index 원문에서 53% 수치·문구 재대조.
+기존 덱(23장) → 새 구조(17장) 매핑
+
+재작성보다 재배치다. 현행 thezonebio.com/arcair 의 자산을 거의 그대로 재사용한다.
+
+1
+기존 S01 커버(“arca 해놔.”)
+톤 유지, 서브 카피만 새 포지셔닝으로.
+→ S0
+2
+신규: AI Explosion(통계 오프닝)
+새로 만든다.
+→ S1
+3
+기존 S02 문제(회의는 끝났는데…)
+메인 스레드 프레임으로 리라이트. 57% 소통 통계는 유지 가능.
+→ S2
+4
+신규: Founder Insight(40+ 인터뷰)
+기존 S02의 40인 인터뷰 요소를 이동.
+→ S3
+5
+신규: 세 가지 문제 카드
+새로 만든다.
+→ S4
+6
+기존 S04~06(기록·기억·위임) + S03(왜 아직 없나)
+하나의 “ARCA it?” 루프로 압축. 화면 자산 재사용.
+→ S5
+7
+기존 S07(위임 다이얼) + S12(지금까지)
+사다리 + 도그푸딩 로그 + 프록시 박스.
+→ S6
+8
+기존 부록 A(구조) + 부록 B(κ-bench) + S14(경쟁 비교)
+본진으로 승격. 경쟁 표는 말로 보조하거나 부록에 유지.
+→ S7
+9
+기존 S16(어떻게 버나)
+확장 맵은 작게, 유닛 박스 추가.
+→ S8
+10
+기존 S10(회사 안으로 · CherieXX)
+상태 배지를 달아 Commercial Proof로 분리.
+→ S9
+11
+기존 S15(어떻게 퍼뜨리나)
+초대 루프를 최상단으로. 채널 목록은 축소.
+→ S10
+12
+기존 S11(ARCA Core)
+한 문장 논리로 압축.
+→ S11
+13
+기존 S18(팀)
+그대로.
+→ S12
+14
+기존 S19(Ask) + S17(12개월)
+합친다. 배분 %는 유지 가능.
+→ S13
+15
+기존 S20(우리가 만들려는 세상) + S09(연결되면)
+Shared ARCA Moment는 피날레 직전 한 장면으로 흡수.
+→ S14
+16
+기존 S08(몰입 모드) · S13(왜 지금) · 부록 A/B/C
+몰입 모드는 S5 보조 또는 생략. 왜 지금의 자본 밸류 목록은 S1 말로 보조. 부록은 그대로 유지.
+→ 부록
+예상 질문 방어 카드
+
+답변 공식: Yes/No → 이유 → 증거 → 경계 → 테제로 복귀. 판정부터 말하고, 아키텍처는 둘째, 비전은 마지막.
+
+1
+ChatGPT·Claude가 다음 업데이트로 만들면?
+기능은 복제 가능. 우리가 소유하는 건 권한·증거·복구의 책임 레이어이고, 모델이 좋아질수록 실행 비용은 내려간다. 완결률로 증명한다.
+2
+Granola·Plaud·Otter와 뭐가 다른가?
+종료 조건이 다르다. 요약에서 끝나는가, 바깥 세상에서 완료가 증명될 때까지 가는가.
+3
+“먼저 움직이는 AI”는 쉽게 복제되지 않나?
+proactivity 자체는 해자가 아니다. 사람·상황별 위임 경계 + 외부 증거 완결 + 실패 복구 이력의 축적이 해자다.
+4
+지금 사용자·매출·리텐션 숫자는?
+PMF를 주장하지 않는다. 문제·메커니즘·제품 루프 검증 + 도그푸딩 로그 + 베타 계측 시작. 다음 증명은 반복 위임.
+5
+3명이 SW와 HW를 다?
+소프트웨어는 아직 대표 혼자라는 갭을 인정. 5억의 첫 채용 2명이 정확히 그 병목 제거용이다.
+6
+커피·커머스 하면서 집중 가능한가?
+커머스는 ARCA의 캐시플로우이자 테스트베드. 대표의 실제 회사 실패가 매일 제품 요구사항이 된다.
+7
+개인 AI에 누가 돈을 내나?
+Vitamin→Habit→Dependency. 더 많은 권한을 맡기는 행동 자체가 지불의사의 선행 지표. 첫 외부 매출 1건 존재.
+8
+5억으로 12개월 뒤 무엇이 증명되나?
+반복 위임 · 외부 증거 완결률 · 잔존 · 지불. 기능 수가 아니다.
+9
+개인정보·오실행·환각은?
+원문은 기기에, 승인 없이는 아무것도 안 나간다, 완료는 외부 증거로. 모르는 것은 실행하지 않는 AI.
+작성 2026-09-21 새벽 · 오늘 대화와 현행 덱(thezonebio.com/arcair) 기준. 경쟁·시장 자료는 2026-09-21 확인. 미검증 클레임은 등록부와 빈칸 목록을 따른다. 이 문서는 슬라이드 재구성 작업의 입력물이며, 어디에도 전송·제출되지 않았다.

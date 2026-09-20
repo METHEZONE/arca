@@ -1,0 +1,737 @@
+ARCA Investor Q&A · Appendix
+
+25 jump-ready backup slides
+
+본 발표 17장 뒤, 질문이 들어왔을 때 번호로 바로 여는 방어 덱. 첫 문장부터 답하고, 증거와 경계를 분리했다.
+
+ORANGE = answer
+WHITE = verified / sourced
+GRAY = [확인 필요]
+Question index
+Cmd/Ctrl+F 또는 번호 클릭
+PRODUCT MOAT
+B01
+ChatGPT, OpenClaw, Claude가 곧 만들면?
+B02
+Instinct, Tomo, Vellum과 무엇이 다른가?
+PRODUCT LOOP
+B03
+Commitment Graph는 정확히 무엇인가?
+B04
+드래그해서 맡기는 것은 진짜 자율성인가?
+LEARNING
+B05
+먼저 묻는 질문이 귀찮아지지 않나?
+TRUST
+B06
+“완료”를 어떻게 검증하나?
+A2A
+B07
+ARCA끼리 대화하면 무엇이 달라지나?
+B08
+Company Brain AX는 B2B 피벗인가?
+SECURITY
+B09
+개인정보, 환각, 오실행은?
+ARCHITECTURE
+B10
+기술 구조는?
+B11
+24시간 감지하면 비용이 폭발하지 않나?
+EVALUATION
+B12
+κ-bench는 무엇을 증명하나?
+TRACTION
+B13
+트랙션인가, 창업자 도그푸딩인가?
+COMMERCIAL PROOF
+B14
+CherieXX 1.15억, Netty 400만은 매출인가?
+GTM
+B15
+ARCA로 ARCA를 판다는 뜻은?
+B16
+referral loop가 왜 생기나?
+ECONOMICS
+B17
+어떻게 돈을 버나?
+B18
+전사와 컴퓨트 비용은?
+MARKET
+B19
+TAM 115.6조는 어떻게 계산했나?
+B20
+SAM과 SOM은?
+PROJECTION
+B21
+성장 계획과 sensitivity는?
+EXPANSION
+B22
+왜 하드웨어까지 하나?
+TEAM
+B23
+3명이 SW와 HW를 다 할 수 있나?
+FINANCING
+B24
+5억 SAFE를 어디에 쓰나?
+CLAIMS
+B25
+accelerator와 referral은 어디까지 말할 수 있나?
+Backup slides
+한 장에 한 주장 · answer → evidence → boundary → follow-up
+B01
+PRODUCT MOAT
+INDEX ↑
+ChatGPT, OpenClaw, Claude가 곧 만들면?
+
+기능은 복제될 수 있습니다. ARCA의 방어선은 모델이 아니라 권한, 상태 전이, 외부 증거, 실패 복구가 쌓이는 commitment layer입니다.
+
+DEEPER ANSWER
+모델은 제안과 추론을 하고, 권한 판정과 상태 전이는 결정론적 코드가 맡습니다.
+모델 가격과 성능이 좋아질수록 ARCA의 실행 원가는 내려가지만, 사람별 위임 경계와 완결 이력은 ARCA에 남습니다.
+EVIDENCE / CALCULATION
+Owned layers: sensing · Commitment Graph · delegation policy · personal/org separation · A2A identity/permission · verified closure.
+OpenClaw 비교는 발표 직전 최신 공개 포지셔닝 재확인.
+CLAIM BOUNDARY
+
+“복제 불가” 또는 “세계 최초” 금지. 해자는 제품 구조와 축적 데이터의 가설이며 완결률로 증명해야 함.
+
+LIKELY FOLLOW-UP
+
+그럼 moat를 언제 숫자로 보여주나? → 반복 위임, evidence-verified completion, recovery success를 코호트로 측정.
+
+MOTION → STATIC FALLBACK
+
+모델 로고는 교체되지만 orange responsibility layer는 남는 스택. 정적: before/after 두 프레임.
+
+B02
+PRODUCT MOAT
+INDEX ↑
+Instinct, Tomo, Vellum과 무엇이 다른가?
+
+같은 personal-agent 지형을 인정하되, ARCA는 약속을 상태 객체로 만들고 외부 증거가 생길 때까지 닫는 데 제품의 중심을 둡니다.
+
+DEEPER ANSWER
+Instinct는 직접 경쟁 맵에 포함합니다. 기능 부재를 추정하지 않고 공개 evidence test로만 비교합니다.
+Vellum, Tomo도 이름·포지셔닝·현재 공개 기능을 최신 공식 자료로 확인해야 합니다.
+EVIDENCE / CALCULATION
+비교 축: real-world sensing / commitment object / granular permission / A2A / external-evidence closure.
+기준일 2026-09-21, 공식 공개자료 기준.
+CLAIM BOUNDARY
+
+타사 O/X를 단정하지 않음. credible public source 없는 매출·사용자·밸류는 생략.
+
+LIKELY FOLLOW-UP
+
+왜 지금 이 팀이 이길 수 있나? → lived workflow, owned stack, completion benchmark로 답함.
+
+MOTION → STATIC FALLBACK
+
+표의 행·열을 순차 점등하고 ARCA 행과 핵심 열은 마지막에 켬. 정적: 출처 각주가 보이는 표.
+
+B03
+PRODUCT LOOP
+INDEX ↑
+Commitment Graph는 정확히 무엇인가?
+
+대화·캘린더·행동에서 생긴 약속을 사람, 기한, 조건, 권한, 완료 증거가 연결된 살아 있는 상태 그래프로 관리하는 구조입니다.
+
+DEEPER ANSWER
+Promise Packet 상태: detected → proposed → accepted → authorized → in_progress → evidence_submitted → verified.
+한 약속의 버전과 의존성을 추적하므로 “무슨 일을 했나”보다 “무엇이 아직 닫히지 않았나”를 운영합니다.
+EVIDENCE / CALCULATION
+ARCA product architecture and Promise Packet design.
+CLAIM BOUNDARY
+
+현재 구현, 설계 완료, 향후 계획을 섞지 않음. 세부 데이터 스키마는 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+LLM이 상태를 잘못 바꾸면? → 모델은 제안, 코드가 전이와 권한을 검증.
+
+MOTION → STATIC FALLBACK
+
+노드가 순차 점등되고 path가 성장. 정적: 상태와 필수 필드가 붙은 그래프.
+
+B04
+PRODUCT LOOP
+INDEX ↑
+드래그해서 맡기는 것은 진짜 자율성인가?
+
+드래그는 사용자가 위임 범위를 공간적으로 지정하는 행위입니다. orange 영역 안에서만 자동 실행하고 경계에서는 다시 묻습니다.
+
+DEEPER ANSWER
+범위 안 자동화와 범위 밖 승인 요청을 분리합니다.
+완전 위임 on/off와 사람·프로젝트별 정책은 학습 가능하지만, 사용자가 언제든 끄고 수정할 수 있어야 합니다.
+EVIDENCE / CALCULATION
+Product interaction: drag-bounded delegation region.
+CLAIM BOUNDARY
+
+현재 자동화 범위의 실측 오작동률은 [확인 필요]. 완전 자율 실행을 주장하지 않음.
+
+LIKELY FOLLOW-UP
+
+사용자가 실수로 넓게 드래그하면? → 고위험 행동은 별도 confirmation과 취소 가능성 유지.
+
+MOTION → STATIC FALLBACK
+
+드래그 후 orange 영역이 확산하고 경계에서 white approval gate가 멈춤. 정적: 허용/질문/금지 3영역.
+
+B05
+LEARNING
+INDEX ↑
+먼저 묻는 질문이 귀찮아지지 않나?
+
+질문 수를 늘리는 것이 목표가 아니라, 권한과 품질이 불확실할 때만 가장 짧은 질문으로 실패를 막는 것이 목표입니다.
+
+DEEPER ANSWER
+Consent label: 해도 되는가. Quality label: 어떤 결과가 좋은가. 둘을 섞지 않습니다.
+반복 피드백은 taste model에 흡수해 같은 질문을 줄이되, 권한은 습관만으로 확대하지 않습니다.
+EVIDENCE / CALCULATION
+Learning targets: extraction, intervention timing, ambiguous evidence, failure recovery.
+CLAIM BOUNDARY
+
+동의는 추론으로 생성하지 않음. 권한 원장과 상태 기계는 학습 대상이 아님.
+
+LIKELY FOLLOW-UP
+
+질문 감소를 어떻게 측정? → task당 clarification count와 승인 후 수정률. 현재 값 [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+consent와 quality 두 lane의 피드백이 taste model로 흐름. 정적: 두 라벨 정의.
+
+B06
+TRUST
+INDEX ↑
+“완료”를 어떻게 검증하나?
+
+모델의 “done”을 믿지 않고 회신, 캘린더 이벤트, 결제 영수증, 배송 상태, 전달된 파일처럼 외부 증거가 있을 때만 verified로 닫습니다.
+
+DEEPER ANSWER
+각 약속에 완료 조건과 evidence adapter를 먼저 연결합니다.
+증거가 애매하면 evidence_submitted에 머물고 사람 또는 검증기가 판정합니다.
+EVIDENCE / CALCULATION
+Promise Packet lifecycle; Gmail/Calendar/Slack/hardware are evidence adapters.
+CLAIM BOUNDARY
+
+모든 현실 결과를 자동 검증할 수 있다고 주장하지 않음. adapter coverage와 정확도 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+증거가 조작되면? → source binding, hash/log, human review가 필요한 보안 설계. 구현 범위 [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+실행 노드 pulse → 외부 receipt 유입 → evidence lock. 정적: 세 상태와 예시.
+
+B07
+A2A
+INDEX ↑
+ARCA끼리 대화하면 무엇이 달라지나?
+
+사람끼리 반복 조율하는 비용을 줄이되, 각 ARCA는 자신이 대표하는 사람의 승인 범위 안에서만 최소 정보와 행동을 교환합니다.
+
+DEEPER ANSWER
+Commitment detection → permission/quality check → minimum request/authority/evidence packet → bilateral alignment → bounded execution → both-side closure.
+B2C는 관계의 coordination tax를 줄이고, B2B는 회사 간 execution layer가 됩니다.
+EVIDENCE / CALCULATION
+Shared ARCA Moment; Promise Packet common atom.
+CLAIM BOUNDARY
+
+ARCAs가 사람 대신 자유롭게 결정하지 않음. 공개 A2A 네트워크 완성이나 매출을 주장하지 않음.
+
+LIKELY FOLLOW-UP
+
+정보가 상대 회사로 새지 않나? → packet 최소화, personal/org separation, 각 인간의 권한 검증.
+
+MOTION → STATIC FALLBACK
+
+두 private graph 사이에 scoped packet만 이동하고 양쪽 completion node가 lock. 정적: 교환 필드와 비공개 필드.
+
+B08
+A2A
+INDEX ↑
+Company Brain AX는 B2B 피벗인가?
+
+아닙니다. ARCA는 개인 소유 Personal Life OS이고, Company Brain AX는 같은 core를 회사 맥락에서 쓰는 첫 Work Shell입니다.
+
+DEEPER ANSWER
+개인과 회사 기억은 분리하고 필요한 packet만 조립합니다.
+회사 간에는 request·authority·evidence를 표준 packet으로 교환하는 execution layer로 확장합니다.
+EVIDENCE / CALCULATION
+Product decision: Company Brain AX = first Work Shell, not second product.
+CLAIM BOUNDARY
+
+개인 중심 thesis를 엔터프라이즈 매출 때문에 바꿨다고 말하지 않음.
+
+LIKELY FOLLOW-UP
+
+두 시장을 동시에 하면 산만하지 않나? → common atom과 sequencing으로 답함.
+
+MOTION → STATIC FALLBACK
+
+개인 graph가 Work Shell을 입고 회사 graph로 확장. 정적: same core / separate memory.
+
+B09
+SECURITY
+INDEX ↑
+개인정보, 환각, 오실행은?
+
+원문은 기기에 두고, 모르는 것은 실행하지 않으며, 메시지·돈·고위험 행동은 명시적 승인과 외부 증거를 요구합니다.
+
+DEEPER ANSWER
+현재 beta 설명: data stays on the user’s Mac; mic/screen/OAuth 권한은 사용자가 부여합니다.
+Chain은 identity key, packet signature, settlement, hashed evidence만. 대화·메모리·건강·캘린더는 올리지 않습니다.
+EVIDENCE / CALCULATION
+Current beta privacy posture; Web2.5 architecture decision.
+CLAIM BOUNDARY
+
+보안 감사, 암호화 세부, retention, incident response는 [확인 필요]. “절대 안전” 금지.
+
+LIKELY FOLLOW-UP
+
+서버가 없으면 sync는? → user-owned context store 방향, 구현·정책 [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+민감 원문은 private vault에 남고 hash/packet만 이동. 정적: data placement map.
+
+B10
+ARCHITECTURE
+INDEX ↑
+기술 구조는?
+
+Swift sensing/approval clients, TypeScript server, Postgres commitment ledger, Temporal-class workflow engine, swappable model adapters로 나눕니다.
+
+DEEPER ANSWER
+Sensing → Context Engine → Commitment Ledger → delegation policy → workflow execution → evidence verification.
+모델은 교체 가능한 inner part, 상태와 책임 레이어는 owned infrastructure입니다.
+EVIDENCE / CALCULATION
+Current Swift/TypeScript/ESP32 code; ledger-first target architecture.
+CLAIM BOUNDARY
+
+6-week ledger-first rebuild는 계획이었고 연기됨. target architecture를 shipped로 말하지 않음.
+
+LIKELY FOLLOW-UP
+
+현재 실제로 어디까지 동작? → recording/transcription/summary 및 connectors와 target stack을 분리해 답함.
+
+MOTION → STATIC FALLBACK
+
+레이어가 아래부터 적층. 정적: shipped / beta / target 배지.
+
+B11
+ARCHITECTURE
+INDEX ↑
+24시간 감지하면 비용이 폭발하지 않나?
+
+모든 이벤트에 큰 모델을 호출하지 않습니다. 로컬·규칙 기반 필터, 이벤트 압축, candidate gate를 통과한 소수 commitment에만 추론과 실행을 씁니다.
+
+DEEPER ANSWER
+Event-driven orchestration: 변화가 있을 때만 깨우고, 장기 대기는 workflow engine이 관리합니다.
+Jev candidate limits: 후보 생성 수, 모델 호출 예산, 재시도와 동시성 상한을 둡니다. 구체 수치는 [확인 필요].
+EVIDENCE / CALCULATION
+Architecture principle: event-driven cost control and deterministic gates.
+CLAIM BOUNDARY
+
+Jev의 현재 구현·정확한 limit·벤치마크는 [확인 필요]. 비용 절감률을 발명하지 않음.
+
+LIKELY FOLLOW-UP
+
+필터가 중요한 약속을 놓치면? → recall/false intervention을 κ-bench와 cohort logs로 측정.
+
+MOTION → STATIC FALLBACK
+
+수천 event가 filter를 거쳐 소수 candidate로 좁아짐. 정적: funnel과 각 gate.
+
+B12
+EVALUATION
+INDEX ↑
+κ-bench는 무엇을 증명하나?
+
+개인 에이전트가 시간에 걸쳐 약속을 지키는지 Recall → Intervene → Authorize → Act → Verify 다섯 게이트로 평가하는 방법론입니다.
+
+DEEPER ANSWER
+single-conversation tool execution을 넘어서 long-horizon completion을 봅니다.
+scenario families, state machine, κ-score, experiment plan이 v0.3에 정의돼 있습니다.
+EVIDENCE / CALCULATION
+κ-bench v0.3 technical report, 29 primary sources.
+CLAIM BOUNDARY
+
+현재 방법론/실험 설계 단계. 성능 결과나 타사 우위 숫자 없음.
+
+LIKELY FOLLOW-UP
+
+왜 자체 benchmark를 믿나? → 공개 가능한 scenarios, baselines, failure traces 계획. 공개 일정 [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+5게이트가 도미노처럼 점등. 정적: 각 게이트의 pass/fail 정의.
+
+B13
+TRACTION
+INDEX ↑
+트랙션인가, 창업자 도그푸딩인가?
+
+지금은 consumer PMF를 주장하지 않습니다. 도그푸딩 로그와 메커니즘 증거가 있고, 다음 단계는 100명 코호트에서 반복 위임, 완결, 잔존, 지불을 계측하는 것입니다.
+
+DEEPER ANSWER
+도그푸딩: 46일·57.7h recording·56 actions는 내부 로그 기준. 70일과 60–70% 체감 수치는 시점/정의가 달라 분리합니다.
+Instinct 사용 강도는 ARCA 평균이 아니라 예상 행동의 proxy입니다.
+EVIDENCE / CALCULATION
+Internal log registry in master brief.
+CLAIM BOUNDARY
+
+사용자 PMF, retention, paid conversion으로 확대 해석 금지. 로그 원장 캡처 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+언제 PMF라고 부를 것인가? → “비가역적인 5명” + cohort metrics의 명시적 threshold [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+Vitamin→Habit→Dependency 사다리와 현재 위치 표시. 정적: measured / felt / proxy 3열.
+
+B14
+COMMERCIAL PROOF
+INDEX ↑
+CherieXX 1.15억, Netty 400만은 매출인가?
+
+아닙니다. CherieXX는 도입 합의 후 계약 문서화 중, Netty는 pipeline입니다. 서명·발주·입금 전에는 계약 체결이나 확정 매출로 부르지 않습니다.
+
+DEEPER ANSWER
+CherieXX safe line: “1억 1,500만 원 규모 ARCA AX 도입에 합의했으며, 계약 문서화가 진행 중입니다.”
+Soomgo 약 25만 원, 원가 1만 원 미만은 1건의 첫 외부 revenue evidence입니다.
+EVIDENCE / CALCULATION
+Internal deal status and first revenue record.
+CLAIM BOUNDARY
+
+CherieXX 구성·기간·공급 범위 [확인 필요]. Netty는 signed deal 아님. Soomgo는 복수 사례 아님.
+
+LIKELY FOLLOW-UP
+
+개인 PMF와 무슨 관계? → 조직도 같은 orchestration problem에 돈을 낼 수 있다는 adjacent proof.
+
+MOTION → STATIC FALLBACK
+
+카드에 문서화 중 / pipeline / completed 1건 stamp. 정적: 상태 배지.
+
+B15
+GTM
+INDEX ↑
+ARCA로 ARCA를 판다는 뜻은?
+
+ARCA가 lead discovery, 관계 맥락, 개인화 초안, follow-up과 referral 추적을 돕고, 대외 발송은 대표 승인 후에만 나갑니다.
+
+DEEPER ANSWER
+“We use ARCA to sell ARCA. Every customer conversation improves both our distribution engine and the product itself.”
+측정: lead→conversation, conversation→delegation, referral, follow-up completion, CAC, ARCA-handled share.
+EVIDENCE / CALCULATION
+Demonstrated founder workflow; metrics instrumentation starting.
+CLAIM BOUNDARY
+
+로그 없는 전환율·CAC·자동화 비율은 [확인 필요]. Demonstrated workflow와 measured traction 분리.
+
+LIKELY FOLLOW-UP
+
+그럼 지금 acquisition engine이 검증됐나? → 아직 아니다. cohort instrumentation의 목표와 시점 답변.
+
+MOTION → STATIC FALLBACK
+
+pipeline이 approval gate에서 멈추고 승인 뒤 evidence가 lock. 정적: human gate가 선명한 funnel.
+
+B16
+GTM
+INDEX ↑
+referral loop가 왜 생기나?
+
+한 약속을 닫으려면 상대방의 참여가 필요한 순간이 생기고, 그때 상대의 ARCA 연결이 조율 비용을 줄여 제품 사용 이유가 됩니다.
+
+DEEPER ANSWER
+B2C: shared commitment closure. B2B: inter-company packet exchange.
+관계 기반 closed beta 후 activation·retention이 증명될 때 콘텐츠/paid acquisition을 엽니다.
+EVIDENCE / CALCULATION
+Shared ARCA Moment and visible closed-beta GTM decision.
+CLAIM BOUNDARY
+
+“word of mouth는 무조건” 금지. 초대율, 수락률, referral conversion은 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+스팸이 되지 않나? → scoped invite, consent, no auto-outbound.
+
+MOTION → STATIC FALLBACK
+
+완결 노드가 다음 사람으로 scoped invitation edge를 만듦. 정적: loop와 guardrails.
+
+B17
+ECONOMICS
+INDEX ↑
+어떻게 돈을 버나?
+
+초기 중심은 개인 Pro 월 12,900원과 enterprise ARCA AX입니다. marketplace, rebate, hardware는 수요 증명 뒤 확장입니다.
+
+DEEPER ANSWER
+Companion free → Pro 12,900원. Company Brain Work Shell / inter-company execution layer.
+핵심 원가 단위는 chat이 아니라 evidence-verified completion 한 건입니다.
+EVIDENCE / CALCULATION
+Internal planned pricing; not realized ARPU.
+CLAIM BOUNDARY
+
+광고·revenue share·hardware margin은 현재 사업 실적 아님. 가격 수용성 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+12,900원으로 gross margin이 나나? → usage distribution과 cost/verified completion 측정 필요.
+
+MOTION → STATIC FALLBACK
+
+현재 수익 막대 2개가 먼저, 미래 chip은 작게. 정적: now / later.
+
+B18
+ECONOMICS
+INDEX ↑
+전사와 컴퓨트 비용은?
+
+공개 API 가격 기준 경량 전사는 분당 $0.003–0.006입니다. 하루 8시간×30일이면 43,200분, 월 $129.6–259.2이고 환율 적용 전입니다.
+
+DEEPER ANSWER
+계산: 480분/일 × 30일 = 14,400분. 정정: 43,200분이 아니라 14,400분이므로 월 $43.2–86.4. 원화 환산은 발표일 환율 [확인 필요].
+모델 추론, storage, workflow, retries를 더한 총 COGS는 usage logs로 산출해야 합니다.
+EVIDENCE / CALCULATION
+OpenAI API pricing: https://developers.openai.com/api/docs/pricing
+CLAIM BOUNDARY
+
+기존 “월 약 6만 원”은 환율과 모델에 따라 달라지는 scenario. 하드 코스트 확정치로 말하지 않음.
+
+LIKELY FOLLOW-UP
+
+heavy user tail은? → caps, local processing, candidate gates, plan tier로 관리. 실제 percentile [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+분×일×단가가 순서대로 count-up. 정적: 산식과 correction note.
+
+B19
+MARKET
+INDEX ↑
+TAM 115.6조는 어떻게 계산했나?
+
+3.734B global labor force × screen/knowledge-work fit 20%[가정] × 연 154,800원 = 약 115.6조 원의 scenario입니다.
+
+DEEPER ANSWER
+10% = 57.8조, 20% = 115.6조, 30% = 173.4조.
+fit 비율은 외부 사실이 아니라 sensitivity input입니다.
+EVIDENCE / CALCULATION
+World Bank/ILO: https://data.worldbank.org/indicator/SL.TLF.TOTL.IN
+Price: 12,900원×12.
+CLAIM BOUNDARY
+
+40억 명은 mission, TAM input 아님. 환율 불필요한 KRW price scenario.
+
+LIKELY FOLLOW-UP
+
+왜 노동인구 전체인가? → broad ceiling일 뿐, SAM과 bottom-up으로 좁힘.
+
+MOTION → STATIC FALLBACK
+
+top-down 원이 fit 적용으로 축소. 정적: 변수 정의와 sensitivity 표.
+
+B20
+MARKET
+INDEX ↑
+SAM과 SOM은?
+
+SAM scenario는 미국 노동인구 171.495M + 한국 취업자 29.154M에 15%[가정]와 연 154,800원을 곱해 약 4.66조 원입니다. SOM은 acquisition·retention 실측 전 확정하지 않습니다.
+
+DEEPER ANSWER
+SAM users: 200.649M×15%=30.097M. 10/15/20% sensitivity.
+Bottom-up: paid 100/1k/10k = ARR 1,548만/1.548억/15.48억. 10k는 SAM-user scenario의 약 0.033%.
+EVIDENCE / CALCULATION
+BLS: https://www.dol.gov/newsroom/economicdata/empsit_01092026.pdf
+Korea official: https://mods.go.kr/board.es?act=view&bid=11732&list_no=438848&mainXml=Y&mid=a20101000000
+CLAIM BOUNDARY
+
+100명 cohort ≠ 100 paid users. ladder ≠ forecast.
+
+LIKELY FOLLOW-UP
+
+12개월 SOM은? → acquisition, activation, retention, ARPU table [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+top-down circle와 bottom-up bars가 0.033%에서 수렴. 정적: 전 산식.
+
+B21
+PROJECTION
+INDEX ↑
+성장 계획과 sensitivity는?
+
+하키스틱 숫자를 먼저 정하지 않고 acquisition→activation→paid conversion→retention→ARPU의 월별 모델로 계산해야 합니다.
+
+DEEPER ANSWER
+Base/upside/downside는 같은 식에 각 assumption만 바꿉니다.
+Revenue_t = active paid_t × ARPU; active paid_t = retained prior + new paid.
+EVIDENCE / CALCULATION
+12-month bottom-up projection table is currently [확인 필요].
+CLAIM BOUNDARY
+
+MRR·BEP는 upside scenario label 유지. 근거 없는 확정 forecast 금지.
+
+LIKELY FOLLOW-UP
+
+투자자에게 숫자 없이 가능한가? → 100-user proof plan과 milestone-based budget을 제시.
+
+MOTION → STATIC FALLBACK
+
+assumption slider가 세 case의 curve를 바꿈. 정적: 3-column assumption table.
+
+B22
+EXPANSION
+INDEX ↑
+왜 하드웨어까지 하나?
+
+Software proves demand; hardware increases context bandwidth. 폰이 놓치는 현실 신호를 Core가 보완하지만, 수요 증명 전 두 번째 사업으로 키우지 않습니다.
+
+DEEPER ANSWER
+ARCA Core: button, mic, status indicator. Shell: context/taste-specific enclosure.
+Mechanical/embedded capability exists in team; software wedge remains first.
+EVIDENCE / CALCULATION
+Core/Shell roadmap and ESP32-S3 firmware.
+CLAIM BOUNDARY
+
+출시일, BOM, margin, certification, preorder는 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+Plaud와 다른가? → capture device가 목적이 아니라 Commitment Graph의 sensing endpoint.
+
+MOTION → STATIC FALLBACK
+
+software node가 Core로 이어지고 sensor bandwidth가 넓어짐. 정적: now / next.
+
+B23
+TEAM
+INDEX ↑
+3명이 SW와 HW를 다 할 수 있나?
+
+현재 software는 대표 의존도가 높다는 갭을 인정합니다. 5억의 첫 채용이 SW/UX와 agent reliability 병목을 줄이는 데 쓰입니다.
+
+DEEPER ANSWER
+박민성: product·AI·business·distribution, user zero. 박진성: mechanical/DFM. 하승호: embedded, 현재 advisor(향후 CTO).
+한 팀이 software-to-hardware를 이해하는 폭은 강점, execution bandwidth는 리스크입니다.
+EVIDENCE / CALCULATION
+Team roles from master brief.
+CLAIM BOUNDARY
+
+하승호의 현재 직함을 advisor로 정확히 표현. 학력·수상 원문 증빙 [확인 필요].
+
+LIKELY FOLLOW-UP
+
+첫 2명 채용 JD와 시점? → [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+3인 역할이 stack에 매핑. 정적: role / proof / gap.
+
+B24
+FINANCING
+INDEX ↑
+5억 SAFE를 어디에 쓰나?
+
+12개월 동안 개발자 채용, hardware R&D, 초기 사용자 compute에 써서 반복 위임, verified completion, retention, payment 네 지표를 증명합니다.
+
+DEEPER ANSWER
+milestone-based allocation이 필요하며 정확한 금액/비율은 [확인 필요].
+현대 1억은 조건 확인 전 “라운드 일부가 될 수 있음” 이상 말하지 않습니다.
+EVIDENCE / CALCULATION
+Current ask: 5억 SAFE · 12개월.
+CLAIM BOUNDARY
+
+SAFE valuation cap, discount, MFN, closing status는 [확인 필요]. YC $500k/a16z $1M은 목표이지 증거 아님.
+
+LIKELY FOLLOW-UP
+
+runway와 월 burn? → hiring plan·compute·hardware budget 원장 [확인 필요].
+
+MOTION → STATIC FALLBACK
+
+자금이 기능이 아니라 네 proof milestone로 흐름. 정적: use→milestone map.
+
+B25
+CLAIMS
+INDEX ↑
+accelerator와 referral은 어디까지 말할 수 있나?
+
+a16z Speedrun은 원문과 일치하는 서류 통과·인터뷰권 범위만, YC 제로베이스 referral은 확정 전이므로 traction에 넣지 않습니다.
+
+DEEPER ANSWER
+accelerator의 표준 투자액은 ARCA 투자 확정이 아닙니다.
+외부 이름은 신뢰를 빌리는 장식이 아니라 검증 가능한 현재 상태만 사용합니다.
+EVIDENCE / CALCULATION
+Original email/document screenshots required: [확인 필요].
+CLAIM BOUNDARY
+
+선정, 투자, 합격, 추천 확정으로 확대 표현 금지.
+
+LIKELY FOLLOW-UP
+
+원문을 보여달라면? → source excerpt appendix에 verified capture만.
+
+MOTION → STATIC FALLBACK
+
+claim ladder에서 evidence 없는 문구가 잠김. 정적: allowed / prohibited phrasing.
+
+A01
+FORMULA DEFINITIONS
+계산식 사전
+
+Annual price
+12,900원 × 12 = 154,800원
+
+TAM scenario
+3,734,006,209 × fit 20% × 154,800원 ≈ 115.6조원
+
+SAM scenario
+(171.495M + 29.154M) × fit 15% × 154,800원 ≈ 4.66조원
+
+Operating ladder
+paid users × 154,800원: 100 = 1,548만원; 1k = 1.548억원; 10k = 15.48억원
+
+Transcription
+480분/일 × 30 = 14,400분; × $0.003–0.006 = $43.2–86.4/월
+
+Completion COGS
+(transcription + inference + tools + storage + retries) ÷ verified completions
+
+A02
+SOURCE EXCERPTS
+원문과 claim registry
+
+World Bank / ILO global labor force indicator, 2025 value used in scenario.
+data.worldbank.org/indicator/SL.TLF.TOTL.IN
+
+US BLS Dec 2025 civilian labor force 171.495M.
+Employment Situation PDF
+
+Korea official statistics Sep 2025 employed 29.154M.
+Economically Active Population Survey
+
+OpenAI API pricing Whisper $0.006/min, gpt-4o-mini-transcribe $0.003/min at cited page.
+developers.openai.com/api/docs/pricing
+
+Internal source set Latest ARCA master brief, product decisions, internal logs, κ-bench v0.3. Deal documents, accelerator emails, interview ledger, retention/paid cohort table remain [확인 필요].
+
+A03
+LIVE-ANSWER PROTOCOL
+답변 순서
+판정부터. Yes / No / Not yet.
+한 문장 이유. 제품 thesis로 돌아간다.
+숫자·증거. measured / proxy / assumption을 구분한다.
+경계. 아직 모르는 것을 먼저 밝힌다.
+다음 증명. 12개월 milestone으로 닫는다.
+
+Fable motion: 질문 index에서 해당 번호로 orange path가 이동하고 답변 첫 문장만 먼저 나타난다. 나머지는 click build. 정적 fallback은 이 페이지 구조 그대로.
+
+Canonical appendix · 2026-09-21 KST. Main deck unchanged. 미검증 값은 [확인 필요]로 유지했고, measured traction과 계획·가정을 분리했다.
