@@ -10,28 +10,29 @@
 
 .onb-card {
   width: 100%;
-  max-width: 420px;
-  padding: 36px 28px;
+  max-width: 440px;
+  padding: 40px 32px;
   border: 1px solid var(--line);
-  border-radius: 20px;
   box-shadow: var(--shadow-card);
-  background: var(--canvas);
+  background: var(--canvas-2);
 }
 
 .onb-logo {
   display: block;
   margin-bottom: 24px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: var(--accent);
   text-decoration: none;
+  text-transform: lowercase;
 }
 
 .onb-step h1 {
   margin: 0 0 8px;
-  font-size: 24px;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  font-size: 30px;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: -0.05em;
 }
 
 .onb-sub {
@@ -43,19 +44,7 @@
 
 .onb-google {
   width: 100%;
-  padding: 13px 18px;
   margin-bottom: 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--field);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 14.5px;
-  cursor: pointer;
-}
-
-.onb-google:hover {
-  background: var(--line);
 }
 
 .onb-email {

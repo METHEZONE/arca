@@ -28,7 +28,7 @@ export function buildGoogleAuthUrl(redirectUri: string, state: string): string {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "openid email",
+    scope: "openid email profile",
     state,
     prompt: "select_account",
   });
@@ -38,6 +38,11 @@ export function buildGoogleAuthUrl(redirectUri: string, state: string): string {
 interface GoogleIdentity {
   email: string;
   googleId: string;
+  /** From the verified id_token when the `profile` scope is granted. Only
+   *  ever surfaced as an identity *candidate* — never written to a row
+   *  without the user's confirmation (see lib/commitments/identity.ts). */
+  name?: string;
+  picture?: string;
 }
 
 /**
@@ -83,7 +88,9 @@ export async function exchangeGoogleCode(
   if (!email || !emailVerified || !sub) {
     throw new Error("Google account has no verified email.");
   }
-  return { email: email.toLowerCase().trim(), googleId: sub };
+  const name = typeof payload.name === "string" ? payload.name : undefined;
+  const picture = typeof payload.picture === "string" ? payload.picture : undefined;
+  return { email: email.toLowerCase().trim(), googleId: sub, name, picture };
 }
 
 export interface LinkedGoogleUser {
