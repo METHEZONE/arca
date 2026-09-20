@@ -25,7 +25,14 @@ export default function CommitmentPage() {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<RunEvent[]>([]);
-  const [drag, setDrag] = useState<{ from: number; to: number } | null>(null);
+  const [drag, setDragState] = useState<{ from: number; to: number } | null>(null);
+  // Ref mirrors the state so pointer handlers never read a stale closure
+  // (a fast down→move→up can land before React re-renders).
+  const dragRef = useRef<{ from: number; to: number } | null>(null);
+  const setDrag = (d: { from: number; to: number } | null) => {
+    dragRef.current = d;
+    setDragState(d);
+  };
   const svgRef = useRef<SVGSVGElement>(null);
 
   const load = useCallback(async () => {
@@ -196,16 +203,21 @@ export default function CommitmentPage() {
             <svg
               ref={svgRef}
               viewBox={`0 0 ${W} ${H}`}
-              onPointerMove={(e) => drag && setDrag({ ...drag, to: idxAt(e.clientX) })}
-              onPointerUp={() => {
-                if (drag) {
-                  void commitScope(drag.from, drag.to);
+              onPointerMove={(e) => {
+                const d = dragRef.current;
+                if (d) setDrag({ ...d, to: idxAt(e.clientX) });
+              }}
+              onPointerUp={(e) => {
+                const d = dragRef.current;
+                if (d) {
+                  void commitScope(d.from, idxAt(e.clientX));
                   setDrag(null);
                 }
               }}
               onPointerLeave={() => {
-                if (drag) {
-                  void commitScope(drag.from, drag.to);
+                const d = dragRef.current;
+                if (d) {
+                  void commitScope(d.from, d.to);
                   setDrag(null);
                 }
               }}
