@@ -49,3 +49,11 @@ iPhone                                              Mac
 - `NSUserActivity`는 스크린샷 감지 시점에 ARCA 앱이 **foreground**여야 발행된다 (iOS가 백그라운드 앱에는 스크린샷 알림을 안 준다) — 인앱 브라우저(BrowserAgent)로 뭔가 보다가 스크린샷 찍는 흐름을 우선 상정.
 - 세션 동기화가 GitHub 릴레이 왕복(몇 초)에 걸리므로, Handoff 아이콘을 클릭한 직후 아주 짧은 로딩이 있을 수 있다 — 6회(약 12초) 안에 못 찾으면 알림으로 안내.
 - 실제 두 기기 간 Handoff 동작은 시뮬레이터/샌드박스에서 검증 불가 — 실기기 페어(아이폰+맥)로 빌드해서 확인 필요.
+
+## Screenshot conversation correction (2026-09-21)
+
+- Previous implementation was source-only, not an installed app update.
+- iOS share intake now routes the newest saved capture directly into ChatTabView using observable pending state, not a delayed notification. The original image and conversation are retained in ChatLogEntry; typing and the existing voice control remain available.
+- Removed the share extension's unsupported responder-chain openURL trick and unconditional dismissal. The extension now checks the completion result of its open request and stays visible with explicit instructions if iOS refuses. This is a fallback, NOT a guarantee that an iOS share extension can launch its containing app.
+- Mac Handoff explicitly opens the chat window before waiting for relay. When the session arrives, the conversation is scoped to its summary and dated action items. The calendar approval prompt remains separate.
+- Validation: Swift frontend parse passes for edited Mac and iOS branches, and git diff whitespace check passes. Full xcodebuild is BLOCKED during local package resolution by sandbox-exec: sandbox_apply: Operation not permitted. No installation, device launch, screenshot share, microphone, calendar or Handoff end-to-end test is claimed.

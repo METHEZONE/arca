@@ -37,19 +37,24 @@ public enum SharedInbox {
     }
 
     /// Called by the share extension. Persists item bytes + a manifest entry.
+    @discardableResult
     public static func enqueue(kind: Item.Kind, imageData: Data? = nil, text: String? = nil,
-                               createdAt: Date) {
-        guard let dir = inboxDir else { return }
+                               createdAt: Date) -> Bool {
+        guard let dir = inboxDir else { return false }
         var fileName: String?
-        if let imageData {
-            let name = "\(UUID().uuidString).jpg"
-            try? imageData.write(to: dir.appendingPathComponent(name))
-            fileName = name
-        }
-        let item = Item(kind: kind, fileName: fileName, text: text, createdAt: createdAt)
-        let manifest = dir.appendingPathComponent("\(item.id.uuidString).json")
-        if let data = try? JSONEncoder().encode(item) {
-            try? data.write(to: manifest)
+        do {
+            if let imageData {
+                let name = "\(UUID().uuidString).jpg"
+                try imageData.write(to: dir.appendingPathComponent(name), options: .atomic)
+                fileName = name
+            }
+            let item = Item(kind: kind, fileName: fileName, text: text, createdAt: createdAt)
+            let manifest = dir.appendingPathComponent("\(item.id.uuidString).json")
+            try JSONEncoder().encode(item).write(to: manifest, options: .atomic)
+            return true
+        } catch {
+            if let fileName { try? FileManager.default.removeItem(at: dir.appendingPathComponent(fileName)) }
+            return false
         }
     }
 

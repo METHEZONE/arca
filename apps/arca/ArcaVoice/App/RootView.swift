@@ -148,6 +148,7 @@ struct RootView: View {
             .onContinueUserActivity(ArcaHandoff.screenshotReviewActivityType) { activity in
                 guard let sessionUID = activity.userInfo?[ArcaHandoff.sessionUIDKey] as? String else { return }
                 Task { @MainActor in
+                    openWindow(id: "arca-chat")
                     NSApp.activate(ignoringOtherApps: true)
                     for attempt in 0..<6 {
                         await RelaySync.shared.syncNow()
@@ -175,9 +176,10 @@ struct RootView: View {
     private func presentPendingContextIfNeeded() {
         let group = UserDefaults(suiteName: SharedInbox.appGroupID)
         guard group?.bool(forKey: "pendingContext") == true,
-              let latest = SharedInbox.pending().last else { return }
+              let latest = SharedInbox.pending().first else { return }
         group?.set(false, forKey: "pendingContext")
-        contextItem = latest
+        services.pendingChatShare = latest
+        selectedTab = .chat
     }
     #endif
 

@@ -13,6 +13,8 @@ final class ShareViewController: UIViewController {
     private let surfaceTop = UIColor(red: 0.165, green: 0.094, blue: 0.071, alpha: 1)
     private let checkmark = UIImageView()
     private let label = UILabel()
+    private let openButton = UIButton(type: .system)
+    private let doneButton = UIButton(type: .system)
     private let startTime = Date()
     private let minimumDisplay: TimeInterval = 0.8
 
@@ -34,12 +36,19 @@ final class ShareViewController: UIViewController {
         checkmark.contentMode = .scaleAspectFit
         checkmark.translatesAutoresizingMaskIntoConstraints = false
 
-        label.text = "Got it — open ARCA"
+        label.text = "Saving to ARCA…"
+        label.numberOfLines = 0
+        label.textAlignment = .center
         label.textColor = .white
         label.font = .systemFont(ofSize: 15, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
 
-        let stack = UIStackView(arrangedSubviews: [checkmark, label])
+        openButton.setTitle("Open ARCA conversation", for: .normal)
+        openButton.addTarget(self, action: #selector(openConversation), for: .touchUpInside)
+        openButton.isHidden = true
+        doneButton.setTitle("Close", for: .normal)
+        doneButton.addTarget(self, action: #selector(closeShare), for: .touchUpInside)
+        let stack = UIStackView(arrangedSubviews: [checkmark, label, openButton, doneButton])
         stack.axis = .vertical
         stack.alignment = .center
         stack.spacing = 12
@@ -47,7 +56,8 @@ final class ShareViewController: UIViewController {
         view.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
 
@@ -66,7 +76,8 @@ final class ShareViewController: UIViewController {
 
     private func handleInput() {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-            return finishAfterMinimumDisplay()
+            label.text = "No shareable content was received. Close and try again."
+            return
         }
         let group = DispatchGroup()
         // Timestamp is captured here (extension may run without a foreground app).
@@ -103,8 +114,14 @@ final class ShareViewController: UIViewController {
         }
 
         group.notify(queue: .main) { [weak self] in
-            self?.markPendingContext()
-            self?.finishAfterMinimumDisplay()
+            guard let self else { return }
+            guard SharedInbox.pending().contains(where: { $0.createdAt >= now }) else {
+                self.label.text = "Couldn't save this screenshot. Close and try sharing again."
+                self.checkmark.image = UIImage(systemName: "exclamationmark.triangle")
+                return
+            }
+            self.markPendingContext()
+            self.finishAfterMinimumDisplay()
         }
     }
 
@@ -138,23 +155,29 @@ final class ShareViewController: UIViewController {
     }
 
     private func finish() {
-        openHostApp()
+        label.text = "Saved. Opening your ARCA conversation…"
+        openButton.isHidden = false
+        openConversation()
+    }
+
+    @objc private func closeShare() {
         extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
     }
 
-    /// Jump straight into ARCA so the action sheet appears without a second
-    /// tap. Extensions can't touch UIApplication.shared, so we walk the
-    /// responder chain up to the hosting app and ask it to open our URL.
-    private func openHostApp() {
-        guard let url = URL(string: "arca://context") else { return }
-        let selector = NSSelectorFromString("openURL:")
-        var responder: UIResponder? = self
-        while let current = responder {
-            if current.responds(to: selector) {
-                current.perform(selector, with: url)
-                return
+    /// A share host may refuse this request. Keep the capture and the sheet
+    /// visible rather than pretending the app opened and dismissing it.
+    @objc private func openConversation() {
+        guard let url = URL(string: "arca://context"), let context = extensionContext else { return }
+        label.text = "Opening ARCA…"
+        context.open(url) { [weak self] opened in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if opened {
+                    self.closeShare()
+                } else {
+                    self.label.text = "Screenshot saved. iOS blocked opening ARCA from this share sheet. Open ARCA from your Home Screen to continue the conversation."
+                }
             }
-            responder = current.next
         }
     }
 }

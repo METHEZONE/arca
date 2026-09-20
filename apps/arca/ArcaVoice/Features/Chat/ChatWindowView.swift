@@ -17,6 +17,26 @@ struct ChatWindowView: View {
         _chat = State(initialValue: ChatSession(conversationId: "window-\(day)"))
     }
 
+    private func consumeScreenshot() {
+        guard let session = AppServices.shared.screenshotChatSession else { return }
+        chat.endConversation()
+        let id = "screenshot-\(session.directoryName)"
+        let next = ChatSession(conversationId: id)
+        let entries = (try? context.fetch(FetchDescriptor<ChatLogEntry>(
+            predicate: #Predicate { $0.conversationId == id }, sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+        next.restore(from: entries)
+        let summary = session.note?.summaryMarkdown ?? ""
+        let actions = session.note?.actionItemsJSON.flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+        next.attachContext("Screenshot: \(session.title)\n\(summary)\nExtracted actions: \(actions)\nDiscuss this screenshot. Ask for explicit approval before creating calendar events or taking external actions.")
+        chat = next
+        restored = true
+        if entries.isEmpty {
+            next.draftText = L("이 스크린샷에 대해 같이 이야기하자. 요약과 다음 할 일을 알려줘.", "Let's discuss this screenshot. Show me the summary and suggested next steps.")
+            next.send()
+        }
+        AppServices.shared.screenshotChatSession = nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -102,6 +122,8 @@ struct ChatWindowView: View {
                 predicate: #Predicate { $0.conversationId == id }, sortBy: [SortDescriptor(\.createdAt)]))) ?? []
             if !entries.isEmpty { chat.restore(from: entries) }
         }
+        .task { consumeScreenshot() }
+        .onChange(of: AppServices.shared.screenshotChatSession?.directoryName) { _, _ in consumeScreenshot() }
         .onDisappear { chat.endConversation() }
     }
 }

@@ -16,6 +16,10 @@ final class AppServices {
     private(set) var container: ModelContainer?
     /// Set by ambient surfaces (notch/island) to ask the main UI to open a session.
     var sessionToOpen: RecordingSession?
+    var screenshotChatSession: RecordingSession?
+    #if os(iOS)
+    var pendingChatShare: SharedInbox.Item?
+    #endif
     /// Deep-link/App-Intent routing: "talk" | "record" | "chat" — consumed by RootView.
     var pendingRoute: String?
     /// Startup/config warning shown once by RootView instead of crashing.

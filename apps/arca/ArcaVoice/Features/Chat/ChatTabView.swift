@@ -35,6 +35,8 @@ struct ChatTabView: View {
                 }
             }
         }
+        .task { consumePendingShare() }
+        .onChange(of: AppServices.shared.pendingChatShare?.id) { _, _ in consumePendingShare() }
         .onDisappear {
             voice.stopSpeaking()
             chat.endConversation()
@@ -87,6 +89,41 @@ struct ChatTabView: View {
         } message: {
             Text(voice.error ?? "")
         }
+    }
+
+    private func consumePendingShare() {
+        guard let item = AppServices.shared.pendingChatShare else { return }
+        var image: Data?
+        if item.kind == .image {
+            guard let url = SharedInbox.imageURL(for: item),
+                  let data = try? Data(contentsOf: url) else { return }
+            image = data
+        }
+        voice.stopSpeaking()
+        chat.endConversation()
+        let id = "share-\(item.id.uuidString)"
+        let next = ChatSession(conversationId: id)
+        let entries = (try? context.fetch(FetchDescriptor<ChatLogEntry>(
+            predicate: #Predicate { $0.conversationId == id },
+            sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+        chat = next
+        if !entries.isEmpty {
+            next.restore(from: entries)
+        } else if let image {
+            next.begin(withImage: image, prompt: L(
+                "이 스크린샷을 요약하고 나와 이어서 이야기해줘. 일정이나 실행할 일이 있으면 먼저 제안하고, 실행 전에는 반드시 내 승인을 받아.",
+                "Summarize this screenshot and discuss it with me. Propose any schedule or actions, but ask for my approval before executing them."))
+        } else if let text = item.text {
+            next.draftText = text
+            next.send()
+        }
+        let saved = (try? context.fetch(FetchDescriptor<ChatLogEntry>(
+            predicate: #Predicate { $0.conversationId == id }))) ?? []
+        if !saved.isEmpty { SharedInbox.remove(item) }
+        UserDefaults(suiteName: SharedInbox.appGroupID)?.set(
+            !SharedInbox.pending().isEmpty, forKey: "pendingContext")
+        AppServices.shared.pendingChatShare = nil
+        inputFocused = true
     }
 
     private var conversations: [ConversationSummary] {

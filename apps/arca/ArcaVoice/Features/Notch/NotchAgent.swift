@@ -155,6 +155,8 @@ final class NotchAgent {
     func presentHandoffReview(session: RecordingSession) {
         DebugTrace.log("handoff: presenting \(session.directoryName.prefix(8))")
         pendingHandoffSession = session
+        AppServices.shared.screenshotChatSession = session
+        NotificationCenter.default.post(name: .arcaOpenChatWindow, object: nil)
         let hasSchedule = !Self.pendingScheduleItems(for: session).isEmpty
         set(.handoffReview(title: session.title, hasSchedule: hasSchedule),
             autoDismissAfter: hasSchedule ? nil : 20)
