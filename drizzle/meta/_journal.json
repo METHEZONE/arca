@@ -43,6 +43,13 @@
       "when": 1789622829633,
       "tag": "0005_downloads",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789933373628,
+      "tag": "0006_commitment_loop",
+      "breakpoints": true
     }
   ]
 }

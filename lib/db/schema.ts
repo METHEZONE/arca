@@ -12,6 +12,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -225,4 +226,108 @@ export const downloads = pgTable(
     city: text("city"),
   },
   (table) => [index("downloads_at_idx").on(table.at), index("downloads_email_idx").on(table.email)],
+);
+
+/* ------------------------------------------------------------------ *
+ * Commitment loop (web app core loop, 2026-09-21)
+ *   profile → capture → commitments → graph nodes → feedback rails
+ * ------------------------------------------------------------------ */
+
+export type ProfileSource = {
+  kind: "google" | "gravatar" | "domain" | "user";
+  label: string;
+  url?: string;
+  confidence: number;
+};
+
+/** Confirmed identity context. Only facts the user explicitly confirmed are
+ *  written here — candidates live in the request/response, never in a row. */
+export const profiles = pgTable("profiles", {
+  userId: uuid("user_id").primaryKey().references(() => users.id),
+  displayName: text("display_name"),
+  headline: text("headline"),
+  company: text("company"),
+  companyUrl: text("company_url"),
+  avatarUrl: text("avatar_url"),
+  sources: jsonb("sources").$type<ProfileSource[]>().notNull().default([]),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Promise Packet lifecycle. */
+export const commitmentStatusEnum = pgEnum("commitment_status", [
+  "detected",
+  "proposed",
+  "accepted",
+  "authorized",
+  "in_progress",
+  "evidence_submitted",
+  "verified",
+]);
+
+export const commitments = pgTable(
+  "commitments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    title: text("title").notNull(),
+    counterpart: text("counterpart"),
+    due: text("due"),
+    /** The real-world result that closes this commitment. */
+    outcome: text("outcome").notNull(),
+    sourceQuote: text("source_quote"),
+    sourceKind: text("source_kind").notNull().default("text"),
+    sourceSummary: text("source_summary"),
+    sourceTranscript: text("source_transcript"),
+    status: commitmentStatusEnum("status").notNull().default("detected"),
+    /** Drag-bounded delegation scope: inclusive node positions. Null = not scoped. */
+    scopeStart: integer("scope_start"),
+    scopeEnd: integer("scope_end"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("commitments_user_created_idx").on(table.userId, table.createdAt)],
+);
+
+export const commitmentNodes = pgTable(
+  "commitment_nodes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    commitmentId: uuid("commitment_id").notNull().references(() => commitments.id),
+    position: integer("position").notNull(),
+    title: text("title").notNull(),
+    /** start | draft | approve | send | wait | decision | outcome */
+    kind: text("kind").notNull(),
+    /** Boundary node: ARCA must ask before acting even inside the scope. */
+    risky: boolean("risky").notNull().default(false),
+    question: text("question"),
+    /** pending | running | needs_approval | blocked | done | locked | rejected */
+    status: text("status").notNull().default("pending"),
+    /** LLM-produced artifact (e.g. the follow-up email draft). */
+    artifact: text("artifact"),
+    /** External evidence that locked this node (pasted reply, URL, approval). */
+    evidence: text("evidence"),
+    evidenceKind: text("evidence_kind"),
+    evidenceAt: timestamp("evidence_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("commitment_nodes_commitment_idx").on(table.commitmentId, table.position)],
+);
+
+/** Two separate rails. `rail` = consent (맡길 것 / 묻고 할 것 / 하지 말 것) or
+ *  quality (내 기준에 맞았다 / 수정 필요). Never merged into one score. */
+export const feedbackEvents = pgTable(
+  "feedback_events",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    commitmentId: uuid("commitment_id").references(() => commitments.id),
+    nodeId: uuid("node_id").references(() => commitmentNodes.id),
+    rail: text("rail").notNull(),
+    value: text("value").notNull(),
+    note: text("note"),
+  },
+  (table) => [index("feedback_events_user_at_idx").on(table.userId, table.at)],
 );
