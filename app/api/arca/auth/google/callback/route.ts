@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     return errorRedirect("google_state_expired");
   }
 
-  const [expectedState, deviceId] = cookie.split(".");
+  const [expectedState, deviceId, flow] = cookie.split(".");
   if (state !== expectedState) {
     return errorRedirect("google_state_mismatch");
   }
@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
 
     // Device-link flow (Mac/iPhone app) keeps its old destination; the web
     // app goes to identity onboarding until a profile is confirmed.
-    let dest = deviceId ? `${ONBOARDING}?step=device` : APP_ONBOARDING;
-    if (!deviceId) {
+    let dest = flow === "device" ? `${ONBOARDING}?step=device` : APP_ONBOARDING;
+    if (flow !== "device") {
       try {
         if (await hasConfirmedProfile(linked.userId)) dest = APP_HOME;
       } catch {

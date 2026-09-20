@@ -111,8 +111,12 @@ export default function OnboardingClient({ googleEnabled }: { googleEnabled: boo
   async function continueWithGoogle() {
     setError(null);
     const deviceToken = await getDeviceToken();
-    const qs = deviceToken ? `?device=${encodeURIComponent(deviceToken)}` : "";
-    window.location.href = `${arcaBase()}/api/arca/auth/google${qs}`;
+    // Device-link flow only when the user explicitly came for it (Mac/iPhone
+    // app hand-off); everyone else lands in the web app.
+    const flow = params.get("next") === "device" || params.get("flow") === "device" ? "device" : "app";
+    const q = new URLSearchParams({ flow });
+    if (deviceToken) q.set("device", deviceToken);
+    window.location.href = `${arcaBase()}/api/arca/auth/google?${q.toString()}`;
   }
 
   return (

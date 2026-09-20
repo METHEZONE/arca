@@ -6,7 +6,7 @@ export function SourcesPanel() {
   const rows: Array<{ name: string; state: "live" | "proto" | "next"; note: string }> = [
     { name: "Google 계정", state: "live", note: "로그인 · 연결됨" },
     { name: "웹 캡처 (붙여넣기 · 브라우저 녹음)", state: "live", note: "전사 · 약속 감지" },
-    { name: "Mac 베타 앱", state: "live", note: "녹음 → 전사 → 요약" },
+    { name: "Mac 베타 앱", state: "live", note: "녹음 → 전사 → 요약 · 기기 연결은 아래 링크" },
     { name: "Gmail", state: "next", note: "발송 · 회신 증거 자동 수집" },
     { name: "Google Calendar", state: "next", note: "수락 증거" },
     { name: "Slack", state: "next", note: "메시지 · 회신 증거" },
@@ -24,7 +24,10 @@ export function SourcesPanel() {
         </div>
       ))}
       <p className="hint" style={{ marginTop: 12 }}>
-        연결되지 않은 소스의 증거는 지금은 직접 붙여넣어 잠급니다. 자동 수집은 Coming next.
+        연결되지 않은 소스의 증거는 지금은 직접 붙여넣어 잠급니다. 자동 수집은 Coming next.{" "}
+        <a href="/arca/onboarding?step=device&next=device" style={{ color: "var(--accent)" }}>
+          Mac 앱 기기 연결 →
+        </a>
       </p>
     </div>
   );

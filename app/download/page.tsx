@@ -57,7 +57,7 @@ export default function DownloadPage() {
           <p className="dl-note">
             Keys: the build ships with none of mine. Paste your own OpenAI and/or
             Anthropic key in Settings (stored in your Keychain only), or sign in to ARCA
-            Cloud from <a href="/arca/onboarding">the onboarding page</a> and link the app
+            Cloud from <a href="/arca/onboarding?next=device">the onboarding page</a> and link the app
             with the code in Settings to run keyless on the shared beta budget.
           </p>
         </section>

@@ -25,11 +25,15 @@ export async function GET(request: NextRequest) {
   }
 
   const deviceId = verifyDeviceToken(request.nextUrl.searchParams.get("device"));
+  // Where to land after sign-in: the web app (default) or the Mac/iPhone
+  // device-link step. Decided by an explicit flag, not by whether the browser
+  // happens to have a cached device token from the public widget.
+  const flow = request.nextUrl.searchParams.get("flow") === "device" ? "device" : "app";
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${request.nextUrl.origin}/api/arca/auth/google/callback`;
 
   const response = NextResponse.redirect(buildGoogleAuthUrl(redirectUri, state));
-  response.cookies.set(STATE_COOKIE, `${state}.${deviceId ?? ""}`, {
+  response.cookies.set(STATE_COOKIE, `${state}.${deviceId ?? ""}.${flow}`, {
     httpOnly: true,
     secure: process.env.VERCEL_ENV === "production",
     sameSite: "lax",
