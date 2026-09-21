@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ARCA — 약속을, 현실이 될 때까지 · Personal Life OS",
+  title: "ARCA — Your Second Self",
   description:
-    "ARCA는 회의와 일상 대화에서 약속을 감지하고, 당신이 그은 범위 안에서만 움직이고, 바깥 세상의 증거가 생겨야 끝났다고 말하는 Personal Life OS입니다. 받아쓰는 AI는 많습니다. 끝내는 AI는 없습니다.",
+    "ARCA is an AGI companion that remembers everything — every meeting, every person, every decision — and does the work you delegate with two words: arca it.",
   openGraph: {
-    title: "ARCA — 약속을, 현실이 될 때까지",
-    description:
-      "From fragmented tasks to a living model of your life. From generic intelligence to your definition of good. From prompted assistance to proactive orchestration.",
+    title: "ARCA — Your Second Self",
+    description: "An AGI companion OS that remembers everything, so you don't have to.",
   },
 };
 
