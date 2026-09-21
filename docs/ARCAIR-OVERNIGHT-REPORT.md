@@ -88,3 +88,13 @@ v02의 `<head>`(토큰, 모션 라이브러리, Spirit 심볼, Mac/iPhone/Core �
 - 덱의 "+50% / 2×" 출처는 v03 소스에 적힌 OpenAI "How ChatGPT adoption has expanded"를 그대로 인용했다. 발표 전 원문 재확인 권장 (v03 리포트도 같은 권고).
 - CherieXX 표기: 스크립트 원문대로 "도입 확정 · 1억 1,500만원 규모". v03 Astra 리뷰가 권한 "계약 문서화 진행 중" 부기는 넣지 않았다. 필요하면 S9 한 줄 추가.
 - 작업 트리에 있던 미추적 파일 `docs/research/competitive-analysis-2026-09.md`는 내가 만든 게 아니라 커밋에 넣지 않았다.
+
+## 8. 추가 (Min 지시로 실행, 10:26 KST) — thezonebio.com 실제 배포
+
+- `thezonebio.com/arcair-2` 슬롯 PR: https://github.com/METHEZONE/thezonebio.com/pull/5 (draft, 미머지 — /arcair로 직접 갔으므로 닫아도 됨)
+- **`thezonebio.com/arcair` 교체 PR: https://github.com/METHEZONE/thezonebio.com/pull/6 — 프리뷰 success 확인 후 main 머지, 프로덕션 배포 success.**
+  - 커밋 1: 라이브 v03을 `public/arcair-v3-backup-20260921/index.html`로 스냅샷 (라우팅 없음, 파일만)
+  - 커밋 2: `public/arcair/index.html` ← v4 (`ir/arcair/index.html`과 바이트 동일)
+- 라이브 검증: `https://thezonebio.com/arcair` 200 · 555,713B · `cmp` v4와 동일 · 19장 · JS 에러 0. `https://thezonebio.com/arcair-ver1` 여전히 v02 바이트 동일.
+- 스크린샷: `docs/screenshots/live/thezonebio-arcair-{01,08,19}.png`
+- 롤백: thezonebio.com 저장소에서 `cp public/arcair-v3-backup-20260921/index.html public/arcair/index.html` 커밋·푸시.
