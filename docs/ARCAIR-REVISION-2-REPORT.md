@@ -99,3 +99,11 @@
 - **로컬 `~/orca-projects/thezonebio.com`** 클론은 main을 `7c1f7fb`까지 pull한 뒤 브랜치 작업. 다음 사람은 `git checkout main && git pull`부터.
 - 작업 트리의 미추적 `docs/research/competitive-analysis-2026-09.md`는 내가 만든 게 아니라 이번에도 커밋하지 않았다.
 - 스크린샷 스크립트(`tmp/shoot.mjs`, `tmp/frags.mjs`, `tmp/live.mjs`)는 `.gitignore`의 `tmp/`에 있어 커밋되지 않음. 필요하면 `scripts/`로 옮겨 커밋.
+
+## 7. 추가 (Min 지시, 11:40 KST) — 커버에 ver1 사진 배경
+
+- **전제 확인:** arcair 전 버전(v2=ver1, v3, v4, v4.1) 커버 어디에도 사진 배경은 없었다(`background-image`/`url(data:` 0건, thezonebio.com 전 커밋 grep). ver1이 가진 사진은 팀 스튜디오 사진과 **ARCA Core 사진(손에 든 Core + ARCA 화면)** 둘. 후자만 다크 커버와 맞아 그걸 썼다.
+- **적용:** 커버 오른쪽 64% 풀블리드, 좌→우 그라데이션으로 "arca 해놔." 쪽은 검정 유지, 상→하 그라데이션으로 밝은 웹앱 패널을 눌렀다. 1.4초 페이드인. 커버의 460px Spirit는 뺐다(사진에 ARCA 얼굴이 둘 있고 패널과 겹쳤다). 카피·필·태그·노트 불변. 2~20장 마크업 불변.
+- **PR:** arca #13 MERGED (`e7b77ac`), thezonebio.com #8 MERGED. 라이브 `thezonebio.com/arcair` 705,123B `cmp` 동일, ver1 불변. 스냅샷 `public/arcair-v41-backup-20260921/`(사진 없는 v4.1) 추가.
+- **스크린샷:** `docs/screenshots/arcair/01.png`, `docs/screenshots/live/thezonebio-arcair-v41-01-cover.png`.
+- 6항의 "커버 톤" 항목은 이걸로 닫힘.
