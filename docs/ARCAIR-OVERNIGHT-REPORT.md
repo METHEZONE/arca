@@ -77,7 +77,8 @@ v02의 `<head>`(토큰, 모션 라이브러리, Spirit 심볼, Mac/iPhone/Core �
 - Vercel 프리뷰 (GitHub 연동 자동 생성, 브랜치 URL):
   - 랜딩: https://arca-git-arcair-overnight-rework-the-zone-bio.vercel.app/arca
   - 덱: https://arca-git-arcair-overnight-rework-the-zone-bio.vercel.app/arcair/index.html
-  - 이 리포트 커밋 푸시 이후 빌드가 끝나야 최신이 반영됨. 상태는 PR의 Vercel 체크에서 확인.
+  - 빌드 상태: 커밋 `4addac2` Vercel 체크 **success** (10:11 KST 확인).
+  - **주의:** 프리뷰에 Vercel Deployment Protection이 걸려 있어 비로그인 요청은 `vercel.com/sso-api`로 302 리다이렉트됨. the-zone-bio 팀 계정으로 로그인된 브라우저에서 열면 바로 보임. 로컬 확인은 `open ir/arcair/index.html` 또는 `npm run dev` 후 `http://localhost:4174/arca`.
 
 ## 7. 막힌 것 / 안 한 것 (정직하게)
 
