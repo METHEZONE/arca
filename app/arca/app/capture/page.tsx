@@ -90,7 +90,7 @@ export default function Capture() {
     setAccepting(id);
     try {
       await api(`/api/arca/commitments/${id}`, { method: "PATCH", body: JSON.stringify({ action: "accept" }) });
-      window.location.href = `/arca/app/c/${id}`;
+      window.location.assign(`/arca/app/c/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "실패했습니다.");
       setAccepting(null);
