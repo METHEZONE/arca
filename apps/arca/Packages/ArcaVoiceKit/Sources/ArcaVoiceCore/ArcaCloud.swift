@@ -11,7 +11,15 @@ import Foundation
 /// Invite code shape: `email.exp.sig` — the same HMAC grant the download link
 /// uses, so approving someone is one action.
 public enum ArcaCloud {
-    public static let baseURL = URL(string: "https://arca-the-zone-bio.vercel.app/api/arca/cloud")!
+    public static var baseURL: URL {
+        #if DEBUG
+        // Points a Debug build at a local `next dev` for end-to-end checks.
+        if let raw = UserDefaults.standard.string(forKey: "arcaCloudBaseOverride"), let url = URL(string: raw) {
+            return url
+        }
+        #endif
+        return URL(string: "https://arca-the-zone-bio.vercel.app/api/arca/cloud")!
+    }
     static let inviteKey = "arcaInviteToken"
 
     public static var inviteToken: String? {

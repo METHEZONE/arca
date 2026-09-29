@@ -1,9 +1,8 @@
 import Foundation
 import ArcaVoiceKit
 
-/// Reads the transcription-language preference. "auto" = 한·영 혼용: the live
-/// pass runs Korean on-device, the final pass takes its hint from ARCA's own
-/// language setting.
+/// Reads the transcription-language preference. "auto" = 한·영 혼용: both the
+/// live on-device pass and the final pass follow ARCA's own language setting.
 ///
 /// "auto" used to send no hint at all, on the theory that the cloud model would
 /// detect the language per segment and handle code-switching. Measured, it does
@@ -19,9 +18,12 @@ enum TranscriptionPrefs {
         UserDefaults.standard.string(forKey: "transcribeLocale") ?? "auto"
     }
 
+    /// "auto" follows the language the user chose for ARCA. It used to be
+    /// Korean for everyone, so an English speaker's live transcript came out as
+    /// Korean guesses at English words.
     static var liveLocale: Locale {
         switch storedValue {
-        case "auto", "ko-KR": return Locale(identifier: "ko-KR")
+        case "auto": return Locale(identifier: appLanguage == "ko" ? "ko-KR" : "en-US")
         default: return Locale(identifier: storedValue)
         }
     }

@@ -464,7 +464,8 @@ struct SessionDetailView: View {
                         FinalPassRunner.retry(
                             record: session,
                             ownerName: AppServices.shared.ownerName,
-                            languageHints: TranscriptionPrefs.languageHints)
+                            languageHints: TranscriptionPrefs.languageHints,
+                            userInitiated: true)
                     }
                     .buttonStyle(.borderedProminent)
                 }

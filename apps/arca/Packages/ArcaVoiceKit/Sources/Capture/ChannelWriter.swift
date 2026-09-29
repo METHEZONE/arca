@@ -2,62 +2,91 @@ import Foundation
 import AVFoundation
 import ArcaVoiceCore
 
-/// Writes one channel's buffers to an AAC .m4a file and tracks elapsed time
-/// via frame counting. Confine calls to a single queue per instance.
+/// Writes one channel's buffers to a crash-safe recording file and tracks
+/// elapsed time via frame counting. Confine calls to a single queue per instance.
+///
+/// The file is 16 kHz mono 16-bit PCM in a CAF container, not AAC in an m4a.
+/// An m4a only becomes readable when its `moov` box is written at close, so a
+/// kill, a crash, or iOS reclaiming memory mid-meeting used to leave a file
+/// nothing could open — the whole recording gone. CoreAudio writes a CAF's data
+/// chunk with size -1 ("runs to end of file") while recording, so whatever
+/// reached disk is playable no matter how the process ends
+/// (`RecordingFileTests` snapshots a file mid-write to prove it).
+/// `AudioFinalizer` turns it into a compact m4a after the recording is safe.
 final class ChannelWriter: @unchecked Sendable {
+    /// Speech needs no more: the transcribers resample to 16 kHz anyway, and it
+    /// keeps the uncompressed file at ~115 MB an hour until it's compacted.
+    static let fileSampleRate: Double = 16_000
+
     let channel: CaptureChannel
     let fileURL: URL
-    private let file: AVAudioFile
+    private var file: AVAudioFile?
+    private let processingFormat: AVAudioFormat
     private let converter = BufferConverter()
     private var framesWritten: AVAudioFramePosition = 0
-    private let sampleRate: Double
+    /// Set once a write fails (disk full, file yanked). Surfaced so the
+    /// recording UI can stop claiming to record over nothing.
+    private(set) var writeError: Error?
+    /// `write` runs on the audio thread and `close` on whoever stops the
+    /// recording; a buffer landing mid-close must not touch a closed file.
+    private let lock = NSLock()
 
     init(channel: CaptureChannel, directory: URL, sourceFormat: AVAudioFormat) throws {
         self.channel = channel
-        self.fileURL = directory.appendingPathComponent("\(channel.rawValue).m4a")
-
-        let channelCount = min(sourceFormat.channelCount, 2)
-        // AAC only encodes the standard rates — pro interfaces (96k+) and
-        // odd aggregate-device rates otherwise kill file creation with '!dat'.
-        // The converter resamples buffers to the file rate, so clamping is safe.
-        let aacRates: [Double] = [8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000]
-        let fileRate = aacRates.contains(sourceFormat.sampleRate) ? sourceFormat.sampleRate : 48000
-        // The encoder rejects bitrates outside the valid range for the
-        // rate/channel combo (96kbps @16kHz mono = '!dat') — scale it.
-        // Speech only: 40 kbps/channel AAC is transparent for transcription and
-        // playback, and less than half the size of the old 96 kbps.
-        let bitRate = min(40_000, Int(fileRate) * 2) * Int(channelCount)
+        self.fileURL = directory.appendingPathComponent("\(channel.rawValue).caf")
         let settings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: fileRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVEncoderBitRateKey: bitRate,
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: Self.fileSampleRate,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false,
         ]
         do {
-            self.file = try AVAudioFile(forWriting: fileURL, settings: settings,
-                                        commonFormat: .pcmFormatFloat32, interleaved: false)
+            let file = try AVAudioFile(forWriting: fileURL, settings: settings,
+                                       commonFormat: .pcmFormatFloat32, interleaved: false)
+            self.file = file
+            self.processingFormat = file.processingFormat
         } catch {
             throw CaptureError.fileCreationFailed(error.localizedDescription)
         }
-        // Elapsed counts frames written at the FILE rate, not the source rate.
-        self.sampleRate = fileRate
     }
 
     var elapsed: TimeInterval {
-        Double(framesWritten) / sampleRate
+        Double(framesWritten) / Self.fileSampleRate
     }
 
     /// Writes the buffer and returns it converted to the file's processing
     /// format, stamped with the pre-write elapsed time, ready for the live pipeline.
     func write(_ buffer: AVAudioPCMBuffer) -> CapturedBuffer? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let file else { return nil }
         let startTime = elapsed
+        let converted: AVAudioPCMBuffer
         do {
-            let converted = try converter.convert(buffer, to: file.processingFormat)
-            try file.write(from: converted)
-            framesWritten += AVAudioFramePosition(converted.frameLength)
-            return CapturedBuffer(channel: channel, buffer: converted, elapsed: startTime)
+            converted = try converter.convert(buffer, to: processingFormat)
         } catch {
             return nil
         }
+        do {
+            try file.write(from: converted)
+            framesWritten += AVAudioFramePosition(converted.frameLength)
+            writeError = nil
+        } catch {
+            writeError = error
+        }
+        // Still handed to the live transcriber: the words on screen are worth
+        // keeping even while the disk refuses the audio.
+        return CapturedBuffer(channel: channel, buffer: converted, elapsed: startTime)
+    }
+
+    /// Flushes and closes the file. Idempotent. Must run before anything reads
+    /// the file back — an open writer can still be holding the tail in memory.
+    func close() {
+        lock.lock()
+        defer { lock.unlock() }
+        file?.close()
+        file = nil
     }
 }

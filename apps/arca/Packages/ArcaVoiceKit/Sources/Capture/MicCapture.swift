@@ -2,6 +2,9 @@ import Accelerate
 import Foundation
 import AVFoundation
 import ArcaVoiceCore
+#if os(iOS)
+import UIKit
+#endif
 
 /// Microphone capture via AVAudioEngine — works on macOS and iOS.
 ///
@@ -42,6 +45,8 @@ final class MicCapture: @unchecked Sendable {
     private var silentSeconds: Double = 0
     private var silenceEscalated = false
     private var silenceNotified = false
+    /// Disk-write watchdog, render-thread state like the silence counters.
+    private var diskFailureNotified = false
     private var pinnedToBuiltIn = false
     private static let digitalSilenceThreshold: Float = 1e-6
     private static let silenceGrace: Double = 6
@@ -154,10 +159,33 @@ final class MicCapture: @unchecked Sendable {
             if let captured = writer.write(buffer) {
                 handler?(captured)
             }
+            self?.observeDisk(writer)
             self?.observeLevel(buffer)
         }
         engine.prepare()
         try engine.start()
+    }
+
+    // MARK: - Disk watchdog
+
+    /// Runs on the render thread. A full disk makes every write fail while the
+    /// microphone keeps delivering, so without this the timer would keep
+    /// counting over audio that is going nowhere.
+    private func observeDisk(_ writer: ChannelWriter) {
+        let failing = writer.writeError != nil
+        guard failing != diskFailureNotified else { return }
+        diskFailureNotified = failing
+        if failing {
+            CaptureTrace.log("mic: audio write failing — \(writer.writeError.map { "\($0)" } ?? "?")")
+            queue.async { [self] in
+                report(.interrupted(reason: L(
+                    "저장 공간이 부족해 소리를 저장하지 못하고 있어요. 공간을 비우면 이어서 저장해요.",
+                    "Storage is full, so the audio isn't being saved. Free up space and recording continues.")))
+            }
+        } else {
+            CaptureTrace.log("mic: audio writes recovered")
+            queue.async { [self] in report(.capturing) }
+        }
     }
 
     // MARK: - Dead-input watchdog
@@ -300,6 +328,11 @@ final class MicCapture: @unchecked Sendable {
             self?.handleRouteChange(reason)
         })
         observers.append(center.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil
+        ) { [weak self] _ in
+            self?.resumeIfStalled()
+        })
+        observers.append(center.addObserver(
             forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: nil
         ) { [weak self] _ in
             // Everything — session, engine, graph — is invalid after this.
@@ -335,6 +368,21 @@ final class MicCapture: @unchecked Sendable {
                 recoveryAttempts = 0
                 recovery(resetEngine: false)
             }
+        }
+    }
+
+    /// Coming back to the app is the one moment iOS always lets a recording
+    /// reclaim the microphone. A call that ended while ARCA was suspended may
+    /// never have delivered its "interruption ended", and a retry budget spent
+    /// in the background may have run dry — either way the user is looking at a
+    /// recording that should be running, so try again with a fresh budget.
+    private func resumeIfStalled() {
+        queue.async { [self] in
+            guard isRunning, !engine.isRunning else { return }
+            CaptureTrace.log("mic: app became active with the engine down — recovering")
+            recoveryGeneration += 1
+            recoveryAttempts = 0
+            recovery(resetEngine: false)
         }
     }
 
@@ -525,6 +573,7 @@ final class MicCapture: @unchecked Sendable {
         onBuffer = nil
         onHealth = nil
         guard let writer else { return nil }
+        writer.close()
         return (writer.fileURL, writer.elapsed)
     }
 }

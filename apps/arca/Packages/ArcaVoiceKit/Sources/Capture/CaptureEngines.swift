@@ -143,6 +143,7 @@ public struct MeetingCaptureEngine: AudioCaptureEngine {
                 duration = micResult.duration
             }
             if let activeWriter {
+                activeWriter.close()
                 files[.systemAudio] = activeWriter.fileURL
                 duration = max(duration, activeWriter.elapsed)
             }

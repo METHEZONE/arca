@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { resolveIdentity } from "@/lib/arca/identity";
+import { authorizeInvite } from "@/lib/cloud";
+import { meterCloud } from "@/lib/cloud-meter";
 import { checkQuota, quotaDenialResponseBody, resolveQuotaSubject } from "@/lib/arca/quota";
 import { record } from "@/lib/arca/usage";
 import { openAiKey } from "@/lib/config";
@@ -9,8 +11,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-/** OpenAI rejects uploads above 25MB; leave headroom for the multipart wrapper. */
-const MAX_BYTES = 24 * 1024 * 1024;
+/**
+ * Vercel refuses request bodies over 4.5MB before this code runs, so the app
+ * sends ~5-minute 32kbps chunks (~1.2MB) cut at pauses (`SpeechChunker.swift`).
+ */
+const MAX_BYTES = 4 * 1024 * 1024;
 
 /**
  * Transcription proxy.
@@ -31,18 +36,24 @@ const MAX_BYTES = 24 * 1024 * 1024;
  * the same recordings. Diarization is not worth losing the transcript.
  */
 export async function POST(request: NextRequest) {
+  // The iPhone/Mac app's beta testers hold an invite code (`x-api-key`), the
+  // same credential the Anthropic and Composio proxies take — that is how the
+  // cloud pass works for people who own no OpenAI key.
   const identity = await resolveIdentity(request);
-  if (!identity) {
+  const invite = identity ? null : authorizeInvite(request);
+  if (!identity && !invite) {
     return NextResponse.json({ error: "Unknown device." }, { status: 401 });
   }
-  const deviceId = identity.kind === "device" ? identity.deviceId : identity.deviceId ?? undefined;
-  const organizationId = identity.kind === "tenant" ? identity.organizationId : undefined;
-  const userId = identity.kind === "tenant" ? identity.userId : undefined;
+  const deviceId = identity?.kind === "device" ? identity.deviceId : identity?.deviceId ?? undefined;
+  const organizationId = identity?.kind === "tenant" ? identity.organizationId : undefined;
+  const userId = identity?.kind === "tenant" ? identity.userId : undefined;
 
-  const quotaSubject = await resolveQuotaSubject(identity);
-  const denial = await checkQuota(quotaSubject);
-  if (denial) {
-    return NextResponse.json(quotaDenialResponseBody(denial), { status: 429 });
+  if (identity) {
+    const quotaSubject = await resolveQuotaSubject(identity);
+    const denial = await checkQuota(quotaSubject);
+    if (denial) {
+      return NextResponse.json(quotaDenialResponseBody(denial), { status: 429 });
+    }
   }
 
   const key = openAiKey();
@@ -66,7 +77,7 @@ export async function POST(request: NextRequest) {
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json(
-      { error: `Clip is ${(file.size / 1024 / 1024).toFixed(1)}MB — split it below 24MB.` },
+      { error: `Clip is ${(file.size / 1024 / 1024).toFixed(1)}MB — split it below 4MB.` },
       { status: 413 },
     );
   }
@@ -76,11 +87,21 @@ export async function POST(request: NextRequest) {
   const audioSeconds = Number(asString(form.get("audioSeconds")) ?? "") || undefined;
   const model = process.env.ARCA_TRANSCRIBE_MODEL?.trim() || "whisper-1";
 
+  // Invite and free-tier callers ride the same spend brake as the other cloud
+  // proxies; that call is also their usage record, so the ones below skip them.
+  if (invite) {
+    const limited = await meterCloud(invite.email, "transcribe", { model, audioSeconds });
+    if (limited) return limited;
+  }
+
   const upstream = new FormData();
   upstream.set("file", file, file.name || "clip.mp3");
   upstream.set("model", model);
   upstream.set("response_format", "verbose_json");
-  upstream.set("language", language);
+  // "auto" lets whisper detect the language. The app sends it for the short
+  // stretches the Korean-hinted pass came back empty on — a sentence said in
+  // English, which a forced `language=ko` silently drops.
+  if (language !== "auto") upstream.set("language", language);
   // Deterministic decoding — sampling is what produces whisper's repetition
   // loops on quiet passages.
   upstream.set("temperature", "0");
@@ -95,11 +116,16 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const detail = (await response.text()).slice(0, 300);
-      await record({
-        deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
-        error: `HTTP ${response.status}: ${detail}`,
-      });
-      return NextResponse.json({ error: detail }, { status: 502 });
+      if (!invite) {
+        await record({
+          deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
+          error: `HTTP ${response.status}: ${detail}`,
+        });
+      }
+      // A 4xx (bad or too-short audio) will fail the same way on retry, so it
+      // passes through as-is; only upstream trouble becomes a retryable 502.
+      const status = response.status >= 400 && response.status < 500 && response.status !== 429 ? 400 : 502;
+      return NextResponse.json({ error: detail }, { status });
     }
 
     const payload = (await response.json()) as {
@@ -116,11 +142,13 @@ export async function POST(request: NextRequest) {
       }))
       .filter((s) => s.text.length > 0);
 
-    await record({
-      deviceId, userId, organizationId, kind: "transcribe", model,
-      audioSeconds: audioSeconds ?? payload.duration,
-      ok: true,
-    });
+    if (!invite) {
+      await record({
+        deviceId, userId, organizationId, kind: "transcribe", model,
+        audioSeconds: audioSeconds ?? payload.duration,
+        ok: true,
+      });
+    }
 
     return NextResponse.json({
       text: payload.text ?? segments.map((s) => s.text).join(" "),
@@ -129,10 +157,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    await record({
-      deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
-      error: message.slice(0, 200),
-    });
+    if (!invite) {
+      await record({
+        deviceId, userId, organizationId, kind: "transcribe", model, audioSeconds, ok: false,
+        error: message.slice(0, 200),
+      });
+    }
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

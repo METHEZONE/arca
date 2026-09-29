@@ -394,8 +394,8 @@ struct SettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if transcriptionEngine == .cloudDiarized, !EngineFactory.hasFinalPassKey {
-                Label(L("OpenAI 키가 없어서 이 엔진은 아직 못 써요.",
-                        "No OpenAI key yet, so this engine can't run."),
+                Label(L("ARCA 클라우드에 아직 연결되지 않아 이 엔진을 못 써요. 인터넷에 연결하면 자동으로 켜져요.",
+                        "ARCA Cloud isn't connected yet, so this engine can't run. It turns on by itself once you're online."),
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)

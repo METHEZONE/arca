@@ -14,9 +14,16 @@ const LIMITS: Partial<Record<UsageKind, { perMinute: number; perDay: number; inv
   chat: { perMinute: 30, perDay: 400, invitePerDay: 1500 },
   delegate: { perMinute: 120, perDay: 3000, invitePerDay: 6000 }, // Composio (connect polling is chatty)
   realtime: { perMinute: 4, perDay: 40, invitePerDay: 150 },
+  // One request per ~5-minute chunk (plus the odd gap re-check): 400/day is
+  // ~30 hours of audio on a free-tier device.
+  transcribe: { perMinute: 40, perDay: 400, invitePerDay: 1500 },
 };
 
-export async function meterCloud(email: string, kind: UsageKind): Promise<Response | null> {
+export async function meterCloud(
+  email: string,
+  kind: UsageKind,
+  extra: { model?: string; audioSeconds?: number } = {},
+): Promise<Response | null> {
   const owner = `email:${email}`;
   const limits = LIMITS[kind];
   const database = db();
@@ -41,6 +48,6 @@ export async function meterCloud(email: string, kind: UsageKind): Promise<Respon
       console.error("arca.cloud.meter_failed", err instanceof Error ? err.message : err);
     }
   }
-  await record({ owner, kind, ok: true });
+  await record({ owner, kind, ok: true, ...extra });
   return null;
 }

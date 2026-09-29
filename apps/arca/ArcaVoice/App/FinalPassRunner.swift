@@ -31,7 +31,44 @@ enum FinalPassRunner {
             DebugTrace.log("final pass: already running for \(record.directoryName), skipping")
             return
         }
+        // Claimed up front, not on failure: if the app is quit or crashes while
+        // the pass is running, this is the only thing left saying the
+        // recording is still owed a transcript.
+        record.qualityPassPending = true
+        inFlight.insert(record.directoryName)
+        Task { @MainActor in
+            // Every exit below releases the retry slot: success, empty result,
+            // and failure alike. Leaking one would freeze that recording out of
+            // all future retries.
+            defer { inFlight.remove(record.directoryName) }
+            #if os(iOS)
+            // The uploads themselves run on a background URLSession, which
+            // `nsurlsessiond` finishes out of process — that is what actually
+            // survives suspension. This assertion covers the in-process work
+            // around them (compaction, chunk export, summarization) for the few
+            // seconds iOS still grants after the app leaves the foreground.
+            let grace = BackgroundGrace()
+            defer { grace.end() }
+            #endif
+            let files = await compactRecordingFiles(record: record, files: files)
+            await process(record: record, files: files, userNotes: userNotes,
+                          ownerName: ownerName, languageHints: languageHints,
+                          rosterSnapshots: rosterSnapshots,
+                          recordingStartedAt: recordingStartedAt, engine: engine)
+        }
+    }
 
+    /// The pass itself, once the audio is in its final format.
+    private static func process(
+        record: RecordingSession,
+        files: [CaptureChannel: URL],
+        userNotes: String?,
+        ownerName: String,
+        languageHints: [String],
+        rosterSnapshots: [RosterSnapshot],
+        recordingStartedAt: Date?,
+        engine: TranscriptionEngine?
+    ) async {
         // Nothing to transcribe if nothing was captured. A meeting recorded off
         // a virtual input (BlackHole, a Zoom/Teams audio device) is exact
         // zeros end to end; sending an hour of that to the cloud costs money
@@ -45,10 +82,15 @@ enum FinalPassRunner {
             return
         }
 
-        // Claimed up front, not on failure: if the app is quit or crashes while
-        // the upload is in flight, this is the only thing left saying the
-        // recording is still owed a transcript.
-        record.qualityPassPending = true
+        // The final transcript landed on an earlier try and only the notes are
+        // missing (the summary call failed). Summarize what's stored rather
+        // than paying to transcribe the whole meeting again.
+        if engine == nil, record.segments.contains(where: \.isFinal),
+           summaryPendingLeads.contains(where: { record.processingError?.hasPrefix($0) == true }),
+           (record.note?.summaryMarkdown ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            await summarizeStoredTranscript(record: record, ownerName: ownerName)
+            return
+        }
 
         // The live pass already ran Apple's on-device recognizer over this audio
         // in real time and its output is in the store. If it covers the
@@ -58,162 +100,319 @@ enum FinalPassRunner {
         // after a kill) are exactly the ones that need the on-device file pass.
         let liveFallback = SessionResummarizer.transcript(from: record)
         let hasUsableLive = hasUsableLiveTranscript(record)
+        // A pass that stays pending runs again; the user hears about the
+        // summary once, not on every retry.
+        let alreadyNotified = !(record.note?.summaryMarkdown ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
         guard let pipeline = EngineFactory.processingPipeline(
             engine: engine, includeOnDeviceFallback: !hasUsableLive) else {
-            summarizeLiveTranscriptOnly(record: record)
+            await summarizeLiveTranscriptOnly(record: record, ownerName: ownerName)
             return
         }
 
-        inFlight.insert(record.directoryName)
-        Task { @MainActor in
-            // Every exit below releases the retry slot: success, empty result,
-            // and failure alike. Leaking one would freeze that recording out of
-            // all future retries.
-            defer { inFlight.remove(record.directoryName) }
-            #if os(iOS)
-            // The uploads themselves run on a background URLSession, which
-            // `nsurlsessiond` finishes out of process — that is what actually
-            // survives suspension. This assertion covers the in-process work
-            // around them (chunk export, decode, summarization) for the few
-            // seconds iOS still grants after the app leaves the foreground.
-            let grace = BackgroundGrace()
-            defer { grace.end() }
-            #endif
-            do {
-                // Names read off the meeting screen double as vocabulary hints
-                // so transcription spells them right.
-                let rosterNames = RosterNameMapper.participantNames(
-                    in: rosterSnapshots, ownerName: ownerName)
-                let output = try await pipeline.process(
-                    files: files,
-                    ownerName: ownerName,
-                    hints: TranscriptHints(vocabulary: rosterNames, languageCodes: languageHints),
-                    userNotes: (userNotes?.isEmpty == false) ? userNotes : nil,
-                    liveFallback: liveFallback.turns.isEmpty ? nil : liveFallback)
+        do {
+            // Names read off the meeting screen double as vocabulary hints
+            // so transcription spells them right.
+            let rosterNames = RosterNameMapper.participantNames(
+                in: rosterSnapshots, ownerName: ownerName)
+            let output = try await pipeline.process(
+                files: files,
+                ownerName: ownerName,
+                hints: TranscriptHints(vocabulary: rosterNames, languageCodes: languageHints),
+                userNotes: (userNotes?.isEmpty == false) ? userNotes : nil,
+                liveFallback: liveFallback.turns.isEmpty ? nil : liveFallback)
 
-                // The on-device transcript is the only copy of what was said.
-                // Replace it ONLY once the cloud pass has actually produced
-                // turns — a pass that legitimately finds nothing (silence, a
-                // dead tap, a service that returns zero segments) used to reach
-                // `removeAll()` and leave the session "ready" and blank, which
-                // is how a recorded conversation disappeared with no error.
-                guard !output.transcript.turns.isEmpty else {
-                    record.state = .ready
-                    record.qualityPassPending = false
-                    record.processingError = Self.emptyPassNotice(
-                        reason: output.emptyReason,
-                        keptOnDeviceTranscript: !record.segments.isEmpty)
-                    try record.modelContext?.save()
-                    DebugTrace.log("final pass: empty transcript for \(record.directoryName), live segments kept")
-                    return
-                }
-
-                // The final pass replaces live segments wholesale — unless the
-                // transcript IS those live segments, promoted because nothing
-                // could transcribe the audio. Rewriting them from themselves
-                // would only relabel them as final, which they are not.
-                if output.transcriptSource == .finalPass {
-                    record.segments.removeAll()
-                    for turn in output.transcript.turns {
-                        record.segments.append(StoredSegment(
-                            text: turn.text, start: turn.start, end: turn.end,
-                            channel: turn.channel,
-                            speakerKey: output.transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey,
-                            isFinal: true))
-                    }
-                }
-
-                // Meet/Zoom roster → transcript names: rename diarized remote
-                // speakers to the names seen on their tiles.
-                if output.transcriptSource == .finalPass,
-                   let startedAt = recordingStartedAt, !rosterSnapshots.isEmpty {
-                    let remote = record.segments.filter {
-                        $0.channelRaw != CaptureChannel.microphone.rawValue
-                    }
-                    let turns = remote.map {
-                        RosterNameMapper.TurnRef(key: $0.speakerKey ?? "Other",
-                                                 start: $0.start, end: $0.end)
-                    }
-                    let renames = RosterNameMapper.renames(
-                        snapshots: rosterSnapshots, startedAt: startedAt,
-                        remoteTurns: turns, ownerName: ownerName)
-                    if !renames.isEmpty {
-                        for segment in remote {
-                            if let name = renames[segment.speakerKey ?? "Other"] {
-                                segment.speakerKey = name
-                            }
-                        }
-                        DebugTrace.log("roster renames applied: \(renames)")
-                    }
-                }
-                if let notes = output.notes {
-                    let note = record.note ?? SessionNote(roughMarkdown: userNotes ?? "")
-                    note.summaryMarkdown = notes.summaryMarkdown
-                    note.enhancedMarkdown = notes.enhancedNotesMarkdown
-                    note.decisionsJSON = try? JSONEncoder().encode(notes.decisions)
-                    note.actionItemsJSON = try? JSONEncoder().encode(notes.actionItems)
-                    record.note = note
-                    applyTitle(notes.title, to: record)
-                }
+            // The on-device transcript is the only copy of what was said.
+            // Replace it ONLY once the cloud pass has actually produced
+            // turns — a pass that legitimately finds nothing (silence, a
+            // dead tap, a service that returns zero segments) used to reach
+            // `removeAll()` and leave the session "ready" and blank, which
+            // is how a recorded conversation disappeared with no error.
+            guard !output.transcript.turns.isEmpty else {
                 record.state = .ready
-                // A channel that threw while another carried the pass leaves the
-                // meeting half-transcribed. Say so rather than presenting it as
-                // complete, and keep the pass pending so the next launch redoes it.
-                switch (output.transcriptSource, output.channelErrors.isEmpty) {
-                case (.finalPass, true):
-                    record.qualityPassPending = false
-                    record.processingError = nil
-                case (.finalPass, false):
-                    record.qualityPassPending = true
-                    record.processingError = L(
-                        "회의 한쪽 채널의 고품질 전사가 실패했어요 (\(output.channelErrors.joined(separator: " · "))). 일부가 빠져 있을 수 있어요.",
-                        "The high-quality pass failed on one channel (\(output.channelErrors.joined(separator: " · "))). Part of this meeting may be missing.")
-                    DebugTrace.log("final pass: partial channel failure — \(output.channelErrors.joined(separator: " | "))")
-                case (.liveSegments, _):
-                    // Notes were still written, off the live transcript. The
-                    // pass stays pending so a working network heals it later.
-                    record.qualityPassPending = true
-                    record.processingError = L(
-                        "고품질 전사를 아직 못 했어요 (\(output.channelErrors.joined(separator: " · "))). 실시간 전사로 요약했고, 오디오는 그대로 있어 다음 실행에서 다시 시도해요.",
-                        "The high-quality pass hasn't landed yet (\(output.channelErrors.joined(separator: " · "))). ARCA summarized the live transcript instead; the audio is intact and it retries on the next launch.")
-                    DebugTrace.log("final pass: fell back to stored live transcript for \(record.directoryName)")
-                }
-                // Relay merge is last-writer-wins on `updatedAt`, and the pass
-                // just rewrote the transcript and the notes. Without this bump
-                // the improved version loses the comparison against the other
-                // device's older copy and silently never propagates — the
-                // recording looks fine here and stays rough over there.
-                record.touch()
+                record.qualityPassPending = false
+                record.processingError = Self.emptyPassNotice(
+                    reason: output.emptyReason,
+                    keptOnDeviceTranscript: !record.segments.isEmpty)
                 try record.modelContext?.save()
-                BrainClient.track("transcript_ready")
+                DebugTrace.log("final pass: empty transcript for \(record.directoryName), live segments kept")
+                return
+            }
 
-                if let notes = output.notes {
-                    CompanionProgress.shared.award(.meetingSummarized)
-                    SummaryNotifier.summaryReady(record: record, notes: notes)
-                    MeetingDelegation.plan(record: record)
-                    sendToWatchIfWatchMemo(record: record, notes: notes)
-                    await autoSendEmailIfEnabled(record: record, notes: notes)
-                    autoExportToObsidianIfEnabled(record: record)
-                    #if os(macOS)
-                    await NotionDBAutoSync.runIfEnabled(
-                        record: record, transcript: output.transcript, notes: notes)
-                    #endif
-                    // Last: one more model call, and nothing the user is waiting on.
-                    await rememberFromMeeting(record: record, notes: notes)
+            // The final pass replaces live segments wholesale — unless the
+            // transcript IS those live segments, promoted because nothing
+            // could transcribe the audio. Rewriting them from themselves
+            // would only relabel them as final, which they are not.
+            if let attributionError = output.attributionError {
+                DebugTrace.log("speakers: attribution skipped — \(attributionError)")
+            }
+            if output.transcriptSource == .liveSegments, output.speakersAttributed {
+                applySpeakerNames(output.transcript.turns.map(\.speakerKey), to: record)
+            }
+            if output.transcriptSource == .finalPass {
+                // Only the channels that came back are replaced. A channel
+                // that failed keeps its on-device text until a retry lands.
+                let produced = Set(output.transcript.turns.map { $0.channel.rawValue })
+                record.segments.removeAll { produced.contains($0.channelRaw) }
+                for turn in output.transcript.turns {
+                    record.segments.append(StoredSegment(
+                        text: turn.text, start: turn.start, end: turn.end,
+                        channel: turn.channel,
+                        speakerKey: output.transcript.speakerNames[turn.speakerKey] ?? turn.speakerKey,
+                        isFinal: true))
                 }
-            } catch {
-                // The live transcript stays put — it's already in `segments` and
-                // nothing above this point touched it. Only the cloud half is
-                // missing, so mark the session for retry rather than final.
-                record.state = .ready
+            }
+
+            // Meet/Zoom roster → transcript names: rename diarized remote
+            // speakers to the names seen on their tiles.
+            if output.transcriptSource == .finalPass,
+               let startedAt = recordingStartedAt, !rosterSnapshots.isEmpty {
+                let remote = record.segments.filter {
+                    $0.channelRaw != CaptureChannel.microphone.rawValue
+                }
+                let turns = remote.map {
+                    RosterNameMapper.TurnRef(key: $0.speakerKey ?? "Other",
+                                             start: $0.start, end: $0.end)
+                }
+                let renames = RosterNameMapper.renames(
+                    snapshots: rosterSnapshots, startedAt: startedAt,
+                    remoteTurns: turns, ownerName: ownerName)
+                if !renames.isEmpty {
+                    for segment in remote {
+                        if let name = renames[segment.speakerKey ?? "Other"] {
+                            segment.speakerKey = name
+                        }
+                    }
+                    DebugTrace.log("roster renames applied: \(renames)")
+                }
+            }
+            if let notes = output.notes {
+                let note = record.note ?? SessionNote(roughMarkdown: userNotes ?? "")
+                note.summaryMarkdown = notes.summaryMarkdown
+                note.enhancedMarkdown = notes.enhancedNotesMarkdown
+                note.decisionsJSON = try? JSONEncoder().encode(notes.decisions)
+                note.actionItemsJSON = try? JSONEncoder().encode(notes.actionItems)
+                record.note = note
+                applyTitle(notes.title, to: record)
+            }
+            record.state = .ready
+            // A channel that threw while another carried the pass leaves the
+            // meeting half-transcribed. Say so rather than presenting it as
+            // complete, and keep the pass pending so the next launch redoes it.
+            switch (output.transcriptSource, output.channelErrors.isEmpty) {
+            case (.finalPass, true):
+                record.qualityPassPending = false
+                record.processingError = nil
+            case (.finalPass, false):
                 record.qualityPassPending = true
                 record.processingError = L(
-                    "고품질 전사를 아직 못 했어요 (\(error.localizedDescription)). 기기에서 만든 전사는 그대로 있고, 연결되면 자동으로 다시 시도해요.",
-                    "The high-quality pass hasn't landed yet (\(error.localizedDescription)). Your on-device transcript is intact, and ARCA retries automatically once it can reach the network.")
-                try? record.modelContext?.save()
-                SummaryNotifier.processingFailed(record: record, message: error.localizedDescription)
+                    "회의 한쪽 채널의 고품질 전사가 실패했어요 (\(output.channelErrors.joined(separator: " · "))). 일부가 빠져 있을 수 있어요.",
+                    "The high-quality pass failed on one channel (\(output.channelErrors.joined(separator: " · "))). Part of this meeting may be missing.")
+                DebugTrace.log("final pass: partial channel failure — \(output.channelErrors.joined(separator: " | "))")
+            case (.liveSegments, _):
+                // Notes were still written, off the live transcript. The
+                // pass stays pending so a working network heals it later.
+                record.qualityPassPending = true
+                record.processingError = L(
+                    "고품질 전사를 아직 못 했어요 (\(output.channelErrors.joined(separator: " · "))). 실시간 전사로 요약했고, 오디오는 그대로 있어 다음 실행에서 다시 시도해요.",
+                    "The high-quality pass hasn't landed yet (\(output.channelErrors.joined(separator: " · "))). ARCA summarized the live transcript instead; the audio is intact and it retries on the next launch.")
+                DebugTrace.log("final pass: fell back to stored live transcript for \(record.directoryName)")
             }
+            if let summaryError = output.summaryError {
+                record.qualityPassPending = true
+                record.processingError = summaryPendingMessage(summaryError)
+                DebugTrace.log("final pass: transcript kept, summary owed — \(summaryError)")
+            }
+            // Relay merge is last-writer-wins on `updatedAt`, and the pass
+            // just rewrote the transcript and the notes. Without this bump
+            // the improved version loses the comparison against the other
+            // device's older copy and silently never propagates — the
+            // recording looks fine here and stays rough over there.
+            record.touch()
+            try record.modelContext?.save()
+            BrainClient.track("transcript_ready")
+
+            if let notes = output.notes {
+                CompanionProgress.shared.award(.meetingSummarized)
+                if !alreadyNotified {
+                    SummaryNotifier.summaryReady(record: record, notes: notes)
+                }
+                MeetingDelegation.plan(record: record)
+                sendToWatchIfWatchMemo(record: record, notes: notes)
+                await autoSendEmailIfEnabled(record: record, notes: notes)
+                autoExportToObsidianIfEnabled(record: record)
+                #if os(macOS)
+                await NotionDBAutoSync.runIfEnabled(
+                    record: record, transcript: output.transcript, notes: notes)
+                #endif
+                // Last: one more model call, and nothing the user is waiting on.
+                await rememberFromMeeting(record: record, notes: notes)
+            }
+        } catch {
+            // The live transcript stays put — it's already in `segments` and
+            // nothing above this point touched it. Only the cloud half is
+            // missing, so mark the session for retry rather than final.
+            record.state = .ready
+            record.qualityPassPending = true
+            record.processingError = L(
+                "고품질 전사를 아직 못 했어요 (\(error.localizedDescription)). 기기에서 만든 전사는 그대로 있고, 연결되면 자동으로 다시 시도해요.",
+                "The high-quality pass hasn't landed yet (\(error.localizedDescription)). Your on-device transcript is intact, and ARCA retries automatically once it can reach the network.")
+            try? record.modelContext?.save()
+            SummaryNotifier.processingFailed(record: record, message: error.localizedDescription)
+        }
+    }
+
+    // MARK: - Audio compaction
+
+    /// Re-encodes crash-safe CAF recordings into m4a before anything reads them.
+    ///
+    /// The order is what makes this safe: the m4a is verified by
+    /// `AudioFinalizer`, the row is pointed at it and saved, and only then is
+    /// the CAF deleted. A kill at any step leaves the CAF referenced or on disk,
+    /// and the next pass simply does it again. A failure keeps the CAF — every
+    /// transcriber reads it fine; it's only bigger.
+    private static func compactRecordingFiles(record: RecordingSession,
+                                              files: [CaptureChannel: URL]) async -> [CaptureChannel: URL] {
+        var result = files
+        for (channel, caf) in files where AudioFinalizer.isRecordingFile(caf) {
+            let compacted: URL
+            do {
+                compacted = try await Task.detached(priority: .userInitiated) {
+                    try AudioFinalizer.compact(caf)
+                }.value
+            } catch {
+                DebugTrace.log("final pass: kept \(caf.lastPathComponent) uncompacted — \(error.localizedDescription)")
+                continue
+            }
+            let seconds = AudioFinalizer.duration(of: compacted)
+            let newPath = "\(record.directoryName)/\(compacted.lastPathComponent)"
+            let asset = record.audioAssets.first { $0.channel == channel }
+            let previousPath = asset?.relativePath
+            if let asset {
+                asset.relativePath = newPath
+                asset.duration = seconds
+            } else {
+                record.audioAssets.append(AudioAsset(channel: channel, relativePath: newPath, duration: seconds))
+            }
+            // A recording recovered after a kill has no duration of its own yet.
+            if seconds > record.duration { record.duration = seconds }
+            do {
+                try record.modelContext?.save()
+            } catch {
+                if let asset, let previousPath {
+                    asset.relativePath = previousPath
+                } else {
+                    record.audioAssets.removeAll { $0.relativePath == newPath }
+                }
+                DebugTrace.log("final pass: couldn't record the compacted file — keeping the CAF (\(error))")
+                continue
+            }
+            try? FileManager.default.removeItem(at: caf)
+            result[channel] = compacted
+        }
+        return result
+    }
+
+    /// Finishes compaction for recordings that aren't owed a pass but still
+    /// hold a CAF — a compaction that failed once, or a kill between saving the
+    /// m4a and deleting the CAF. Runs with the launch sweep.
+    static func compactLeftoverRecordings(context: ModelContext) {
+        let sessions = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
+        for record in sessions where record.state != .recording && record.state != .processing
+            && !record.qualityPassPending && !inFlight.contains(record.directoryName) {
+            let directory = SessionPaths.directory(for: record.directoryName)
+            let cafs = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])
+                .filter(AudioFinalizer.isRecordingFile)
+            guard !cafs.isEmpty else { continue }
+            var toCompact: [CaptureChannel: URL] = [:]
+            for caf in cafs {
+                let cafPath = "\(record.directoryName)/\(caf.lastPathComponent)"
+                let m4aPath = "\(record.directoryName)/\(AudioFinalizer.compactedURL(for: caf).lastPathComponent)"
+                if record.audioAssets.contains(where: { $0.relativePath == cafPath }) {
+                    let channel = CaptureChannel(rawValue: caf.deletingPathExtension().lastPathComponent) ?? .mixed
+                    toCompact[channel] = caf
+                } else if record.audioAssets.contains(where: { $0.relativePath == m4aPath }),
+                          FileManager.default.fileExists(atPath: SessionPaths.resolve(relativePath: m4aPath).path) {
+                    // The row already points at a verified m4a: this CAF is the
+                    // leftover of a kill right before its deletion.
+                    try? FileManager.default.removeItem(at: caf)
+                }
+            }
+            guard !toCompact.isEmpty else { continue }
+            inFlight.insert(record.directoryName)
+            Task { @MainActor in
+                defer { inFlight.remove(record.directoryName) }
+                _ = await compactRecordingFiles(record: record, files: toCompact)
+            }
+        }
+    }
+
+    // MARK: - Notes
+
+    /// Both languages: the error was written in whichever one was active then.
+    private static let summaryPendingLeads = ["받아쓰기는 끝났고 요약만 아직이에요", "The transcript is done; only the summary"]
+
+    private static func summaryPendingMessage(_ reason: String) -> String {
+        L("받아쓰기는 끝났고 요약만 아직이에요 (\(reason)). 자동으로 다시 시도해요.",
+          "The transcript is done; only the summary is still pending (\(reason)). ARCA retries automatically.")
+    }
+
+    /// Writes the notes for a transcript that's already stored.
+    private static func summarizeStoredTranscript(record: RecordingSession, ownerName: String) async {
+        record.state = .ready
+        guard let summarizer = EngineFactory.summarizer() else {
+            try? record.modelContext?.save()
+            return
+        }
+        await attributeStoredSpeakers(record, ownerName: ownerName)
+        do {
+            let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+            applyTitle(notes.title, to: record)
+            record.qualityPassPending = false
+            record.processingError = nil
+            record.touch()
+            try? record.modelContext?.save()
+            BrainClient.track("transcript_ready")
+            CompanionProgress.shared.award(.meetingSummarized)
+            SummaryNotifier.summaryReady(record: record, notes: notes)
+            MeetingDelegation.plan(record: record)
+            await rememberFromMeeting(record: record, notes: notes)
+        } catch {
+            record.qualityPassPending = true
+            record.processingError = summaryPendingMessage(error.localizedDescription)
+            try? record.modelContext?.save()
+        }
+    }
+
+    // MARK: - Speakers
+
+    /// Writes one speaker name per stored segment, in transcript order.
+    private static func applySpeakerNames(_ names: [String], to record: RecordingSession) {
+        let segments = SessionResummarizer.orderedSegments(record)
+        guard names.count == segments.count else {
+            DebugTrace.log("speakers: \(names.count) names for \(segments.count) segments — not applied")
+            return
+        }
+        for (segment, name) in zip(segments, names) { segment.speakerKey = name }
+        record.touch()
+        try? record.modelContext?.save()
+    }
+
+    /// Names the speakers of a stored live transcript that has none yet, so the
+    /// summary and the "대신 처리할까요?" plan know whose action items are whose.
+    private static func attributeStoredSpeakers(_ record: RecordingSession, ownerName: String) async {
+        let segments = SessionResummarizer.orderedSegments(record)
+        guard segments.count >= 2, segments.allSatisfy({ $0.speakerKey == nil }),
+              let attributor = EngineFactory.speakerAttributor() else { return }
+        let transcript = SessionResummarizer.transcript(from: record)
+        do {
+            let names = try await attributor.speakers(
+                for: transcript,
+                context: SpeakerContext(ownerName: ownerName, participants: record.participants.map(\.name)))
+            applySpeakerNames(names, to: record)
+        } catch {
+            DebugTrace.log("speakers: attribution skipped for \(record.directoryName) — \(error.localizedDescription)")
         }
     }
 
@@ -265,7 +464,7 @@ enum FinalPassRunner {
         if !title.isEmpty, !placeholder { record.title = title }
     }
 
-    private static func summarizeLiveTranscriptOnly(record: RecordingSession) {
+    private static func summarizeLiveTranscriptOnly(record: RecordingSession, ownerName: String) async {
         // The free engine's normal path, not a fallback: the on-device live
         // pass already is the transcript, so summarizing it is the whole job.
         // It used to fall through to the "no OpenAI key" wording below — every
@@ -285,29 +484,28 @@ enum FinalPassRunner {
                 try? record.modelContext?.save()
                 return
             }
-            Task { @MainActor in
-                do {
-                    let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
-                    applyTitle(notes.title, to: record)
-                    record.touch()
-                    try? record.modelContext?.save()
-                    BrainClient.track("transcript_ready")
-                    CompanionProgress.shared.award(.meetingSummarized)
-                    SummaryNotifier.summaryReady(record: record, notes: notes)
-                    MeetingDelegation.plan(record: record)
-                    await rememberFromMeeting(record: record, notes: notes)
-                } catch {
-                    // Keep it owed: a network blip mustn't leave it unsummarized.
-                    record.qualityPassPending = true
-                    try? record.modelContext?.save()
-                    DebugTrace.log("final pass: live-transcript summary failed — \(error)")
-                }
+            await attributeStoredSpeakers(record, ownerName: ownerName)
+            do {
+                let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+                applyTitle(notes.title, to: record)
+                record.touch()
+                try? record.modelContext?.save()
+                BrainClient.track("transcript_ready")
+                CompanionProgress.shared.award(.meetingSummarized)
+                SummaryNotifier.summaryReady(record: record, notes: notes)
+                MeetingDelegation.plan(record: record)
+                await rememberFromMeeting(record: record, notes: notes)
+            } catch {
+                // Keep it owed: a network blip mustn't leave it unsummarized.
+                record.qualityPassPending = true
+                try? record.modelContext?.save()
+                DebugTrace.log("final pass: live-transcript summary failed — \(error)")
             }
             return
         }
         record.state = .ready
-        // Pending on purpose: adding a key (or switching engines) later heals
-        // the session on the next sweep.
+        // Pending on purpose: coming online (or adding a key) later heals the
+        // session on the next sweep.
         record.qualityPassPending = true
         let alreadySummarized = !(record.note?.summaryMarkdown ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -315,24 +513,25 @@ enum FinalPassRunner {
               SessionResummarizer.canResummarize(record),
               !alreadySummarized else {
             record.processingError = L(
-                "화자분리 전사를 켜뒀는데 OpenAI 키가 없어요. 설정에서 키를 넣거나, 전사 엔진을 '기기에서 (무료)'로 바꾸면 바로 처리돼요.",
-                "Speaker-separated transcription is selected but there's no OpenAI key. Add one in Settings, or switch the transcription engine to \"On this device (free)\" and this runs right away.")
+                "클라우드 전사에 연결하지 못했어요. 인터넷이 연결되면 자동으로 다시 시도해요. 급하면 설정에서 전사 엔진을 '기기에서 (무료)'로 바꿀 수 있어요.",
+                "Couldn't reach cloud transcription. ARCA retries automatically once you're online, or switch the transcription engine to \"On this device (free)\" in Settings.")
             try? record.modelContext?.save()
             return
         }
         record.processingError = L(
-            "고품질 전사 대신 실시간 전사를 요약했어요. 설정에서 OpenAI 키를 넣으면 화자분리 전사로 다시 시도해요.",
-            "Summarized the live transcript instead of the high-quality pass. Add an OpenAI key in Settings for a diarized transcript and this retries.")
+            "클라우드 전사 대신 실시간 전사로 먼저 요약했어요. 연결되면 더 정확한 전사로 다시 시도해요.",
+            "Summarized the live transcript for now. ARCA retries with the more accurate cloud transcript once it can.")
         try? record.modelContext?.save()
-        Task { @MainActor in
-            do {
-                let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
-                BrainClient.track("transcript_ready")
-                SummaryNotifier.summaryReady(record: record, notes: notes)
-                MeetingDelegation.plan(record: record)
-            } catch {
-                DebugTrace.log("final pass: live-transcript summary failed — \(error)")
-            }
+        await attributeStoredSpeakers(record, ownerName: ownerName)
+        do {
+            let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+            applyTitle(notes.title, to: record)
+            try? record.modelContext?.save()
+            BrainClient.track("transcript_ready")
+            SummaryNotifier.summaryReady(record: record, notes: notes)
+            MeetingDelegation.plan(record: record)
+        } catch {
+            DebugTrace.log("final pass: live-transcript summary failed — \(error)")
         }
     }
 
@@ -375,7 +574,11 @@ enum FinalPassRunner {
                             languageHints: [String]) {
         let sessions = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
         for record in sessions {
-            guard SessionRecovery.needsFinalPass(
+            // `qualityPassPending` too: it's what orphan recovery sets on a
+            // recording revived after a kill, and this runs right after that
+            // recovery at launch. Without it the revived recording waited for
+            // the next network change before anything transcribed it.
+            guard record.qualityPassPending || SessionRecovery.needsFinalPass(
                 state: record.state,
                 processingError: record.processingError,
                 hasAudio: !record.audioAssets.isEmpty) else { continue }
@@ -386,13 +589,31 @@ enum FinalPassRunner {
     /// Re-runs the pass for one recording. Returns false when there's nothing to
     /// work with (already running, no audio left on this device), so a button
     /// can stay honest about whether it did anything.
+    /// Automatic attempts per session this launch, and when the last began.
+    /// Sweeps fire on every foreground; a recording that keeps failing must
+    /// not re-upload the whole meeting each time the user opens the app.
+    private static var attempts: [String: (count: Int, last: Date)] = [:]
+
+    /// 1, 2, 4 … minutes between automatic retries, capped at an hour.
+    static func retryDelay(afterAttempts count: Int) -> TimeInterval {
+        count == 0 ? 0 : min(3600, 60 * pow(2, Double(count - 1)))
+    }
+
     @discardableResult
     static func retry(record: RecordingSession, ownerName: String,
                       languageHints: [String],
-                      engine: TranscriptionEngine? = nil) -> Bool {
+                      engine: TranscriptionEngine? = nil,
+                      userInitiated: Bool = false) -> Bool {
         guard record.state != .recording, record.state != .processing,
               !record.audioAssets.isEmpty,
+              record.directoryName != AppServices.shared.coordinator.activeDirectoryName,
               !inFlight.contains(record.directoryName) else { return false }
+        let previous = attempts[record.directoryName]
+        if !userInitiated, engine == nil, let previous,
+           Date.now.timeIntervalSince(previous.last) < retryDelay(afterAttempts: previous.count) {
+            return false
+        }
+        attempts[record.directoryName] = ((previous?.count ?? 0) + 1, .now)
         var files: [CaptureChannel: URL] = [:]
         for asset in record.audioAssets {
             let url = SessionPaths.resolve(relativePath: asset.relativePath)
@@ -514,7 +735,7 @@ enum FinalPassRunner {
         for record in recoverable(context: context) {
             record.qualityPassPending = true
             if retry(record: record, ownerName: ownerName,
-                     languageHints: languageHints, engine: engine) {
+                     languageHints: languageHints, engine: engine, userInitiated: true) {
                 started += 1
             }
         }
