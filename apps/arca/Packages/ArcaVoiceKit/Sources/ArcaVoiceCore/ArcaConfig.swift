@@ -39,7 +39,9 @@ public enum ArcaConfig {
         if let configured, !configured.isEmpty, let url = URL(string: configured) {
             return url
         }
-        return URL(string: "https://arca-nine.vercel.app")!
+        // The host Google sign-in is registered on (arca-nine is an alias of
+        // the same deployment, and its callback is rejected by Google).
+        return URL(string: "https://arca-the-zone-bio.vercel.app")!
     }
 
     /// `cloudBaseURL` + a route path, e.g. `cloudEndpoint("api/arca/crash")`.
