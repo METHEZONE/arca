@@ -36,12 +36,12 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
+	<string>다른 앱의 회의 소리를 함께 녹음해서, 봇 없이도 상대방 말까지 받아적어요.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>ARCA adds events you approve from captured screens.</string>
+	<string>승인하신 일정만 캘린더에 넣어요.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ARCA records your meetings and voice notes.</string>
+	<string>회의와 음성 메모를 녹음해요. 녹음은 누를 때만 시작해요.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>ARCA transcribes your recordings on-device.</string>
+	<string>녹음한 말을 글로 받아적어요.</string>
 </dict>
 </plist>

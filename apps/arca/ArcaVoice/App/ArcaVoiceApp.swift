@@ -67,6 +67,9 @@ struct ArcaVoiceApp: App {
                 // user actually picks a different language — never on launch.
                 .id(language.generation)
                 .tint(ArcaFace.ember)
+                // Relative times, dates and pickers follow ARCA's language, not
+                // the phone's — a Korean ARCA on an English iPhone said "13 sec".
+                .environment(\.locale, Locale(identifier: ArcaLanguage.isKorean ? "ko_KR" : "en_US"))
         }
         .modelContainer(container)
 

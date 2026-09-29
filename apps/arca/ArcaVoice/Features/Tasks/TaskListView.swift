@@ -22,7 +22,7 @@ struct TaskListView: View {
            sort: \TodoTask.updatedAt, order: .reverse)
     private var completedTasks: [TodoTask]
 
-    @Query(filter: #Predicate<ReplyProposal> { $0.stateRaw == "proposed" },
+    @Query(filter: #Predicate<ReplyProposal> { $0.stateRaw == "proposed" || $0.stateRaw == "failed" },
            sort: \ReplyProposal.createdAt, order: .reverse)
     private var proposals: [ReplyProposal]
 
@@ -138,13 +138,6 @@ struct TaskListView: View {
                                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                         }
                     }
-                } footer: {
-                    Text(L("완료한 일은 이 기기의 SwiftData에 남고, 릴레이 동기화를 설정해 두면 arca-brain 릴레이를 통해 tasks.json으로 동기화돼요.",
-                           "Completed tasks stay in SwiftData on this device and sync through the arca-brain relay as tasks.json when relay sync is configured."))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .textCase(nil)
-                        .padding(.horizontal, 16)
                 }
             }
         }
@@ -155,11 +148,11 @@ struct TaskListView: View {
     private var completedEmptyState: some View {
         VStack(spacing: 12) {
             SpiritFace(mood: .idle, size: 80)
-            Text(L("아직 완료한 퀘스트가 없어요.", "No completed quests yet."))
+            Text(L("아직 끝낸 일이 없어요.", "Nothing finished yet."))
                 .font(.headline)
                 .foregroundStyle(.white)
-            Text(L("ARCA가 무언가를 끝내면 결과와 출처가 여기 남아요.",
-                   "When ARCA finishes something, the result and source stay here."))
+            Text(L("ARCA가 대신 처리한 일은 결과와 함께 여기 남아요.",
+                   "What ARCA handles for you stays here, with the result."))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -175,6 +168,7 @@ struct TaskListView: View {
     private struct CompletedQuestRow: View {
         @Bindable var task: TodoTask
         @Environment(\.modelContext) private var context
+        @State private var showingResult = false
 
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
@@ -186,10 +180,9 @@ struct TaskListView: View {
                         Text(task.title)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.white)
-                        HStack(spacing: 3) {
-                            Text(L("출처: \(task.sourceRaw) ·", "source: \(task.sourceRaw) ·"))
-                            Text(task.updatedAt, style: .relative)
-                        }
+                        Text(task.sourceLabel + task.updatedAt.formatted(
+                            .dateTime.month().day().hour().minute()
+                                .locale(Locale(identifier: ArcaLanguageResolver.isKorean ? "ko_KR" : "en_US"))))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     }
@@ -206,19 +199,23 @@ struct TaskListView: View {
                 }
 
                 if let result = task.resultMarkdown, !result.isEmpty {
-                    Text(result)
+                    Text(result.plainPreview)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                        .lineLimit(8)
+                        .lineLimit(6)
+                    Text(L("눌러서 전체 보기", "Tap to read it all"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(ArcaFace.ember)
                 } else {
-                    Text(L("직접 완료로 표시하셨어요. ARCA 실행 기록은 없어요.",
-                           "Marked complete manually. No ARCA result log was attached."))
+                    Text(L("직접 끝내셨어요.", "You finished this one."))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             .padding(14)
+            .contentShape(Rectangle())
+            .onTapGesture { if task.resultMarkdown?.isEmpty == false { showingResult = true } }
+            .sheet(isPresented: $showingResult) { TaskResultSheet(task: task) }
             .glassEffect(.regular.tint(.black.opacity(0.25)), in: RoundedRectangle(cornerRadius: 18))
             .swipeActions(edge: .trailing) {
                 Button(role: .destructive) {
@@ -236,8 +233,8 @@ struct TaskListView: View {
     private var emptyState: some View {
         ArcaEmptyState(
             title: L("아직 할 일이 없어요", "Nothing to do yet"),
-            message: L("위에 적어두면 ARCA가 기억하고, 혼자 할 수 있는 일은 '맡기기'로 대신 처리해요.",
-                       "Write one above — ARCA keeps it, and anything it can do alone gets a Toss button."))
+            message: L("적어두거나 회의를 녹음하면 할 일이 여기 모여요. ARCA가 대신 할 수 있는 일은 먼저 물어볼게요.",
+                       "Write one above or record a meeting. ARCA asks first about anything it can do for you."))
     }
 
     private func addTask() {
@@ -255,6 +252,10 @@ struct TaskListView: View {
 private struct QuestRow: View {
     let task: TodoTask
     let level: AutonomyLevel
+    @State private var showingResult = false
+
+    /// ARCA judged it can do this itself and the user hasn't answered yet.
+    private var isAsking: Bool { task.state == .open && !task.actionKind.isManual }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -285,6 +286,7 @@ private struct QuestRow: View {
                         .lineLimit(2)
                 }
                 statusLine
+                if isAsking { askRow }
             }
 
             Spacer(minLength: 8)
@@ -292,6 +294,11 @@ private struct QuestRow: View {
             trailing
         }
         .padding(14)
+        .contentShape(Rectangle())
+        .onTapGesture { if task.resultMarkdown?.isEmpty == false { showingResult = true } }
+        .sheet(isPresented: $showingResult) { TaskResultSheet(task: task) }
+        .onAppear { if isAsking { Self.markAsked(task) } }
+        .onChange(of: isAsking) { _, asking in if asking { Self.markAsked(task) } }
         .glassEffect(.regular.tint(urgencyTint), in: RoundedRectangle(cornerRadius: 18))
         .overlay(alignment: .leading) {
             UnevenRoundedRectangle(topLeadingRadius: 18, bottomLeadingRadius: 18)
@@ -328,30 +335,71 @@ private struct QuestRow: View {
             }
         case .done:
             if let result = task.resultMarkdown {
-                Text(result)
+                Text(result.plainPreview)
                     .font(.caption)
                     .foregroundStyle(.secondary.opacity(0.7))
                     .lineLimit(3)
             }
-        case .open, .tossed, .needsUser, .trashed:
+        case .needsUser:
+            if let result = task.resultMarkdown, !result.isEmpty {
+                Text(L("초안이 준비됐어요. 눌러서 확인하세요.", "Your draft is ready — tap to review."))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ArcaFace.ember)
+            }
+        case .open, .tossed, .trashed:
             EmptyView()
         }
     }
 
-    @ViewBuilder private var trailing: some View {
-        if task.isTossable(at: level) && task.state == .open {
+    /// "대신 처리할까요?" — the user's yes is the permission to act.
+    private var askRow: some View {
+        HStack(spacing: 8) {
+            Text(L("대신 처리할까요?", "Want me to handle it?"))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+            Spacer(minLength: 4)
+            Button {
+                UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                BrainClient.track("proposal_rejected")
+                task.actionKind = .manual
+                task.autonomyRationale = L("직접 하기로 했어요.", "You're handling this one.")
+                task.touch()
+                try? task.modelContext?.save()
+                RelaySync.shared.scheduleSync()
+            } label: {
+                Text(L("아니요", "No"))
+                    .font(.caption.weight(.bold))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Color.white.opacity(0.12), in: Capsule())
+            }
+            .buttonStyle(.plain)
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                TaskEngine.shared.toss(task)
+                BrainClient.track("proposal_approved")
+                TaskEngine.shared.toss(task, approved: true)
             } label: {
-                Text(L("맡기기", "Toss"))
+                Text(L("네", "Yes"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.black)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(ArcaTheme.pixel, in: Capsule())
+                    .padding(.horizontal, 14).padding(.vertical, 6)
+                    .background(ArcaFace.ember, in: Capsule())
             }
-        } else if task.actionKind == .manual {
+            .buttonStyle(.plain)
+        }
+        .padding(.top, 4)
+    }
+
+    /// Counts each question once for the funnel, however often the row redraws.
+    private static func markAsked(_ task: TodoTask) {
+        let key = "askedTaskUIDs"
+        var asked = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        guard asked.insert(task.uid.uuidString).inserted else { return }
+        UserDefaults.standard.set(Array(asked.suffix(500)), forKey: key)
+        BrainClient.track("proposal_shown")
+    }
+
+    @ViewBuilder private var trailing: some View {
+        if task.actionKind == .manual && task.state == .open {
             Image(systemName: "person.fill")
                 .foregroundStyle(.secondary)
                 .help(L("이건 직접 하셔야 해요", "This one needs you"))
@@ -392,6 +440,67 @@ private struct QuestRow: View {
         task.touch()
         try? task.modelContext?.save()
         RelaySync.shared.scheduleSync()
+    }
+}
+
+/// The full result of something ARCA did — read it, copy it, send it on.
+private struct TaskResultSheet: View {
+    let task: TodoTask
+    @Environment(\.dismiss) private var dismiss
+    @State private var copied = false
+
+    private var result: String { task.resultMarkdown ?? "" }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                MarkdownText(result)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+            }
+            .navigationTitle(task.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L("닫기", "Close")) { dismiss() }
+                }
+                ToolbarItemGroup(placement: .bottomBar) {
+                    Button {
+                        UIPasteboard.general.string = result
+                        copied = true
+                    } label: {
+                        Label(copied ? L("복사했어요", "Copied") : L("복사", "Copy"),
+                              systemImage: copied ? "checkmark" : "doc.on.doc")
+                    }
+                    Spacer()
+                    ShareLink(item: result) {
+                        Label(L("보내기", "Share"), systemImage: "square.and.arrow.up")
+                    }
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large])
+    }
+}
+
+private extension String {
+    /// Result text for a two-line preview: markdown marks and links stripped.
+    var plainPreview: String {
+        var out = replacingOccurrences(of: #"\[([^\]]+)\]\([^)]+\)"#, with: "$1", options: .regularExpression)
+        out = out.replacingOccurrences(of: #"(\*\*|__|`|^#+\s*)"#, with: "", options: [.regularExpression])
+        out = out.replacingOccurrences(of: #"(?m)^#+\s*"#, with: "", options: .regularExpression)
+        return out.replacingOccurrences(of: #"\n{2,}"#, with: "\n", options: .regularExpression)
+    }
+}
+
+private extension TodoTask {
+    /// Where a to-do came from, in words a tester knows.
+    var sourceLabel: String {
+        if sourceRaw.hasPrefix("meeting:") { return L("회의에서 · ", "From a meeting · ") }
+        if sourceRaw == "user" { return "" }
+        return ""
     }
 }
 

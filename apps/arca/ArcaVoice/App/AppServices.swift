@@ -64,9 +64,15 @@ final class AppServices {
         RelaySync.shared.configure(container: container)
         // No key, no code → a free-tier grant on THE ZONE's key, so the first
         // chat and the first summary just work. No-op once anything is set.
-        Task { await ArcaCloud.enrollIfNeeded() }
-        // Traction: one row per launch → WAU / D1·D7 on /arca/metrics.
-        BrainClient.track("app_open")
+        // Traction: one row per launch → WAU / D1·D7 on /arca/metrics. After
+        // enrolling, so a brand-new install's very first open is counted too.
+        Task {
+            _ = await ArcaCloud.enrollIfNeeded()
+            BrainClient.track("app_open")
+            #if DEBUG
+            MeetingDelegation.seedIfRequested(context: container.mainContext)
+            #endif
+        }
         // Capture can die in a way it cannot recover from (the mic never comes
         // back after an interruption). Close the recording out with what was
         // captured instead of leaving the surface counting time over dead audio.

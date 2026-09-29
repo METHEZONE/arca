@@ -40,7 +40,7 @@ struct SettingsView: View {
     @AppStorage("dayTrackerDigestHour") private var dayTrackerDigestHour = 21
     @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
     @AppStorage(DocumentVault.defaultsKey) private var documentVaultPath = ""
-    @State private var emailRecipient = "me@thezonebio.com"
+    @State private var emailRecipient = ""
     @State private var obsidianVaultPath = ""
     @State private var accounts: [ArcaAccount] = []
     @State private var currentAccount = AccountStore.current()
@@ -791,7 +791,7 @@ struct SettingsView: View {
     #endif
 
     private func loadScopedSettings() {
-        emailRecipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
+        emailRecipient = AccountDefaults.string("summaryEmailRecipient") ?? ""
         obsidianVaultPath = AccountDefaults.string("obsidianVaultPath") ?? ""
     }
 }

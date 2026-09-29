@@ -50,6 +50,13 @@
       "when": 1789933373628,
       "tag": "0006_commitment_loop",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790677901126,
+      "tag": "0007_kpi_events",
+      "breakpoints": true
     }
   ]
 }

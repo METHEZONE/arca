@@ -12,7 +12,26 @@ export interface Metrics {
   byDay: DayRow[];
   perOwnerApproval: Array<{ owner: string; days: Array<{ day: string; approvalRate: number | null; n: number }> }>;
   retention: { d1: number | null; d3: number | null; d7: number | null };
+  /** Beta KPI funnel since `since`: talk → record → transcript → plan → ask → do. */
+  dau: number;
+  funnel: Record<FunnelKey, number>;
+  perOwner: Array<{ owner: string; lastSeen: string } & Record<FunnelKey, number>>;
 }
+
+export const FUNNEL = {
+  chatTurns: "chat_turn",
+  recordings: "recording_started",
+  transcripts: "transcript_ready",
+  actionPlans: "action_plan_ready",
+  asked: "proposal_shown",
+  approved: "proposal_approved",
+  executed: "loop_closed",
+  failed: "execution_failed",
+} as const;
+export type FunnelKey = keyof typeof FUNNEL;
+const emptyFunnel = (): Record<FunnelKey, number> =>
+  Object.fromEntries(Object.keys(FUNNEL).map((k) => [k, 0])) as Record<FunnelKey, number>;
+const funnelKeyOf = new Map<string, FunnelKey>(Object.entries(FUNNEL).map(([k, v]) => [v, k as FunnelKey]));
 
 const DAY_MS = 86_400_000;
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -26,6 +45,10 @@ export function aggregate(rows: EventRow[], now: Date, since: Date): Metrics {
   const perOwnerDay = new Map<string, Map<string, { a: number; r: number }>>();
   let closedLoops = 0;
   let meetings = 0;
+  const funnel = emptyFunnel();
+  const perOwner = new Map<string, { lastSeen: Date; counts: Record<FunnelKey, number> }>();
+  const dayAgo = new Date(now.getTime() - DAY_MS);
+  const activeToday = new Set<string>();
 
   for (const e of rows) {
     const f = firstSeen.get(e.owner);
@@ -38,6 +61,11 @@ export function aggregate(rows: EventRow[], now: Date, since: Date): Metrics {
     if (e.kind === "loop_closed") closedLoops++;
     if (e.kind === "meeting_captured") meetings++;
     if (e.at < since) continue;
+    if (e.at >= dayAgo) activeToday.add(e.owner);
+    const po = perOwner.get(e.owner) ?? perOwner.set(e.owner, { lastSeen: e.at, counts: emptyFunnel() }).get(e.owner)!;
+    if (e.at > po.lastSeen) po.lastSeen = e.at;
+    const fk = funnelKeyOf.get(e.kind);
+    if (fk) { funnel[fk]++; po.counts[fk]++; }
     const k = dayKey(e.at);
     const row = byDay.get(k) ?? { day: k, proposals: 0, approved: 0, rejected: 0, autoExecuted: 0, approvalRate: null };
     if (e.kind === "proposal_shown") row.proposals++;
@@ -85,5 +113,10 @@ export function aggregate(rows: EventRow[], now: Date, since: Date): Metrics {
     users: firstSeen.size, installs, wau, closedLoops, meetings,
     byDay: days, perOwnerApproval,
     retention: { d1: retentionAt(1), d3: retentionAt(3), d7: retentionAt(7) },
+    dau: activeToday.size,
+    funnel,
+    perOwner: [...perOwner.entries()]
+      .map(([owner, v]) => ({ owner, lastSeen: v.lastSeen.toISOString(), ...v.counts }))
+      .sort((a, b) => b.lastSeen.localeCompare(a.lastSeen)),
   };
 }

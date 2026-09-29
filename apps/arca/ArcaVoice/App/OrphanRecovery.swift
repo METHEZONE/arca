@@ -59,7 +59,11 @@ enum OrphanRecovery {
                 continue
             }
             attachAssets(files, to: record)
-            record.state = .processing
+            // Queued, not `.processing`: every retry path skips a session it
+            // believes is mid-pass, so `.processing` here meant a spinner that
+            // never stopped. `qualityPassPending` is what the sweep picks up.
+            record.state = .ready
+            record.qualityPassPending = true
             record.processingError = nil
             record.touch()
             report.revived += 1
@@ -80,7 +84,8 @@ enum OrphanRecovery {
                 directoryName: name,
                 createdAt: created)
             attachAssets(files, to: record)
-            record.state = .processing
+            record.state = .ready
+            record.qualityPassPending = true
             context.insert(record)
             report.adopted += 1
             changed = true

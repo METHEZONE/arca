@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 import { authorizeInvite, composioEntity } from "@/lib/cloud";
+import { meterCloud } from "@/lib/cloud-meter";
 
 const COMPOSIO = "https://backend.composio.dev/api/v3";
 
@@ -15,6 +16,8 @@ async function forward(req: Request, path: string[]): Promise<Response> {
   const key = process.env.COMPOSIO_API_KEY?.trim();
   if (!key) return Response.json({ error: "ARCA Cloud has no connector key configured" }, { status: 500 });
   const entity = composioEntity(auth.email);
+  const limited = await meterCloud(auth.email, "delegate");
+  if (limited) return limited;
 
   const incoming = new URL(req.url);
   const target = new URL(`${COMPOSIO}/${path.join("/")}`);

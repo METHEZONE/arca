@@ -7,7 +7,16 @@ interface DayRow { day: string; proposals: number; approved: number; rejected: n
 interface Metrics {
   since: string; until: string; users: number; installs: number; wau: number; closedLoops: number; meetings: number;
   byDay: DayRow[]; retention: { d1: number | null; d3: number | null; d7: number | null };
+  dau: number; funnel: Record<FunnelKey, number>;
+  perOwner: Array<{ owner: string; lastSeen: string } & Record<FunnelKey, number>>;
 }
+
+type FunnelKey = "chatTurns" | "recordings" | "transcripts" | "actionPlans" | "asked" | "approved" | "executed" | "failed";
+const FUNNEL_LABELS: Array<[FunnelKey, string]> = [
+  ["chatTurns", "대화"], ["recordings", "녹음"], ["transcripts", "전사"], ["actionPlans", "액션플랜"],
+  ["asked", "대신 처리 제안"], ["approved", "승인"], ["executed", "처리 완료"], ["failed", "처리 실패"],
+];
+const cell = { padding: "6px 8px", borderBottom: "1px solid var(--line)", textAlign: "right" as const, fontVariantNumeric: "tabular-nums" };
 
 const pct = (v: number | null) => (v === null ? "—" : `${Math.round(v * 100)}%`);
 
@@ -60,8 +69,8 @@ export default function MetricsPage() {
       {err && <p style={{ color: "var(--accent)" }}>오류 {err}</p>}
       {data && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-            {[["사용자", data.users], ["주간 활성", data.wau], ["닫힌 루프", data.closedLoops], ["회의", data.meetings]].map(([k, v]) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 }}>
+            {[["사용자", data.users], ["오늘 활성", data.dau], ["주간 활성", data.wau], ["닫힌 루프", data.closedLoops], ["회의", data.meetings]].map(([k, v]) => (
               <div key={k as string} style={{ background: "var(--field)", borderRadius: 16, padding: 16 }}>
                 <div style={{ fontSize: 32, fontWeight: 800 }}>{v as number}</div>
                 <div style={{ color: "var(--ter)", fontSize: 13 }}>{k as string}</div>
@@ -71,6 +80,36 @@ export default function MetricsPage() {
           <p style={{ color: "var(--sub)", margin: "12px 0" }}>리텐션 D1 {pct(data.retention.d1)} · D3 {pct(data.retention.d3)} · D7 {pct(data.retention.d7)} · 기준 {data.since.slice(0, 10)}</p>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: "18px 0 8px" }}>위임 승인율 · 일별</h2>
           <Line rows={data.byDay} />
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "18px 0 8px" }}>베타 퍼널</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+            {FUNNEL_LABELS.map(([k, label]) => (
+              <div key={k} style={{ background: "var(--field)", borderRadius: 12, padding: 12 }}>
+                <div style={{ fontSize: 22, fontWeight: 800 }}>{data.funnel?.[k] ?? 0}</div>
+                <div style={{ color: "var(--ter)", fontSize: 12 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "18px 0 8px" }}>테스터별</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th style={{ ...cell, textAlign: "left" }}>테스터</th>
+                  {FUNNEL_LABELS.map(([k, label]) => <th key={k} style={cell}>{label}</th>)}
+                  <th style={cell}>마지막 사용</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.perOwner ?? []).map((o) => (
+                  <tr key={o.owner}>
+                    <td style={{ ...cell, textAlign: "left" }}>{o.owner.replace(/^email:/, "").replace(/@arca\.device$/, "").slice(0, 22)}</td>
+                    {FUNNEL_LABELS.map(([k]) => <td key={k} style={cell}>{o[k]}</td>)}
+                    <td style={cell}>{new Date(o.lastSeen).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

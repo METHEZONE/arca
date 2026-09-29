@@ -38,19 +38,19 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>NSAudioCaptureUsageDescription</key>
-	<string>ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.</string>
+	<string>다른 앱의 회의 소리를 함께 녹음해서, 봇 없이도 상대방 말까지 받아적어요.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>ARCA adds events you approve from captured screens.</string>
+	<string>승인하신 일정만 캘린더에 넣어요.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>ARCA reads your sleep, heart rate, HRV, and activity so it can tell you when you focus best and when to rest. It stays on your devices.</string>
+	<string>수면·심박·HRV·활동을 읽고 언제 집중이 잘 되고 언제 쉬어야 하는지 알려드려요. 기기 밖으로 나가지 않아요.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>ARCA saves the meals you tell it about, and the minutes you spend in a focus measurement, to Apple Health.</string>
+	<string>말씀하신 식사와 집중 측정 시간을 Apple 건강에 기록해요.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ARCA records your meetings and voice notes.</string>
+	<string>회의와 음성 메모를 녹음해요. 녹음은 누를 때만 시작해요.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>ARCA reads the screenshot you just took to draft an action plan.</string>
+	<string>방금 찍은 스크린샷을 읽고 할 일로 정리해요.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>ARCA transcribes your recordings on-device.</string>
+	<string>녹음한 말을 글로 받아적어요.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIBackgroundModes</key>

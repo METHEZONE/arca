@@ -47,8 +47,10 @@ final class TaskEngine {
     }
 
     /// Executes a tossable task in the background, streaming progress into its result.
-    func toss(_ task: TodoTask) {
-        guard task.isTossable() else { return }
+    /// `approved` is the user's explicit "네" to "대신 처리할까요?" — that yes is
+    /// the permission, so the global autonomy level doesn't gate it.
+    func toss(_ task: TodoTask, approved: Bool = false) {
+        guard approved ? !task.actionKind.isManual : task.isTossable() else { return }
         task.state = .running
         task.resultMarkdown = L("▸ 시작합니다…", "▸ Starting…")
         task.touch()
@@ -80,10 +82,20 @@ final class TaskEngine {
                     BrainClient.track("task_tossed")
                     BrainClient.track("loop_closed")
                     #else
-                    // The phone can't drive Codex — relay it to the Mac agent.
-                    task.state = .tossed
-                    task.resultMarkdown = L("🛰 Mac으로 보냈어요 — ARCA가 거기서 실행할 거예요.",
-                                            "🛰 Sent to your Mac — ARCA will run it there.")
+                    if GitHubRelay() != nil {
+                        // The phone can't drive Codex — relay it to the Mac agent.
+                        task.state = .tossed
+                        task.resultMarkdown = L("Mac으로 보냈어요. ARCA가 거기서 실행할 거예요.",
+                                                "Sent to your Mac — ARCA will run it there.")
+                    } else {
+                        // No Mac to hand it to: do the part ARCA can do here —
+                        // the ready-to-send draft — and leave the send to the user.
+                        let draft = try await runWithClaude(task, asDraft: true)
+                        task.resultMarkdown = L("초안을 준비했어요. 확인하고 보내 주세요.\n\n",
+                                                "Draft's ready — check it and send it.\n\n") + draft
+                        task.state = .needsUser
+                        BrainClient.track("task_tossed")
+                    }
                     #endif
                 case .manual:
                     task.state = .needsUser
@@ -92,6 +104,7 @@ final class TaskEngine {
                 task.resultMarkdown = L("실패: \(Self.friendlyMessage(for: error))",
                                         "Failed: \(Self.friendlyMessage(for: error))")
                 task.state = .failed
+                BrainClient.track("execution_failed")
             }
             task.touch()
             try? task.modelContext?.save()
@@ -100,18 +113,36 @@ final class TaskEngine {
             if task.state == .done {
                 AppServices.shared.notch.celebrate(task.title)
             }
+            #else
+            if task.state == .done || task.state == .needsUser {
+                SummaryNotifier.taskHandled(title: task.title, needsReview: task.state == .needsUser)
+            }
             #endif
         }
     }
 
-    private func runWithClaude(_ task: TodoTask) async throws -> String {
+    private func runWithClaude(_ task: TodoTask, asDraft: Bool = false) async throws -> String {
         guard let key = anthropicKey else { throw TaskError.noKey }
         let language = ArcaLanguageResolver.isKorean ? "In Korean." : "In English."
-        let prompt = task.actionKind == .draft
+        let prompt = task.actionKind == .draft || asDraft
             ? "Write the deliverable for the following task (email/message/document draft) so it's ready to use as-is. \(language) Title: \(task.title). Description: \(task.detail)"
             : "Research and summarize the following task, distilling just the key points. \(language) Title: \(task.title). Description: \(task.detail)"
         let messages = [ChatMessage(role: .user, parts: [.text(prompt)])]
-        return try await ClaudeChat(apiKey: key, model: model).reply(to: messages, maxTokens: 1200)
+        guard task.actionKind == .research, !asDraft else {
+            return try await ClaudeChat(apiKey: key, model: model).reply(to: messages, maxTokens: 1200)
+        }
+        // Research means looking things up, not restating the task: the same
+        // server-side web search the chat uses, sources linked in the answer.
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let system = ClaudeChat.systemPrompt
+            + "\nToday is \(formatter.string(from: .now)). Search the web for current facts before answering, "
+            + "and link each source you used. Be concise: key findings first, then sources."
+        return try await ClaudeAgent(apiKey: key, model: model).turn(
+            system: system, history: messages, tools: [], webSearch: true,
+            execute: { _, _ in (summary: "", result: "", ok: false) },
+            onEvent: { _ in })
     }
 
     /// Re-runs autonomy judgment for tasks whose last classification failed

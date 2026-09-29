@@ -29,7 +29,6 @@
 		178024833E6E9B7725E84324 /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		189498ECAA167365EC998D30 /* ArcaVoiceWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 307DCB4AEF89DB33596DBD99 /* ArcaVoiceWidgets.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		19E5C51A1863C1860E4F6A3C /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
-		1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1A9E34AF467D6004D2D63347 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3D17BAB77EB7A2054C849E /* SettingsView.swift */; };
 		1AFE0013D06EB360A29C7129 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9616C74E40C61399BFFF316E /* ContextView.swift */; };
 		1B4EF1A7FA23123484B43B1F /* WatchRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C67787A4026B8F5719B5BB /* WatchRecorder.swift */; };
@@ -37,7 +36,6 @@
 		1BB78D5658CB29EA71E55CA2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE75340E0AD5143C9876E8A /* HomeView.swift */; };
 		1BF4B10888A1054050274B6C /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DDCF20A4A4EA9B0B6B9FD0 /* ShareViewController.swift */; };
 		1E176E2D8C6CFEFCAC5A3911 /* VitalsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64AF49E49651BBE466E45012 /* VitalsEngine.swift */; };
-		1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		1ECB9FEBD66AAE8BC7CA2521 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
 		1FBD7E6F7531639BD4B0C00C /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
 		205A3B96E3E33A4201AA81DF /* WatchSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4BCF223BBD9E7947283A45 /* WatchSettingsView.swift */; };
@@ -224,6 +222,7 @@
 		875E14D09F06A687C82DE18E /* ActionItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */; };
 		876B935C1FABD5AD0EB2E807 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9908E22F15766999C2B7DD2B /* RecordingCoordinator.swift */; };
 		8796EF58C9B6E368F9016DBC /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D3841C6F1FB855B1D3919B /* ScreenshotWatcher.swift */; };
+		8A1A7E6C21D7BE3646CEBFA6 /* MeetingDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */; };
 		8A2BFA9D0C0AA61FAC4B008D /* ArcaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F2EB7A5B10040606E35425 /* ArcaTheme.swift */; };
 		8ABB73D05461DD7754A4FBA3 /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
 		8AD1F41A8864A72E9047CA70 /* SpiritFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7E68E616D117C86DBBEAF2 /* SpiritFace.swift */; };
@@ -343,6 +342,7 @@
 		C3AD6CD06172C8FA93B6DF34 /* BrowserAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75AC922DC1E22782DF5CE7FD /* BrowserAgent.swift */; };
 		C59700E228CB354F3B9C93C1 /* NotionDBAutoSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7EDE2779A0CC4CC9D5DADF3 /* NotionDBAutoSync.swift */; };
 		C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78A32E703ECAAC127268AFC /* FaceRecordView.swift */; };
+		C795953E3208B4C7D07892F9 /* MeetingDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */; };
 		C7DC1D1628D140A6F699FFAC /* SlackHarvestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */; };
 		C7F8362013B099962AC5CCE0 /* MacOnboardingGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */; };
 		C810FEF3E59368728C16B8C5 /* ArcaVoiceWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CA137F6F45E228FF0612F1 /* ArcaVoiceWatchApp.swift */; };
@@ -358,11 +358,11 @@
 		D15B3BBB53917611EFD193F5 /* ArcaSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 251782279561DB97C74E91BD /* ArcaSection.swift */; };
 		D17480663134EF0142D22EA8 /* DayLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53522C2C5C3826D2AFB9F83B /* DayLogView.swift */; };
 		D17554AFD89FA3DEBC8A4457 /* ChatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D040B49523067F15BC91CA7 /* ChatTabView.swift */; };
-		D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */ = {isa = PBXBuildFile; fileRef = 59B31B9C3656C6518CDFCCED /* BundledKeys.plist */; };
 		D250D75DEF42750AB474C7CB /* DayLogEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4362BBD2FC58E2E45D475 /* DayLogEngine.swift */; };
 		D470D8A3A70E7B441C9E5D8B /* VitalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEEF947D0CEDC84F37C7F8D /* VitalsView.swift */; };
 		D4A342E948D858AE87794949 /* ObsidianImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3579E1E01B619CAAF06566 /* ObsidianImporter.swift */; };
 		D4BAE0F2AEFCFB38C767664A /* ArcaLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */; };
+		D6182F5CB02733891032677D /* MeetingDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */; };
 		D6AA177F3790247AF6F1BCEA /* ConnectorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E36C1EC87E6FC1508DFA35 /* ConnectorsView.swift */; };
 		D718F4321CE32D322F74B3E4 /* ChatBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C41EE7D1BF8EBD222BF745 /* ChatBubbleView.swift */; };
 		D8061F03884D9242ACE246C5 /* RealtimeSecretMinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */; };
@@ -472,6 +472,7 @@
 		08C67787A4026B8F5719B5BB /* WatchRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecorder.swift; sourceTree = "<group>"; };
 		0965856119018122EAA4BBDC /* ArcaEdition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaEdition.swift; sourceTree = "<group>"; };
 		0AA434C8AF00098C130A7852 /* SessionPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaths.swift; sourceTree = "<group>"; };
+		0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDelegation.swift; sourceTree = "<group>"; };
 		10D6291756FA4FC9D1833A08 /* WatchSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSummaryStore.swift; sourceTree = "<group>"; };
 		11200D2FA3477C00AE65A237 /* SlackHarvestFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackHarvestFilter.swift; sourceTree = "<group>"; };
 		113834A824878A4554AD2328 /* VitalsRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalsRelay.swift; sourceTree = "<group>"; };
@@ -521,7 +522,6 @@
 		5544B905C9F4B84834415444 /* NightlyDigest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightlyDigest.swift; sourceTree = "<group>"; };
 		5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionTodoRail.swift; sourceTree = "<group>"; };
 		57B78FC7A082E747229B19B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		59B31B9C3656C6518CDFCCED /* BundledKeys.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = BundledKeys.plist; sourceTree = "<group>"; };
 		59E1551A8B3072F0E9D0ED7F /* OrphanRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrphanRecovery.swift; sourceTree = "<group>"; };
 		5C85B6787FFA1E9297B85F5A /* Info-Test.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Test.plist"; sourceTree = "<group>"; };
 		5E20975BF767500024D5E80F /* DebugTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTrace.swift; sourceTree = "<group>"; };
@@ -739,6 +739,7 @@
 		262A3DDEF3DD04790324B34A /* Tasks */ = {
 			isa = PBXGroup;
 			children = (
+				0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */,
 				A56B192B6C772E42CB6713D0 /* TaskEngine.swift */,
 				3A3CCCFF29D14A575824E7E2 /* TaskListView.swift */,
 				D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */,
@@ -1057,7 +1058,6 @@
 			children = (
 				DE2E70D6F63358C5E15E5E24 /* ArcaVoice-iOS.entitlements */,
 				836495A6A9F0B481863F388F /* ArcaVoice-macOS.entitlements */,
-				59B31B9C3656C6518CDFCCED /* BundledKeys.plist */,
 				141CCF2F66F97F549D01285B /* Info-Beta.plist */,
 				5C85B6787FFA1E9297B85F5A /* Info-Test.plist */,
 				0573ECA9B3866ACA5804292D /* Info.plist */,
@@ -1322,7 +1322,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D5139B23D64B467DA16DDB6 /* Assets.xcassets in Resources */,
-				1E7F5E843C1B4033C4324AA8 /* BundledKeys.plist in Resources */,
 				ACF819F7C62A22544A104409 /* Info-Beta.plist in Resources */,
 				5AAB5C7AA3094B769F88D2C1 /* Info.plist in Resources */,
 			);
@@ -1333,7 +1332,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				959D1987E74A9D396A90C815 /* Assets.xcassets in Resources */,
-				1A34803BD5815B9E8D66D9E6 /* BundledKeys.plist in Resources */,
 				54CD21FB990F9C8385062CF1 /* Info-Test.plist in Resources */,
 				C995BE6CACCAEE8ABBAC9222 /* Info.plist in Resources */,
 			);
@@ -1352,7 +1350,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5CD2B3DF6CF7561DA7509A3A /* Assets.xcassets in Resources */,
-				D1D41F53C230D2FCDEC57D3B /* BundledKeys.plist in Resources */,
 				2EDB367F3BEA7B63C4885D07 /* Info-Beta.plist in Resources */,
 				F5A711151F5B285CB3F7CC40 /* Info-Test.plist in Resources */,
 			);
@@ -1426,6 +1423,7 @@
 				2546F0C2BA65F2C1A5D534FA /* MacOnboardingGate.swift in Sources */,
 				83533E48AC7218E00331343A /* MacPermissionCoach.swift in Sources */,
 				5707E27CAB2A58DBEDA6F9B5 /* MeetingChatSheet.swift in Sources */,
+				8A1A7E6C21D7BE3646CEBFA6 /* MeetingDelegation.swift in Sources */,
 				4EE2B9574DCB7996EE23DA2C /* MeetingDetector.swift in Sources */,
 				BF2A76DC38BDCA8A705C7DFE /* MeetingRosterWatcher.swift in Sources */,
 				DF6017CBB997D00A88012188 /* MemoryRemarkProvider.swift in Sources */,
@@ -1565,6 +1563,7 @@
 				4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */,
 				ACC5533AC8013A7FAB2D6F6D /* MacPermissionCoach.swift in Sources */,
 				73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */,
+				D6182F5CB02733891032677D /* MeetingDelegation.swift in Sources */,
 				9D4E15F80647F2399BB43FC4 /* MeetingDetector.swift in Sources */,
 				842FA6613CC50564B90453E9 /* MeetingRosterWatcher.swift in Sources */,
 				72010F1448C45F2CF75D59F6 /* MemoryRemarkProvider.swift in Sources */,
@@ -1693,6 +1692,7 @@
 				C7F8362013B099962AC5CCE0 /* MacOnboardingGate.swift in Sources */,
 				7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */,
 				8215C5E22B581C5DD5D11057 /* MeetingChatSheet.swift in Sources */,
+				C795953E3208B4C7D07892F9 /* MeetingDelegation.swift in Sources */,
 				832FD3FFDA572363F224694F /* MeetingDetector.swift in Sources */,
 				059A055C3247CBCFDC13E4D8 /* MeetingRosterWatcher.swift in Sources */,
 				B9625A284F7AB2EF530E636E /* MemoryRemarkProvider.swift in Sources */,

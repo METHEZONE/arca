@@ -242,7 +242,7 @@ struct SessionDetailView: View {
                     notes: notes,
                     participants: participants(names: sheetModel.speakerNames,
                                                emails: sheetModel.emailsByName),
-                    fallbackRecipient: AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
+                    fallbackRecipient: AccountDefaults.string("summaryEmailRecipient") ?? ""
                 )
             }
         }
@@ -274,7 +274,19 @@ struct SessionDetailView: View {
     /// the words, send it in one tap, share it anywhere, or talk about it.
     /// These used to sit in the window toolbar, where they read as global
     /// controls and vanished whenever the note wasn't showing.
-    private var actionRow: some View {
+    /// Five chips don't fit an iPhone's width — squeezed, their labels broke
+    /// one letter per line. On the phone they scroll sideways at full size.
+    @ViewBuilder private var actionRow: some View {
+        #if os(iOS)
+        ScrollView(.horizontal, showsIndicators: false) {
+            actionChips.fixedSize()
+        }
+        #else
+        actionChips
+        #endif
+    }
+
+    private var actionChips: some View {
         HStack(spacing: 8) {
             CopyButton(text: { SessionClipboardText.markdown(for: session) },
                        title: L("회의록 복사", "Copy notes"))
@@ -348,9 +360,13 @@ struct SessionDetailView: View {
     /// Gmail connection — the same path the automatic post-meeting send uses.
     private func sendNow() {
         guard let notes = meetingNotes else { return }
-        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
-        guard let sender = ComposioEmailSender.fromArcaConfig(), !recipient.isEmpty else {
-            quickSend = .failed(L("Gmail 커넥터가 없어요", "No Gmail connector"))
+        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? ""
+        guard !recipient.isEmpty else {
+            quickSend = .failed(L("설정에서 받을 메일 주소를 적어 주세요", "Add a recipient address in Settings"))
+            return
+        }
+        guard let sender = ComposioEmailSender.fromArcaConfig() else {
+            quickSend = .failed(L("Gmail을 먼저 연결해 주세요", "Connect Gmail first"))
             return
         }
         quickSend = .sending
