@@ -83,10 +83,14 @@ struct HomeView: View {
                 // ARCA sits inside your focus ring: the companion and the state
                 // of your body are one object, not a widget bolted next to one.
                 ZStack {
-                    FocusRing(score: vitals.ringScore, isLive: vitals.ringIsLive,
-                              lineWidth: 7, trackOpacity: 0.07)
-                        .frame(width: 250, height: 250)
-                        .allowsHitTesting(false)
+                    // An empty grey ring around the face read as a broken
+                    // widget to anyone without a Watch — draw it only with data.
+                    if vitals.ringScore != nil {
+                        FocusRing(score: vitals.ringScore, isLive: vitals.ringIsLive,
+                                  lineWidth: 7, trackOpacity: 0.07)
+                            .frame(width: 250, height: 250)
+                            .allowsHitTesting(false)
+                    }
                     SpiritFace(mood: mood, size: 190)
                         .scaleEffect(tapBounce ? 0.88 : 1.0)
                         .onTapGesture { tapFace() }

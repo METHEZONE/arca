@@ -154,14 +154,7 @@ enum FinalPassRunner {
                     note.decisionsJSON = try? JSONEncoder().encode(notes.decisions)
                     note.actionItemsJSON = try? JSONEncoder().encode(notes.actionItems)
                     record.note = note
-                    // An empty or inaudible recording comes back titled
-                    // "<UNKNOWN>" — keep the dated default instead.
-                    let title = notes.title.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let placeholder = (title.hasPrefix("<") && title.hasSuffix(">"))
-                        || ["unknown", "untitled", "제목 없음"].contains(title.lowercased())
-                    if !title.isEmpty, !placeholder {
-                        record.title = title
-                    }
+                    applyTitle(notes.title, to: record)
                 }
                 record.state = .ready
                 // A channel that threw while another carried the pass leaves the
@@ -263,7 +256,55 @@ enum FinalPassRunner {
     /// An install with an Anthropic key but no OpenAI key used to get a
     /// transcript and nothing else — the message told the user to add a key and
     /// stopped there, even though the notes only ever needed the transcript.
+    /// An empty or inaudible recording comes back titled "<UNKNOWN>" — keep
+    /// the dated default instead.
+    private static func applyTitle(_ raw: String, to record: RecordingSession) {
+        let title = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let placeholder = (title.hasPrefix("<") && title.hasSuffix(">"))
+            || ["unknown", "untitled", "제목 없음"].contains(title.lowercased())
+        if !title.isEmpty, !placeholder { record.title = title }
+    }
+
     private static func summarizeLiveTranscriptOnly(record: RecordingSession) {
+        // The free engine's normal path, not a fallback: the on-device live
+        // pass already is the transcript, so summarizing it is the whole job.
+        // It used to fall through to the "no OpenAI key" wording below — every
+        // phone recording showed an orange key warning, never got a title, and
+        // stayed pending so the sweep re-ran it forever.
+        if EngineFactory.transcriptionEngine == .localFree {
+            record.state = .ready
+            record.qualityPassPending = false
+            record.processingError = nil
+            try? record.modelContext?.save()
+            let alreadySummarized = !(record.note?.summaryMarkdown ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            guard !alreadySummarized, SessionResummarizer.canResummarize(record) else { return }
+            guard let summarizer = EngineFactory.summarizer() else {
+                // Only a failed enroll gets here; the next sweep heals it.
+                record.qualityPassPending = true
+                try? record.modelContext?.save()
+                return
+            }
+            Task { @MainActor in
+                do {
+                    let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+                    applyTitle(notes.title, to: record)
+                    record.touch()
+                    try? record.modelContext?.save()
+                    BrainClient.track("transcript_ready")
+                    CompanionProgress.shared.award(.meetingSummarized)
+                    SummaryNotifier.summaryReady(record: record, notes: notes)
+                    MeetingDelegation.plan(record: record)
+                    await rememberFromMeeting(record: record, notes: notes)
+                } catch {
+                    // Keep it owed: a network blip mustn't leave it unsummarized.
+                    record.qualityPassPending = true
+                    try? record.modelContext?.save()
+                    DebugTrace.log("final pass: live-transcript summary failed — \(error)")
+                }
+            }
+            return
+        }
         record.state = .ready
         // Pending on purpose: adding a key (or switching engines) later heals
         // the session on the next sweep.
