@@ -3,6 +3,8 @@ import SwiftData
 import ArcaVoiceKit
 #if os(macOS)
 import AppKit
+#elseif os(iOS)
+import UIKit
 #endif
 
 /// The things ARCA can actually do from a chat turn, and how each is described
@@ -138,6 +140,10 @@ enum ChatToolbox {
             }
             #if os(macOS)
             NSWorkspace.shared.open(url)
+            #elseif os(iOS)
+            guard await UIApplication.shared.open(url) else {
+                return (L("링크를 열지 못했어요", "Couldn't open the link"), "failed to open \(raw)", false)
+            }
             #endif
             return (L("열었어요: \(url.host ?? raw)", "Opened \(url.host ?? raw)"), "Opened \(raw)", true)
 

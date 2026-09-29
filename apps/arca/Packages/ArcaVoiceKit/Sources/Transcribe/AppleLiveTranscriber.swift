@@ -37,7 +37,21 @@ public final class AppleLiveTranscriber: LiveTranscriber {
                         reportingOptions: [.volatileResults],
                         attributeOptions: [.audioTimeRange]
                     )
-                    try await Self.ensureModel(for: transcriber, locale: locale)
+                    do {
+                        try await Self.ensureModel(for: transcriber, locale: locale)
+                    } catch {
+                        // The on-device model couldn't be readied (not downloaded
+                        // yet, no network on first use, a Simulator). The older
+                        // recognizer needs no asset — a recording must never start
+                        // without a live transcript because of it. `buffers` hasn't
+                        // been read yet, so it can be handed over whole.
+                        for try await segment in LegacyLiveTranscriber(vocabulary: self.vocabulary)
+                            .transcribe(buffers, channel: channel, locale: locale) {
+                            continuation.yield(segment)
+                        }
+                        continuation.finish()
+                        return
+                    }
 
                     let analyzer = SpeechAnalyzer(modules: [transcriber])
                     // Names the user entered before the meeting, so they are
@@ -109,18 +123,19 @@ public final class AppleLiveTranscriber: LiveTranscriber {
 
     /// Shared with the file-based transcriber in this module.
     static func ensureModel(for transcriber: SpeechTranscriber, locale: Locale) async throws {
-        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-            try await request.downloadAndInstall()
-        }
-
         let supported = await SpeechTranscriber.supportedLocales
         guard supported.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) else {
             throw TranscribeError.localeNotSupported(locale.identifier)
         }
-
+        // Reserve first: asking for the download status of a locale the app
+        // hasn't reserved fails with "… is not subscribed to transcription.ko",
+        // which is what a fresh install hit on its first recording.
         let reserved = await AssetInventory.reservedLocales
         if !reserved.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
-            try await AssetInventory.reserve(locale: locale)
+            try? await AssetInventory.reserve(locale: locale)
+        }
+        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+            try await request.downloadAndInstall()
         }
     }
 }
@@ -133,9 +148,9 @@ public enum TranscribeError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .noCompatibleAudioFormat:
-            return "No audio format compatible with the transcription engine"
+            return L("받아적기 엔진이 이 오디오 형식을 읽지 못했어요.", "No audio format compatible with the transcription engine")
         case .localeNotSupported(let identifier):
-            return "On-device transcription on this device doesn't support \(identifier)"
+            return L("이 기기는 \(identifier) 받아적기를 지원하지 않아요.", "On-device transcription on this device doesn't support \(identifier)")
         case .speechNotAuthorized:
             return L("음성 인식 권한이 없어요 — 시스템 설정 › 개인정보 보호 및 보안 › 음성 인식에서 ARCA를 켜주세요.",
                      "Speech recognition isn't allowed — turn ARCA on in System Settings › Privacy & Security › Speech Recognition.")

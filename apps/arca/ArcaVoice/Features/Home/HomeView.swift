@@ -29,6 +29,38 @@ struct HomeView: View {
 
     private var phase: RecordingCoordinator.Phase { services.coordinator.phase }
 
+    @Query(filter: #Predicate<TodoTask> { $0.stateRaw == "open" && $0.actionKindRaw != "manual" },
+           sort: \TodoTask.createdAt, order: .reverse)
+    private var askingTasks: [TodoTask]
+    @State private var showingTasks = false
+
+    /// "대신 처리할 수 있는 일 N개" — the one card that leads to 할 일.
+    private var delegationCard: some View {
+        Button { showingTasks = true } label: {
+            HStack(spacing: 12) {
+                ArcaFace(mood: .idle, size: 34, halo: false)
+                    .frame(width: 38, height: 38)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L("제가 대신 처리할 수 있는 일 \(askingTasks.count)개", "\(askingTasks.count) things I can handle for you"))
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                    Text(askingTasks.first?.title ?? "")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 20))
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showingTasks) { TaskListView() }
+    }
+
     private var mood: SpiritFace.Mood {
         switch phase {
         case .recording: return .listening
@@ -62,21 +94,14 @@ struct HomeView: View {
 
                 statusLine
 
-                vitalsChip
-
                 Spacer(minLength: 10)
 
-                MorningMomentCard { openSection = .condition }
-
-                RecoveredTimeCard()
-
-                // The same sections the Mac sidebar has, by the same names — so
-                // 하루 and 위키 aren't Mac-only features any more.
-                ArcaSectionCards(sections: ArcaSection.phoneSecondary) { section in
-                    openSection = section
+                // The beta home is the core loop only: tap to record, and
+                // whatever ARCA is waiting to hear "네" on. Condition, 하루 and
+                // 위키 stay reachable from their own screens.
+                if !askingTasks.isEmpty {
+                    delegationCard
                 }
-
-                DevicePresenceBar(compact: true)
 
                 if let shotResult {
                     resultCard(shotResult)
@@ -229,40 +254,6 @@ struct HomeView: View {
             // Reached only if the card list grows; these have their own tabs.
             VitalsView()
         }
-    }
-
-    private var vitalsChip: some View {
-        Button {
-            openSection = .condition
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: vitals.ringIsLive ? "target" : "bolt.heart.fill")
-                    .font(.caption)
-                    .foregroundStyle(FocusRing.tint(for: vitals.ringScore))
-                if let score = vitals.ringScore {
-                    Text(vitals.ringIsLive
-                         ? L("몰입 \(score)", "Focus \(score)")
-                         : L("준비도 \(score)", "Readiness \(score)"))
-                        .font(.system(.caption, design: .rounded, weight: .bold))
-                    Text("·")
-                        .foregroundStyle(.white.opacity(0.5))
-                    Text(vitals.ringLabel)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.7))
-                } else {
-                    Text(L("컨디션 측정 시작하기", "Start tracking your condition"))
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.8))
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .background(.white.opacity(0.07), in: Capsule())
-        }
-        .buttonStyle(.arcaPress)
     }
 
     // MARK: - Screenshot flow

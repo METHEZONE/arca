@@ -34,12 +34,25 @@ enum SummaryNotifier {
             let content = UNMutableNotificationContent()
             content.title = L("✅ 회의록이 준비됐어요", "✅ Notes ready")
             content.body = actionCount > 0
-                ? L("\(title) — 요약 + 액션 \(actionCount)개", "\(title) — summary + \(actionCount) action\(actionCount == 1 ? "" : "s")")
+                ? L("\(title) — 할 일 \(actionCount)개. ARCA가 대신 처리할 수 있는 건 할 일 탭에서 물어볼게요.", "\(title) — \(actionCount) action\(actionCount == 1 ? "" : "s"). ARCA will ask in Tasks about the ones it can handle.")
                 : L("\(title) — 요약이 라이브러리에 있어요", "\(title) — summary is in your library")
             content.sound = .default
             content.userInfo = ["sessionUID": uid]
             let request = UNNotificationRequest(
                 identifier: "summary-\(uid)", content: content, trigger: nil)
+            try? await UNUserNotificationCenter.current().add(request)
+        }
+    }
+
+    /// "처리했어요" — a delegated task finished while the user was elsewhere.
+    static func taskHandled(title: String, needsReview: Bool) {
+        Task { @MainActor in
+            guard await ensurePermission() else { return }
+            let content = UNMutableNotificationContent()
+            content.title = needsReview ? L("초안을 준비했어요", "Your draft is ready") : L("처리했어요", "Done")
+            content.body = title
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: "task-\(UUID().uuidString)", content: content, trigger: nil)
             try? await UNUserNotificationCenter.current().add(request)
         }
     }

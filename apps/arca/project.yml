@@ -35,16 +35,16 @@ targets:
       path: ArcaVoice/Support/Info.plist
       properties:
         CFBundleDisplayName: ARCA
-        NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
-        NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
-        NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
+        NSMicrophoneUsageDescription: 회의와 음성 메모를 녹음해요. 녹음은 누를 때만 시작해요.
+        NSSpeechRecognitionUsageDescription: 녹음한 말을 글로 받아적어요.
+        NSAudioCaptureUsageDescription: 다른 앱의 회의 소리를 함께 녹음해서, 봇 없이도 상대방 말까지 받아적어요.
         NSSupportsLiveActivities: true
-        NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
-        NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSPhotoLibraryUsageDescription: 방금 찍은 스크린샷을 읽고 할 일로 정리해요.
+        NSCalendarsWriteOnlyAccessUsageDescription: 승인하신 일정만 캘린더에 넣어요.
         # Declared here, not hand-added to Info.plist — `xcodegen generate`
         # rewrites the plist from these properties and drops anything missing.
-        NSHealthShareUsageDescription: ARCA reads your sleep, heart rate, HRV, and activity so it can tell you when you focus best and when to rest. It stays on your devices.
-        NSHealthUpdateUsageDescription: ARCA saves the meals you tell it about, and the minutes you spend in a focus measurement, to Apple Health.
+        NSHealthShareUsageDescription: 수면·심박·HRV·활동을 읽고 언제 집중이 잘 되고 언제 쉬어야 하는지 알려드려요. 기기 밖으로 나가지 않아요.
+        NSHealthUpdateUsageDescription: 말씀하신 식사와 집중 측정 시간을 Apple 건강에 기록해요.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.voice
             CFBundleURLSchemes: [arca]
@@ -88,10 +88,10 @@ targets:
       path: ArcaVoice/Support/Info-Beta.plist
       properties:
         CFBundleDisplayName: ARCA Beta
-        NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
-        NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
-        NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
-        NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSMicrophoneUsageDescription: 회의와 음성 메모를 녹음해요. 녹음은 누를 때만 시작해요.
+        NSSpeechRecognitionUsageDescription: 녹음한 말을 글로 받아적어요.
+        NSAudioCaptureUsageDescription: 다른 앱의 회의 소리를 함께 녹음해서, 봇 없이도 상대방 말까지 받아적어요.
+        NSCalendarsWriteOnlyAccessUsageDescription: 승인하신 일정만 캘린더에 넣어요.
         CFBundleURLTypes:
           - CFBundleURLName: com.thezone.arca.beta
             CFBundleURLSchemes: [arca-beta]
@@ -126,11 +126,11 @@ targets:
       path: ArcaVoice/Support/Info-Test.plist
       properties:
         CFBundleDisplayName: ARCA Test
-        NSMicrophoneUsageDescription: ARCA records your meetings and voice notes.
-        NSSpeechRecognitionUsageDescription: ARCA transcribes your recordings on-device.
-        NSAudioCaptureUsageDescription: ARCA captures meeting audio from other apps so remote participants are transcribed without a bot.
-        NSPhotoLibraryUsageDescription: ARCA reads the screenshot you just took to draft an action plan.
-        NSCalendarsWriteOnlyAccessUsageDescription: ARCA adds events you approve from captured screens.
+        NSMicrophoneUsageDescription: 회의와 음성 메모를 녹음해요. 녹음은 누를 때만 시작해요.
+        NSSpeechRecognitionUsageDescription: 녹음한 말을 글로 받아적어요.
+        NSAudioCaptureUsageDescription: 다른 앱의 회의 소리를 함께 녹음해서, 봇 없이도 상대방 말까지 받아적어요.
+        NSPhotoLibraryUsageDescription: 방금 찍은 스크린샷을 읽고 할 일로 정리해요.
+        NSCalendarsWriteOnlyAccessUsageDescription: 승인하신 일정만 캘린더에 넣어요.
         NSHealthShareUsageDescription: ARCA는 수면·HRV·안정 심박을 읽어, 그날 남긴 기록과 몸의 상태를 나란히 보여드립니다. 이 데이터는 기기에 남고 서버로 올라가지 않습니다.
         NSHealthUpdateUsageDescription: ARCA가 기록한 마음챙김 세션을 애플 건강에 남깁니다.
         CFBundleURLTypes:

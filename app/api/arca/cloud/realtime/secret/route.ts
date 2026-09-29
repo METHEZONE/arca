@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { authorizeInvite } from "@/lib/cloud";
+import { meterCloud } from "@/lib/cloud-meter";
 
 const OPENAI_CLIENT_SECRETS = "https://api.openai.com/v1/realtime/client_secrets";
 
@@ -18,6 +19,9 @@ export async function POST(req: Request): Promise<Response> {
   if (!key) {
     return Response.json({ error: { message: "ARCA Cloud has no OpenAI key configured" } }, { status: 500 });
   }
+
+  const limited = await meterCloud(auth.email, "realtime");
+  if (limited) return limited;
 
   let body: Record<string, unknown>;
   try {

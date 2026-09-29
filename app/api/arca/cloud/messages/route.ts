@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 import { authorizeInvite, composioEntity, isFreeTier } from "@/lib/cloud";
+import { meterCloud } from "@/lib/cloud-meter";
 
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS_CAP = 8192;
@@ -15,6 +16,9 @@ export async function POST(req: Request): Promise<Response> {
   if (!auth) return Response.json({ type: "error", error: { type: "authentication_error", message: "invalid or expired ARCA invite code" } }, { status: 401 });
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) return Response.json({ type: "error", error: { type: "api_error", message: "ARCA Cloud has no model key configured" } }, { status: 500 });
+
+  const limited = await meterCloud(auth.email, "chat");
+  if (limited) return limited;
 
   let body: Record<string, unknown>;
   try {

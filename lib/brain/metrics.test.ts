@@ -74,3 +74,33 @@ test("empty input yields zeros and nulls, never NaN", () => {
   assert.deepEqual(m.byDay, []);
   assert.equal(m.retention.d1, null);
 });
+
+test("beta funnel counts each step, per owner, and DAU over the last 24h", () => {
+  const m = aggregate(
+    [
+      ev("email:a", "chat_turn", "2026-09-19T01:00:00Z"),
+      ev("email:a", "chat_turn", "2026-09-19T01:05:00Z"),
+      ev("email:a", "recording_started", "2026-09-19T02:00:00Z"),
+      ev("email:a", "transcript_ready", "2026-09-19T03:00:00Z"),
+      ev("email:a", "action_plan_ready", "2026-09-19T03:01:00Z"),
+      ev("email:a", "proposal_shown", "2026-09-19T03:02:00Z"),
+      ev("email:a", "proposal_approved", "2026-09-19T03:03:00Z"),
+      ev("email:a", "loop_closed", "2026-09-19T03:04:00Z"),
+      ev("email:b", "execution_failed", "2026-09-15T03:04:00Z"),
+    ],
+    NOW,
+    SINCE,
+  );
+  assert.equal(m.funnel.chatTurns, 2);
+  assert.equal(m.funnel.recordings, 1);
+  assert.equal(m.funnel.transcripts, 1);
+  assert.equal(m.funnel.actionPlans, 1);
+  assert.equal(m.funnel.asked, 1);
+  assert.equal(m.funnel.approved, 1);
+  assert.equal(m.funnel.executed, 1);
+  assert.equal(m.funnel.failed, 1);
+  assert.equal(m.dau, 1); // only a was active in the last 24h
+  assert.equal(m.perOwner[0].owner, "email:a"); // most recent first
+  assert.equal(m.perOwner[0].chatTurns, 2);
+  assert.equal(m.perOwner[1].failed, 1);
+});

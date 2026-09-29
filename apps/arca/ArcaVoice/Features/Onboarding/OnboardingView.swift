@@ -32,7 +32,7 @@ struct OnboardingView: View {
     @FocusState private var nameFocused: Bool
     @FocusState private var companionFocused: Bool
 
-    private let pageCount = 6
+    private let pageCount = 5
 
     #if DEBUG
     /// `-onboardingPage 2` opens straight to that page. Reviewing this flow
@@ -56,12 +56,9 @@ struct OnboardingView: View {
                 HatchPage(name: $typedCompanion, focused: $companionFocused,
                           action: commitCompanion).tag(2)
                 MicPage(asked: micAsked, action: requestMic).tag(3)
-                // The Health ask sits here, after ARCA has explained itself and
-                // before the closing page. A permission prompt with a reason
-                // attached gets granted; the same prompt fired cold gets denied
-                // once and then lives in Settings forever.
-                FocusBodyPage(action: advance).tag(4)
-                CreditPage(action: finish).tag(5)
+                // The beta is the core loop (talk, record, "대신 처리할까요?"),
+                // so the Health ask waits for the condition screen itself.
+                CreditPage(action: finish).tag(4)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -446,6 +443,7 @@ private struct ReadyCard: View {
             ("infinity", "녹음과 받아적기 — 무제한", true),
             ("infinity", "회의 요약·결정사항·할 일", true),
             ("bubble.left.and.text.bubble.right", "ARCA와 \(TrialCredit.grantLabel())", false),
+            ("hand.raised", "할 수 있는 일은 \"대신 처리할까요?\"라고 먼저 물어봐요", false),
         ]
     }
 

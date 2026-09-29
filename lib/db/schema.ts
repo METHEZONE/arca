@@ -81,6 +81,14 @@ export const usageKindEnum = pgEnum("usage_kind", [
   "task_tossed",
   "loop_closed",
   "auto_executed",
+  // Beta KPI loop (2026-09-29): cloud-metered realtime secrets, and the
+  // talk → record → transcript → plan → execute funnel from the apps.
+  "realtime",
+  "chat_turn",
+  "recording_started",
+  "transcript_ready",
+  "action_plan_ready",
+  "execution_failed",
 ]);
 
 /** Durable replacement for the single-line JSON logs `usage.ts` used to emit. */

@@ -104,6 +104,7 @@ final class RecordingCoordinator {
             startedAt = .now
             recordingStartedAt = startedAt
             phase = .recording
+            BrainClient.track("recording_started")
 
             // Persisted before a single word is transcribed. Everything from here
             // on is recoverable: a kill leaves a row in `.recording` pointing at

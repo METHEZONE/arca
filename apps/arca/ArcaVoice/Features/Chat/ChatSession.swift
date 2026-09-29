@@ -130,14 +130,27 @@ final class ChatSession {
         }
     }
 
-    private func runTurn() {
+    private func runTurn(enrollAttempted: Bool = false) {
         let anthropicKey = ArcaCloud.anthropicKey
         let openAIKey = KeychainStore.get(.openAI)
         guard anthropicKey?.isEmpty == false || openAIKey?.isEmpty == false else {
-            appendAssistant(L("OpenAI 또는 Anthropic 키가 필요해요 — 설정에서 추가해 주세요.",
-                              "An OpenAI or Anthropic key is required — add one in Settings."))
+            // A fresh install whose launch-time enroll didn't land (offline on
+            // first open) has no key yet — enroll now instead of sending a
+            // tester to a Settings screen they have no key for.
+            guard !enrollAttempted else {
+                appendAssistant(L("ARCA 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 보내 주세요.",
+                                  "Couldn't reach ARCA's server. Check your connection and send it again."))
+                return
+            }
+            isThinking = true
+            Task { @MainActor in
+                _ = await ArcaCloud.enrollIfNeeded()
+                isThinking = false
+                runTurn(enrollAttempted: true)
+            }
             return
         }
+        BrainClient.track("chat_turn")
         isThinking = true
         proposedBrowserTask = nil
         let model = UserDefaults.standard.string(forKey: "chatModel") ?? "claude-sonnet-5"

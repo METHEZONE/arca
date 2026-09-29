@@ -138,6 +138,11 @@ struct ReplyApprovalRow: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+            if proposal.stateRaw == "failed" {
+                Text(L("Couldn't send — tap Yes to try again.", ko: "보내지 못했어요. '네'를 누르면 다시 보내요."))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
             if proposal.sourceRaw == "gmail" {
                 // The literal send target — the question above is model text,
                 // this is what actually goes on the envelope.

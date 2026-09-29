@@ -27,7 +27,13 @@ export type UsageKind =
   | "proposal_rejected"
   | "task_tossed"
   | "loop_closed"
-  | "auto_executed";
+  | "auto_executed"
+  | "realtime"
+  | "chat_turn"
+  | "recording_started"
+  | "transcript_ready"
+  | "action_plan_ready"
+  | "execution_failed";
 
 /** Traction kinds emitted by the apps through POST /api/brain/events —
  *  aggregated by lib/brain/metrics.ts for the IR-Day dashboard. */
@@ -40,6 +46,11 @@ export const TRACTION_KINDS: ReadonlySet<UsageKind> = new Set<UsageKind>([
   "task_tossed",
   "loop_closed",
   "auto_executed",
+  "chat_turn",
+  "recording_started",
+  "transcript_ready",
+  "action_plan_ready",
+  "execution_failed",
 ]);
 
 export interface UsageEvent {

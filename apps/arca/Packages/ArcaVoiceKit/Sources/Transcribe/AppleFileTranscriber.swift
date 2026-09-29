@@ -142,12 +142,13 @@ public struct AppleFileTranscriber: FinalTranscriber {
     /// the reservation slots are full — and a failure there says nothing about
     /// whether transcription would have worked, so it must not abort the run.
     static func installAssets(for transcriber: SpeechTranscriber, locale: Locale) async throws {
-        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-            try await request.downloadAndInstall()
-        }
+        // Reserve before asking about the download — see AppleLiveTranscriber.ensureModel.
         let reserved = await AssetInventory.reservedLocales
         if !reserved.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) {
             try? await AssetInventory.reserve(locale: locale)
+        }
+        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+            try await request.downloadAndInstall()
         }
     }
 }

@@ -154,8 +154,13 @@ enum FinalPassRunner {
                     note.decisionsJSON = try? JSONEncoder().encode(notes.decisions)
                     note.actionItemsJSON = try? JSONEncoder().encode(notes.actionItems)
                     record.note = note
-                    if !notes.title.isEmpty {
-                        record.title = notes.title
+                    // An empty or inaudible recording comes back titled
+                    // "<UNKNOWN>" — keep the dated default instead.
+                    let title = notes.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let placeholder = (title.hasPrefix("<") && title.hasSuffix(">"))
+                        || ["unknown", "untitled", "제목 없음"].contains(title.lowercased())
+                    if !title.isEmpty, !placeholder {
+                        record.title = title
                     }
                 }
                 record.state = .ready
@@ -188,10 +193,12 @@ enum FinalPassRunner {
                 // recording looks fine here and stays rough over there.
                 record.touch()
                 try record.modelContext?.save()
+                BrainClient.track("transcript_ready")
 
                 if let notes = output.notes {
                     CompanionProgress.shared.award(.meetingSummarized)
                     SummaryNotifier.summaryReady(record: record, notes: notes)
+                    MeetingDelegation.plan(record: record)
                     sendToWatchIfWatchMemo(record: record, notes: notes)
                     await autoSendEmailIfEnabled(record: record, notes: notes)
                     autoExportToObsidianIfEnabled(record: record)
@@ -279,7 +286,9 @@ enum FinalPassRunner {
         Task { @MainActor in
             do {
                 let notes = try await SessionResummarizer.resummarize(record, using: summarizer)
+                BrainClient.track("transcript_ready")
                 SummaryNotifier.summaryReady(record: record, notes: notes)
+                MeetingDelegation.plan(record: record)
             } catch {
                 DebugTrace.log("final pass: live-transcript summary failed — \(error)")
             }
@@ -523,7 +532,7 @@ enum FinalPassRunner {
         let defaults = UserDefaults.standard
         let enabled = defaults.object(forKey: "autoEmailSummary") as? Bool ?? true
         guard enabled else { return }
-        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? "me@thezonebio.com"
+        let recipient = AccountDefaults.string("summaryEmailRecipient") ?? ""
         guard !recipient.isEmpty, let sender = ComposioEmailSender.fromArcaConfig() else { return }
         do {
             try await sender.sendSummary(to: recipient, sessionTitle: record.title,
