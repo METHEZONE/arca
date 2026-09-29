@@ -62,6 +62,14 @@ import Foundation
         #expect(labels[9] == "민성", "an unknown id inherits the line before")
     }
 
+    /// Seen from the production proxy: "Unknown" where an empty string was asked for.
+    @Test func placeholderNamesBecomeNumberedSpeakers() throws {
+        let labels = try ClaudeSpeakerAttributor.resolve(
+            answer([("A", "Unknown", false), ("B", "", true), ("C", "Speaker 2", false), ("D", "김대표", false)], "ABCD"),
+            lineCount: 4, ownerName: "민성", korean: true)
+        #expect(labels == ["화자 1", "민성", "화자 2", "김대표"])
+    }
+
     @Test func theOwnerNameIsNeverGivenToSomeoneElse() throws {
         let labels = try ClaudeSpeakerAttributor.resolve(
             answer([("A", "민성", false), ("B", "", true)], "AB"),

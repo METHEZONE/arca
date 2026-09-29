@@ -199,6 +199,17 @@ public struct ClaudeSpeakerAttributor: SpeakerAttributor {
         var lineSpeakers: [String]
     }
 
+    /// The name as given, or "" when it's a placeholder rather than a name —
+    /// asked for an empty string, the model still sometimes writes "Unknown".
+    static func realName(_ raw: String?) -> String {
+        let name = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let lowered = name.lowercased()
+        let placeholder = ClaudeSummarizer.unknownPlaceholders.contains(lowered)
+            || ["unknown speaker", "알 수 없음", "모름"].contains(lowered)
+            || lowered.hasPrefix("speaker") || name.hasPrefix("화자")
+        return placeholder ? "" : name
+    }
+
     /// Turns the model's answer into one label per line.
     ///
     /// A list a line or two off (the model miscounting a long transcript) is
@@ -215,7 +226,7 @@ public struct ClaudeSpeakerAttributor: SpeakerAttributor {
         func label(for id: String) -> String? {
             if let existing = labels[id] { return existing }
             guard let speaker = known[id] else { return nil }
-            let name = speaker.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let name = realName(speaker.name)
             let resolved: String
             if speaker.isOwner == true && !ownerTaken {
                 ownerTaken = true
