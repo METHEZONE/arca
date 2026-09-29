@@ -86,8 +86,13 @@ public final class LegacyLiveTranscriber: LiveTranscriber, @unchecked Sendable {
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                     if !text.isEmpty {
                         let (start, end) = LegacySpeech.timeRange(of: result.bestTranscription.segments, offset: baseOffset)
+                        // SFSpeech only scores a final result; partials read 0.
+                        let scores = result.bestTranscription.segments.map { Double($0.confidence) }
+                        let confidence = result.isFinal && !scores.isEmpty
+                            ? scores.reduce(0, +) / Double(scores.count) : nil
                         continuation.yield(LiveSegment(id: self.id, channel: channel, text: text,
-                                                       start: start, end: end, isVolatile: !result.isFinal))
+                                                       start: start, end: end, isVolatile: !result.isFinal,
+                                                       confidence: confidence))
                     }
                 }
                 if result?.isFinal == true || error != nil {

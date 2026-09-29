@@ -19,15 +19,53 @@ enum TranscriptionPrefs {
         UserDefaults.standard.string(forKey: "transcribeLocale") ?? "auto"
     }
 
+    /// The file pass and anything without a live transcript: the language the
+    /// last recording turned out to be in, else the first candidate.
     static var liveLocale: Locale {
         switch storedValue {
-        case "auto", "ko-KR": return Locale(identifier: "ko-KR")
+        case "auto": return detectedLocale ?? liveCandidates.first ?? Locale(identifier: "ko-KR")
         default: return Locale(identifier: storedValue)
         }
     }
 
+    /// "auto": languages to try at once at the start of a recording
+    /// (`AutoLanguageTranscriber`) — the one heard last time first, then the
+    /// device's languages, then whichever of Korean/English is still missing,
+    /// so a Korean speaker on an English iPhone (or the reverse) is covered.
+    /// Two at most: each is a recognizer running for the first 20 seconds.
+    static var liveCandidates: [Locale] {
+        guard storedValue == "auto" else { return [liveLocale] }
+        var codes: [String] = []
+        let heard = detectedLocale?.language.languageCode?.identifier
+        for code in [heard].compactMap({ $0 })
+            + Locale.preferredLanguages.compactMap({ Locale(identifier: $0).language.languageCode?.identifier })
+            + ["ko", "en"] where !codes.contains(code) {
+            codes.append(code)
+        }
+        return codes.prefix(2).map(recognizerLocale(for:))
+    }
+
+    static func rememberDetected(_ locale: Locale) {
+        UserDefaults.standard.set(locale.identifier, forKey: detectedKey)
+    }
+
+    private static let detectedKey = "detectedSpeechLocale"
+
+    private static var detectedLocale: Locale? {
+        UserDefaults.standard.string(forKey: detectedKey).map(Locale.init(identifier:))
+    }
+
+    /// A bare language → the region its recognizer is published under.
+    private static func recognizerLocale(for code: String) -> Locale {
+        let regions = ["ko": "ko-KR", "en": "en-US", "ja": "ja-JP", "zh": "zh-CN", "es": "es-ES",
+                       "fr": "fr-FR", "de": "de-DE", "it": "it-IT", "pt": "pt-BR", "vi": "vi-VN"]
+        return Locale(identifier: regions[code] ?? code)
+    }
+
     static var languageHints: [String] {
-        if storedValue == "auto" { return [appLanguage] }
+        if storedValue == "auto" {
+            return [detectedLocale?.language.languageCode?.identifier ?? appLanguage]
+        }
         if let code = Locale(identifier: storedValue).language.languageCode?.identifier {
             return [code]
         }
