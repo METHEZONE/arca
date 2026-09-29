@@ -222,7 +222,7 @@ struct ChatTabView: View {
                     VStack(spacing: 18) {
                         ArcaEmptyState(
                             title: L("무엇이든 물어보세요", "Ask me anything"),
-                            message: L("회의, 할 일, 오늘 컨디션까지 — ARCA가 기억한 것으로 답해요.",
+                            message: L("회의와 할 일, ARCA가 기억한 것으로 답해요.",
                                        "Meetings, to-dos, how you're doing today — answered from what ARCA remembers."))
                             .frame(maxHeight: 320)
                         VStack(spacing: 8) {

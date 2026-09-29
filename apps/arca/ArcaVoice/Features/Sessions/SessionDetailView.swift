@@ -296,6 +296,7 @@ struct SessionDetailView: View {
                 .actionChip()
                 .disabled(session.segments.isEmpty)
 
+            #if os(macOS)
             Button(action: sendNow) {
                 HStack(spacing: 6) {
                     switch quickSend {
@@ -321,8 +322,13 @@ struct SessionDetailView: View {
             .actionChip()
             .disabled(meetingNotes == nil)
 
-            #if os(macOS)
             ShareChip(text: { SessionClipboardText.markdown(for: session) })
+            #else
+            ShareLink(item: SessionClipboardText.markdown(for: session)) {
+                Label(L("공유", "Share"), systemImage: "square.and.arrow.up")
+            }
+            .actionChip()
+            .disabled(meetingNotes == nil)
             #endif
 
             Spacer(minLength: 0)

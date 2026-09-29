@@ -96,11 +96,6 @@ struct TaskListView: View {
 
     private var list: some View {
         List {
-            BriefingCard()
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-
             if scope == .open {
                 ForEach(proposals) { proposal in
                     ReplyApprovalRow(proposal: proposal)
@@ -257,6 +252,20 @@ private struct QuestRow: View {
     /// ARCA judged it can do this itself and the user hasn't answered yet.
     private var isAsking: Bool { task.state == .open && !task.actionKind.isManual }
 
+    /// One plain line on what "네" will do — not the classifier's reasoning,
+    /// which read like an internal log ("…즉시 처리 필요").
+    private var planLine: String? {
+        guard task.state == .open else { return nil }
+        switch task.actionKind {
+        case .research: return L("찾아보고 출처와 함께 정리해 드릴게요.", "I'll look it up and summarize it with sources.")
+        case .draft, .send: return L("바로 보낼 수 있게 초안을 써 둘게요.", "I'll write a draft you can send as is.")
+        case .broad: return L("할 수 있는 데까지 준비해 둘게요.", "I'll get it as far along as I can.")
+        case .manual:
+            return task.autonomyRationale.isEmpty || task.autonomyRationale.hasPrefix(L("직접", "You"))
+                ? nil : L("직접 하셔야 하는 일이에요.", "This one needs you.")
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Button(action: complete) {
@@ -279,8 +288,8 @@ private struct QuestRow: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                 }
-                if !task.autonomyRationale.isEmpty {
-                    Text(task.autonomyRationale)
+                if let plan = planLine {
+                    Text(plan)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
