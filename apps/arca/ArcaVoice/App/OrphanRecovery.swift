@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import AVFoundation
 import ArcaVoiceKit
 
 /// Puts recordings the app lost track of back into the processing queue.
@@ -8,7 +7,7 @@ import ArcaVoiceKit
 /// Two ways a recording used to become permanently invisible:
 ///
 /// 1. Killed before the row existed at all (the row was only written in
-///    `stop()`), leaving an `.m4a` under the sessions directory that nothing in
+///    `stop()`), leaving audio under the sessions directory that nothing in
 ///    the app referenced. No screen could show it and no sweep looked for it.
 /// 2. Killed while the row said `.recording`. Nothing is recording after a
 ///    relaunch, but no code path ever moved that state on, and only `.processing`
@@ -121,29 +120,28 @@ enum OrphanRecovery {
         let duration: TimeInterval
     }
 
-    /// Channel files big enough to be worth transcribing. Filenames come from
-    /// `ChannelWriter`, which names each file after its channel.
+    /// Channel files big enough to be worth transcribing, one per channel.
+    /// Filenames come from `ChannelWriter`, which names each file after its
+    /// channel: `.caf` while recording, `.m4a` once compacted. When both exist
+    /// the CAF wins — it is only deleted after its m4a is safely recorded, so
+    /// its presence means that never finished.
     private static func audioFiles(in directory: URL) -> [FoundAudio] {
         let contents = (try? FileManager.default.contentsOfDirectory(
             at: directory, includingPropertiesForKeys: [.fileSizeKey],
             options: [.skipsHiddenFiles])) ?? []
-        return contents.compactMap { url in
-            guard url.pathExtension.lowercased() == "m4a" else { return nil }
+        var byChannel: [CaptureChannel: URL] = [:]
+        for url in contents {
+            let ext = url.pathExtension.lowercased()
+            guard ext == "m4a" || ext == AudioFinalizer.recordingExtension else { continue }
             let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-            guard size >= minimumUsefulBytes else { return nil }
+            guard size >= minimumUsefulBytes else { continue }
             let channel = CaptureChannel(rawValue: url.deletingPathExtension().lastPathComponent) ?? .mixed
-            return FoundAudio(channel: channel, url: url, duration: duration(of: url))
+            if let existing = byChannel[channel], AudioFinalizer.isRecordingFile(existing) { continue }
+            byChannel[channel] = url
         }
-        .sorted { $0.channel.rawValue < $1.channel.rawValue }
-    }
-
-    /// Read off the container. A force-killed recording can have a written mdat
-    /// with no moov box, in which case this reports 0 — the pass still runs, and
-    /// the transcriber reports the real reason if the file is unusable.
-    private static func duration(of url: URL) -> TimeInterval {
-        guard let file = try? AVAudioFile(forReading: url),
-              file.processingFormat.sampleRate > 0 else { return 0 }
-        return Double(file.length) / file.processingFormat.sampleRate
+        return byChannel
+            .map { FoundAudio(channel: $0.key, url: $0.value, duration: AudioFinalizer.duration(of: $0.value)) }
+            .sorted { $0.channel.rawValue < $1.channel.rawValue }
     }
 
     private static func attachAssets(_ files: [FoundAudio], to record: RecordingSession) {

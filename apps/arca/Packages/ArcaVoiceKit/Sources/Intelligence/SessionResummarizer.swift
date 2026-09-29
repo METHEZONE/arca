@@ -18,8 +18,7 @@ public enum SessionResummarizer {
     /// quality pass has run, so it is used directly; a segment with no key
     /// falls back to the channel label used everywhere else ("Me"/"Other").
     public static func transcript(from record: RecordingSession) -> AttributedTranscript {
-        let turns = record.segments
-            .sorted { $0.start < $1.start }
+        let turns = orderedSegments(record)
             .map { segment -> SpeakerTurn in
                 let channel = CaptureChannel(rawValue: segment.channelRaw) ?? .microphone
                 let key = segment.speakerKey ?? (channel == .microphone ? "Me" : "Other")
@@ -31,6 +30,14 @@ public enum SessionResummarizer {
                     channel: channel)
             }
         return AttributedTranscript(turns: turns)
+    }
+
+    /// The session's segments in transcript order. SwiftData hands a
+    /// relationship back in no particular order, so ties on `start` are broken
+    /// on `end` and text — anything that maps a transcript's turns back onto
+    /// these rows by index needs both reads to agree.
+    public static func orderedSegments(_ record: RecordingSession) -> [StoredSegment] {
+        record.segments.sorted { ($0.start, $0.end, $0.text) < ($1.start, $1.end, $1.text) }
     }
 
     /// True when there is stored transcript text worth re-summarizing.

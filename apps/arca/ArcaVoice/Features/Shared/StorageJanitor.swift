@@ -14,7 +14,9 @@ final class StorageJanitor {
 
     /// Days to keep audio for; 0 = forever.
     static let retentionKey = "audioRetentionDays"
-    static let defaultRetentionDays = 30
+    /// Forever unless the user picks a limit. Audio the app deletes on its own
+    /// is a recording the user thinks they still have.
+    static let defaultRetentionDays = 0
     static let retentionChoices = [7, 30, 90, 0]
 
     struct Report: Equatable {

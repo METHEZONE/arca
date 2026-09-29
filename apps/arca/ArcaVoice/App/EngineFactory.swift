@@ -5,7 +5,8 @@ import ArcaVoiceKit
 enum TranscriptionEngine: String, CaseIterable, Identifiable, Sendable {
     /// Apple's on-device engine. Free, offline, no diarization.
     case localFree
-    /// OpenAI's diarized model. Paid per minute of audio, per channel.
+    /// Whisper through ARCA Cloud (or the user's own OpenAI key), with speakers
+    /// worked out from the conversation. The raw value predates both.
     case cloudDiarized
 
     var id: String { rawValue }
@@ -13,7 +14,7 @@ enum TranscriptionEngine: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .localFree: return L("기기에서 (무료)", "On this device (free)")
-        case .cloudDiarized: return L("클라우드 화자분리 (유료)", "Cloud with speaker separation (paid)")
+        case .cloudDiarized: return L("클라우드 (더 정확하게)", "Cloud (more accurate)")
         }
     }
 
@@ -23,8 +24,8 @@ enum TranscriptionEngine: String, CaseIterable, Identifiable, Sendable {
             return L("애플 온디바이스 엔진. 비용 0원, 와이파이 없어도 되고 오디오가 기기 밖으로 나가지 않아요. 마이크와 상대 소리를 따로 녹음하니 '나 / 상대'는 그대로 구분돼요. 상대가 여러 명일 때 그들끼리 나누지는 못해요.",
                      "Apple's on-device engine. Costs nothing, needs no network, and the audio never leaves the Mac. Mic and system audio are recorded separately, so you still get \"me / them\" — it just can't split several remote speakers from each other.")
         case .cloudDiarized:
-            return L("오디오를 OpenAI로 보내 화자별로 나눠요. 오디오 분 단위로 과금되고, 마이크·시스템 채널이 각각 청구돼요.",
-                     "Sends the audio to OpenAI and splits it by speaker. Billed per minute of audio, and the mic and system channels are billed separately.")
+            return L("녹음이 끝나면 오디오를 ARCA 클라우드(OpenAI 음성 인식)로 보내 한국어와 영어를 더 정확하게 받아적어요. 누가 말했는지는 대화 맥락으로 나눠요. 인터넷이 없으면 기기에서 만든 전사를 먼저 쓰고, 연결되면 다시 시도해요.",
+                     "When a recording ends, ARCA sends the audio to ARCA Cloud (OpenAI speech recognition) for a more accurate Korean and English transcript, and works out who said what from the conversation. Offline, the on-device transcript is used first and the cloud pass retries once you're connected.")
         }
     }
 }
@@ -33,23 +34,50 @@ enum TranscriptionEngine: String, CaseIterable, Identifiable, Sendable {
 enum EngineFactory {
     static let engineDefaultsKey = "transcriptionEngine"
 
+    /// Whether the cloud pass can run: the user's own OpenAI key, or an ARCA
+    /// Cloud grant (an invite, or the free tier every install enrolls in).
     static var hasFinalPassKey: Bool {
-        KeychainStore.get(.openAI)?.isEmpty == false
+        cloudTranscriber() != nil
     }
 
     static var hasSummarizerKey: Bool {
         ArcaCloud.anthropicKey?.isEmpty == false || KeychainStore.get(.openAI)?.isEmpty == false
     }
 
-    /// Defaults to the free engine. Transcription is by far the largest line on
-    /// the bill — an hour of two-channel meeting is two billable hours — and the
-    /// device can already do it for nothing, so paying is the opt-in.
+    /// Defaults to the cloud pass whenever it can run. The on-device engine
+    /// hears one language per recording and trips over Korean-English
+    /// code-switching; people keep ARCA for the words, so accuracy is the
+    /// default and the free engine is one tap away. Whatever the user picked
+    /// themselves stays picked.
     static var transcriptionEngine: TranscriptionEngine {
         get {
             UserDefaults.standard.string(forKey: engineDefaultsKey)
-                .flatMap(TranscriptionEngine.init(rawValue:)) ?? .localFree
+                .flatMap(TranscriptionEngine.init(rawValue:))
+                ?? (hasFinalPassKey ? .cloudDiarized : .localFree)
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: engineDefaultsKey) }
+    }
+
+    /// Whisper with the user's own key, else through ARCA Cloud on the invite
+    /// code. nil when neither exists.
+    static func cloudTranscriber() -> OpenAIDiarizedTranscriber? {
+        if let key = KeychainStore.get(.openAI), !key.isEmpty {
+            return OpenAIDiarizedTranscriber(apiKey: key)
+        }
+        if let invite = ArcaCloud.inviteToken {
+            return OpenAIDiarizedTranscriber(
+                apiKey: invite,
+                endpoint: ArcaCloud.baseURL.deletingLastPathComponent().appendingPathComponent("transcribe"),
+                auth: .arcaCloud)
+        }
+        return nil
+    }
+
+    /// Works out who said what from the conversation — the only speaker
+    /// separation a single iPhone microphone can get.
+    static func speakerAttributor() -> (any SpeakerAttributor)? {
+        guard let key = ArcaCloud.anthropicKey, !key.isEmpty else { return nil }
+        return ClaudeSpeakerAttributor(apiKey: key)
     }
 
     /// The summarizer for whichever key(s) are actually configured.
@@ -108,8 +136,6 @@ enum EngineFactory {
     ///   `FinalPassRunner`, which makes that call per session.
     static func processingPipeline(engine: TranscriptionEngine? = nil,
                                    includeOnDeviceFallback: Bool = true) -> ProcessingPipeline? {
-        let openAIKey = KeychainStore.get(.openAI).flatMap { $0.isEmpty ? nil : $0 }
-
         let finalTranscriber: any FinalTranscriber
         switch (engine ?? transcriptionEngine, includeOnDeviceFallback) {
         case (.localFree, true):
@@ -120,14 +146,14 @@ enum EngineFactory {
             // live transcript instead of paying to redo it.
             return nil
         case let (.cloudDiarized, includeFallback):
-            guard let openAIKey else { return nil }
-            let cloud = OpenAIDiarizedTranscriber(apiKey: openAIKey)
+            guard let cloud = cloudTranscriber() else { return nil }
             finalTranscriber = includeFallback
                 ? FallbackTranscriber(primary: cloud,
                                       fallback: onDeviceTranscriber(),
                                       log: { DebugTrace.log($0) })
                 : cloud
         }
-        return ProcessingPipeline(finalTranscriber: finalTranscriber, summarizer: summarizer())
+        return ProcessingPipeline(finalTranscriber: finalTranscriber, summarizer: summarizer(),
+                                  speakerAttributor: speakerAttributor())
     }
 }

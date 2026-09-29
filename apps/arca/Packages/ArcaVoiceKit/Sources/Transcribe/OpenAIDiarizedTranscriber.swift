@@ -18,81 +18,171 @@ import ArcaVoiceCore
 /// "S1"). Mic-vs-system channel separation, not the model, is what still
 /// distinguishes you from everyone else in the room.
 ///
-/// Recordings longer than `maxChunkSeconds` or bigger than the upload cap
-/// (25MB) are split into equal chunks, transcribed a few at a time, and
-/// stitched back together with chunk-offset timestamps.
+/// Every recording is cut by `SpeechChunker` into ~5-minute chunks at pauses,
+/// transcribed a few at a time — each retried on its own when the network
+/// hiccups — and stitched back together with sample-exact offsets.
 ///
-/// BYOK: the key is passed at init (read from the Keychain by the caller).
+/// Two ways in: the user's own OpenAI key straight to OpenAI, or ARCA Cloud
+/// (`app/api/arca/transcribe`) with the tester's invite code, which is how the
+/// beta gets cloud accuracy without anyone owning a key.
 public struct OpenAIDiarizedTranscriber: FinalTranscriber {
-    /// OpenAI's hard cap on a single upload.
-    public static let maxUploadBytes = 25 * 1024 * 1024
-    /// Chunk length for long recordings. Whisper has no duration cap of its
-    /// own, but shorter requests fail smaller and retry cheaper.
-    public static let maxChunkSeconds: Double = 1320
-    /// How many chunk uploads may be in flight at once.
-    ///
-    /// This used to be unbounded: a three-hour meeting fired every chunk into
-    /// one task group simultaneously, and the resident payloads alone were
-    /// enough for iOS to jetsam the app. Two keeps the upload pipe busy without
-    /// letting peak memory scale with recording length.
-    public static let maxConcurrentUploads = 2
+    public enum Auth: Sendable {
+        /// `Authorization: Bearer <OpenAI key>`.
+        case openAIKey
+        /// `x-api-key: <invite code>` — ARCA Cloud's own check.
+        case arcaCloud
+    }
+
+    /// How many chunk uploads may be in flight at once. Bounded so peak memory
+    /// and socket count don't grow with the length of the meeting.
+    public static let maxConcurrentUploads = 3
     /// Last-resort language when the caller passes no hint. Whisper drifts into
     /// hallucinated English on Korean audio when it has to guess.
     public static let fallbackLanguage = "ko"
     /// Copy granularity when streaming audio into the multipart file.
     private static let copyBufferBytes = 1 << 20
+    /// Waits between attempts at one chunk. Four retries ride out a tunnel, a
+    /// provider blip, or a rate limit; a chunk that still fails fails the pass,
+    /// which keeps the recording queued for the next sweep.
+    static let retryDelays: [Duration] = [.seconds(2), .seconds(6), .seconds(15), .seconds(30)]
 
     private let apiKey: String
     private let model: String
     private let endpoint: URL
+    private let auth: Auth
     private let urlSession: URLSession
 
     public init(
         apiKey: String,
         model: String = "whisper-1",
         endpoint: URL = URL(string: "https://api.openai.com/v1/audio/transcriptions")!,
+        auth: Auth = .openAIKey,
         urlSession: URLSession = .shared
     ) {
         self.apiKey = apiKey
         self.model = model
         self.endpoint = endpoint
+        self.auth = auth
         self.urlSession = urlSession
     }
 
     public func transcribe(fileURL: URL, channel: CaptureChannel, hints: TranscriptHints) async throws -> Transcript {
-        let fileSize = try Self.fileSize(of: fileURL)
-        let duration = (try? await AVURLAsset(url: fileURL).load(.duration).seconds) ?? 0
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("arca-chunks-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
 
-        let transcript: Transcript
-        if duration > Self.maxChunkSeconds || fileSize > Self.maxUploadBytes {
-            transcript = try await transcribeChunked(
-                fileURL: fileURL, channel: channel, hints: hints,
-                duration: duration, fileSize: fileSize)
-        } else {
-            transcript = try await transcribeSingle(fileURL: fileURL, channel: channel, hints: hints)
+        let chunks: [SpeechChunker.Chunk]
+        do {
+            chunks = try SpeechChunker.export(fileURL, into: tempDir)
+        } catch {
+            throw OpenAITranscriptionError.chunking(error.localizedDescription)
         }
+
+        var pieces: [(chunk: SpeechChunker.Chunk, transcript: Transcript)] = []
+        for batchStart in stride(from: 0, to: chunks.count, by: Self.maxConcurrentUploads) {
+            let batch = chunks[batchStart..<min(batchStart + Self.maxConcurrentUploads, chunks.count)]
+            let done = try await withThrowingTaskGroup(of: (SpeechChunker.Chunk, Transcript).self) { group in
+                for chunk in batch {
+                    group.addTask {
+                        var transcript = try await withTransientRetry(delays: Self.retryDelays) {
+                            try await transcribeSingle(fileURL: chunk.url, channel: channel,
+                                                       language: Self.resolvedLanguage(hints),
+                                                       prompt: Self.promptHint(hints),
+                                                       seconds: chunk.duration)
+                        }
+                        transcript.segments = await fillGaps(in: transcript.segments, chunk: chunk,
+                                                             channel: channel)
+                        return (chunk, transcript)
+                    }
+                }
+                var collected: [(SpeechChunker.Chunk, Transcript)] = []
+                for try await piece in group { collected.append(piece) }
+                return collected
+            }
+            pieces.append(contentsOf: done.sorted { $0.0.index < $1.0.index }.map { ($0.0, $0.1) })
+        }
+
+        var segments: [Transcript.Segment] = []
+        for piece in pieces {
+            for segment in piece.transcript.segments {
+                let start = SpeechChunker.recordingTime(segment.start, in: piece.chunk)
+                segments.append(Transcript.Segment(
+                    text: segment.text,
+                    start: start,
+                    end: max(start, SpeechChunker.recordingTime(segment.end, in: piece.chunk)),
+                    confidence: segment.confidence,
+                    speakerLabel: segment.speakerLabel))
+            }
+        }
+        let language = pieces.first { !($0.transcript.languageCode ?? "").isEmpty }?.transcript.languageCode
         // Logged once per channel with the whole duration, not per chunk —
-        // chunking is our workaround for the model's length cap, and billing
-        // follows the audio, so counting chunks would inflate the total.
-        AIUsageLog.appendAudio(provider: "openai", model: model,
-                               source: "transcribe-\(channel.rawValue)", seconds: duration)
-        return transcript
+        // billing follows the audio, so counting chunks would inflate it.
+        AIUsageLog.appendAudio(provider: auth == .arcaCloud ? "arca-cloud" : "openai", model: model,
+                               source: "transcribe-\(channel.rawValue)",
+                               seconds: chunks.reduce(0) { $0 + $1.duration })
+        return Transcript(channel: channel, segments: segments, languageCode: language)
     }
 
-    private func transcribeSingle(fileURL: URL, channel: CaptureChannel, hints: TranscriptHints) async throws -> Transcript {
-        let fileSize = try Self.fileSize(of: fileURL)
-        guard fileSize <= Self.maxUploadBytes else {
-            throw OpenAITranscriptionError.fileTooLarge(bytes: fileSize, limit: Self.maxUploadBytes)
+    /// Re-transcribes, with no language hint, the stretches of `chunk` where
+    /// there was speech and the hinted pass returned nothing (see
+    /// `SpeechGaps`). Best-effort: a gap that fails stays a gap, the chunk's
+    /// own transcript is never put at risk. Segments are in chunk-file time,
+    /// like the ones they join.
+    private func fillGaps(in segments: [Transcript.Segment], chunk: SpeechChunker.Chunk,
+                          channel: CaptureChannel) async -> [Transcript.Segment] {
+        let lead = SpeechChunker.leadIn
+        let covered = segments.map { ($0.start - lead)...max($0.start - lead, $0.end - lead) }
+        let regions = SpeechGaps.regions(windowRMS: chunk.windowRMS,
+                                         windowSeconds: SpeechChunker.windowSeconds, covered: covered)
+        guard !regions.isEmpty else { return segments }
+        var result = segments
+        // ponytail: a dozen per chunk bounds the extra requests on a noisy
+        // recording; raise it if real meetings hit the cap.
+        for (number, region) in regions.prefix(12).enumerated() {
+            let clipStart = max(0, region.lowerBound - 0.3)
+            let clipEnd = min(chunk.duration, region.upperBound + 0.3)
+            let clip = chunk.url.deletingLastPathComponent()
+                .appendingPathComponent("gap-\(chunk.index)-\(number).m4a")
+            defer { try? FileManager.default.removeItem(at: clip) }
+            guard (try? SpeechChunker.extractClip(from: chunk, start: clipStart, end: clipEnd, to: clip)) != nil,
+                  let found = try? await withTransientRetry(delays: [.seconds(2), .seconds(6)], {
+                      try await transcribeSingle(fileURL: clip, channel: channel, language: nil, prompt: nil,
+                                                 seconds: clipEnd - clipStart)
+                  }) else { continue }
+            for segment in found.segments {
+                let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                let start = clipStart + segment.start          // clip-file → chunk-file time
+                let end = clipStart + segment.end
+                let words = text.split(separator: " ").count
+                guard !text.isEmpty,
+                      end - start >= 0.6 || words >= 3,
+                      start - lead <= region.upperBound,
+                      !SpeechGaps.noisePhrases.contains(text.lowercased()),
+                      !result.contains(where: { $0.text.contains(text) }) else { continue }
+                result.append(Transcript.Segment(text: text, start: start, end: end,
+                                                 confidence: segment.confidence,
+                                                 speakerLabel: segment.speakerLabel))
+            }
         }
+        return result.sorted { $0.start < $1.start }
+    }
 
+    private func transcribeSingle(fileURL: URL, channel: CaptureChannel,
+                                  language: String?, prompt: String?,
+                                  seconds: TimeInterval) async throws -> Transcript {
         let boundary = "arca-\(UUID().uuidString)"
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
-        // Server-side transcription of a ~20-minute chunk can take several
-        // minutes — the default 60s (and curl's old 120s cap) cut it off.
-        request.timeoutInterval = 600
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        // A five-minute chunk normally comes back in 10–30 s. Whisper does
+        // occasionally stall on one request (measured: 4 minutes for a clip
+        // that took 3 s on the next try), and a retry is faster than waiting.
+        request.timeoutInterval = 120
+        switch auth {
+        case .openAIKey: request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        case .arcaCloud: request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        }
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         // Streamed to disk, never assembled in memory — see writeMultipartFile.
@@ -100,8 +190,14 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
             boundary: boundary,
             audioURL: fileURL,
             model: model,
-            language: Self.resolvedLanguage(hints),
-            prompt: Self.promptHint(hints)
+            language: language,
+            prompt: prompt,
+            // ARCA Cloud defaults a missing language to Korean; "auto" is how
+            // the gap pass asks it to detect instead.
+            autoLanguageToken: auth == .arcaCloud ? "auto" : nil,
+            // ARCA Cloud's usage record ("time spent with ARCA"); OpenAI
+            // itself rejects fields it doesn't know.
+            audioSeconds: auth == .arcaCloud ? seconds : nil
         )
         defer { try? FileManager.default.removeItem(at: bodyFile) }
 
@@ -122,97 +218,6 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
         return try Self.decodeTranscript(from: data, channel: channel)
     }
 
-    // MARK: - Chunking (long/large recordings)
-
-    /// Splits the recording into equal chunks that satisfy both the duration
-    /// and the upload-size caps, transcribes them a few at a time, and stitches
-    /// the segments back together with each chunk's start-time offset.
-    private func transcribeChunked(
-        fileURL: URL, channel: CaptureChannel, hints: TranscriptHints,
-        duration: Double, fileSize: Int
-    ) async throws -> Transcript {
-        guard duration > 1 else {
-            // No readable duration — nothing to slice on. One honest attempt.
-            return try await transcribeSingle(fileURL: fileURL, channel: channel, hints: hints)
-        }
-        let byDuration = Int((duration / Self.maxChunkSeconds).rounded(.up))
-        // Export re-encodes to AAC, but keep a size-derived floor anyway.
-        let sizeBudget = Self.maxUploadBytes * 4 / 5
-        let bySize = Int((Double(fileSize) / Double(sizeBudget)).rounded(.up))
-        let count = max(byDuration, bySize, 1)
-        let chunkLength = duration / Double(count)
-
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("arca-chunks-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tempDir) }
-
-        var chunks: [(index: Int, start: Double, url: URL)] = []
-        for index in 0..<count {
-            let start = Double(index) * chunkLength
-            let length = min(chunkLength, duration - start)
-            let chunkURL = tempDir.appendingPathComponent("chunk-\(index).m4a")
-            try await Self.exportChunk(of: fileURL, to: chunkURL, start: start, length: length)
-            chunks.append((index, start, chunkURL))
-        }
-
-        // Uploaded in small batches rather than all at once: peak memory and
-        // peak socket count then depend on `maxConcurrentUploads`, not on how
-        // long the meeting was.
-        var pieces: [(Int, Double, Transcript)] = []
-        for start in stride(from: 0, to: chunks.count, by: Self.maxConcurrentUploads) {
-            let batch = chunks[start..<min(start + Self.maxConcurrentUploads, chunks.count)]
-            let done = try await withThrowingTaskGroup(
-                of: (Int, Double, Transcript).self
-            ) { group in
-                for chunk in batch {
-                    group.addTask {
-                        let transcript = try await transcribeSingle(
-                            fileURL: chunk.url, channel: channel, hints: hints)
-                        return (chunk.index, chunk.start, transcript)
-                    }
-                }
-                var collected: [(Int, Double, Transcript)] = []
-                for try await piece in group { collected.append(piece) }
-                return collected
-            }
-            pieces.append(contentsOf: done)
-        }
-        pieces.sort { $0.0 < $1.0 }
-
-        var segments: [Transcript.Segment] = []
-        for (_, offset, transcript) in pieces {
-            for segment in transcript.segments {
-                segments.append(Transcript.Segment(
-                    text: segment.text,
-                    start: segment.start + offset,
-                    end: segment.end + offset,
-                    confidence: segment.confidence,
-                    speakerLabel: segment.speakerLabel))
-            }
-        }
-        let language = pieces.first { !($0.2.languageCode ?? "").isEmpty }?.2.languageCode
-        return Transcript(channel: channel, segments: segments, languageCode: language)
-    }
-
-    /// Cuts `[start, start+length)` out of the source audio as an AAC m4a.
-    private static func exportChunk(of source: URL, to destination: URL,
-                                    start: Double, length: Double) async throws {
-        let asset = AVURLAsset(url: source)
-        guard let export = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
-            throw OpenAITranscriptionError.chunking("Could not create an audio export session.")
-        }
-        export.timeRange = CMTimeRange(
-            start: CMTime(seconds: start, preferredTimescale: 600),
-            duration: CMTime(seconds: length, preferredTimescale: 600))
-        do {
-            try await export.export(to: destination, as: .m4a)
-        } catch {
-            throw OpenAITranscriptionError.chunking(
-                "Exporting the \(Int(start))s–\(Int(start + length))s slice failed: \(error.localizedDescription)")
-        }
-    }
-
     // MARK: - Request building
 
     /// The language actually sent. Whisper's failure mode without a hint is not
@@ -230,21 +235,40 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
         let vocabulary = hints.vocabulary
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        guard !vocabulary.isEmpty else { return nil }
-        return String(vocabulary.joined(separator: ", ").prefix(400))
+        var parts: [String] = []
+        if !vocabulary.isEmpty {
+            parts.append(String(vocabulary.joined(separator: ", ").prefix(300)))
+        }
+        // Whisper reads the prompt as the text that came before, and copies its
+        // style. Korean meetings are full of English product words; a prompt
+        // that already mixes the two keeps them in Latin letters instead of
+        // turning "TestFlight" into "테스트 플라이트".
+        if resolvedLanguage(hints) == "ko" {
+            parts.append(koreanStyleSeed)
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: ". ")
     }
+
+    public static let koreanStyleSeed = "네, 그럼 다음 주 미팅 전에 TestFlight 빌드랑 API 문서 정리해서 Slack에 공유할게요."
 
     /// Form fields sent alongside the audio part.
     ///
     /// `temperature=0` matters as much as the model choice: sampling is what
     /// produces whisper's repetition loops on quiet passages.
-    public static func formFields(model: String, language: String, prompt: String?) -> [(String, String)] {
+    public static func formFields(model: String, language: String?, prompt: String?,
+                                  autoLanguageToken: String? = nil,
+                                  audioSeconds: TimeInterval? = nil) -> [(String, String)] {
         var fields: [(String, String)] = [
             ("model", model),
             ("response_format", "verbose_json"),
             ("temperature", "0"),
-            ("language", language),
         ]
+        if let language = language ?? autoLanguageToken {
+            fields.append(("language", language))
+        }
+        if let audioSeconds {
+            fields.append(("audioSeconds", String(format: "%.1f", audioSeconds)))
+        }
         if let prompt, !prompt.isEmpty {
             fields.append(("prompt", prompt))
         }
@@ -263,12 +287,15 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
         boundary: String,
         audioURL: URL,
         model: String,
-        language: String,
-        prompt: String?
+        language: String?,
+        prompt: String?,
+        autoLanguageToken: String? = nil,
+        audioSeconds: TimeInterval? = nil
     ) throws -> URL {
         let fileName = audioURL.lastPathComponent
         var prologue = Data()
-        for (name, value) in formFields(model: model, language: language, prompt: prompt) {
+        for (name, value) in formFields(model: model, language: language, prompt: prompt,
+                                        autoLanguageToken: autoLanguageToken, audioSeconds: audioSeconds) {
             prologue.appendString("--\(boundary)\r\n")
             prologue.appendString("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
             prologue.appendString("\(value)\r\n")
@@ -440,18 +467,12 @@ public struct OpenAIDiarizedTranscriber: FinalTranscriber {
         }
         return "Unknown error."
     }
-
-    private static func fileSize(of url: URL) throws -> Int {
-        let values = try url.resourceValues(forKeys: [.fileSizeKey])
-        return values.fileSize ?? 0
-    }
 }
 
 /// LocalizedError conformance matters: FinalPassRunner stores
 /// `error.localizedDescription`, which without it collapses to the useless
 /// "(Transcribe.OpenAITranscriptionError error 2.)".
-public enum OpenAITranscriptionError: Error, CustomStringConvertible, LocalizedError {
-    case fileTooLarge(bytes: Int, limit: Int)
+public enum OpenAITranscriptionError: Error, CustomStringConvertible, LocalizedError, TransientError {
     case transport(Error)
     case invalidResponse
     case api(status: Int, message: String)
@@ -460,10 +481,6 @@ public enum OpenAITranscriptionError: Error, CustomStringConvertible, LocalizedE
 
     public var description: String {
         switch self {
-        case .fileTooLarge(let bytes, let limit):
-            let mb = Double(bytes) / (1024 * 1024)
-            let limitMB = limit / (1024 * 1024)
-            return String(format: "An audio chunk is %.1f MB, over the %d MB OpenAI upload limit.", mb, limitMB)
         case .transport(let error):
             return "Network error contacting OpenAI: \(error.localizedDescription)"
         case .invalidResponse:
@@ -478,6 +495,14 @@ public enum OpenAITranscriptionError: Error, CustomStringConvertible, LocalizedE
     }
 
     public var errorDescription: String? { description }
+
+    public var isTransient: Bool {
+        switch self {
+        case .transport(let error): return isTransientTransportError(error)
+        case .api(let status, _): return isTransientHTTPStatus(status)
+        case .invalidResponse, .decoding, .chunking: return false
+        }
+    }
 }
 
 private extension Data {

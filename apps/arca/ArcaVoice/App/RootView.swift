@@ -122,6 +122,9 @@ struct RootView: View {
             case "record":
                 selectedTab = .home
                 if coordinator.phase == .idle { services.startRecording() }
+            case "stop":
+                // arca://stop — Shortcuts, and the verification harness.
+                services.stopRecording()
             case "chat":
                 selectedTab = .chat
             case "context":

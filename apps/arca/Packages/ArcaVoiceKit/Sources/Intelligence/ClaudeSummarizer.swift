@@ -58,28 +58,82 @@ public struct ClaudeSummarizer: Summarizer {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        // A long meeting's report is minutes of generation in one unstreamed
+        // response; the 60-second default cut exactly those off.
+        request.timeoutInterval = 300
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue(anthropicVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
+        // The model occasionally breaks its own tool call — one field swallows
+        // the rest as raw markup (`…</tldr><parameter name="sections">[…`),
+        // leaving a summary that is half XML and has no sections. Ask again;
+        // a third bad answer gets the markup cut off rather than shown.
+        var attempt = 0
+        while true {
+            let data = try await withTransientRetry {
+                try await Self.send(request, body: httpBody, session: urlSession)
+            }
+            AIUsageLog.recordResponse(provider: "anthropic", model: model, source: "summary", data: data)
+            guard let input = try Self.toolUseInput(from: data) else {
+                throw ClaudeSummarizerError.missingToolUse
+            }
+            attempt += 1
+            if Self.containsToolMarkup(input) && attempt < 3 { continue }
+            let clean = Self.strippingToolMarkup(input)
+            do {
+                let wire = try JSONSerialization.data(withJSONObject: clean)
+                return try Self.notes(fromWireData: wire, style: style, userNotes: userNotes)
+            } catch {
+                // Strict tool use made this rare (1 in 24 measured), not impossible.
+                if attempt < 3 { continue }
+                throw error as? ClaudeSummarizerError ?? .decoding(error)
+            }
+        }
+    }
+
+    // MARK: - Broken tool calls
+
+    static let toolMarkupMarkers = ["<parameter", "</parameter", "<invoke", "</tldr>", "</title>", "</sections>"]
+
+    static func containsToolMarkup(_ value: Any) -> Bool {
+        switch value {
+        case let text as String: return toolMarkupMarkers.contains { text.contains($0) }
+        case let array as [Any]: return array.contains(where: containsToolMarkup)
+        case let object as [String: Any]: return object.values.contains(where: containsToolMarkup)
+        default: return false
+        }
+    }
+
+    /// Cuts every string at the first sign of leaked tool-call markup.
+    static func strippingToolMarkup(_ value: Any) -> Any {
+        switch value {
+        case let text as String:
+            let cut = toolMarkupMarkers.compactMap { text.range(of: $0)?.lowerBound }.min()
+            return cut.map { String(text[..<$0]).trimmingCharacters(in: .whitespacesAndNewlines) } ?? text
+        case let array as [Any]: return array.map(strippingToolMarkup)
+        case let object as [String: Any]: return object.mapValues(strippingToolMarkup)
+        default: return value
+        }
+    }
+
+    /// One Messages call. Shared with `ClaudeSpeakerAttributor`.
+    static func send(_ request: URLRequest, body: Data, session: URLSession) async throws -> Data {
         // upload(from:) — a long transcript makes a large body, which can hang
         // over HTTP/2 when sent as httpBody via data(for:).
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await uploadBody(urlSession, for: request, body: httpBody)
+            (data, response) = try await uploadBody(session, for: request, body: body)
         } catch {
             throw ClaudeSummarizerError.transport(error)
         }
-
         guard let http = response as? HTTPURLResponse else {
             throw ClaudeSummarizerError.invalidResponse
         }
         guard (200..<300).contains(http.statusCode) else {
-            throw ClaudeSummarizerError.api(status: http.statusCode, message: Self.apiErrorMessage(from: data))
+            throw ClaudeSummarizerError.api(status: http.statusCode, message: apiErrorMessage(from: data))
         }
-
-        AIUsageLog.recordResponse(provider: "anthropic", model: model, source: "summary", data: data)
-        return try Self.parseNotes(from: data, style: style, userNotes: userNotes)
+        return data
     }
 
     // MARK: - Request building
@@ -123,9 +177,14 @@ public struct ClaudeSummarizer: Summarizer {
             "- actionItems: each must be executable weeks later without re-reading anything — start with a verb, name the concrete deliverable, and carry the needed context (a bare \"look into X\" is banned: say what, why, and how far). Resolve relative deadlines (\"다음 주까지\", \"by Friday\") into ISO dates using today's date from the prompt; omit due when none was stated.",
             "- openQuestions: questions raised but left unresolved — the things the attendees must not forget.",
             "",
+            "Reading the transcript:",
+            "- It comes from automatic speech recognition, so expect misheard words — especially names, numbers, and English terms inside Korean speech. Read through them using context, and when a term appears correctly elsewhere, use that spelling. Never guess a fact that isn't there.",
+            "- Speaker labels were assigned from context, not from voices. \"화자 N\" / \"Speaker N\" is a person whose name was never said; keep that label rather than inventing a name.",
+            "- A single-speaker recording is a personal voice memo or a talk: write it as notes for that person, and treat the tasks they mention for themselves as their action items.",
+            "",
             "Rules:",
-            "- Write every output field in the language the transcript is written in (Korean meetings are the norm — keep them Korean).",
-            "- Use speaker names exactly as they appear in the transcript.",
+            "- Write every output field in the output language the prompt names — that is the language the meeting was held in.",
+            "- Use speaker names exactly as they appear in the transcript. An action item's assigneeName is the label of the speaker who took it on or was asked to do it; leave it empty when that isn't clear.",
             "- Never invent content, decisions, owners, or deadlines that are not in the transcript.",
             "- Call the \(toolName) tool exactly once with your result.",
         ]
@@ -149,6 +208,7 @@ public struct ClaudeSummarizer: Summarizer {
             styleHint = "Focus on extracting clear, assignable action items (plus the structured meeting report)."
         }
         sections.append("Task: \(styleHint)")
+        sections.append("Output language: \(outputLanguage(for: transcript)).")
 
         // The model needs an anchor date to turn "다음 주 금요일까지" into a real
         // due date — summarization runs right after the meeting, so now ≈ then.
@@ -158,6 +218,11 @@ public struct ClaudeSummarizer: Summarizer {
             context.append("Meeting duration: about \(minutes) minutes.")
         }
         sections.append(context.joined(separator: " "))
+        // Weekday arithmetic is where the model slips: "수요일까지" said on a
+        // Wednesday came back as Thursday's date. A lookup table beats asking
+        // it to count.
+        sections.append("Calendar for relative deadlines (use it; don't compute weekdays): "
+                        + upcomingDates(from: today))
 
         if let userNotes, !userNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             sections.append("User's rough notes:\n\(userNotes)")
@@ -173,6 +238,35 @@ public struct ClaudeSummarizer: Summarizer {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd (EEEE)"
         return formatter.string(from: date)
+    }
+
+    /// Decided in code, not left to the model: with Korean all over the
+    /// instructions, an English meeting came back summarized in Korean.
+    /// Counted in words, and a word with any Hangul in it is Korean —
+    /// "review할게요" is Korean grammar wrapped around an English word, and
+    /// Korean speech is full of those.
+    static func outputLanguage(for transcript: AttributedTranscript) -> String {
+        var korean = 0, english = 0
+        for word in transcript.turns.map(\.text).joined(separator: " ").split(whereSeparator: \.isWhitespace) {
+            if word.unicodeScalars.contains(where: { (0xAC00...0xD7A3).contains($0.value) }) {
+                korean += 1
+            } else if word.unicodeScalars.contains(where: { $0.isASCII && $0.properties.isAlphabetic }) {
+                english += 1
+            }
+        }
+        return korean * 2 >= english ? "Korean" : "English"
+    }
+
+    /// The next three weeks as "yyyy-MM-dd Weekday", today first.
+    static func upcomingDates(from date: Date, days: Int = 21) -> String {
+        let calendar = Calendar(identifier: .gregorian)
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd EEE"
+        return (0..<days).compactMap { calendar.date(byAdding: .day, value: $0, to: date) }
+            .map { formatter.string(from: $0) }
+            .joined(separator: ", ")
     }
 
     public static func formatTranscript(_ transcript: AttributedTranscript) -> String {
@@ -234,6 +328,7 @@ public struct ClaudeSummarizer: Summarizer {
                         ],
                     ],
                     "required": ["heading", "bullets"],
+                    "additionalProperties": false,
                 ],
             ],
             "decisions": [
@@ -252,6 +347,7 @@ public struct ClaudeSummarizer: Summarizer {
                         "due": ["type": "string", "description": "Due date as an ISO 8601 date (YYYY-MM-DD). Resolve relative mentions using today's date from the prompt; omit if no deadline was stated."],
                     ],
                     "required": ["text", "assigneeName", "due"],
+                    "additionalProperties": false,
                 ],
             ],
             "openQuestions": [
@@ -271,13 +367,18 @@ public struct ClaudeSummarizer: Summarizer {
             required.append("enhancedNotesMarkdown")
         }
 
+        // `strict` makes the API hold the call to this schema. Without it the
+        // model broke the call on most runs of one test meeting — arrays sent
+        // as strings, `<parameter name=…>` markup inside field values.
         return [
             "name": toolName,
             "description": "Record the structured meeting notes.",
+            "strict": true,
             "input_schema": [
                 "type": "object",
                 "properties": properties,
                 "required": required,
+                "additionalProperties": false,
             ],
         ]
     }
@@ -533,7 +634,7 @@ public struct ClaudeSummarizer: Summarizer {
     }
 }
 
-public enum ClaudeSummarizerError: Error, CustomStringConvertible, LocalizedError {
+public enum ClaudeSummarizerError: Error, CustomStringConvertible, LocalizedError, TransientError {
     case encoding(Error)
     case transport(Error)
     case invalidResponse
@@ -559,4 +660,12 @@ public enum ClaudeSummarizerError: Error, CustomStringConvertible, LocalizedErro
     }
 
     public var errorDescription: String? { description }
+
+    public var isTransient: Bool {
+        switch self {
+        case .transport(let error): return isTransientTransportError(error)
+        case .api(let status, _): return isTransientHTTPStatus(status)
+        case .encoding, .invalidResponse, .missingToolUse, .decoding: return false
+        }
+    }
 }

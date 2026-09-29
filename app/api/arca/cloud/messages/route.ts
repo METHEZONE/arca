@@ -6,7 +6,9 @@ import { authorizeInvite, composioEntity, isFreeTier } from "@/lib/cloud";
 import { meterCloud } from "@/lib/cloud-meter";
 
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
-const MAX_TOKENS_CAP = 8192;
+// A long meeting's structured report runs past 8K output tokens, and a cut-off
+// tool call is a summary that fails outright. The meter bounds the spend.
+const MAX_TOKENS_CAP = 16384;
 
 // Anthropic Messages passthrough (streaming or not) for invited testers.
 // The body is forwarded as-is except for a max_tokens cap and a model

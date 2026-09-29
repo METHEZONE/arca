@@ -157,9 +157,17 @@ import ArcaVoiceKit
     }
 
     @Test func promptHintCarriesVocabularyOrNothing() {
-        #expect(OpenAIDiarizedTranscriber.promptHint(TranscriptHints()) == nil)
+        #expect(OpenAIDiarizedTranscriber.promptHint(TranscriptHints(languageCodes: ["en"])) == nil)
         #expect(OpenAIDiarizedTranscriber.promptHint(
-            TranscriptHints(vocabulary: ["민성", " ", "ARCA"])) == "민성, ARCA")
+            TranscriptHints(vocabulary: ["민성", " ", "ARCA"], languageCodes: ["en"])) == "민성, ARCA")
+    }
+
+    /// Korean audio gets a mixed-script prompt so English terms stay in Latin letters.
+    @Test func koreanPromptSeedsMixedScript() {
+        let seed = OpenAIDiarizedTranscriber.koreanStyleSeed
+        #expect(OpenAIDiarizedTranscriber.promptHint(TranscriptHints(languageCodes: ["ko"])) == seed)
+        #expect(OpenAIDiarizedTranscriber.promptHint(
+            TranscriptHints(vocabulary: ["민성"], languageCodes: ["ko"])) == "민성. \(seed)")
     }
 }
 
@@ -487,6 +495,20 @@ import ArcaVoiceKit
         #expect(prompt.contains("about 63 minutes"))
     }
 
+    /// "수요일까지" said on a Wednesday must resolve against a real calendar.
+    @Test func userPromptCarriesACalendarForRelativeDeadlines() {
+        let wednesday = Calendar(identifier: .gregorian)
+            .date(from: DateComponents(year: 2026, month: 9, day: 30, hour: 12))!
+        let dates = ClaudeSummarizer.upcomingDates(from: wednesday)
+        #expect(dates.hasPrefix("2026-09-30 Wed, 2026-10-01 Thu, 2026-10-02 Fri"))
+        #expect(dates.contains("2026-10-07 Wed"))
+        #expect(dates.split(separator: ",").count == 21)
+        let transcript = AttributedTranscript(
+            turns: [SpeakerTurn(speakerKey: "owner", text: "시작", start: 0, end: 60, channel: .microphone)])
+        #expect(ClaudeSummarizer.userPrompt(transcript: transcript, userNotes: nil, style: .meetingSummary,
+                                            today: wednesday).contains(dates))
+    }
+
     @Test func toolSchemaRequiresTheStructuredReportFields() {
         let tool = ClaudeSummarizer.toolDefinition(style: .meetingSummary)
         let schema = tool["input_schema"] as? [String: Any]
@@ -495,5 +517,31 @@ import ArcaVoiceKit
             #expect(required.contains(field))
         }
         #expect(JSONSerialization.isValidJSONObject(tool))
+    }
+}
+
+@Suite struct SummaryHardeningTests {
+    private func transcript(_ text: String) -> AttributedTranscript {
+        AttributedTranscript(turns: [SpeakerTurn(speakerKey: "Me", text: text, start: 0, end: 5, channel: .microphone)])
+    }
+
+    @Test func outputLanguageFollowsTheMeeting() {
+        #expect(ClaudeSummarizer.outputLanguage(for: transcript("Min, can you send the pricing deck by Thursday?")) == "English")
+        #expect(ClaudeSummarizer.outputLanguage(for: transcript("네, 금요일까지 TestFlight 빌드랑 IR 덱 Slack에 올릴게요.")) == "Korean")
+        #expect(ClaudeSummarizer.outputLanguage(for: transcript("그럼 API documentation이랑 onboarding flow 먼저 review할게요")) == "Korean")
+    }
+
+    /// The exact shape a broken tool call came back in during testing.
+    @Test func leakedToolMarkupIsDetectedAndCut() throws {
+        let broken: [String: Any] = [
+            "title": "투자자 자료 준비",
+            "tldr": "짧게 점검했다.</tldr>\n<parameter name=\"sections\">[{\"heading\":\"x\"}]",
+            "sections": [],
+        ]
+        #expect(ClaudeSummarizer.containsToolMarkup(broken))
+        let clean = ClaudeSummarizer.strippingToolMarkup(broken) as! [String: Any]
+        #expect(clean["tldr"] as? String == "짧게 점검했다.")
+        #expect(!ClaudeSummarizer.containsToolMarkup(clean))
+        #expect(!ClaudeSummarizer.containsToolMarkup(["title": "a < b", "tldr": "fine"]))
     }
 }

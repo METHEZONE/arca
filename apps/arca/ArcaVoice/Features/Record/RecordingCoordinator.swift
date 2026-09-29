@@ -110,8 +110,9 @@ final class RecordingCoordinator {
             // on is recoverable: a kill leaves a row in `.recording` pointing at
             // this directory, which the launch-time scan turns into a real
             // processable session. Previously the row was only created in stop(),
-            // so a kill mid-recording left an .m4a on disk that nothing in the
-            // app referenced and no screen could ever show.
+            // so a kill mid-recording left audio on disk that nothing in the
+            // app referenced and no screen could ever show. The audio itself is
+            // a CAF (see `ChannelWriter`), readable however the process ends.
             let record = RecordingSession(
                 title: Self.defaultTitle(startedAt: startedAt ?? .now),
                 source: channels.contains(.systemAudio) ? .macMeeting : .voiceMemo,
@@ -124,7 +125,7 @@ final class RecordingCoordinator {
             for channel in channels.sorted(by: { $0.rawValue < $1.rawValue }) {
                 record.audioAssets.append(AudioAsset(
                     channel: channel,
-                    relativePath: "\(dirName)/\(channel.rawValue).m4a",
+                    relativePath: "\(dirName)/\(channel.rawValue).\(AudioFinalizer.recordingExtension)",
                     duration: 0))
             }
             record.note = SessionNote(roughMarkdown: "")
@@ -365,6 +366,10 @@ final class RecordingCoordinator {
 
         do {
             let artifacts = try await withTimeout(seconds: 20) { try await session.stop() }
+            // The watchdog may have force-reset while stop was in flight; that
+            // path already queued the row. Carrying on would build a second row
+            // on the same audio directory.
+            guard phase == .stopping else { return nil }
             healthTask?.cancel()
             healthTask = nil
             routerTask?.cancel()
@@ -423,7 +428,9 @@ final class RecordingCoordinator {
             startedAt = nil
             recordingStartedAt = nil
             FinalPassRunner.run(record: record, files: artifacts.files, userNotes: roughNotes,
-                                ownerName: ownerName, languageHints: languageHints,
+                                // Read now, not at start: the live pass has
+                                // just heard which language this recording is in.
+                                ownerName: ownerName, languageHints: TranscriptionPrefs.languageHints,
                                 rosterSnapshots: rosterSnapshots,
                                 recordingStartedAt: startedAtSnapshot)
             return record
@@ -436,8 +443,13 @@ final class RecordingCoordinator {
 
     /// Last-resort teardown: cancel everything and return to idle. Audio that
     /// was written so far stays on disk, and the row inserted at `start()` is
-    /// moved into `.processing` so the retry sweep finishes the job — leaving it
-    /// in `.recording` would strand it, because nothing is recording any more.
+    /// queued for the retry sweep — leaving it in `.recording` would strand it,
+    /// because nothing is recording any more.
+    ///
+    /// The row stays `.processing` (which every retry skips) until the capture
+    /// has really stopped and closed its file, and only then becomes `.ready` +
+    /// pending. Queuing it earlier let a sweep compact a CAF that was still
+    /// being written and delete it.
     func forceReset() {
         #if os(macOS)
         _ = rosterWatcher.stop()
@@ -447,21 +459,34 @@ final class RecordingCoordinator {
         routerTask?.cancel()
         for task in transcriberTasks { task.cancel() }
         transcriberTasks = []
-        if let session = captureSession {
-            captureSession = nil
-            // Dropping the reference is not enough: the engine keeps running, the
-            // output file stays open, and on iOS the audio-session claim is never
-            // released — which would then block voice chat and playback forever.
-            Task.detached { _ = try? await session.stop() }
-        }
         flushLiveState()
-        if let record = liveRecord {
+        let record = liveRecord
+        if let record {
             if record.duration == 0, let startedAt = recordingStartedAt {
                 record.duration = Date.now.timeIntervalSince(startedAt)
             }
             record.state = .processing
             record.touch()
             try? record.modelContext?.save()
+        }
+        let queue: @MainActor () -> Void = {
+            guard let record else { return }
+            record.state = .ready
+            record.qualityPassPending = true
+            record.touch()
+            try? record.modelContext?.save()
+        }
+        if let session = captureSession {
+            captureSession = nil
+            // Dropping the reference is not enough: the engine keeps running, the
+            // output file stays open, and on iOS the audio-session claim is never
+            // released — which would then block voice chat and playback forever.
+            Task.detached {
+                _ = try? await session.stop()
+                await MainActor.run { queue() }
+            }
+        } else {
+            queue()
         }
         liveRecord = nil
         persistedSegmentCount = 0

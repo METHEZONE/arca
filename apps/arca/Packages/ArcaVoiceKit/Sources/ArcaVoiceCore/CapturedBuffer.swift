@@ -146,6 +146,9 @@ public final class BufferConverter {
         if converter == nil || converter?.inputFormat != buffer.format || converter?.outputFormat != format {
             converter = AVAudioConverter(from: buffer.format, to: format)
             converter?.primeMethod = .none
+            // Fewer output channels: mix them down. Without this the converter
+            // keeps only the first, and a mic on input 2 records silence.
+            converter?.downmix = format.channelCount < buffer.format.channelCount
         }
         guard let converter else { throw ConversionError.converterCreationFailed }
 

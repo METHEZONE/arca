@@ -79,5 +79,6 @@ final class PassRetryScheduler {
             ownerName: ownerName(),
             languageHints: languageHints(),
             resetStuckPasses: resetStuckPasses)
+        FinalPassRunner.compactLeftoverRecordings(context: context)
     }
 }
