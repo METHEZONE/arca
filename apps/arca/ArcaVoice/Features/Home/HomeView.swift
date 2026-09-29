@@ -56,6 +56,7 @@ struct HomeView: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 20))
+            .analyticsPrivate()
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showingTasks) { TaskListView() }

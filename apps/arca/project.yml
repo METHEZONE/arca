@@ -10,6 +10,9 @@ options:
 packages:
   ArcaVoiceKit:
     path: Packages/ArcaVoiceKit
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios.git
+    from: 3.0.0
 
 targets:
   ARCA:
@@ -21,6 +24,7 @@ targets:
     dependencies:
       - package: ArcaVoiceKit
         product: ArcaVoiceKit
+      - package: PostHog
       # iOS-only companions ride inside the app bundle; macOS gets none of them.
       - target: ArcaVoiceWidgets
         embed: true
@@ -84,6 +88,7 @@ targets:
     dependencies:
       - package: ArcaVoiceKit
         product: ArcaVoiceKit
+      - package: PostHog
     info:
       path: ArcaVoice/Support/Info-Beta.plist
       properties:
@@ -122,6 +127,7 @@ targets:
     dependencies:
       - package: ArcaVoiceKit
         product: ArcaVoiceKit
+      - package: PostHog
     info:
       path: ArcaVoice/Support/Info-Test.plist
       properties:

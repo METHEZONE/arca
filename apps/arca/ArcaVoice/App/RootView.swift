@@ -26,23 +26,23 @@ struct RootView: View {
         #if os(iOS)
         TabView(selection: $selectedTab) {
             Tab(value: AppTab.home) {
-                HomeView()
+                HomeView().analyticsScreen("홈")
             } label: {
                 Label(L("홈", "Home"), systemImage: "sparkles")
             }
             Tab(value: AppTab.chat) {
-                ChatTabView()
+                ChatTabView().analyticsScreen("채팅")
             } label: {
                 Label(L("채팅", "Chat"), systemImage: "bubble.left.and.text.bubble.right")
             }
             Tab(value: AppTab.tasks) {
-                TaskListView()
+                TaskListView().analyticsScreen("할 일")
             } label: {
                 Label(L("할 일", "Tasks"), systemImage: "checklist")
             }
             Tab(value: AppTab.brain) {
                 NavigationStack {
-                    BrainView()
+                    BrainView().analyticsScreen("메모리").analyticsPrivate()
                         .navigationTitle(L("메모리", "Memory"))
                         .navigationBarTitleDisplayMode(.inline)
                 }
@@ -50,7 +50,7 @@ struct RootView: View {
                 Label(L("메모리", "Brain"), systemImage: "brain.head.profile")
             }
             Tab(value: AppTab.library) {
-                library
+                library.analyticsScreen("라이브러리")
             } label: {
                 Label(L("라이브러리", "Library"), systemImage: "waveform")
             }

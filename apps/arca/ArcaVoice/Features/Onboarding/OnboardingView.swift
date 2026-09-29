@@ -32,7 +32,7 @@ struct OnboardingView: View {
     @FocusState private var nameFocused: Bool
     @FocusState private var companionFocused: Bool
 
-    private let pageCount = 5
+    private let pageCount = 6
 
     #if DEBUG
     /// `-onboardingPage 2` opens straight to that page. Reviewing this flow
@@ -52,13 +52,17 @@ struct OnboardingView: View {
 
             TabView(selection: $page) {
                 MeetPage(action: advance).tag(0)
-                NamePage(name: $typedName, focused: $nameFocused, action: commitName).tag(1)
+                AccountPage { name in
+                    if let name, typedName.isEmpty { typedName = name }
+                    advance()
+                }.tag(1)
+                NamePage(name: $typedName, focused: $nameFocused, action: commitName).tag(2)
                 HatchPage(name: $typedCompanion, focused: $companionFocused,
-                          action: commitCompanion).tag(2)
-                MicPage(asked: micAsked, action: requestMic).tag(3)
+                          action: commitCompanion).tag(3)
+                MicPage(asked: micAsked, action: requestMic).tag(4)
                 // The beta is the core loop (talk, record, "대신 처리할까요?"),
                 // so the Health ask waits for the condition screen itself.
-                CreditPage(action: finish).tag(4)
+                CreditPage(action: finish).tag(5)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -69,7 +73,9 @@ struct OnboardingView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onChange(of: page) { _, step in BrainClient.track("onboarding_step_\(step)") }
         .onAppear {
+            BrainClient.track("onboarding_step_0")
             typedName = ownerName
             typedCompanion = companionName
             // Start the picker on whatever the account already wears, so
@@ -118,6 +124,7 @@ struct OnboardingView: View {
 
     private func finish() {
         TrialCredit.grantIfNeeded()
+        BrainClient.track("onboarding_completed")
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         onDone()
     }
@@ -158,7 +165,68 @@ private struct MeetPage: View {
     }
 }
 
-// MARK: - Page 2 · what to call you
+// MARK: - Page 2 · an account (optional)
+
+/// Google sign-in, skippable. With it the iPhone and the Mac share one memory
+/// and the tester has a name on the metrics; without it everything still works
+/// on a per-device account.
+private struct AccountPage: View {
+    let onDone: (_ googleName: String?) -> Void
+    @State private var working = false
+    @State private var signedInAs: String?
+    @State private var failed = false
+
+    var body: some View {
+        VStack(spacing: 26) {
+            Spacer()
+            SpiritFace(mood: signedInAs == nil ? .idle : .happy, size: 120)
+            VStack(spacing: 10) {
+                Text(signedInAs == nil ? "계정을 만들까요?" : "연결됐어요")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(signedInAs ?? "Google로 로그인하면 아이폰과 맥이 같은 기억을 써요.\n지금 안 해도 다 쓸 수 있어요.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                if failed {
+                    Text("로그인하지 못했어요. 설정 › ARCA Cloud에서 다시 할 수 있어요.")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+            }
+            Spacer()
+            VStack(spacing: 14) {
+                if signedInAs == nil {
+                    OnboardingCTA(title: working ? "여는 중…" : "Google로 계속하기", prominent: true) {
+                        guard !working else { return }
+                        working = true
+                        failed = false
+                        Task { @MainActor in
+                            let account = await GoogleSignIn.shared.signIn()
+                            working = false
+                            if let account {
+                                signedInAs = account.email
+                                try? await Task.sleep(for: .seconds(1))
+                                onDone(account.name)
+                            } else {
+                                failed = true
+                            }
+                        }
+                    }
+                    Button("나중에") { onDone(nil) }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+            }
+            .padding(.bottom, 54)
+        }
+    }
+}
+
+// MARK: - Page 3 · what to call you
 
 private struct NamePage: View {
     @Binding var name: String
@@ -444,6 +512,7 @@ private struct ReadyCard: View {
             ("infinity", "회의 요약·결정사항·할 일", true),
             ("bubble.left.and.text.bubble.right", "ARCA와 \(TrialCredit.grantLabel())", false),
             ("hand.raised", "할 수 있는 일은 \"대신 처리할까요?\"라고 먼저 물어봐요", false),
+            ("chart.bar", "무엇을 부탁했는지 한 줄 요약과 사용 기록은 ARCA를 고치는 데 써요. 대화·회의 원문은 보내지 않아요", false),
         ]
     }
 

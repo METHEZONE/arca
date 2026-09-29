@@ -229,7 +229,11 @@ public enum BrainClient {
     /// Never blocks and never throws: the kind is queued in AccountDefaults so an
     /// offline day still counts, and a flush is attempted in the background. No
     /// credential, no server memory, no event — same rule as `remember`.
+    /// Mirrors every event to the app's product analytics (set at launch).
+    nonisolated(unsafe) public static var onTrack: (@Sendable (String) -> Void)?
+
     public static func track(_ kind: String) {
+        onTrack?(kind)
         guard isAvailable else { return }
         saveQueue(pendingEventKinds() + [kind])
         Task.detached(priority: .utility) { await flushEvents() }
