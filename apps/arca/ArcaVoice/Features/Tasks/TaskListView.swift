@@ -228,9 +228,7 @@ struct TaskListView: View {
 
     private var emptyState: some View {
         ArcaEmptyState(
-            title: L("아직 할 일이 없어요", "Nothing to do yet"),
-            message: L("적어두거나 회의를 녹음하면 할 일이 여기 모여요. ARCA가 대신 할 수 있는 일은 먼저 물어볼게요.",
-                       "Write one above or record a meeting. ARCA asks first about anything it can do for you."))
+            title: L("회의를 녹음하면 할 일이 여기 모여요", "Record a meeting and your to-dos land here"))
     }
 
     private func addTask() {
