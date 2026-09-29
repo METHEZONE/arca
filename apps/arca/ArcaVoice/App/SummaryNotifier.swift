@@ -15,6 +15,8 @@ enum SummaryNotifier {
         case .authorized, .provisional:
             return true
         case .notDetermined:
+            // Never over the onboarding screens — one ask per screen.
+            guard UserDefaults.standard.bool(forKey: "onboarded") else { return false }
             return (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
         default:
             return false

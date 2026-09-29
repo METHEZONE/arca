@@ -223,15 +223,9 @@ struct HomeView: View {
             VStack(spacing: 4) {
                 Text(readingShot
                      ? L("스크린샷을 읽고 있어요…", "Reading your screenshot…")
-                     : L("눌러보세요 — 제가 들을게요.", "Tap me — I'll listen."))
+                     : L("누르면 들을게요", "Tap and I'll listen"))
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.9))
-                if !readingShot {
-                    Text(L("회의, 아이디어, 무엇이든요. 전사하고 기억해 둘게요.",
-                           "Meetings, ideas, anything. I transcribe and remember."))
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.7))
-                }
             }
         }
     }

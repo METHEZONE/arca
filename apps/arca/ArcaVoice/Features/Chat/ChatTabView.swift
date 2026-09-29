@@ -221,9 +221,7 @@ struct ChatTabView: View {
                 if chat.messages.isEmpty && activeLog.isEmpty {
                     VStack(spacing: 18) {
                         ArcaEmptyState(
-                            title: L("무엇이든 물어보세요", "Ask me anything"),
-                            message: L("회의와 할 일, ARCA가 기억한 것으로 답해요.",
-                                       "Meetings, to-dos, how you're doing today — answered from what ARCA remembers."))
+                            title: L("무엇이든 물어보세요", "Ask me anything"))
                             .frame(maxHeight: 320)
                         VStack(spacing: 8) {
                             ForEach([L("오늘 뭐 했는지 정리해줘", "Sum up what I did today"),
