@@ -9,10 +9,15 @@ public struct LiveSegment: Sendable, Identifiable {
     public var start: TimeInterval
     public var end: TimeInterval
     public var isVolatile: Bool
+    /// The recognizer's own 0–1 confidence, when it reports one. Used to pick
+    /// the spoken language when two are tried at once.
+    public var confidence: Double?
 
     public init(id: UUID = UUID(), channel: CaptureChannel, text: String,
-                start: TimeInterval, end: TimeInterval, isVolatile: Bool) {
+                start: TimeInterval, end: TimeInterval, isVolatile: Bool,
+                confidence: Double? = nil) {
         self.id = id
+        self.confidence = confidence
         self.channel = channel
         self.text = text
         self.start = start

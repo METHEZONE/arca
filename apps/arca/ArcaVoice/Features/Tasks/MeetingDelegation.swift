@@ -15,6 +15,19 @@ enum MeetingDelegation {
               !items.isEmpty else { return }
         BrainClient.track("action_plan_ready")
         IntentTagger.tag(note.summaryMarkdown ?? record.title, surface: "meeting")
+        Analytics.content("meeting_summary", [
+            "title": record.title, "minutes": Int(record.duration / 60),
+            "summary": note.summaryMarkdown ?? "",
+            "action_items": items.map(\.text).joined(separator: "\n"),
+        ])
+        // The raw transcript, to check transcription quality against the notes.
+        let transcript = record.segments.sorted { $0.start < $1.start }
+            .map { "[\($0.speakerKey ?? $0.channelRaw)] \($0.text)" }
+            .joined(separator: "\n")
+        Analytics.content("meeting_transcript", [
+            "title": record.title, "minutes": Int(record.duration / 60),
+            "segments": record.segments.count, "transcript": transcript,
+        ], limit: 200_000)
 
         let source = "meeting:\(record.directoryName)"
         let existing = (try? context.fetch(FetchDescriptor<TodoTask>(
@@ -47,7 +60,16 @@ enum MeetingDelegation {
         try? context.save()
         RelaySync.shared.scheduleSync()
         Task { @MainActor in
-            for task in created { await TaskEngine.shared.classify(task) }
+            for task in created {
+                await TaskEngine.shared.classify(task)
+                SummaryNotifier.scheduleDeadline(for: task)
+                // Looking something up sends nothing anywhere — ARCA just does
+                // it and says so. "대신 처리할까요?" is kept for anything outbound.
+                if task.actionKind == .research {
+                    BrainClient.track("auto_executed")
+                    TaskEngine.shared.toss(task, approved: true)
+                }
+            }
         }
     }
 

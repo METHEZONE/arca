@@ -1,8 +1,9 @@
 import Foundation
 import ArcaVoiceKit
 
-/// Reads the transcription-language preference. "auto" = 한·영 혼용: both the
-/// live on-device pass and the final pass follow ARCA's own language setting.
+/// Reads the transcription-language preference. "auto" = 한·영 혼용: the live
+/// pass runs Korean on-device, the final pass takes its hint from ARCA's own
+/// language setting.
 ///
 /// "auto" used to send no hint at all, on the theory that the cloud model would
 /// detect the language per segment and handle code-switching. Measured, it does
@@ -18,18 +19,53 @@ enum TranscriptionPrefs {
         UserDefaults.standard.string(forKey: "transcribeLocale") ?? "auto"
     }
 
-    /// "auto" follows the language the user chose for ARCA. It used to be
-    /// Korean for everyone, so an English speaker's live transcript came out as
-    /// Korean guesses at English words.
+    /// The file pass and anything without a live transcript: the language the
+    /// last recording turned out to be in, else the first candidate.
     static var liveLocale: Locale {
         switch storedValue {
-        case "auto": return Locale(identifier: appLanguage == "ko" ? "ko-KR" : "en-US")
+        case "auto": return detectedLocale ?? liveCandidates.first ?? Locale(identifier: "ko-KR")
         default: return Locale(identifier: storedValue)
         }
     }
 
+    /// "auto": languages to try at once at the start of a recording
+    /// (`AutoLanguageTranscriber`) — the one heard last time first, then the
+    /// device's languages, then whichever of Korean/English is still missing,
+    /// so a Korean speaker on an English iPhone (or the reverse) is covered.
+    /// Two at most: each is a recognizer running for the first 20 seconds.
+    static var liveCandidates: [Locale] {
+        guard storedValue == "auto" else { return [liveLocale] }
+        var codes: [String] = []
+        let heard = detectedLocale?.language.languageCode?.identifier
+        for code in [heard].compactMap({ $0 })
+            + Locale.preferredLanguages.compactMap({ Locale(identifier: $0).language.languageCode?.identifier })
+            + ["ko", "en"] where !codes.contains(code) {
+            codes.append(code)
+        }
+        return codes.prefix(2).map(recognizerLocale(for:))
+    }
+
+    static func rememberDetected(_ locale: Locale) {
+        UserDefaults.standard.set(locale.identifier, forKey: detectedKey)
+    }
+
+    private static let detectedKey = "detectedSpeechLocale"
+
+    private static var detectedLocale: Locale? {
+        UserDefaults.standard.string(forKey: detectedKey).map(Locale.init(identifier:))
+    }
+
+    /// A bare language → the region its recognizer is published under.
+    private static func recognizerLocale(for code: String) -> Locale {
+        let regions = ["ko": "ko-KR", "en": "en-US", "ja": "ja-JP", "zh": "zh-CN", "es": "es-ES",
+                       "fr": "fr-FR", "de": "de-DE", "it": "it-IT", "pt": "pt-BR", "vi": "vi-VN"]
+        return Locale(identifier: regions[code] ?? code)
+    }
+
     static var languageHints: [String] {
-        if storedValue == "auto" { return [appLanguage] }
+        if storedValue == "auto" {
+            return [detectedLocale?.language.languageCode?.identifier ?? appLanguage]
+        }
         if let code = Locale(identifier: storedValue).language.languageCode?.identifier {
             return [code]
         }

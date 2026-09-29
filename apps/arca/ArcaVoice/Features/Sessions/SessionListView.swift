@@ -101,9 +101,7 @@ struct SessionListView: View {
         .overlay {
             if sessions.isEmpty && recoverable.isEmpty {
                 ArcaEmptyState(
-                    title: L("아직 녹음이 없어요", "No recordings yet"),
-                    message: L("회의든 혼잣말이든 녹음하면 전사와 회의록이 여기에 모여요.",
-                               "Meetings or a note to yourself — recordings land here with a transcript and notes."),
+                    title: L("녹음하면 여기 모여요", "Your recordings land here"),
                     actionTitle: L("첫 녹음 시작", "Start the first recording"),
                     actionSymbol: "mic.fill") {
                     AppServices.shared.startRecording()

@@ -58,7 +58,9 @@ public enum ArcaLanguageResolver {
         switch raw {
         case "ko": return .korean
         case "en": return .english
-        default: return ArcaLanguageChoice(rawValue: raw) ?? .korean
+        // Unset follows the device: a Korean iPhone speaks Korean, an
+        // English one English. Settings can still pin either.
+        default: return ArcaLanguageChoice(rawValue: raw) ?? .system
         }
     }
 

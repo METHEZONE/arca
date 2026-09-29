@@ -6,7 +6,7 @@ import ArcaVoiceKit
 /// was a large part of why the app read as unfinished.
 struct ArcaEmptyState: View {
     let title: String
-    let message: String
+    var message: String = ""
     var actionTitle: String? = nil
     var actionSymbol: String = "arrow.right"
     var action: (() -> Void)? = nil
@@ -20,6 +20,7 @@ struct ArcaEmptyState: View {
                 .font(.system(.title3, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
+            if !message.isEmpty {
             Text(message)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.white.opacity(0.72))
@@ -27,6 +28,7 @@ struct ArcaEmptyState: View {
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 36)
+            }
             if let actionTitle, let action {
                 Button(action: action) {
                     Label(actionTitle, systemImage: actionSymbol)

@@ -38,7 +38,7 @@ struct SettingsView: View {
     @AppStorage("dayTrackerSnapshots") private var dayTrackerSnapshots = true
     @AppStorage("dayTrackerIntervalMin") private var dayTrackerIntervalMin = 5
     @AppStorage("dayTrackerDigestHour") private var dayTrackerDigestHour = 21
-    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "korean"
+    @AppStorage(ArcaLang.defaultsKey) private var appLanguage = "system"
     @AppStorage(DocumentVault.defaultsKey) private var documentVaultPath = ""
     @State private var emailRecipient = ""
     @State private var obsidianVaultPath = ""
@@ -55,231 +55,10 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            accountSection
-
-            Section {
-                NavigationLink {
-                    ConnectorsView()
-                } label: {
-                    Label(L("커넥터", "Connectors"), systemImage: "app.connected.to.app.below.fill")
-                }
-                NavigationLink {
-                    SkinsView()
-                } label: {
-                    Label(L("스킨", "Skins"), systemImage: "paintpalette.fill")
-                }
-                NavigationLink {
-                    BrainView()
-                } label: {
-                    Label(L("메모리 브레인", "Memory Brain"), systemImage: "brain.head.profile")
-                }
-                NavigationLink {
-                    StorageSettingsView()
-                } label: {
-                    Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
-                }
-                #if os(macOS)
-                Toggle(isOn: Binding(
-                    get: { UserDefaults.standard.object(forKey: FloatingCompanionController.enabledKey) as? Bool ?? true },
-                    set: { AppServices.shared.setFloatingCompanion(enabled: $0) })) {
-                    Label(L("떠다니는 ARCA (화면 어디든 드래그)", "Floating ARCA (drag anywhere)"), systemImage: "circle.dotted.and.circle")
-                }
-                Button {
-                    NotificationCenter.default.post(name: .arcaOpenChatWindow, object: nil)
-                } label: {
-                    Label(L("채팅을 별도 창으로 열기 (⇧⌘J)", "Open chat in its own window (⇧⌘J)"), systemImage: "macwindow.on.rectangle")
-                }
-                #endif
-            } footer: {
-                Text(L("Gmail, 캘린더, 드라이브, Slack까지 — ARCA가 컨텍스트를 먼저 가져와서 이미 알고 있어요.",
-                       "Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows."))
-            }
-
-            ArcaCloudSection()
-
-            Section {
-                Picker(L("언어", "Language"), selection: Binding(
-                    get: { language.choice },
-                    set: { language.set($0) }
-                )) {
-                    ForEach(ArcaLanguage.Choice.allCases) { choice in
-                        Text(choice.label).tag(choice)
-                    }
-                }
-            } header: {
-                Text(L("언어", "Language"))
-            } footer: {
-                Text(L("맥과 아이폰이 같은 언어로 보이도록 두 앱이 같은 설정을 씁니다. 기기 설정을 따라가면 아이폰과 맥의 시스템 언어를 각각 따릅니다.",
-                       "Both apps share this setting so the Mac and the iPhone read the same way. Following the device setting means each one follows its own system language."))
-            }
-
-            Section(L("내 정보", "My Info")) {
-                TextField(L("이름 (전사에서 내 발화에 붙는 이름)",
-                            "Your name (label for your speech in transcripts)"),
-                          text: $ownerName)
-                Picker(L("전사 언어", "Transcription language"), selection: $localeID) {
-                    Text(L("한국어/영어 섞어서 (자동)", "Korean/English mixed (auto)")).tag("auto")
-                    Text(L("한국어", "Korean")).tag("ko-KR")
-                    Text(L("영어", "English")).tag("en-US")
-                }
-            }
-
-            Section {
-                SecureField(L("OpenAI API 키 (sk-…)", "OpenAI API Key (sk-…)"), text: $openAIKey)
-                SecureField(L("Anthropic API 키 (sk-ant-…)", "Anthropic API Key (sk-ant-…)"), text: $anthropicKey)
-                Button(saved ? L("저장됐어요 ✓", "Saved ✓") : L("키 저장", "Save keys")) {
-                    #if os(iOS)
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    #endif
-                    saveKeys()
-                }
-            } header: {
-                Text(L("API 키 (BYOK)", "API Keys (BYOK)"))
-            } footer: {
-                Text(L("키는 이 기기의 키체인에만 저장됩니다. 맥에서는 ~/.arca/voice-keys.json에 있는 키를 첫 실행 때 자동으로 불러옵니다. OpenAI 키 = 고품질 전사와 화자 분리, Anthropic 키 = 회의 요약과 노트 완성.",
-                       "Keys are stored only in this device's Keychain. On Mac, keys in ~/.arca/voice-keys.json are loaded automatically on first launch. OpenAI key = high-quality transcription & speaker separation, Anthropic key = meeting summaries & note completion."))
-            }
-
-            transcriptionEngineSection
-
-            #if os(macOS)
-            permissionsSection
-            #endif
-
-            connectorsSection
-
-            #if os(macOS)
-            nightlyDigestSection
-            #endif
-
-            vitalsSection
-
-            Section {
-                Toggle(L("앰비언트 운영 — 받은 메일을 할 일과 답장 초안으로",
-                         "Ambient ops — inbox to tasks & reply drafts"),
-                       isOn: $ambientHarvest)
-                TextField(L("나를 부르는 Slack 핸들", "Slack handles that ping me"),
-                          text: $slackMentionHandles)
-                TextField(L("무시할 내 Slack 이름", "My Slack names to ignore"),
-                          text: $slackSelfNames)
-            } footer: {
-                Text(L("Slack 핸들과 이름을 쉼표로 구분해 적어주세요. ARCA는 나를 부르는 말이나 실제로 처리할 일만 찾고, 여기 적힌 내 이름에서 온 메시지는 무시하며, 답장은 당신이 확인한 뒤에만 나갑니다.",
-                       "Comma-separated Slack handles/names. ARCA searches only likely pings or actionable asks, ignores messages from these self names, and drafts replies you approve before anything is sent."))
-            }
-
-            #if os(macOS)
-            Section {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("문서함", "Document vault"))
-                        Text(documentVaultDisplayPath)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                    Spacer()
-                    Button(L("폴더 선택…", "Choose…")) { pickDocumentVault() }
-                }
-            } footer: {
-                Text(L("사업자등록증, 통장사본 같은 공식 서류 폴더예요. 이메일로 서류를 요청받으면 ARCA가 파일을 첨부한 회신을 제안하고, 승인해야 발송돼요.",
-                       "A folder of official documents (business registration cert, bank copy, …). When an email asks for one, ARCA proposes a reply with the file attached — you approve before it sends."))
-            }
-            #endif
-
-            #if os(macOS)
-            Section {
-                Picker(L("노치 존재감", "Notch presence"), selection: $notchStyle) {
-                    Text(L("코지 — 눈이 살짝 보여요", "Cozy — eyes peek out")).tag("cozy")
-                    Text(L("클린 — 노치만", "Clean — just the notch")).tag("clean")
-                }
-            } footer: {
-                Text(L("코지는 ARCA의 눈을 노치 바로 아래에 두고 커서를 느긋하게 따라가게 합니다. 클린은 무슨 일이 생길 때까지 ARCA를 숨기고요 — 마우스를 올리면 대시보드는 그대로 열립니다.",
-                       "Cozy keeps ARCA's eyes just under the notch, lazily following your cursor. Clean hides ARCA until something happens — hover still opens the dashboard."))
-            }
-
-            Section {
-                Picker(L("자율성 단계", "Autonomy level"), selection: $autonomyRaw) {
-                    ForEach(AutonomyLevel.allCases, id: \.rawValue) { level in
-                        Text(level.label).tag(level.rawValue)
-                    }
-                }
-                Text((AutonomyLevel(rawValue: autonomyRaw) ?? .readOnly).detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } header: {
-                Text(L("ARCA 자율성", "ARCA Autonomy"))
-            } footer: {
-                Text(L("ZONE 중에 들어온 할 일과 항목을 ARCA가 어디까지 혼자 처리할지 정합니다. 이 단계로 부족한 일은 Toss 버튼 없이 당신이 직접 처리하도록 남겨둡니다.",
-                       "Sets how far ARCA can act on its own for tasks and items that come in during ZONE. Anything that needs more than this level stays for you to handle directly, without a Toss button."))
-            }
-
-            Section {
-                Picker(L("화면 캡처 핫키", "Screen capture hotkey"), selection: $chatHotkey) {
-                    ForEach(ChatHotkey.allCases) { key in
-                        Text(key.label).tag(key.rawValue)
-                    }
-                }
-                Picker(L("ARCA 챗 모델", "ARCA chat model"), selection: $chatModel) {
-                    Text("Claude Sonnet 5").tag("claude-sonnet-5")
-                    Text("Claude Opus 4.8").tag("claude-opus-4-8")
-                    Text("Claude Fable 5").tag("claude-fable-5")
-                }
-            } header: {
-                Text(L("ARCA 라이브 챗", "ARCA Live Chat"))
-            } footer: {
-                Text(L("핫키를 두 번 누르면 전체 화면을 캡처하고 바로 대화가 시작됩니다. 스크린샷을 노치로 끌어다 놓아도 돼요. 브라우저 조작이 필요하면 ARCA가 Codex로 실행할지 물어봅니다. (전역 핫키에는 손쉬운 사용 권한이 필요합니다.)",
-                       "Double-tap the hotkey to capture the full screen and start chatting right away. You can also drag a screenshot onto the notch. If browser control is needed, ARCA will offer to run it via Codex. (Global hotkeys require Accessibility permission.)"))
-            }
-
-            Section {
-                Toggle(L("회의가 끝나면 요약을 자동으로 메일로 보내기",
-                         "Automatically email a summary when a meeting ends"),
-                       isOn: $autoEmailSummary)
-                TextField(L("받는 사람 이메일", "Recipient email"), text: $emailRecipient)
-                    .disabled(!autoEmailSummary)
-                    .onChange(of: emailRecipient) { _, value in
-                        AccountDefaults.set(value, for: "summaryEmailRecipient")
-                    }
-                Toggle(L("회의록 Obsidian 자동 저장", "Save meeting notes to Obsidian automatically"),
-                       isOn: $autoObsidianExport)
-                #if os(macOS)
-                Toggle(L("회의 참가자 자동 인식 — 통화 화면에서 이름을 읽어 전사에 반영",
-                         "Recognize meeting attendees — reads names off the call window into the transcript"),
-                       isOn: $autoRosterCapture)
-                #endif
-            } header: {
-                Text(L("요약 메일", "Summary Email"))
-            } footer: {
-                Text(summaryFooterText)
-            }
-
-            Section {
-                Toggle(L("데이 트래커 켜기", "Turn on the Day Tracker"), isOn: $dayTrackerEnabled)
-                Toggle(L("스냅샷 포함", "Include snapshots"), isOn: $dayTrackerSnapshots)
-                    .disabled(!dayTrackerEnabled)
-                Picker(L("간격", "Interval"), selection: $dayTrackerIntervalMin) {
-                    Text(L("3분", "3 min")).tag(3)
-                    Text(L("5분", "5 min")).tag(5)
-                    Text(L("10분", "10 min")).tag(10)
-                }
-                .disabled(!dayTrackerEnabled || !dayTrackerSnapshots)
-                Picker(L("자동 정리 시각", "Digest time"), selection: $dayTrackerDigestHour) {
-                    ForEach(18...23, id: \.self) { hour in
-                        Text(L("\(hour)시", "\(hour):00")).tag(hour)
-                    }
-                }
-                .disabled(!dayTrackerEnabled)
-            } header: {
-                Text(L("데이 트래커", "Day Tracker"))
-            } footer: {
-                Text(L("모든 기록은 이 Mac에만 저장됩니다. 정리 생성 시에만 샘플 스냅샷이 AI로 전송됩니다.",
-                       "Everything stays on this Mac. Sample snapshots go to the AI only when you generate a digest."))
-            }
-            .onChange(of: dayTrackerEnabled) { _, _ in AppServices.shared.dayLog.applySettings() }
-            .onChange(of: dayTrackerSnapshots) { _, _ in AppServices.shared.dayLog.applySettings() }
-            .onChange(of: dayTrackerIntervalMin) { _, _ in AppServices.shared.dayLog.applySettings() }
-            .onChange(of: dayTrackerDigestHour) { _, _ in AppServices.shared.dayLog.applySettings() }
+            #if os(iOS)
+            simpleSections
+            #else
+            fullSections
             #endif
         }
         .formStyle(.grouped)
@@ -296,7 +75,9 @@ struct SettingsView: View {
             reloadAccounts()
             loadScopedSettings()
             openAIKey = KeychainStore.get(.openAI) ?? ""
-            anthropicKey = ArcaCloud.anthropicKey ?? ""
+            // Only a key the user typed — never the ARCA Cloud grant, which "키 저장"
+            // would otherwise save as an Anthropic key and break every call.
+            anthropicKey = KeychainStore.get(.anthropic) ?? ""
         }
         .alert(L("계정 추가", "Add account"), isPresented: $showingAddAccount) {
             TextField(L("이름", "Name"), text: $newAccountName)
@@ -635,6 +416,285 @@ struct SettingsView: View {
         """)
         #endif
     }
+
+    /// Everything, as it always was — the Mac, and 고급 설정 on the phone.
+    @ViewBuilder private var fullSections: some View {
+            accountSection
+
+            Section {
+                NavigationLink {
+                    ConnectorsView()
+                } label: {
+                    Label(L("커넥터", "Connectors"), systemImage: "app.connected.to.app.below.fill")
+                }
+                NavigationLink {
+                    SkinsView()
+                } label: {
+                    Label(L("스킨", "Skins"), systemImage: "paintpalette.fill")
+                }
+                NavigationLink {
+                    BrainView()
+                } label: {
+                    Label(L("메모리 브레인", "Memory Brain"), systemImage: "brain.head.profile")
+                }
+                NavigationLink {
+                    StorageSettingsView()
+                } label: {
+                    Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
+                }
+                #if os(macOS)
+                Toggle(isOn: Binding(
+                    get: { UserDefaults.standard.object(forKey: FloatingCompanionController.enabledKey) as? Bool ?? true },
+                    set: { AppServices.shared.setFloatingCompanion(enabled: $0) })) {
+                    Label(L("떠다니는 ARCA (화면 어디든 드래그)", "Floating ARCA (drag anywhere)"), systemImage: "circle.dotted.and.circle")
+                }
+                Button {
+                    NotificationCenter.default.post(name: .arcaOpenChatWindow, object: nil)
+                } label: {
+                    Label(L("채팅을 별도 창으로 열기 (⇧⌘J)", "Open chat in its own window (⇧⌘J)"), systemImage: "macwindow.on.rectangle")
+                }
+                #endif
+            } footer: {
+                Text(L("Gmail, 캘린더, 드라이브, Slack까지 — ARCA가 컨텍스트를 먼저 가져와서 이미 알고 있어요.",
+                       "Gmail, Calendar, Drive, Slack and more — ARCA pulls context so it already knows."))
+            }
+
+            ArcaCloudSection()
+
+            Section {
+                Picker(L("언어", "Language"), selection: Binding(
+                    get: { language.choice },
+                    set: { language.set($0) }
+                )) {
+                    ForEach(ArcaLanguage.Choice.allCases) { choice in
+                        Text(choice.label).tag(choice)
+                    }
+                }
+            } header: {
+                Text(L("언어", "Language"))
+            } footer: {
+                Text(L("맥과 아이폰이 같은 언어로 보이도록 두 앱이 같은 설정을 씁니다. 기기 설정을 따라가면 아이폰과 맥의 시스템 언어를 각각 따릅니다.",
+                       "Both apps share this setting so the Mac and the iPhone read the same way. Following the device setting means each one follows its own system language."))
+            }
+
+            Section(L("내 정보", "My Info")) {
+                TextField(L("이름 (전사에서 내 발화에 붙는 이름)",
+                            "Your name (label for your speech in transcripts)"),
+                          text: $ownerName)
+                Picker(L("전사 언어", "Transcription language"), selection: $localeID) {
+                    Text(L("자동 (말하는 언어를 알아서)", "Automatic (detects what you speak)")).tag("auto")
+                    Text(L("한국어", "Korean")).tag("ko-KR")
+                    Text(L("영어", "English")).tag("en-US")
+                }
+            }
+
+            Section {
+                SecureField(L("OpenAI API 키 (sk-…)", "OpenAI API Key (sk-…)"), text: $openAIKey)
+                SecureField(L("Anthropic API 키 (sk-ant-…)", "Anthropic API Key (sk-ant-…)"), text: $anthropicKey)
+                Button(saved ? L("저장됐어요 ✓", "Saved ✓") : L("키 저장", "Save keys")) {
+                    #if os(iOS)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    #endif
+                    saveKeys()
+                }
+            } header: {
+                Text(L("API 키 (BYOK)", "API Keys (BYOK)"))
+            } footer: {
+                Text(L("키는 이 기기의 키체인에만 저장됩니다. 맥에서는 ~/.arca/voice-keys.json에 있는 키를 첫 실행 때 자동으로 불러옵니다. OpenAI 키 = 고품질 전사와 화자 분리, Anthropic 키 = 회의 요약과 노트 완성.",
+                       "Keys are stored only in this device's Keychain. On Mac, keys in ~/.arca/voice-keys.json are loaded automatically on first launch. OpenAI key = high-quality transcription & speaker separation, Anthropic key = meeting summaries & note completion."))
+            }
+
+            transcriptionEngineSection
+
+            #if os(macOS)
+            permissionsSection
+            #endif
+
+            connectorsSection
+
+            #if os(macOS)
+            nightlyDigestSection
+            #endif
+
+            vitalsSection
+
+            Section {
+                Toggle(L("앰비언트 운영 — 받은 메일을 할 일과 답장 초안으로",
+                         "Ambient ops — inbox to tasks & reply drafts"),
+                       isOn: $ambientHarvest)
+                TextField(L("나를 부르는 Slack 핸들", "Slack handles that ping me"),
+                          text: $slackMentionHandles)
+                TextField(L("무시할 내 Slack 이름", "My Slack names to ignore"),
+                          text: $slackSelfNames)
+            } footer: {
+                Text(L("Slack 핸들과 이름을 쉼표로 구분해 적어주세요. ARCA는 나를 부르는 말이나 실제로 처리할 일만 찾고, 여기 적힌 내 이름에서 온 메시지는 무시하며, 답장은 당신이 확인한 뒤에만 나갑니다.",
+                       "Comma-separated Slack handles/names. ARCA searches only likely pings or actionable asks, ignores messages from these self names, and drafts replies you approve before anything is sent."))
+            }
+
+            #if os(macOS)
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("문서함", "Document vault"))
+                        Text(documentVaultDisplayPath)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    Spacer()
+                    Button(L("폴더 선택…", "Choose…")) { pickDocumentVault() }
+                }
+            } footer: {
+                Text(L("사업자등록증, 통장사본 같은 공식 서류 폴더예요. 이메일로 서류를 요청받으면 ARCA가 파일을 첨부한 회신을 제안하고, 승인해야 발송돼요.",
+                       "A folder of official documents (business registration cert, bank copy, …). When an email asks for one, ARCA proposes a reply with the file attached — you approve before it sends."))
+            }
+            #endif
+
+            #if os(macOS)
+            Section {
+                Picker(L("노치 존재감", "Notch presence"), selection: $notchStyle) {
+                    Text(L("코지 — 눈이 살짝 보여요", "Cozy — eyes peek out")).tag("cozy")
+                    Text(L("클린 — 노치만", "Clean — just the notch")).tag("clean")
+                }
+            } footer: {
+                Text(L("코지는 ARCA의 눈을 노치 바로 아래에 두고 커서를 느긋하게 따라가게 합니다. 클린은 무슨 일이 생길 때까지 ARCA를 숨기고요 — 마우스를 올리면 대시보드는 그대로 열립니다.",
+                       "Cozy keeps ARCA's eyes just under the notch, lazily following your cursor. Clean hides ARCA until something happens — hover still opens the dashboard."))
+            }
+
+            Section {
+                Picker(L("자율성 단계", "Autonomy level"), selection: $autonomyRaw) {
+                    ForEach(AutonomyLevel.allCases, id: \.rawValue) { level in
+                        Text(level.label).tag(level.rawValue)
+                    }
+                }
+                Text((AutonomyLevel(rawValue: autonomyRaw) ?? .readOnly).detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } header: {
+                Text(L("ARCA 자율성", "ARCA Autonomy"))
+            } footer: {
+                Text(L("ZONE 중에 들어온 할 일과 항목을 ARCA가 어디까지 혼자 처리할지 정합니다. 이 단계로 부족한 일은 Toss 버튼 없이 당신이 직접 처리하도록 남겨둡니다.",
+                       "Sets how far ARCA can act on its own for tasks and items that come in during ZONE. Anything that needs more than this level stays for you to handle directly, without a Toss button."))
+            }
+
+            Section {
+                Picker(L("화면 캡처 핫키", "Screen capture hotkey"), selection: $chatHotkey) {
+                    ForEach(ChatHotkey.allCases) { key in
+                        Text(key.label).tag(key.rawValue)
+                    }
+                }
+                Picker(L("ARCA 챗 모델", "ARCA chat model"), selection: $chatModel) {
+                    Text("Claude Sonnet 5").tag("claude-sonnet-5")
+                    Text("Claude Opus 4.8").tag("claude-opus-4-8")
+                    Text("Claude Fable 5").tag("claude-fable-5")
+                }
+            } header: {
+                Text(L("ARCA 라이브 챗", "ARCA Live Chat"))
+            } footer: {
+                Text(L("핫키를 두 번 누르면 전체 화면을 캡처하고 바로 대화가 시작됩니다. 스크린샷을 노치로 끌어다 놓아도 돼요. 브라우저 조작이 필요하면 ARCA가 Codex로 실행할지 물어봅니다. (전역 핫키에는 손쉬운 사용 권한이 필요합니다.)",
+                       "Double-tap the hotkey to capture the full screen and start chatting right away. You can also drag a screenshot onto the notch. If browser control is needed, ARCA will offer to run it via Codex. (Global hotkeys require Accessibility permission.)"))
+            }
+
+            Section {
+                Toggle(L("회의가 끝나면 요약을 자동으로 메일로 보내기",
+                         "Automatically email a summary when a meeting ends"),
+                       isOn: $autoEmailSummary)
+                TextField(L("받는 사람 이메일", "Recipient email"), text: $emailRecipient)
+                    .disabled(!autoEmailSummary)
+                    .onChange(of: emailRecipient) { _, value in
+                        AccountDefaults.set(value, for: "summaryEmailRecipient")
+                    }
+                Toggle(L("회의록 Obsidian 자동 저장", "Save meeting notes to Obsidian automatically"),
+                       isOn: $autoObsidianExport)
+                #if os(macOS)
+                Toggle(L("회의 참가자 자동 인식 — 통화 화면에서 이름을 읽어 전사에 반영",
+                         "Recognize meeting attendees — reads names off the call window into the transcript"),
+                       isOn: $autoRosterCapture)
+                #endif
+            } header: {
+                Text(L("요약 메일", "Summary Email"))
+            } footer: {
+                Text(summaryFooterText)
+            }
+
+            Section {
+                Toggle(L("데이 트래커 켜기", "Turn on the Day Tracker"), isOn: $dayTrackerEnabled)
+                Toggle(L("스냅샷 포함", "Include snapshots"), isOn: $dayTrackerSnapshots)
+                    .disabled(!dayTrackerEnabled)
+                Picker(L("간격", "Interval"), selection: $dayTrackerIntervalMin) {
+                    Text(L("3분", "3 min")).tag(3)
+                    Text(L("5분", "5 min")).tag(5)
+                    Text(L("10분", "10 min")).tag(10)
+                }
+                .disabled(!dayTrackerEnabled || !dayTrackerSnapshots)
+                Picker(L("자동 정리 시각", "Digest time"), selection: $dayTrackerDigestHour) {
+                    ForEach(18...23, id: \.self) { hour in
+                        Text(L("\(hour)시", "\(hour):00")).tag(hour)
+                    }
+                }
+                .disabled(!dayTrackerEnabled)
+            } header: {
+                Text(L("데이 트래커", "Day Tracker"))
+            } footer: {
+                Text(L("모든 기록은 이 Mac에만 저장됩니다. 정리 생성 시에만 샘플 스냅샷이 AI로 전송됩니다.",
+                       "Everything stays on this Mac. Sample snapshots go to the AI only when you generate a digest."))
+            }
+            .onChange(of: dayTrackerEnabled) { _, _ in AppServices.shared.dayLog.applySettings() }
+            .onChange(of: dayTrackerSnapshots) { _, _ in AppServices.shared.dayLog.applySettings() }
+            .onChange(of: dayTrackerIntervalMin) { _, _ in AppServices.shared.dayLog.applySettings() }
+            .onChange(of: dayTrackerDigestHour) { _, _ in AppServices.shared.dayLog.applySettings() }
+            #endif
+    }
+
+    #if os(iOS)
+    @State private var signingIn = false
+
+    /// The phone's settings: one thing per row, no keys or engines on show.
+    @ViewBuilder private var simpleSections: some View {
+        Section {
+            TextField(L("이름", "Name"), text: $ownerName)
+            Picker(L("언어", "Language"), selection: Binding(
+                get: { language.choice },
+                set: { language.set($0) }
+            )) {
+                ForEach(ArcaLanguage.Choice.allCases) { choice in
+                    Text(choice.label).tag(choice)
+                }
+            }
+            if let email = AccountDefaults.string("cloudAccountEmail") {
+                LabeledContent(L("계정", "Account"), value: email)
+            } else {
+                Button(signingIn ? L("여는 중…", "Opening…") : L("Google로 로그인", "Sign in with Google")) {
+                    signingIn = true
+                    Task { @MainActor in
+                        _ = await GoogleSignIn.shared.signIn()
+                        signingIn = false
+                    }
+                }
+                .disabled(signingIn)
+            }
+        }
+        Section {
+            NavigationLink {
+                ConnectorsView()
+            } label: {
+                Label(L("연결된 앱", "Connected apps"), systemImage: "app.connected.to.app.below.fill")
+            }
+            NavigationLink {
+                StorageSettingsView()
+            } label: {
+                Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
+            }
+        }
+        Section {
+            NavigationLink(L("고급 설정", "Advanced")) {
+                Form { fullSections }
+                    .navigationTitle(L("고급 설정", "Advanced"))
+            }
+        }
+    }
+    #endif
 
     private var accountSection: some View {
         Section {

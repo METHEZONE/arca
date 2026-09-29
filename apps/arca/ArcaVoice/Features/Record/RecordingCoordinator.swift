@@ -170,15 +170,24 @@ final class RecordingCoordinator {
             // this is the whole payoff of asking beforehand on an engine that
             // can't tell voices apart.
             let vocabulary = plannedParticipants.vocabulary(excluding: Self.ownerName)
-            let transcriber: any LiveTranscriber
-            // `legacySpeech` (UserDefaults) forces the Sequoia path on a newer
-            // Mac so the fallback can be QA'd without an old machine.
-            if #available(macOS 26.0, iOS 26.0, *), !UserDefaults.standard.bool(forKey: "legacySpeech") {
-                transcriber = AppleLiveTranscriber(vocabulary: vocabulary)
-            } else {
+            let forceLegacy = UserDefaults.standard.bool(forKey: "legacySpeech")
+            let make: @Sendable (Locale) -> any LiveTranscriber = { _ in
+                // `legacySpeech` (UserDefaults) forces the Sequoia path on a newer
+                // Mac so the fallback can be QA'd without an old machine.
+                if #available(macOS 26.0, iOS 26.0, *), !forceLegacy {
+                    return AppleLiveTranscriber(vocabulary: vocabulary)
+                }
                 // Sequoia and earlier: the older recognizer, rotated per minute.
-                transcriber = LegacyLiveTranscriber(vocabulary: vocabulary)
+                return LegacyLiveTranscriber(vocabulary: vocabulary)
             }
+            // "auto" tries the user's languages side by side for the first
+            // stretch and keeps the one it actually hears.
+            let transcriber = AutoLanguageTranscriber(
+                candidates: TranscriptionPrefs.liveCandidates, make: make,
+                decided: { locale in
+                    TranscriptionPrefs.rememberDetected(locale)
+                    DebugTrace.log("record: spoken language → \(locale.identifier)")
+                })
             for (channel, stream) in streams {
                 let task = Task { [weak self] in
                     do {
@@ -419,7 +428,9 @@ final class RecordingCoordinator {
             startedAt = nil
             recordingStartedAt = nil
             FinalPassRunner.run(record: record, files: artifacts.files, userNotes: roughNotes,
-                                ownerName: ownerName, languageHints: languageHints,
+                                // Read now, not at start: the live pass has
+                                // just heard which language this recording is in.
+                                ownerName: ownerName, languageHints: TranscriptionPrefs.languageHints,
                                 rosterSnapshots: rosterSnapshots,
                                 recordingStartedAt: startedAtSnapshot)
             return record

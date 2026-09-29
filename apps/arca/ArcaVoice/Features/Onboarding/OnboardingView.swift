@@ -146,10 +146,10 @@ private struct MeetPage: View {
                 withAnimation(.easeOut(duration: 0.45)) { arrived = true }
             }
             VStack(spacing: 12) {
-                Text("저는 ARCA예요")
+                Text(L("저는 ARCA예요", "I'm ARCA"))
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("회의든 혼잣말이든, 제 얼굴을 누르면 듣기 시작해요.\n말한 걸 받아적고 기억해뒀다가 필요할 때 꺼내드릴게요.")
+                Text(L("말한 걸 기억하고, 할 일은 대신 해 드려요.", "I remember what you say and handle the to-dos."))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -158,7 +158,7 @@ private struct MeetPage: View {
             .opacity(arrived ? 1 : 0)
             .offset(y: arrived ? 0 : 10)
             Spacer()
-            OnboardingCTA(title: "시작하기", action: action)
+            OnboardingCTA(title: L("시작하기", "Get started"), action: action)
                 .opacity(arrived ? 1 : 0)
         }
         .padding(.vertical, 50)
@@ -181,16 +181,16 @@ private struct AccountPage: View {
             Spacer()
             SpiritFace(mood: signedInAs == nil ? .idle : .happy, size: 120)
             VStack(spacing: 10) {
-                Text(signedInAs == nil ? "계정을 만들까요?" : "연결됐어요")
+                Text(signedInAs == nil ? L("계정을 만들까요?", "Create an account?") : L("연결됐어요", "You're in"))
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text(signedInAs ?? "Google로 로그인하면 아이폰과 맥이 같은 기억을 써요.\n지금 안 해도 다 쓸 수 있어요.")
+                Text(signedInAs ?? L("로그인하면 아이폰과 맥이 같은 기억을 써요.", "Sign in and your iPhone and Mac share one memory."))
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                 if failed {
-                    Text("로그인하지 못했어요. 설정 › ARCA Cloud에서 다시 할 수 있어요.")
+                    Text(L("로그인하지 못했어요. 나중에 다시 해 주세요.", "Couldn't sign in. Try again later."))
                         .font(.footnote)
                         .foregroundStyle(.orange)
                         .multilineTextAlignment(.center)
@@ -200,7 +200,7 @@ private struct AccountPage: View {
             Spacer()
             VStack(spacing: 14) {
                 if signedInAs == nil {
-                    OnboardingCTA(title: working ? "여는 중…" : "Google로 계속하기", prominent: true) {
+                    OnboardingCTA(title: working ? L("여는 중…", "Opening…") : L("Google로 계속하기", "Continue with Google"), prominent: true) {
                         guard !working else { return }
                         working = true
                         failed = false
@@ -216,7 +216,7 @@ private struct AccountPage: View {
                             }
                         }
                     }
-                    Button("나중에") { onDone(nil) }
+                    Button(L("나중에", "Not now")) { onDone(nil) }
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.5))
                 }
@@ -238,16 +238,16 @@ private struct NamePage: View {
             Spacer()
             SpiritFace(mood: .idle, size: 120)
             VStack(spacing: 10) {
-                Text("뭐라고 부를까요?")
+                Text(L("뭐라고 부를까요?", "What should I call you?"))
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("녹취록에서 회원님 발언을 이 이름으로 표시해요.")
+                Text(L("녹취록에 이 이름으로 표시해요.", "This is how you appear in transcripts."))
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.center)
             }
 
-            TextField("", text: $name, prompt: Text("이름").foregroundStyle(.white.opacity(0.3)))
+            TextField("", text: $name, prompt: Text(L("이름", "Name")).foregroundStyle(.white.opacity(0.3)))
                 .focused(focused)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(.white)
@@ -268,7 +268,7 @@ private struct NamePage: View {
                 .padding(.horizontal, 48)
 
             Spacer()
-            OnboardingCTA(title: "다음", action: action)
+            OnboardingCTA(title: L("다음", "Next"), action: action)
         }
         .padding(.vertical, 50)
     }
@@ -292,7 +292,7 @@ private struct HatchPage: View {
         VStack(spacing: 18) {
             Spacer(minLength: 8)
 
-            Text("이름을 지어주세요")
+            Text(L("이름을 지어주세요", "Give me a name"))
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
@@ -300,7 +300,7 @@ private struct HatchPage: View {
                 .frame(maxWidth: .infinity)
 
             TextField("", text: $name,
-                      prompt: Text("이름 지어주기").foregroundStyle(.white.opacity(0.3)))
+                      prompt: Text(L("이름 지어주기", "Name me")).foregroundStyle(.white.opacity(0.3)))
                 .focused(focused)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(.white)
@@ -319,7 +319,7 @@ private struct HatchPage: View {
                 .padding(.horizontal, 56)
 
             Spacer(minLength: 8)
-            OnboardingCTA(title: "이 아이로 할게요", action: action)
+            OnboardingCTA(title: L("이 아이로 할게요", "That's the one"), action: action)
         }
         .padding(.vertical, 40)
     }
@@ -341,139 +341,25 @@ private struct MicPage: View {
                 .font(.system(size: 72, weight: .light))
                 .foregroundStyle(accent)
             VStack(spacing: 10) {
-                Text("마이크를 열어주세요")
+                Text(L("마이크를 열어주세요", "Turn on the mic"))
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("듣지 않으면 받아적을 수가 없어요.\n녹음은 회원님이 누를 때만 시작합니다.")
+                Text(L("녹음은 누를 때만 시작해요.", "Recording starts only when you tap."))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 34)
             }
 
-            PrivacyNote()
-
+            
             Spacer()
-            OnboardingCTA(title: asked ? "계속" : "마이크 허용", action: action)
+            OnboardingCTA(title: asked ? L("계속", "Continue") : L("마이크 허용", "Allow mic"), action: action)
         }
         .padding(.vertical, 50)
     }
 }
 
-private struct PrivacyNote: View {
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "lock.fill")
-                .font(.caption)
-                .foregroundStyle(accent)
-                .padding(.top, 2)
-            Text("녹음 파일은 이 기기에 남아요. 받아적는 동안에만 서버를 거칩니다.")
-                .font(.footnote)
-                .foregroundStyle(.white.opacity(0.55))
-            Spacer(minLength: 0)
-        }
-        .padding(14)
-        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
-        .padding(.horizontal, 36)
-    }
-}
-
-// MARK: - Page 5 · your body
-
-private struct FocusBodyPage: View {
-    let action: () -> Void
-
-    @State private var vitals = VitalsEngine.shared
-    @State private var isRequesting = false
-
-    private var isConnected: Bool {
-        switch vitals.healthLink {
-        case .measuring, .askedNoData: return true
-        default: return false
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer(minLength: 10)
-
-            // Teaches the ring here, so it's already familiar on the Home screen.
-            ZStack {
-                FocusRing(score: isConnected ? 74 : nil, isLive: false,
-                          lineWidth: 8, trackOpacity: 0.08)
-                    .frame(width: 186, height: 186)
-                SpiritFace(mood: isConnected ? .happy : .idle, size: 140)
-            }
-
-            VStack(spacing: 10) {
-                Text(L("당신이 가장 또렷한 순간을 알아요", "I can tell when you're sharpest"))
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                Text(L("워치가 이미 수면·HRV·심박을 기록하고 있어요. 읽게 해주시면 어려운 일을 언제 하고 언제 멈출지 알려드릴게요.", "Your Watch already logs your sleep, HRV and heart rate. Let me read it and I'll tell you when to do the hard thing — and when to stop."))
-                    .font(.body)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 30)
-            }
-
-            VStack(alignment: .leading, spacing: 12) {
-                BodyBullet(symbol: "battery.100", text: L("배터리를 안 써요 — 워치가 이미 적어둔 걸 읽을 뿐이에요.", "Costs no battery — I read what your Watch already wrote."))
-                BodyBullet(symbol: "lock.fill", text: L("기기 안에만 있어요. 저희 서버로는 아무것도 안 가요.", "Stays on your devices. Nothing goes to a server of ours."))
-                BodyBullet(symbol: "hand.raised.fill", text: L("며칠은 지켜본 뒤에만 점수를 내요. 추측하지 않아요.", "No score until I've watched you for a few days. I won't guess."))
-            }
-            .padding(.horizontal, 34)
-
-            Spacer()
-
-            if isConnected {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(ArcaTheme.pixel)
-                    Text(L("Apple 건강 연결됨", "Apple Health connected"))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                }
-                OnboardingCTA(title: L("계속", "Continue"), action: action)
-            } else {
-                OnboardingCTA(title: isRequesting ? L("건강 앱 여는 중…", "Opening Health…") : L("Apple 건강 연결", "Connect Apple Health")) {
-                    guard !isRequesting else { return }
-                    isRequesting = true
-                    Task {
-                        await vitals.requestPermission()
-                        isRequesting = false
-                        action()
-                    }
-                }
-                Button(L("나중에", "Not now"), action: action)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.5))
-            }
-        }
-        .padding(.bottom, 54)
-        .padding(.top, 40)
-    }
-}
-
-private struct BodyBullet: View {
-    let symbol: String
-    let text: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.caption)
-                .foregroundStyle(ArcaTheme.pixel)
-                .frame(width: 20)
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.82))
-            Spacer(minLength: 0)
-        }
-    }
-}
-
-// MARK: - Page 6 · trial balance
+// MARK: - Page 6 · ready
 
 private struct CreditPage: View {
     let action: () -> Void
@@ -483,62 +369,23 @@ private struct CreditPage: View {
             Spacer()
             SpiritFace(mood: .happy, size: 140)
             VStack(spacing: 10) {
-                Text("녹음은 무제한이에요")
+                Text(L("준비됐어요", "You're all set"))
                     .font(.system(size: 29, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                Text("받아적고 정리하는 비용은 제가 낼게요.\nAPI 키 같은 건 준비하지 않으셔도 돼요.")
+                Text(L("녹음은 무제한이고, 비용은 제가 낼게요.", "Recording is unlimited, and it's on me."))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
 
-            ReadyCard()
-
             Spacer()
-            OnboardingCTA(title: "첫 녹음 하러 가기", prominent: true, action: action)
+            OnboardingCTA(title: L("첫 녹음 하러 가기", "Make your first recording"), prominent: true, action: action)
         }
         .padding(.vertical, 50)
     }
 }
-
-private struct ReadyCard: View {
-    /// Recording is deliberately listed as unlimited and chat as the metered
-    /// one — the trial should never make someone hesitate to hit record.
-    private var items: [(icon: String, text: String, free: Bool)] {
-        [
-            ("infinity", "녹음과 받아적기 — 무제한", true),
-            ("infinity", "회의 요약·결정사항·할 일", true),
-            ("bubble.left.and.text.bubble.right", "ARCA와 \(TrialCredit.grantLabel())", false),
-            ("hand.raised", "할 수 있는 일은 \"대신 처리할까요?\"라고 먼저 물어봐요", false),
-            ("chart.bar", "무엇을 부탁했는지 한 줄 요약과 사용 기록은 ARCA를 고치는 데 써요. 대화·회의 원문은 보내지 않아요", false),
-        ]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            ForEach(items, id: \.text) { item in
-                HStack(spacing: 10) {
-                    Image(systemName: item.icon)
-                        .font(.footnote)
-                        .foregroundStyle(item.free ? accent : .white.opacity(0.5))
-                        .frame(width: 20)
-                    Text(item.text)
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(item.free ? 0.85 : 0.6))
-                    Spacer(minLength: 0)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal, 36)
-    }
-}
-
-// MARK: - Shared chrome
 
 private struct PageDots: View {
     let count: Int

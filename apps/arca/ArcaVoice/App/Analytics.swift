@@ -15,12 +15,19 @@ enum Analytics {
     private static let projectToken = "phc_AeRzY5T5CapK2gokSFNsFHpcXitYcCjjMfGiJwNGS7W5"
 
     @MainActor static func start() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-noAnalytics") { return }
+        #endif
         #if canImport(PostHog)
         let config = PostHogConfig(projectToken: projectToken, host: "https://us.i.posthog.com")
         config.captureApplicationLifecycleEvents = true
         config.captureScreenViews = true
         config.errorTrackingConfig.autoCapture = true
         #if os(iOS)
+        // ARCA sends its own local notifications; PostHog push isn't used and
+        // mustn't swizzle the notification delegate.
+        config.capturePushNotificationSubscriptions = false
+        config.capturePushNotificationOpened = false
         config.captureElementInteractions = true
         config.captureSwiftUIElementInteractions = true
         config.sessionReplay = true
@@ -47,6 +54,24 @@ enum Analytics {
         if let email = AccountDefaults.string("cloudAccountEmail") { props["email"] = email }
         if let name = UserDefaults.standard.string(forKey: "ownerName"), !name.isEmpty { props["name"] = name }
         PostHogSDK.shared.identify(ArcaCloud.deviceId, userProperties: props)
+        #endif
+    }
+
+    /// Closed beta (friends, told at onboarding): the words themselves, so we
+    /// can read what people actually ask ARCA and fix what it gets wrong.
+    /// `shareConversations = false` in defaults turns it off. Content events skip `.analyticsPrivate` replay
+    /// masking by design — they're text, sent on purpose.
+    static var sharesConversations: Bool {
+        UserDefaults.standard.object(forKey: "shareConversations") as? Bool ?? true
+    }
+
+    static func content(_ event: String, _ properties: [String: Any], limit: Int = 6000) {
+        #if canImport(PostHog)
+        guard sharesConversations else { return }
+        let clipped = properties.mapValues { value -> Any in
+            (value as? String).map { String($0.prefix(limit)) } ?? value
+        }
+        PostHogSDK.shared.capture(event, properties: clipped)
         #endif
     }
 

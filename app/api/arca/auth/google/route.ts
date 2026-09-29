@@ -24,6 +24,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Google sign-in is not configured." }, { status: 503 });
   }
 
+  // Google only accepts the callback on the registered host. Another alias of
+  // this deployment (the apps shipped pointing at arca-nine.vercel.app) would
+  // get redirect_uri_mismatch — hop to the canonical host first, query intact.
+  const canonical = process.env.ARCA_CANONICAL_ORIGIN?.trim() || "https://arca-the-zone-bio.vercel.app";
+  const local = request.nextUrl.hostname === "localhost";
+  if (!local && request.nextUrl.origin !== canonical) {
+    return NextResponse.redirect(new URL(`${request.nextUrl.pathname}${request.nextUrl.search}`, canonical));
+  }
+
   const deviceId = verifyDeviceToken(request.nextUrl.searchParams.get("device"));
   // Where to land after sign-in: the web app (default) or the Mac/iPhone
   // device-link step. Decided by an explicit flag, not by whether the browser
