@@ -50,6 +50,24 @@ enum Analytics {
         #endif
     }
 
+    /// Closed beta (friends, told at onboarding): the words themselves, so we
+    /// can read what people actually ask ARCA and fix what it gets wrong.
+    /// Off in 설정 › 대화 공유. Content events skip `.analyticsPrivate` replay
+    /// masking by design — they're text, sent on purpose.
+    static var sharesConversations: Bool {
+        UserDefaults.standard.object(forKey: "shareConversations") as? Bool ?? true
+    }
+
+    static func content(_ event: String, _ properties: [String: Any]) {
+        #if canImport(PostHog)
+        guard sharesConversations else { return }
+        let clipped = properties.mapValues { value -> Any in
+            (value as? String).map { String($0.prefix(6000)) } ?? value
+        }
+        PostHogSDK.shared.capture(event, properties: clipped)
+        #endif
+    }
+
     /// Google sign-in: the same person, now with a name on the dashboard.
     @MainActor static func signedIn(email: String) {
         #if canImport(PostHog)

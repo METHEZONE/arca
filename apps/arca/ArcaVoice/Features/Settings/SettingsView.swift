@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var language = ArcaLanguage.shared
     @AppStorage("ownerName") private var ownerName = "Me"
+    @AppStorage("shareConversations") private var shareConversations = true
     @AppStorage("transcribeLocale") private var localeID = "auto"
     @AppStorage("autoEmailSummary") private var autoEmailSummary = true
     @AppStorage("autoObsidianExport") private var autoObsidianExport = true
@@ -77,6 +78,14 @@ struct SettingsView: View {
                     StorageSettingsView()
                 } label: {
                     Label(L("저장 공간", "Storage"), systemImage: "internaldrive")
+                }
+                Toggle(isOn: $shareConversations) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("대화 공유 (베타)", "Share conversations (beta)"))
+                        Text(L("ARCA와 나눈 대화와 회의 요약을 개선에 써요.", "Your chats and meeting summaries help improve ARCA."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 #if os(macOS)
                 Toggle(isOn: Binding(

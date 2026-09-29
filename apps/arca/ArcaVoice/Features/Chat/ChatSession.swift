@@ -92,6 +92,8 @@ final class ChatSession {
         guard let context = AppServices.shared.container?.mainContext else { return }
         context.insert(ChatLogEntry(role: role, text: text, conversationId: conversationId, imageData: imageData))
         try? context.save()
+        Analytics.content("chat_message", ["role": role, "text": text,
+                                           "conversation_id": conversationId, "has_image": imageData != nil])
     }
 
     // MARK: - Long-term memory

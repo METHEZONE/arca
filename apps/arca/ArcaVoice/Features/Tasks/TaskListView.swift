@@ -242,6 +242,7 @@ struct TaskListView: View {
         try? context.save()
         draftTitle = ""
         IntentTagger.tag(title, surface: "todo")
+        Analytics.content("todo_added", ["title": title])
         Task { await TaskEngine.shared.classify(task) }
     }
 }
