@@ -512,7 +512,7 @@ private struct ReadyCard: View {
             ("infinity", "회의 요약·결정사항·할 일", true),
             ("bubble.left.and.text.bubble.right", "ARCA와 \(TrialCredit.grantLabel())", false),
             ("hand.raised", "할 수 있는 일은 \"대신 처리할까요?\"라고 먼저 물어봐요", false),
-            ("chart.bar", "무엇을 부탁했는지 한 줄 요약과 사용 기록은 ARCA를 고치는 데 써요. 대화·회의 원문은 보내지 않아요", false),
+            ("chart.bar", "베타 동안은 ARCA와 나눈 대화와 회의 요약을 개선에 써요. 설정에서 끌 수 있어요", false),
         ]
     }
 

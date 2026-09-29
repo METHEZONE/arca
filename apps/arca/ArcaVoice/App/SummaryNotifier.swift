@@ -48,6 +48,35 @@ enum SummaryNotifier {
         }
     }
 
+    /// A meeting's deadline, ahead of time: 9 a.m. the day before and the day
+    /// of. The best thing ARCA can do is keep the user from missing it.
+    /// ponytail: not cancelled when the task is finished early; add removal
+    /// by `deadline-<uid>` ids if that turns into noise.
+    static func scheduleDeadline(for task: TodoTask) {
+        guard let due = task.dueAt else { return }
+        let title = task.title
+        let uid = task.uid.uuidString
+        Task { @MainActor in
+            guard await ensurePermission() else { return }
+            let calendar = Calendar.current
+            let dueDay = calendar.startOfDay(for: due)
+            for (offset, label) in [(-1, L("내일 마감", "Due tomorrow")), (0, L("오늘 마감", "Due today"))] {
+                guard let day = calendar.date(byAdding: .day, value: offset, to: dueDay),
+                      let fire = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day),
+                      fire > .now else { continue }
+                let content = UNMutableNotificationContent()
+                content.title = label
+                content.body = title
+                content.sound = .default
+                let trigger = UNCalendarNotificationTrigger(
+                    dateMatching: calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fire),
+                    repeats: false)
+                try? await UNUserNotificationCenter.current().add(
+                    UNNotificationRequest(identifier: "deadline-\(uid)-\(offset)", content: content, trigger: trigger))
+            }
+        }
+    }
+
     /// "처리했어요" — a delegated task finished while the user was elsewhere.
     static func taskHandled(title: String, needsReview: Bool) {
         Task { @MainActor in
