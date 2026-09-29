@@ -35,7 +35,7 @@ public final class AppleLiveTranscriber: LiveTranscriber {
                         locale: locale,
                         transcriptionOptions: [],
                         reportingOptions: [.volatileResults],
-                        attributeOptions: [.audioTimeRange]
+                        attributeOptions: [.audioTimeRange, .transcriptionConfidence]
                     )
                     do {
                         try await Self.ensureModel(for: transcriber, locale: locale)
@@ -78,7 +78,8 @@ public final class AppleLiveTranscriber: LiveTranscriber {
                                 text: text,
                                 start: start,
                                 end: end,
-                                isVolatile: !result.isFinal
+                                isVolatile: !result.isFinal,
+                                confidence: Self.confidence(of: result.text)
                             )
                             continuation.yield(segment)
                             if result.isFinal {
@@ -105,6 +106,18 @@ public final class AppleLiveTranscriber: LiveTranscriber {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    /// Mean per-run confidence, weighted by run length; nil if none reported.
+    static func confidence(of text: AttributedString) -> Double? {
+        var total = 0.0, weight = 0.0
+        for run in text.runs {
+            guard let value = run.transcriptionConfidence else { continue }
+            let length = Double(text[run.range].characters.count)
+            total += value * length
+            weight += length
+        }
+        return weight > 0 ? total / weight : nil
     }
 
     /// Shared with the file-based transcriber in this module.

@@ -31,6 +31,6 @@ let package = Package(
         // `@testable import` — the re-export through ArcaVoiceKit only carries
         // the public surface.
         .testTarget(name: "ArcaVoiceKitTests",
-                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling", "Intelligence"]),
+                    dependencies: ["ArcaVoiceKit", "ArcaVoiceCore", "Vitals", "Calling", "Intelligence", "Transcribe"]),
     ]
 )

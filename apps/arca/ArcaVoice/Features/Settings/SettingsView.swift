@@ -482,7 +482,7 @@ struct SettingsView: View {
                             "Your name (label for your speech in transcripts)"),
                           text: $ownerName)
                 Picker(L("전사 언어", "Transcription language"), selection: $localeID) {
-                    Text(L("한국어/영어 섞어서 (자동)", "Korean/English mixed (auto)")).tag("auto")
+                    Text(L("자동 (말하는 언어를 알아서)", "Automatic (detects what you speak)")).tag("auto")
                     Text(L("한국어", "Korean")).tag("ko-KR")
                     Text(L("영어", "English")).tag("en-US")
                 }
