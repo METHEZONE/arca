@@ -23,9 +23,12 @@ const APP_ONBOARDING = "/arca/app/onboarding";
  * browser never dead-ends on raw JSON.
  */
 export async function GET(request: NextRequest) {
+  const nativeFlow = request.cookies.get(STATE_COOKIE)?.value.split(".")[2] === "native";
   const errorRedirect = (code: string) => {
     const res = NextResponse.redirect(
-      new URL(`${ONBOARDING}?step=signin&error=${code}`, request.nextUrl.origin),
+      nativeFlow
+        ? `arca://linked?error=${code}`
+        : new URL(`${ONBOARDING}?step=signin&error=${code}`, request.nextUrl.origin),
     );
     res.cookies.delete(STATE_COOKIE);
     return res;
@@ -82,7 +85,14 @@ export async function GET(request: NextRequest) {
         /* fall through to onboarding */
       }
     }
-    const res = NextResponse.redirect(new URL(dest, request.nextUrl.origin));
+    // The in-app sheet closes on `arca://`; the device is already claimed
+    // above, so the app only needs to hear who signed in.
+    const res = flow === "native"
+      ? NextResponse.redirect(`arca://linked?${new URLSearchParams({
+          email: linked.email ?? "",
+          name: identity.name ?? "",
+        })}`)
+      : NextResponse.redirect(new URL(dest, request.nextUrl.origin));
     res.cookies.delete(STATE_COOKIE);
     setSessionCookie(res, sessionToken);
     if (identity.name || identity.picture) {

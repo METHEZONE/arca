@@ -208,6 +208,7 @@ struct TaskListView: View {
                 }
             }
             .padding(14)
+            .analyticsPrivate()
             .contentShape(Rectangle())
             .onTapGesture { if task.resultMarkdown?.isEmpty == false { showingResult = true } }
             .sheet(isPresented: $showingResult) { TaskResultSheet(task: task) }
@@ -240,6 +241,7 @@ struct TaskListView: View {
         context.insert(task)
         try? context.save()
         draftTitle = ""
+        IntentTagger.tag(title, surface: "todo")
         Task { await TaskEngine.shared.classify(task) }
     }
 }
@@ -303,6 +305,7 @@ private struct QuestRow: View {
             trailing
         }
         .padding(14)
+        .analyticsPrivate()
         .contentShape(Rectangle())
         .onTapGesture { if task.resultMarkdown?.isEmpty == false { showingResult = true } }
         .sheet(isPresented: $showingResult) { TaskResultSheet(task: task) }
@@ -464,6 +467,7 @@ private struct TaskResultSheet: View {
         NavigationStack {
             ScrollView {
                 MarkdownText(result)
+                    .analyticsPrivate()
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)

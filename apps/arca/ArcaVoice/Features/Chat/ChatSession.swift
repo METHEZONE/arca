@@ -82,6 +82,7 @@ final class ChatSession {
         messages.append(ChatMessage(role: .user, parts: [.text(text)]))
         hasNewTurns = true
         persist(role: "user", text: text)
+        IntentTagger.tag(text, surface: "chat")
         runTurn()
     }
 

@@ -32,10 +32,14 @@ enum SummaryNotifier {
             #endif
             guard await ensurePermission() else { return }
             let content = UNMutableNotificationContent()
-            content.title = L("✅ 회의록이 준비됐어요", "✅ Notes ready")
+            // First line is the gist — a notification is read once, at a glance.
+            let gist = notes.summaryMarkdown
+                .split(whereSeparator: \.isNewline).first
+                .map { String($0.prefix(90)) } ?? title
+            content.title = title
             content.body = actionCount > 0
-                ? L("\(title) — 할 일 \(actionCount)개. ARCA가 대신 처리할 수 있는 건 할 일 탭에서 물어볼게요.", "\(title) — \(actionCount) action\(actionCount == 1 ? "" : "s"). ARCA will ask in Tasks about the ones it can handle.")
-                : L("\(title) — 요약이 라이브러리에 있어요", "\(title) — summary is in your library")
+                ? gist + L("\n할 일 \(actionCount)개 — 대신 처리할 수 있는 건 물어볼게요.", "\n\(actionCount) to-dos — I'll ask about the ones I can handle.")
+                : gist
             content.sound = .default
             content.userInfo = ["sessionUID": uid]
             let request = UNNotificationRequest(

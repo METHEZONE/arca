@@ -23,7 +23,9 @@ struct ChatBubbleView: View {
     private var images: [Data] { message.parts.filter { $0.kind == .image }.compactMap(\.imageData) }
     private var stillThinking: Bool { message.isPending && texts.isEmpty }
 
-    var body: some View {
+    var body: some View { bubble.analyticsPrivate() }
+
+    @ViewBuilder private var bubble: some View {
         HStack(alignment: .top, spacing: 8) {
             if isUser { Spacer(minLength: compact ? 40 : 80) }
             if !isUser, showFace {

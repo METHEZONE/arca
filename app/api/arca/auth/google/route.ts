@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
   // Where to land after sign-in: the web app (default) or the Mac/iPhone
   // device-link step. Decided by an explicit flag, not by whether the browser
   // happens to have a cached device token from the public widget.
-  const flow = request.nextUrl.searchParams.get("flow") === "device" ? "device" : "app";
+  // `native`: the iPhone/Mac app's in-app sign-in sheet, which waits for an
+  // `arca://linked` redirect to close itself.
+  const flowParam = request.nextUrl.searchParams.get("flow");
+  const flow = flowParam === "device" || flowParam === "native" ? flowParam : "app";
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${request.nextUrl.origin}/api/arca/auth/google/callback`;
 

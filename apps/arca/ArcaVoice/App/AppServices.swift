@@ -54,6 +54,7 @@ final class AppServices {
 
     func configure(container: ModelContainer) {
         self.container = container
+        Analytics.start()
         // Was only wired under `#if os(macOS)` below, so every CaptureTrace.log
         // call in the recording/mic path (permission, format, interruption,
         // recovery — the exact detail needed to diagnose a start failure) was a
@@ -68,6 +69,7 @@ final class AppServices {
         // enrolling, so a brand-new install's very first open is counted too.
         Task {
             _ = await ArcaCloud.enrollIfNeeded()
+            Analytics.identify()
             BrainClient.track("app_open")
             #if DEBUG
             MeetingDelegation.seedIfRequested(context: container.mainContext)

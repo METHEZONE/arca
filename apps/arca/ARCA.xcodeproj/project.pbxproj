@@ -81,6 +81,7 @@
 		375E80C608202ABD44B6693F /* CallLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F819D6795C53B655D03603 /* CallLabApp.swift */; };
 		382989C88EF2EAF7ED8C2485 /* FocusRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C0C6801229E35633259326 /* FocusRing.swift */; };
 		3909C5ECED3BC4C3AD04F21D /* CompanionTodoRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5603962CB07B510CA77A1607 /* CompanionTodoRail.swift */; };
+		394B9692633691F9A20FC7A4 /* GoogleSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3032A2E637E47889988C282 /* GoogleSignIn.swift */; };
 		3A4166CF0B0BF34BED219BB2 /* ImageDownscaler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0141182B1EC364988D1301EE /* ImageDownscaler.swift */; };
 		3C35580E2C4A4BD3FB268B8C /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		3E12935886E50568B39D6104 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */; };
@@ -145,6 +146,7 @@
 		619AEF1295DEC7DE4574355C /* CompanionGenesis.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */; };
 		6210A8679715F8C495AA112F /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
 		6222A68E146C04CC480C85FA /* RealtimeSecretMinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6913B9A4A6AE61E392235EB6 /* RealtimeSecretMinter.swift */; };
+		622840CF2F6E8C3DFB776B68 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73E085FACD8737E55E64D84 /* Analytics.swift */; };
 		623B680EB57F13E484DFC2A0 /* OpsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EE7FD61A7FCB124D824768 /* OpsViews.swift */; };
 		62D5D4101313BAE7F0216D83 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		6352533A67B7DEF20EF3A650 /* ProposalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC3F34FA123DBE59A89954C /* ProposalEngine.swift */; };
@@ -153,6 +155,7 @@
 		644FFA60D7949368499BCC8A /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2295B2F2A54A71248802D0A1 /* SessionListView.swift */; };
 		651725966B3E7D1B8EEE0C9F /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
 		6578435762FF9D15791181F5 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E297C0A34F32907C8096A8 /* EngineFactory.swift */; };
+		657C109F1D3451D90FEEC2CF /* GoogleSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3032A2E637E47889988C282 /* GoogleSignIn.swift */; };
 		659F1BEFED6CC860216FE4D2 /* RelaySync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71690C5DDCBB80162041242A /* RelaySync.swift */; };
 		65E68F6D13325971BFD3FB4E /* ZoneReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD9AE86205742C95B982086 /* ZoneReportView.swift */; };
 		67AA18366CB83FBC06BF4D90 /* SessionSpeakerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7346102A1E0E21334211C769 /* SessionSpeakerStyle.swift */; };
@@ -179,6 +182,7 @@
 		72010F1448C45F2CF75D59F6 /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
 		72789C89E4F5F95B58442611 /* ChatWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA8BE946E00F193BAC998B /* ChatWindowView.swift */; };
 		72DFE8866767CD9A2FD13202 /* SessionPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA434C8AF00098C130A7852 /* SessionPaths.swift */; };
+		730EA00A014392DC3F3A339A /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73E085FACD8737E55E64D84 /* Analytics.swift */; };
 		73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F842220B887A99DAB0CC81B2 /* MeetingChatSheet.swift */; };
 		744C52DB68A38DC3A355E0D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC41D9BAE9AD1D416FBB0C8E /* Assets.xcassets */; };
 		749CA50C862CDD124258506C /* PassRetryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */; };
@@ -199,6 +203,7 @@
 		7EAAF899DF032819FA040603 /* CrashNoteSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914353E9DD58C9EB466CC22C /* CrashNoteSync.swift */; };
 		7F1ABD8255735C9C66A719D8 /* ArcaMarkdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123613D77FA98700DD70AFBF /* ArcaMarkdown.swift */; };
 		7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */; };
+		800F5D10F083413D26738341 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = BAD7E38121628302954A54B1 /* PostHog */; };
 		801A933869C8C63F63CA6E70 /* NotionDBAutoSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7EDE2779A0CC4CC9D5DADF3 /* NotionDBAutoSync.swift */; };
 		80D20DE45431D7ED588D4175 /* ZoneSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */; };
 		80DA502016DD74D05B883C8C /* OrphanRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E1551A8B3072F0E9D0ED7F /* OrphanRecovery.swift */; };
@@ -215,6 +220,7 @@
 		85BF8142317587B2ABE2E728 /* TodoTriage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E47AEFBFA90C7C1B778FD7 /* TodoTriage.swift */; };
 		85E856C0C3173F5CED295670 /* ArcaCloudSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1D09BE388A76F083A1E795 /* ArcaCloudSection.swift */; };
 		86048B969598C0854E74B66E /* RecordingActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8813ADC9AB95B6982790C7CC /* RecordingActivityController.swift */; };
+		866B0ECA517DCCC63B206B70 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73E085FACD8737E55E64D84 /* Analytics.swift */; };
 		86B9FB725879514C2F9AA643 /* RecordingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A682151C405E802D8E34197D /* RecordingIntents.swift */; };
 		86BF5DC3BA73F1C9FCF6015A /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C72D6C67FF4E97FD1414728 /* RecordView.swift */; };
 		872D1CA1ED0F00FBFD26EC39 /* SessionAudioBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D298B08E99B3C3E752482E39 /* SessionAudioBar.swift */; };
@@ -276,6 +282,7 @@
 		A48DE84ABEA45864A315A78B /* DevicePresenceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C836252A8CB8F19F63BB5339 /* DevicePresenceBar.swift */; };
 		A4B0ACB2CDFA39E6E4F96151 /* ParticipantsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76AC60358CDDC9221D71D72 /* ParticipantsCard.swift */; };
 		A4C04AAB3DB114A755857E1B /* ArcaVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33D78D5CB16004B3F0AFE2 /* ArcaVault.swift */; };
+		A4E91E8AF47C0234E863308F /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 3680FB07210928857D39C723 /* PostHog */; };
 		A6FD42E60BAB114271DE66D7 /* ArcaEmptyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */; };
 		A71A9CB69DA9A02920073F49 /* FinalPassRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */; };
 		A7E568DBA52765B84E8DE21A /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
@@ -340,6 +347,7 @@
 		C2E42ABE88ABB71B747B862A /* BrainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45667ADF4278F8378B7393B0 /* BrainView.swift */; };
 		C382540473D03DB11EA5E569 /* AsideBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1645C01E93CC9717B1F0EC /* AsideBridge.swift */; };
 		C3AD6CD06172C8FA93B6DF34 /* BrowserAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75AC922DC1E22782DF5CE7FD /* BrowserAgent.swift */; };
+		C3B180FAA7E4835FC2E35812 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = D82A64C1372801A4ADF4B9B7 /* PostHog */; };
 		C59700E228CB354F3B9C93C1 /* NotionDBAutoSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7EDE2779A0CC4CC9D5DADF3 /* NotionDBAutoSync.swift */; };
 		C6C3F8FB686C4D6793D39ADB /* FaceRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78A32E703ECAAC127268AFC /* FaceRecordView.swift */; };
 		C795953E3208B4C7D07892F9 /* MeetingDelegation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF842C8DFF404FC80539511 /* MeetingDelegation.swift */; };
@@ -373,9 +381,11 @@
 		DC4A25D9832A91BE21AAF6FA /* NotificationBell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54488392E83C5D2F055F1BF /* NotificationBell.swift */; };
 		DCAEEBEB8BBA40678F030042 /* WatchLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD2C83E58AEB77B8852236DB /* WatchLocalization.swift */; };
 		DD5284EEA3864A8B74D5EBD5 /* NotchAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124BC3BE9E2377DC2DC7DDC4 /* NotchAgent.swift */; };
+		DD62BEE8A6C3FEF001E8135E /* GoogleSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3032A2E637E47889988C282 /* GoogleSignIn.swift */; };
 		DDE129E0F4ADE20CEC855C07 /* BrainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB356FCDCAA7ACF45363761F /* BrainEngine.swift */; };
 		DECFC24705F44B28EA7E723F /* SummaryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AF3176B12884BB78616861 /* SummaryListView.swift */; };
 		DF6017CBB997D00A88012188 /* MemoryRemarkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4C00383FB29966B078A2AF /* MemoryRemarkProvider.swift */; };
+		E11A400F82C0DDB084BFD6FC /* IntentTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080812F94A60EA101F0EB2BB /* IntentTagger.swift */; };
 		E19C450617B87E3941822AA2 /* NotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37C83D49E48C2C908912BF5 /* NotchView.swift */; };
 		E1F046C638824AC6BA10690D /* DevicePresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */; };
 		E4F94193460A48D6F66E8B29 /* ZoneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376E7AEBEFE4B145D56F821E /* ZoneEngine.swift */; };
@@ -394,7 +404,9 @@
 		F2DB196BE9E7EB724781D972 /* ObsidianExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D3EC43CFA5109F60636F4 /* ObsidianExporter.swift */; };
 		F336100BAB08C31DD593C25F /* AmbientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6374B4731CD9794ADC3D1902 /* AmbientOps.swift */; };
 		F3E745C6272817671239CF28 /* SkinsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785C78DA8EA61A38047E7465 /* SkinsView.swift */; };
+		F457979AD1DB2F9EC52DE621 /* IntentTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080812F94A60EA101F0EB2BB /* IntentTagger.swift */; };
 		F4DE08FA7A3AA67AA81E677D /* SharedInboxProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE87B57917E47D51D3017668 /* SharedInboxProcessor.swift */; };
+		F4FD65445C7EE688A485781E /* IntentTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080812F94A60EA101F0EB2BB /* IntentTagger.swift */; };
 		F5A711151F5B285CB3F7CC40 /* Info-Test.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5C85B6787FFA1E9297B85F5A /* Info-Test.plist */; };
 		F5DD0AF91D01F97D3C400975 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAC9D8D176F80F0CFD86D7B /* ShopView.swift */; };
 		F5EC7D87CEDC1AE969D207E7 /* MorningMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A455369D5DD48B9F437A391 /* MorningMoment.swift */; };
@@ -468,6 +480,7 @@
 		0141182B1EC364988D1301EE /* ImageDownscaler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDownscaler.swift; sourceTree = "<group>"; };
 		0573ECA9B3866ACA5804292D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		06D332B736B216C92F9A7082 /* ArcaShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaShortcuts.swift; sourceTree = "<group>"; };
+		080812F94A60EA101F0EB2BB /* IntentTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentTagger.swift; sourceTree = "<group>"; };
 		081ACFF31D1E38D75F7443B5 /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
 		08C67787A4026B8F5719B5BB /* WatchRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRecorder.swift; sourceTree = "<group>"; };
 		0965856119018122EAA4BBDC /* ArcaEdition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaEdition.swift; sourceTree = "<group>"; };
@@ -578,6 +591,7 @@
 		AC9A9AED04BB6EA962518D23 /* UserWikiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWikiView.swift; sourceTree = "<group>"; };
 		AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatchOnboardingView.swift; sourceTree = "<group>"; };
 		AD204029AF2329934E3322BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B3032A2E637E47889988C282 /* GoogleSignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSignIn.swift; sourceTree = "<group>"; };
 		B94B6BF8FC0AF92C49C3B621 /* ArcaEmptyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcaEmptyState.swift; sourceTree = "<group>"; };
 		B9EE7FD61A7FCB124D824768 /* OpsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpsViews.swift; sourceTree = "<group>"; };
 		BC278547B59354CA3624B45D /* ChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanel.swift; sourceTree = "<group>"; };
@@ -613,6 +627,7 @@
 		E4D8DCE930FE2F4A70415494 /* ZoneSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoneSources.swift; sourceTree = "<group>"; };
 		E54488392E83C5D2F055F1BF /* NotificationBell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBell.swift; sourceTree = "<group>"; };
 		E68DACBA3C07C29F698B9294 /* FloatingCompanion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingCompanion.swift; sourceTree = "<group>"; };
+		E73E085FACD8737E55E64D84 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		E7EDE2779A0CC4CC9D5DADF3 /* NotionDBAutoSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotionDBAutoSync.swift; sourceTree = "<group>"; };
 		E84B636D05D23DB68E5F839D /* ARCA-Beta.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ARCA-Beta.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9761DED7F3249BF6EBC3063 /* ActionItemsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemsCard.swift; sourceTree = "<group>"; };
@@ -635,6 +650,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D4BB69D4610DC2A0AE72C4B /* ArcaVoiceKit in Frameworks */,
+				800F5D10F083413D26738341 /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -651,6 +667,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2148DA949AB84FB8392F1DAB /* ArcaVoiceKit in Frameworks */,
+				C3B180FAA7E4835FC2E35812 /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -659,6 +676,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE768817571590D07AC89C90 /* ArcaVoiceKit in Frameworks */,
+				A4E91E8AF47C0234E863308F /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -752,6 +770,7 @@
 			children = (
 				BC41829B6BEE8B993A3C5FC0 /* CompanionGenesis.swift */,
 				7FC68367DF6F2A00E8819A7B /* CompanionTour.swift */,
+				B3032A2E637E47889988C282 /* GoogleSignIn.swift */,
 				AD1E8C4B355B25B526FC2496 /* HatchOnboardingView.swift */,
 				2811B721CA690FB4D6214CBA /* MacOnboardingGate.swift */,
 				66775A4E16A10D9E7C87C23A /* MacPermissionCoach.swift */,
@@ -986,6 +1005,7 @@
 		8650EAC6A0AF348C3E40D076 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E73E085FACD8737E55E64D84 /* Analytics.swift */,
 				82731CD2C6E93B4C80F2272C /* AppServices.swift */,
 				0965856119018122EAA4BBDC /* ArcaEdition.swift */,
 				702C7B66059D3CCACE8ACDE9 /* ArcaLanguage.swift */,
@@ -997,6 +1017,7 @@
 				4EBEE9A689B49D10CF39B8AC /* DevicePresence.swift */,
 				D1E297C0A34F32907C8096A8 /* EngineFactory.swift */,
 				3A791969313C6DC8730BABA5 /* FinalPassRunner.swift */,
+				080812F94A60EA101F0EB2BB /* IntentTagger.swift */,
 				59E1551A8B3072F0E9D0ED7F /* OrphanRecovery.swift */,
 				D3D28C36173C5BEC1625F471 /* PassRetryScheduler.swift */,
 				DFAFE61E357444FF63E6554B /* PhoneWatchSync.swift */,
@@ -1166,6 +1187,7 @@
 			name = ARCA;
 			packageProductDependencies = (
 				43B589F1254CC496D339F2A1 /* ArcaVoiceKit */,
+				3680FB07210928857D39C723 /* PostHog */,
 			);
 			productName = ARCA;
 			productReference = 30954CEF8090ACBD1A63750D /* ARCA.app */;
@@ -1186,6 +1208,7 @@
 			name = "ARCA-Beta";
 			packageProductDependencies = (
 				6214BB03BF1DE4EC38C39C93 /* ArcaVoiceKit */,
+				D82A64C1372801A4ADF4B9B7 /* PostHog */,
 			);
 			productName = "ARCA-Beta";
 			productReference = E84B636D05D23DB68E5F839D /* ARCA-Beta.app */;
@@ -1206,6 +1229,7 @@
 			name = "ARCA-Test";
 			packageProductDependencies = (
 				1599B4E5607159B229B81BEF /* ArcaVoiceKit */,
+				BAD7E38121628302954A54B1 /* PostHog */,
 			);
 			productName = "ARCA-Test";
 			productReference = C05EC8DE279C3EEDF20375A6 /* ARCA-Test.app */;
@@ -1298,6 +1322,7 @@
 			mainGroup = 55BEB90DDE896789BBEB0632;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				76898558751A765196BBC8DF /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				4BAB334E77BB7C246FFBA935 /* XCLocalSwiftPackageReference "Packages/ArcaVoiceKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -1365,6 +1390,7 @@
 				33D7BD22F21FD3DEBF62CE92 /* AccountSwitcher.swift in Sources */,
 				61963EE7F217ED4FBB78BC6F /* ActionItemsCard.swift in Sources */,
 				35D7CAEF66CBDFDA74642857 /* AmbientOps.swift in Sources */,
+				622840CF2F6E8C3DFB776B68 /* Analytics.swift in Sources */,
 				BA2A47750E904DB8E7D8E69F /* AppServices.swift in Sources */,
 				22340F9EF01047B6B9FB9CB6 /* ArcaClipboard.swift in Sources */,
 				BE6F31DB848A6150B17383D9 /* ArcaCloudSection.swift in Sources */,
@@ -1415,11 +1441,13 @@
 				7DC818AE12E1F68F4A76023C /* FloatingCompanion.swift in Sources */,
 				BDFD1A073BD0CD8A4BD11617 /* FocusMode.swift in Sources */,
 				D96E26C4C34BD84085FF4959 /* FocusRing.swift in Sources */,
+				DD62BEE8A6C3FEF001E8135E /* GoogleSignIn.swift in Sources */,
 				BF818A9846E5F0B873082247 /* HatchOnboardingView.swift in Sources */,
 				2B6E9833A44618B9E564D671 /* HealthVitals.swift in Sources */,
 				1BB78D5658CB29EA71E55CA2 /* HomeView.swift in Sources */,
 				BB5CA82891A149C3948D205E /* HotkeyMonitor.swift in Sources */,
 				7BD8DE659AF6152FC713481B /* ImageDownscaler.swift in Sources */,
+				F4FD65445C7EE688A485781E /* IntentTagger.swift in Sources */,
 				2546F0C2BA65F2C1A5D534FA /* MacOnboardingGate.swift in Sources */,
 				83533E48AC7218E00331343A /* MacPermissionCoach.swift in Sources */,
 				5707E27CAB2A58DBEDA6F9B5 /* MeetingChatSheet.swift in Sources */,
@@ -1505,6 +1533,7 @@
 				29C617BF860550A479D20379 /* AccountSwitcher.swift in Sources */,
 				A3C8A637CBF3D17816618F86 /* ActionItemsCard.swift in Sources */,
 				F336100BAB08C31DD593C25F /* AmbientOps.swift in Sources */,
+				730EA00A014392DC3F3A339A /* Analytics.swift in Sources */,
 				2474C1F5CA3BF7003AF54A98 /* AppServices.swift in Sources */,
 				9370045FBD3B5AEB286588A7 /* ArcaClipboard.swift in Sources */,
 				2AD9043B5E625172D3567A2B /* ArcaCloudSection.swift in Sources */,
@@ -1555,11 +1584,13 @@
 				14C864289DF8DC9B7628671D /* FloatingCompanion.swift in Sources */,
 				B9FEC579970A8A7734D410F2 /* FocusMode.swift in Sources */,
 				04EDBCB9B2E22FD136ED4521 /* FocusRing.swift in Sources */,
+				657C109F1D3451D90FEEC2CF /* GoogleSignIn.swift in Sources */,
 				79100E3B9D8189CB91B099EC /* HatchOnboardingView.swift in Sources */,
 				B35500F5B3E11A8AFF3C1B06 /* HealthVitals.swift in Sources */,
 				0E61F03040CE628507AAEE87 /* HomeView.swift in Sources */,
 				21912877959F3E63A51EF6C0 /* HotkeyMonitor.swift in Sources */,
 				5A3B52C0E69C23F0A08D5095 /* ImageDownscaler.swift in Sources */,
+				E11A400F82C0DDB084BFD6FC /* IntentTagger.swift in Sources */,
 				4B7502399FFA6BDC0326E4FD /* MacOnboardingGate.swift in Sources */,
 				ACC5533AC8013A7FAB2D6F6D /* MacPermissionCoach.swift in Sources */,
 				73F160F7D7F3796B876048AF /* MeetingChatSheet.swift in Sources */,
@@ -1634,6 +1665,7 @@
 				68B8FE1F5770DE4242C18347 /* AccountSwitcher.swift in Sources */,
 				875E14D09F06A687C82DE18E /* ActionItemsCard.swift in Sources */,
 				786B1AC912D50EF59A2C67A5 /* AmbientOps.swift in Sources */,
+				866B0ECA517DCCC63B206B70 /* Analytics.swift in Sources */,
 				6BA5C40615E34C8B4F6ECB99 /* AppServices.swift in Sources */,
 				94A8065ADFDE3C4E2E7943CC /* ArcaClipboard.swift in Sources */,
 				85E856C0C3173F5CED295670 /* ArcaCloudSection.swift in Sources */,
@@ -1684,11 +1716,13 @@
 				ED279BE553EE28D60D4DE596 /* FloatingCompanion.swift in Sources */,
 				225EE0F54E720E61061F39DC /* FocusMode.swift in Sources */,
 				382989C88EF2EAF7ED8C2485 /* FocusRing.swift in Sources */,
+				394B9692633691F9A20FC7A4 /* GoogleSignIn.swift in Sources */,
 				56A17FBA446DB359FDD09ED4 /* HatchOnboardingView.swift in Sources */,
 				8D5DFB00FB130273CBEA164A /* HealthVitals.swift in Sources */,
 				9CE932E265749D75EC5C8903 /* HomeView.swift in Sources */,
 				A3707929DDDD31434A6F6191 /* HotkeyMonitor.swift in Sources */,
 				3A4166CF0B0BF34BED219BB2 /* ImageDownscaler.swift in Sources */,
+				F457979AD1DB2F9EC52DE621 /* IntentTagger.swift in Sources */,
 				C7F8362013B099962AC5CCE0 /* MacOnboardingGate.swift in Sources */,
 				7F26B56122162B8D5376DB7F /* MacPermissionCoach.swift in Sources */,
 				8215C5E22B581C5DD5D11057 /* MeetingChatSheet.swift in Sources */,
@@ -2375,10 +2409,26 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		76898558751A765196BBC8DF /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		1599B4E5607159B229B81BEF /* ArcaVoiceKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ArcaVoiceKit;
+		};
+		3680FB07210928857D39C723 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 76898558751A765196BBC8DF /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 		43B589F1254CC496D339F2A1 /* ArcaVoiceKit */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -2396,9 +2446,19 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ArcaVoiceKit;
 		};
+		BAD7E38121628302954A54B1 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 76898558751A765196BBC8DF /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
 		BCAAE3A5420E2AC1E4DE05F1 /* ArcaVoiceKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ArcaVoiceKit;
+		};
+		D82A64C1372801A4ADF4B9B7 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 76898558751A765196BBC8DF /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

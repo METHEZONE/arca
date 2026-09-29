@@ -151,8 +151,8 @@ struct SessionDetailView: View {
                     onAddParticipantOnly: addParticipantOnly(name:email:)
                 )
 
-                notesSection
-                transcriptSection(model: model)
+                notesSection.analyticsPrivate()
+                transcriptSection(model: model).analyticsPrivate()
             }
             .padding()
         }
@@ -402,7 +402,7 @@ struct SessionDetailView: View {
                 }
                 if let summary = note.summaryMarkdown, !summary.isEmpty {
                     NoteCard(title: L("회의 요약", "Meeting Summary"),
-                             icon: "doc.text.fill", markdown: summary)
+                             icon: "doc.text.fill", markdown: summary, collapsible: true)
                 }
                 if let data = note.decisionsJSON,
                    let decisions = try? JSONDecoder().decode([String].self, from: data),
@@ -612,12 +612,33 @@ private struct NoteCard: View {
     let title: String
     let icon: String
     let markdown: String
+    /// Frontload, then load more: the summary's opening paragraph (the TL;DR)
+    /// shows first; the topic sections wait behind 자세히 보기.
+    var collapsible = false
+    @State private var expanded = false
+
+    private var lead: String? {
+        guard collapsible,
+              let range = markdown.range(of: "\n\n") else { return nil }
+        let first = String(markdown[..<range.lowerBound])
+        return first.count < markdown.count - 40 ? first : nil
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(title, systemImage: icon)
                 .font(.headline)
-            MarkdownText(markdown)
+            if let lead, !expanded {
+                MarkdownText(lead)
+                Button(L("자세히 보기", "Show details")) {
+                    withAnimation(.spring(duration: 0.3)) { expanded = true }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(ArcaFace.ember)
+                .buttonStyle(.plain)
+            } else {
+                MarkdownText(markdown)
+            }
         }
         .padding(14)
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 12))

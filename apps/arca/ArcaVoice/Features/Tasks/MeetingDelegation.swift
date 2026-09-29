@@ -14,6 +14,7 @@ enum MeetingDelegation {
               var items = try? JSONDecoder().decode([MeetingNotes.ActionItem].self, from: data),
               !items.isEmpty else { return }
         BrainClient.track("action_plan_ready")
+        IntentTagger.tag(note.summaryMarkdown ?? record.title, surface: "meeting")
 
         let source = "meeting:\(record.directoryName)"
         let existing = (try? context.fetch(FetchDescriptor<TodoTask>(

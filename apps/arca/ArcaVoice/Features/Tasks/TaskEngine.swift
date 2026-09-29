@@ -125,8 +125,8 @@ final class TaskEngine {
         guard let key = anthropicKey else { throw TaskError.noKey }
         let language = ArcaLanguageResolver.isKorean ? "In Korean." : "In English."
         let prompt = task.actionKind == .draft || asDraft
-            ? "Write the deliverable for the following task (email/message/document draft) so it's ready to use as-is. \(language) Title: \(task.title). Description: \(task.detail)"
-            : "Research and summarize the following task, distilling just the key points. \(language) Title: \(task.title). Description: \(task.detail)"
+            ? "Write the deliverable for the following task (email/message/document draft) so it's ready to use as-is. First line: one plain sentence saying what this draft is and who it's for. Then a blank line, then the draft itself. \(language) Title: \(task.title). Description: \(task.detail)"
+            : "Research the following task. First line: the answer in one sentence (under 60 characters). Then at most three short bullets with the key facts. Then a 'Details' section and the sources. People read the first line, some read the bullets, few read on — write for that. \(language) Title: \(task.title). Description: \(task.detail)"
         let messages = [ChatMessage(role: .user, parts: [.text(prompt)])]
         guard task.actionKind == .research, !asDraft else {
             return try await ClaudeChat(apiKey: key, model: model).reply(to: messages, maxTokens: 1200)
