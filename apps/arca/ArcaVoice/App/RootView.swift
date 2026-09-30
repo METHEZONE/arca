@@ -114,11 +114,7 @@ struct RootView: View {
             switch route {
             case "talk":
                 selectedTab = .chat
-                // Let the tab mount before dropping into the voice turn.
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(350))
-                    NotificationCenter.default.post(name: .arcaOpenTalk, object: nil)
-                }
+                services.voiceTurnRequested = true
             case "record":
                 selectedTab = .home
                 if coordinator.phase == .idle { services.startRecording() }

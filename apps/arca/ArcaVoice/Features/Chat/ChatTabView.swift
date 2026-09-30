@@ -46,7 +46,13 @@ struct ChatTabView: View {
                   let last = chat.messages.last, last.role == .assistant else { return }
             voice.speak(last.displayText)
         }
-        // arca://talk (island / Action Button) drops straight into voice.
+        // arca://talk (island / Action Button) and a hold on the home face
+        // drop straight into voice — whether or not this tab existed yet.
+        .onChange(of: AppServices.shared.voiceTurnRequested, initial: true) { _, requested in
+            guard requested else { return }
+            AppServices.shared.voiceTurnRequested = false
+            Task { await beginVoiceTurn() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .arcaOpenTalk)) { _ in
             Task { await beginVoiceTurn() }
         }

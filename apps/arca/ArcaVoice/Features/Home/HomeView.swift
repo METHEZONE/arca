@@ -29,6 +29,25 @@ struct HomeView: View {
 
     private var phase: RecordingCoordinator.Phase { services.coordinator.phase }
 
+    @Query(sort: \RecordingSession.createdAt) private var allSessions: [RecordingSession]
+    @Query private var memories: [MemoryFact]
+
+    /// "함께한 지 D+12일 · 기억 34개" — what ARCA and you have built so far.
+    private var togetherLine: String {
+        guard let first = allSessions.first?.createdAt else { return "" }
+        let days = CompanionHomeLogic.dayCount(since: first)
+        return memories.isEmpty
+            ? L("함께한 지 D+\(days)일", "D+\(days) together")
+            : L("함께한 지 D+\(days)일 · 기억 \(memories.count)개", "D+\(days) together · \(memories.count) memories")
+    }
+
+    private func holdFace() {
+        guard phase == .idle else { return }
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        // The same route the Action Button uses: Chat tab, voice turn open.
+        services.pendingRoute = "talk"
+    }
+
     @Query(filter: #Predicate<TodoTask> { $0.stateRaw == "open" && $0.actionKindRaw != "manual" },
            sort: \TodoTask.createdAt, order: .reverse)
     private var askingTasks: [TodoTask]
@@ -94,10 +113,24 @@ struct HomeView: View {
                     }
                     SpiritFace(mood: mood, size: 190)
                         .scaleEffect(tapBounce ? 0.88 : 1.0)
-                        .onTapGesture { tapFace() }
+                        // The whole face is the button, not only its painted pixels.
+                        .contentShape(Circle())
+                        // Hold to talk (like the Watch), tap to record. One
+                        // gesture, hold decided first — two separate modifiers
+                        // raced and the hold was lost about half the time.
+                        .gesture(
+                            LongPressGesture(minimumDuration: 0.45)
+                                .onEnded { _ in holdFace() }
+                                .exclusively(before: TapGesture().onEnded { tapFace() }))
                 }
 
                 statusLine
+
+                if phase == .idle, !togetherLine.isEmpty {
+                    Text(togetherLine)
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
 
                 Spacer(minLength: 10)
 
@@ -223,7 +256,7 @@ struct HomeView: View {
             VStack(spacing: 4) {
                 Text(readingShot
                      ? L("스크린샷을 읽고 있어요…", "Reading your screenshot…")
-                     : L("누르면 들을게요", "Tap and I'll listen"))
+                     : L("누르면 녹음, 꾹 누르면 대화", "Tap to record, hold to talk"))
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.9))
             }
