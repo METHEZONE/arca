@@ -29,8 +29,41 @@ final class VoiceTalk: NSObject {
         synthesizer.delegate = self
     }
 
+    /// The system answers on a background queue. A closure written inside this
+    /// @MainActor class inherits its isolation, and Swift 6 traps the moment
+    /// the callback runs off the main thread — the first tap on the mic (or a
+    /// hold on the home face) crashed the app. Nonisolated, it's just a value.
+    nonisolated private static func speechAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
+        await withCheckedContinuation { continuation in
+            SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
+        }
+    }
+
+    /// Same trap, audio thread: the tap runs on the render thread and the
+    /// recognizer calls back on its own queue, so neither closure may be born
+    /// inside this @MainActor class.
+    nonisolated private static func feed(_ input: AVAudioInputNode, format: AVAudioFormat,
+                                         into request: SFSpeechAudioBufferRecognitionRequest) {
+        nonisolated(unsafe) let request = request
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+            request.append(buffer)
+        }
+    }
+
+    nonisolated private static func recognize(
+        _ recognizer: SFSpeechRecognizer, _ request: SFSpeechAudioBufferRecognitionRequest,
+        update: @escaping @Sendable (String?, Bool, String?) -> Void
+    ) -> SFSpeechRecognitionTask {
+        recognizer.recognitionTask(with: request) { result, error in
+            if let error { DebugTrace.log("voice: recognizer ended — \(error.localizedDescription)") }
+            update(result?.bestTranscription.formattedString, error != nil || (result?.isFinal ?? false),
+                   error?.localizedDescription)
+        }
+    }
+
     /// Starts listening; live text lands in `liveTranscript`.
     func startListening() async {
+        DebugTrace.log("voice: start (listening=\(isListening), recordingClaimed=\(AudioSessionArbiter.isRecordingClaimed))")
         guard !isListening else { return }
         // There is one AVAudioSession per process. Claiming it here with
         // `.measurement` mode reconfigures the session under the recording's live
@@ -43,23 +76,26 @@ final class VoiceTalk: NSObject {
         error = nil
         liveTranscript = ""
 
-        let auth = await withCheckedContinuation { cont in
-            SFSpeechRecognizer.requestAuthorization { cont.resume(returning: $0) }
-        }
-        guard auth == .authorized else {
-            error = "Speech recognition permission needed — allow it in Settings."
+        let speechStatus = await Self.speechAuthorization()
+        DebugTrace.log("voice: speech auth \(speechStatus.rawValue)")
+        guard speechStatus == .authorized else {
+            error = L("음성 인식을 허용해 주세요. 설정 › ARCA에서 켤 수 있어요.",
+                      "Allow speech recognition in Settings › ARCA.")
             return
         }
         guard await AVAudioApplication.requestRecordPermission() else {
-            error = "Microphone permission needed."
+            error = L("마이크를 허용해 주세요. 설정 › ARCA에서 켤 수 있어요.",
+                      "Allow the microphone in Settings › ARCA.")
             return
         }
 
         stopSpeaking()
-        recognizer = SFSpeechRecognizer(locale: Locale.current)
+        // The language recordings turned out to be in, not the phone's.
+        recognizer = SFSpeechRecognizer(locale: TranscriptionPrefs.liveLocale)
             ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        DebugTrace.log("voice: recognizer \(recognizer?.locale.identifier ?? "nil") available=\(recognizer?.isAvailable ?? false)")
         guard let recognizer, recognizer.isAvailable else {
-            error = "Speech recognition unavailable right now."
+            error = L("지금은 음성 인식을 쓸 수 없어요. 잠시 뒤 다시 해 주세요.", "Speech recognition isn't available right now.")
             return
         }
 
@@ -75,26 +111,28 @@ final class VoiceTalk: NSObject {
 
             let input = engine.inputNode
             let format = input.outputFormat(forBus: 0)
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
-                request.append(buffer)
-            }
+            Self.feed(input, format: format, into: request)
             engine.prepare()
             try engine.start()
             isListening = true
+            DebugTrace.log("voice: listening")
 
-            task = recognizer.recognitionTask(with: request) { [weak self] result, err in
+            task = Self.recognize(recognizer, request) { [weak self] text, ended, failure in
                 Task { @MainActor in
                     guard let self else { return }
-                    if let result {
-                        self.liveTranscript = result.bestTranscription.formattedString
+                    if let text { self.liveTranscript = text }
+                    guard ended else { return }
+                    // Dying before a single word used to just switch the mic
+                    // off — say so, so it isn't read as "tapping does nothing".
+                    if failure != nil, self.liveTranscript.isEmpty {
+                        self.error = L("음성 인식을 시작하지 못했어요. 잠시 뒤 다시 눌러 주세요.",
+                                       "Couldn't start listening. Try again in a moment.")
                     }
-                    if err != nil || (result?.isFinal ?? false) {
-                        self.teardownAudio()
-                    }
+                    self.teardownAudio()
                 }
             }
         } catch {
-            self.error = "Couldn't start listening: \(error.localizedDescription)"
+            self.error = L("듣기를 시작하지 못했어요: \(error.localizedDescription)", "Couldn't start listening: \(error.localizedDescription)")
             teardownAudio()
         }
     }

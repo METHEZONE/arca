@@ -33,6 +33,9 @@ enum Analytics {
         config.sessionReplay = true
         config.sessionReplayConfig.maskAllTextInputs = true
         config.sessionReplayConfig.maskAllImages = true
+        // SwiftUI screens only replay as screenshots; the wireframe mode came
+        // back blank. Masks (.analyticsPrivate, inputs, images) still apply.
+        config.sessionReplayConfig.screenshotMode = true
         #endif
         PostHogSDK.shared.setup(config)
         #if DEBUG

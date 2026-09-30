@@ -18,6 +18,10 @@ final class AppServices {
     var sessionToOpen: RecordingSession?
     /// Deep-link/App-Intent routing: "talk" | "record" | "chat" — consumed by RootView.
     var pendingRoute: String?
+    /// A voice turn asked for before the Chat tab exists (hold on the home
+    /// face, Action Button). The tab consumes it when it appears — a
+    /// notification posted into a tab that hasn't mounted yet is just lost.
+    var voiceTurnRequested = false
     /// Startup/config warning shown once by RootView instead of crashing.
     var startupNotice: String?
 
