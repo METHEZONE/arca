@@ -78,6 +78,18 @@ enum Analytics {
         #endif
     }
 
+    /// One event per proposal state change ("shown", "approved", "rejected",
+    /// "auto_executed"), keyed by `id`, so shown→answered latency and "shown, never
+    /// answered" come out of a single PostHog query. `age_s` = seconds since the
+    /// item was created. The bare funnel kinds in `BrainClient.track` carry no
+    /// payload; this is the payload.
+    static func proposal(_ phase: String, id: UUID, kind: String, title: String, source: String, since: Date) {
+        content("proposal_event", [
+            "phase": phase, "id": id.uuidString, "kind": kind, "title": title,
+            "source": source, "age_s": Int(Date.now.timeIntervalSince(since)),
+        ], limit: 200)
+    }
+
     /// Google sign-in: the same person, now with a name on the dashboard.
     @MainActor static func signedIn(email: String) {
         #if canImport(PostHog)
