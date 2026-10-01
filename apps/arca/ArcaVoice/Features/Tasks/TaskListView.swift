@@ -372,6 +372,7 @@ private struct QuestRow: View {
             Button {
                 UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                 BrainClient.track("proposal_rejected")
+                Self.report("rejected", task)
                 task.actionKind = .manual
                 task.autonomyRationale = L("직접 하기로 했어요.", "You're handling this one.")
                 task.touch()
@@ -387,6 +388,7 @@ private struct QuestRow: View {
             Button {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 BrainClient.track("proposal_approved")
+                Self.report("approved", task)
                 TaskEngine.shared.toss(task, approved: true)
             } label: {
                 Text(L("네", "Yes"))
@@ -407,6 +409,12 @@ private struct QuestRow: View {
         guard asked.insert(task.uid.uuidString).inserted else { return }
         UserDefaults.standard.set(Array(asked.suffix(500)), forKey: key)
         BrainClient.track("proposal_shown")
+        report("shown", task)
+    }
+
+    private static func report(_ phase: String, _ task: TodoTask) {
+        Analytics.proposal(phase, id: task.uid, kind: task.actionKindRaw, title: task.title,
+                           source: task.sourceRaw, since: task.createdAt)
     }
 
     @ViewBuilder private var trailing: some View {

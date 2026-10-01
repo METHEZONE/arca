@@ -262,6 +262,7 @@ final class AmbientOps {
                             autoCandidates.append(proposal)
                         } else {
                             pendingQuestions.append(proposal)
+                            Self.report("shown", proposal)
                         }
                         madeProposal = true
                     }
@@ -480,6 +481,7 @@ final class AmbientOps {
             // Traction: a delegated reply actually left the building.
             BrainClient.track(auto ? "auto_executed" : "proposal_approved")
             BrainClient.track("loop_closed")
+            Self.report(auto ? "auto_executed" : "approved", proposal)
             #if os(macOS)
             let target = proposal.author.isEmpty ? proposal.channel : proposal.author
             let what = proposal.attachmentName.map {
@@ -610,9 +612,15 @@ final class AmbientOps {
         }
     }
 
+    private static func report(_ phase: String, _ proposal: ReplyProposal) {
+        Analytics.proposal(phase, id: proposal.uid, kind: "reply", title: proposal.subject ?? proposal.draft,
+                           source: proposal.sourceRaw, since: proposal.createdAt)
+    }
+
     func skip(_ proposal: ReplyProposal, context: ModelContext) {
         proposal.stateRaw = "skipped"
         BrainClient.track("proposal_rejected")
+        Self.report("rejected", proposal)
         try? context.save()
     }
 
