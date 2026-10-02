@@ -49,6 +49,25 @@ public enum AudioFinalizer {
         caf.deletingPathExtension().appendingPathExtension("m4a")
     }
 
+    /// Whether every sample of `url` decodes. False for a file that won't open
+    /// or throws partway through (killed mid-write before crash-safe capture)
+    /// — damage no retry can fix. Decodes the whole file: call it only after
+    /// a pass has already failed.
+    public static func isFullyReadable(_ url: URL) -> Bool {
+        guard let file = try? AVAudioFile(forReading: url), file.length > 0,
+              let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 65_536)
+        else { return false }
+        do {
+            while file.framePosition < file.length {
+                try file.read(into: buffer)
+                if buffer.frameLength == 0 { break }
+            }
+        } catch {
+            return false
+        }
+        return true
+    }
+
     /// Seconds of audio in a file, or 0 when it can't be opened.
     public static func duration(of url: URL) -> TimeInterval {
         guard let file = try? AVAudioFile(forReading: url),

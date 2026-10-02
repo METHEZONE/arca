@@ -26,7 +26,8 @@ enum FinalPassRunner {
         languageHints: [String],
         rosterSnapshots: [RosterSnapshot] = [],
         recordingStartedAt: Date? = nil,
-        engine: TranscriptionEngine? = nil
+        engine: TranscriptionEngine? = nil,
+        announceFailure: Bool = false
     ) {
         guard !inFlight.contains(record.directoryName) else {
             DebugTrace.log("final pass: already running for \(record.directoryName), skipping")
@@ -63,7 +64,8 @@ enum FinalPassRunner {
             await process(record: record, files: files, userNotes: userNotes,
                           ownerName: ownerName, languageHints: languageHints,
                           rosterSnapshots: rosterSnapshots,
-                          recordingStartedAt: recordingStartedAt, engine: engine)
+                          recordingStartedAt: recordingStartedAt, engine: engine,
+                          announceFailure: announceFailure)
         }
     }
 
@@ -76,7 +78,8 @@ enum FinalPassRunner {
         languageHints: [String],
         rosterSnapshots: [RosterSnapshot],
         recordingStartedAt: Date?,
-        engine: TranscriptionEngine?
+        engine: TranscriptionEngine?,
+        announceFailure: Bool
     ) async {
         // Nothing to transcribe if nothing was captured. A meeting recorded off
         // a virtual input (BlackHole, a Zoom/Teams audio device) is exact
@@ -259,9 +262,12 @@ enum FinalPassRunner {
                 await rememberFromMeeting(record: record, notes: notes)
             }
         } catch {
-            // Opened but couldn't be read through (truncated mid-file): same
-            // verdict as a file that won't open — a retry can't fix the bytes.
-            if error.localizedDescription.contains("Could not split the recording") {
+            // Cutting the audio into upload chunks failed. If the file itself
+            // can't be decoded end to end, no retry will ever fix it; any other
+            // cause (a temp file, a hiccup) keeps its retries. Judged by
+            // reading the audio, not by the wording of the error.
+            if error.localizedDescription.contains("Could not split the recording"),
+               !files.values.contains(where: AudioFinalizer.isFullyReadable) {
                 markUnreadable(record)
                 return
             }
@@ -274,9 +280,10 @@ enum FinalPassRunner {
                 "고품질 전사를 아직 못 했어요 (\(error.localizedDescription)). 기기에서 만든 전사는 그대로 있고, 연결되면 자동으로 다시 시도해요.",
                 "The high-quality pass hasn't landed yet (\(error.localizedDescription)). Your on-device transcript is intact, and ARCA retries automatically once it can reach the network.")
             try? record.modelContext?.save()
-            // Only for what the user just recorded. A background retry of an
-            // old recording failing again is not news.
-            if Date.now.timeIntervalSince(record.createdAt) < 6 * 3600 {
+            // Once, for the recording the user just finished. Retries run on
+            // every launch and foreground; announcing each one is what filled
+            // the lock screen. The library row still shows the error.
+            if announceFailure {
                 SummaryNotifier.processingFailed(record: record, message: error.localizedDescription)
             }
         }

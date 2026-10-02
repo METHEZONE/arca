@@ -30,6 +30,27 @@ import ArcaVoiceCore
         return Double(file.length) / file.processingFormat.sampleRate
     }
 
+    /// The final pass stops retrying only audio that can't be read through —
+    /// a transient failure must keep its retries.
+    @Test func onlyAudioThatCantBeReadThroughCountsAsDamaged() throws {
+        let dir = try tempDirectory()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let m4a = dir.appendingPathComponent("microphone.m4a")
+        let source = micBuffer(seconds: 3)
+        let out = try AVAudioFile(forWriting: m4a, settings: AudioFinalizer.aacSettings,
+                                  commonFormat: .pcmFormatFloat32, interleaved: false)
+        try out.write(from: source)
+        out.close()
+        #expect(AudioFinalizer.isFullyReadable(m4a))
+
+        // Pre-CAF recordings killed mid-write: half an m4a, no index.
+        let data = try Data(contentsOf: m4a)
+        let torn = dir.appendingPathComponent("torn.m4a")
+        try data.prefix(data.count / 2).write(to: torn)
+        #expect(!AudioFinalizer.isFullyReadable(torn))
+        #expect(!AudioFinalizer.isFullyReadable(dir.appendingPathComponent("missing.m4a")))
+    }
+
     @Test func aRecordingKilledMidWriteIsStillReadable() throws {
         let dir = try tempDirectory()
         defer { try? FileManager.default.removeItem(at: dir) }

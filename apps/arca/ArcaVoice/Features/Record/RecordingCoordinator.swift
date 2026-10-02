@@ -433,7 +433,8 @@ final class RecordingCoordinator {
                                 // just heard which language this recording is in.
                                 ownerName: ownerName, languageHints: TranscriptionPrefs.languageHints,
                                 rosterSnapshots: rosterSnapshots,
-                                recordingStartedAt: startedAtSnapshot)
+                                recordingStartedAt: startedAtSnapshot,
+                                announceFailure: true)
             return record
         } catch {
             errorMessage = error.localizedDescription
