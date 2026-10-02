@@ -226,6 +226,10 @@ final class PhoneWatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
         Task { @MainActor in
             guard let container = self.container else { return }
             let context = container.mainContext
+            // WatchConnectivity can deliver the same file twice; one recording, one row.
+            let dir = directoryName
+            if let count = try? context.fetchCount(FetchDescriptor<RecordingSession>(
+                predicate: #Predicate { $0.directoryName == dir })), count > 0 { return }
 
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: ArcaLanguageResolver.isKorean ? "ko_KR" : "en_US")
