@@ -252,7 +252,8 @@ final class PhoneWatchSync: NSObject, WCSessionDelegate, @unchecked Sendable {
                 files: [.microphone: destination],
                 userNotes: nil,
                 ownerName: UserDefaults.standard.string(forKey: "ownerName") ?? "Me",
-                languageHints: TranscriptionPrefs.languageHints)
+                languageHints: TranscriptionPrefs.languageHints,
+                announceFailure: true)
         }
     }
 }
