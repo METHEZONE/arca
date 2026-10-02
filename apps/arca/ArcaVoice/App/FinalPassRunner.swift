@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import SwiftData
 import ArcaVoiceKit
@@ -51,6 +52,14 @@ enum FinalPassRunner {
             defer { grace.end() }
             #endif
             let files = await compactRecordingFiles(record: record, files: files)
+            // Audio that can't even be opened (a recording killed mid-write
+            // months ago, before crash-safe capture) never transcribes, and
+            // retrying it on every launch is what filled the lock screen with
+            // "처리에 실패했어요". Say so once, keep whatever transcript exists.
+            guard files.values.contains(where: { (try? AVAudioFile(forReading: $0)) != nil }) else {
+                markUnreadable(record)
+                return
+            }
             await process(record: record, files: files, userNotes: userNotes,
                           ownerName: ownerName, languageHints: languageHints,
                           rosterSnapshots: rosterSnapshots,
@@ -250,6 +259,12 @@ enum FinalPassRunner {
                 await rememberFromMeeting(record: record, notes: notes)
             }
         } catch {
+            // Opened but couldn't be read through (truncated mid-file): same
+            // verdict as a file that won't open — a retry can't fix the bytes.
+            if error.localizedDescription.contains("Could not split the recording") {
+                markUnreadable(record)
+                return
+            }
             // The live transcript stays put — it's already in `segments` and
             // nothing above this point touched it. Only the cloud half is
             // missing, so mark the session for retry rather than final.
@@ -259,8 +274,22 @@ enum FinalPassRunner {
                 "고품질 전사를 아직 못 했어요 (\(error.localizedDescription)). 기기에서 만든 전사는 그대로 있고, 연결되면 자동으로 다시 시도해요.",
                 "The high-quality pass hasn't landed yet (\(error.localizedDescription)). Your on-device transcript is intact, and ARCA retries automatically once it can reach the network.")
             try? record.modelContext?.save()
-            SummaryNotifier.processingFailed(record: record, message: error.localizedDescription)
+            // Only for what the user just recorded. A background retry of an
+            // old recording failing again is not news.
+            if Date.now.timeIntervalSince(record.createdAt) < 6 * 3600 {
+                SummaryNotifier.processingFailed(record: record, message: error.localizedDescription)
+            }
         }
+    }
+
+    private static func markUnreadable(_ record: RecordingSession) {
+        record.state = .ready
+        record.qualityPassPending = false
+        record.processingError = record.segments.isEmpty
+            ? L("이 녹음 파일은 손상돼서 받아적을 수 없어요.", "This recording's audio is damaged and can't be transcribed.")
+            : L("오디오 파일이 손상돼서 녹음 중에 받아적은 내용만 남아 있어요.", "The audio is damaged; only the live transcript remains.")
+        try? record.modelContext?.save()
+        DebugTrace.log("final pass: \(record.directoryName) audio unreadable — stopped retrying")
     }
 
     // MARK: - Audio compaction

@@ -26,6 +26,8 @@ struct HomeView: View {
     /// so the phone and the Mac reach the same places by the same names.
     @State private var openSection: ArcaSection?
     @State private var openedDaySession: RecordingSession?
+    /// What ARCA is doing between your taps ("간식 먹는 중") — same life as the Mac.
+    @State private var activity: SpiritFace.Activity?
 
     private var phase: RecordingCoordinator.Phase { services.coordinator.phase }
 
@@ -96,6 +98,7 @@ struct HomeView: View {
             // Scrolls now that the home carries the morning card and the section
             // list. The hero still owns the first screenful; the cards peeking
             // below are what tell you there's more down there.
+            GeometryReader { geo in
             ScrollView {
                 VStack(spacing: 22) {
                     Spacer(minLength: 10)
@@ -111,7 +114,8 @@ struct HomeView: View {
                             .frame(width: 250, height: 250)
                             .allowsHitTesting(false)
                     }
-                    SpiritFace(mood: mood, size: 190)
+                    SpiritFace(mood: mood, size: 190, activities: true,
+                               onActivity: { a in withAnimation(.easeInOut(duration: 0.3)) { activity = a } })
                         .scaleEffect(tapBounce ? 0.88 : 1.0)
                         // The whole face is the button, not only its painted pixels.
                         .contentShape(Circle())
@@ -123,8 +127,15 @@ struct HomeView: View {
                                 .onEnded { _ in holdFace() }
                                 .exclusively(before: TapGesture().onEnded { tapFace() }))
                 }
+                // Room for the ring, and for the laptop/TV ARCA sets down
+                // below itself, with or without Health data.
+                .frame(height: 236)
 
                 statusLine
+
+                if phase == .idle {
+                    conditionChip
+                }
 
                 if phase == .idle, !togetherLine.isEmpty {
                     Text(togetherLine)
@@ -150,8 +161,13 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
+                // The first screenful is the hero, centred: ARCA sat in the
+                // top third with a void under it.
+                .frame(maxWidth: .infinity, minHeight: geo.size.height)
+            }
             }
         }
+        .task { await vitals.refresh() }
         .fullScreenCover(isPresented: Binding(get: { !onboarded }, set: { _ in })) {
             OnboardingView { onboarded = true }
         }
@@ -259,7 +275,48 @@ struct HomeView: View {
                      : L("누르면 녹음, 꾹 누르면 대화", "Tap to record, hold to talk"))
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.9))
+                if let activity, !readingShot {
+                    Text(activity.caption)
+                        .font(.subheadline)
+                        .foregroundStyle(ArcaFace.ember.opacity(0.85))
+                        .transition(.opacity)
+                }
             }
+        }
+    }
+
+    /// Says what the ring around ARCA is, and opens 컨디션. Without Health
+    /// access it's the one-tap way to connect it.
+    @ViewBuilder private var conditionChip: some View {
+        if let score = vitals.ringScore {
+            Button { openSection = .condition } label: {
+                HStack(spacing: 6) {
+                    Circle().fill(FocusRing.tint(for: score)).frame(width: 8, height: 8)
+                    Text(vitals.ringIsLive
+                         ? L("몰입 깊이 \(score) · \(vitals.ringLabel)", "Focus depth \(score) · \(vitals.ringLabel)")
+                         : L("오늘 컨디션 \(score) · \(vitals.ringLabel)", "Today's condition \(score) · \(vitals.ringLabel)"))
+                    Image(systemName: "chevron.right").font(.caption2.weight(.bold))
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.8))
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(.white.opacity(0.08), in: Capsule())
+            }
+            .buttonStyle(.plain)
+        } else if vitals.needsPermissionPrompt {
+            Button {
+                Task {
+                    await vitals.requestPermission()
+                    openSection = .condition
+                }
+            } label: {
+                Label(L("건강 데이터 연결하기", "Connect Health data"), systemImage: "heart.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(.white.opacity(0.08), in: Capsule())
+            }
+            .buttonStyle(.plain)
         }
     }
 

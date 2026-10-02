@@ -24,21 +24,23 @@ struct RootView: View {
 
     var body: some View {
         #if os(iOS)
+        // Tab glyphs are ARCA's own (Assets: Tab*) — chunky and round like
+        // her, instead of thin, detailed SF Symbols.
         TabView(selection: $selectedTab) {
             Tab(value: AppTab.home) {
                 HomeView().analyticsScreen("홈")
             } label: {
-                Label(L("홈", "Home"), systemImage: "sparkles")
+                Label(L("홈", "Home"), image: "TabHome")
             }
             Tab(value: AppTab.chat) {
                 ChatTabView().analyticsScreen("채팅")
             } label: {
-                Label(L("채팅", "Chat"), systemImage: "bubble.left.and.text.bubble.right")
+                Label(L("채팅", "Chat"), image: "TabChat")
             }
             Tab(value: AppTab.tasks) {
                 TaskListView().analyticsScreen("할 일")
             } label: {
-                Label(L("할 일", "Tasks"), systemImage: "checklist")
+                Label(L("할 일", "Tasks"), image: "TabTasks")
             }
             Tab(value: AppTab.brain) {
                 NavigationStack {
@@ -47,12 +49,12 @@ struct RootView: View {
                         .navigationBarTitleDisplayMode(.inline)
                 }
             } label: {
-                Label(L("메모리", "Brain"), systemImage: "brain.head.profile")
+                Label(L("메모리", "Brain"), image: "TabMemory")
             }
             Tab(value: AppTab.library) {
                 library.analyticsScreen("라이브러리")
             } label: {
-                Label(L("라이브러리", "Library"), systemImage: "waveform")
+                Label(L("라이브러리", "Library"), image: "TabLibrary")
             }
         }
         // ARCA is a night creature: the home is painted dark, so every other
@@ -60,6 +62,13 @@ struct RootView: View {
         .preferredColorScheme(.dark)
         .tint(ArcaFace.ember)
         .task {
+            #if DEBUG
+            // `-arcaStartTab chat|tasks|brain|library` — Simulator screenshots.
+            if let tab = UserDefaults.standard.string(forKey: "arcaStartTab") {
+                try? await Task.sleep(for: .seconds(2))
+                selectedTab = ["chat": .chat, "tasks": .tasks, "brain": .brain, "library": .library][tab] ?? .home
+            }
+            #endif
             presentPendingContextIfNeeded()
             await RelaySync.shared.syncNow()
             await AmbientOps.shared.harvest(context: modelContext)
@@ -123,6 +132,8 @@ struct RootView: View {
                 services.stopRecording()
             case "chat":
                 selectedTab = .chat
+            case "home":
+                selectedTab = .home
             case "context":
                 // The share extension just deep-linked us open — present the
                 // shared item's action sheet immediately.

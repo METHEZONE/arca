@@ -29,15 +29,18 @@ enum TranscriptionPrefs {
     }
 
     /// "auto": languages to try at once at the start of a recording
-    /// (`AutoLanguageTranscriber`) — the one heard last time first, then the
-    /// device's languages, then whichever of Korean/English is still missing,
-    /// so a Korean speaker on an English iPhone (or the reverse) is covered.
-    /// Two at most: each is a recognizer running for the first 20 seconds.
+    /// (`AutoLanguageTranscriber`) — ARCA's language first (ties go to it),
+    /// then the device's languages, then whichever of Korean/English is still
+    /// missing, so a Korean speaker on an English iPhone (or the reverse) is
+    /// covered. Two at most: each is a recognizer running for the first 20 s.
+    ///
+    /// "The one heard last time" used to lead. One recording that opened on
+    /// silence or English then won every tie after it, and its language went
+    /// to whisper as the hint — testers got fluent nonsense transcripts.
     static var liveCandidates: [Locale] {
         guard storedValue == "auto" else { return [liveLocale] }
         var codes: [String] = []
-        let heard = detectedLocale?.language.languageCode?.identifier
-        for code in [heard].compactMap({ $0 })
+        for code in [appLanguage]
             + Locale.preferredLanguages.compactMap({ Locale(identifier: $0).language.languageCode?.identifier })
             + ["ko", "en"] where !codes.contains(code) {
             codes.append(code)
@@ -47,6 +50,12 @@ enum TranscriptionPrefs {
 
     static func rememberDetected(_ locale: Locale) {
         UserDefaults.standard.set(locale.identifier, forKey: detectedKey)
+    }
+
+    /// Called as a recording starts: the hint must describe this recording,
+    /// not an earlier one. Undecided (short) recordings hint ARCA's language.
+    static func forgetDetected() {
+        UserDefaults.standard.removeObject(forKey: detectedKey)
     }
 
     private static let detectedKey = "detectedSpeechLocale"

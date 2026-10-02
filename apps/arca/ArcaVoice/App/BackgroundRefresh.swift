@@ -38,6 +38,7 @@ enum BackgroundRefresh {
         schedule() // keep the chain alive for the next wake
         nonisolated(unsafe) let task = task
         let work = Task { @MainActor in
+            RecordingActivityController.shared.refreshPose()
             await RelaySync.shared.syncNow()
             task.setTaskCompleted(success: RelaySync.shared.lastError == nil)
         }

@@ -21,6 +21,8 @@ struct BrainView: View {
     @State private var lastTickDate: Date?
     @State private var pulseOn = false
     @State private var confirmDelete = false
+    /// Node scale for the current canvas — see `baseRadius(size:)`.
+    @State private var unit: CGFloat = 10
 
     private let fixedDt: Double = 1.0 / 60.0
     private let background = Color(red: 0.05, green: 0.06, blue: 0.11)
@@ -40,9 +42,16 @@ struct BrainView: View {
                     graphCanvas(size: geo.size)
                 }
 
-                VStack(spacing: 10) {
+                // Two rows: on a phone the chips and the buttons side by side
+                // squeezed the chips into unreadable pills.
+                VStack(alignment: .leading, spacing: 10) {
+                    ScrollView(.horizontal, showsIndicators: false) { legend }
                     HStack(alignment: .top) {
-                        legend
+                        if engine.edges.count > 0 {
+                            Text(L("연결 \(engine.edges.count)개", "\(engine.edges.count) links"))
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
                         Spacer()
                         weaveControls
                     }
@@ -77,6 +86,8 @@ struct BrainView: View {
             .contentShape(Rectangle())
             .gesture(SpatialTapGesture().onEnded { value in handleTap(at: value.location) })
             .onChange(of: timeline.date) { _, newDate in step(now: newDate, size: size) }
+            .onAppear { unit = baseRadius(size: size) }
+            .onChange(of: engine.nodes.count) { _, _ in unit = baseRadius(size: size) }
         }
         .scaleEffect(zoom * pinchDelta)
         .offset(x: offset.width + dragTranslation.width, y: offset.height + dragTranslation.height)
@@ -128,8 +139,32 @@ struct BrainView: View {
 
     // MARK: - Drawing
 
+    /// Size comes from the room each thought actually has. A fixed 13–30pt
+    /// body was fine at 20 memories and a pile of overlapping faces at 150.
+    private func baseRadius(size: CGSize) -> CGFloat {
+        let containR = min(size.width, size.height) * 0.42
+        let spacing = (CGFloat.pi * containR * containR / CGFloat(max(engine.nodes.count, 1))).squareRoot()
+        return min(max(spacing * 0.3, 4), 13)
+    }
+
+    /// Only the well-connected few are characters with faces and names; the
+    /// rest are points of light around them, so a big brain stays readable.
+    private var characterIds: Set<String> {
+        var ids = Set(engine.nodes.sorted { $0.degree > $1.degree }.prefix(8).map(\.id))
+        if let selected = engine.selectedNode { ids.insert(selected) }
+        for node in engine.nodes where node.kind == .insight { ids.insert(node.id) }
+        return ids
+    }
+
     private func radius(for node: BrainEngine.Node) -> CGFloat {
-        CGFloat(13 + 9 * min(max(node.weight, 0), 1) + 8 * node.degree)
+        let grow = CGFloat(1 + 0.4 * node.degree)
+        return characterIds.contains(node.id)
+            ? min(unit * 1.7 * grow, 20)
+            : unit * 0.55 * grow
+    }
+
+    private func isCharacter(_ node: BrainEngine.Node, labeled: Set<String>) -> Bool {
+        characterIds.contains(node.id)
     }
 
     private func color(for kind: BrainEngine.NodeKind) -> Color { Color(hex: kind.hex) }
@@ -168,7 +203,11 @@ struct BrainView: View {
             let dimmed = hasSearch ? !matches : (selected != nil && node.id != selected && !neighbors.contains(node.id))
             ctx.drawLayer { layer in
                 layer.opacity = dimmed ? 0.28 : 1
-                drawThought(&layer, node: node, selected: node.id == selected, t: t)
+                if isCharacter(node, labeled: labeled) || node.id == selected {
+                    drawThought(&layer, node: node, selected: node.id == selected, t: t)
+                } else {
+                    drawSpark(&layer, node: node, t: t)
+                }
                 if labeled.contains(node.id) || (hasSearch && matches) {
                     drawLabel(&layer, node: node)
                 }
@@ -180,7 +219,7 @@ struct BrainView: View {
 
     private func labelNodeIds() -> Set<String> {
         var ids = Set<String>()
-        for id in engine.nodes.sorted(by: { $0.degree > $1.degree }).prefix(6).map(\.id) { ids.insert(id) }
+        for id in engine.nodes.sorted(by: { $0.degree > $1.degree }).prefix(4).map(\.id) { ids.insert(id) }
         if let selected = engine.selectedNode {
             ids.insert(selected)
             for edge in engine.edgesTouching(selected) { ids.insert(edge.a); ids.insert(edge.b) }
@@ -206,8 +245,8 @@ struct BrainView: View {
         } else {
             let strength = min(max(edge.strength, 0), 1)
             ctx.drawLayer { layer in
-                layer.opacity = 0.35 + 0.45 * strength
-                layer.stroke(path, with: shading, lineWidth: CGFloat(1.2 + strength * 1.8))
+                layer.opacity = 0.18 + 0.3 * strength
+                layer.stroke(path, with: shading, lineWidth: CGFloat(0.8 + strength * 1.2))
             }
         }
     }
@@ -230,6 +269,21 @@ struct BrainView: View {
                 layer.fill(Path(ellipseIn: CGRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5)), with: .color(.white))
             }
         }
+    }
+
+    /// A small memory: a soft glowing point in its kind's colour.
+    private func drawSpark(_ ctx: inout GraphicsContext, node: BrainEngine.Node, t: Double) {
+        let phase = Double(abs(node.id.hashValue % 628)) / 100.0
+        let r = radius(for: node) * CGFloat(1 + 0.06 * sin(t * 1.3 + phase))
+        let c = node.position
+        let tint = color(for: node.kind)
+        ctx.drawLayer { layer in
+            layer.opacity = 0.25
+            layer.addFilter(.blur(radius: r))
+            layer.fill(Path(ellipseIn: CGRect(x: c.x - r * 1.6, y: c.y - r * 1.6, width: r * 3.2, height: r * 3.2)),
+                       with: .color(tint))
+        }
+        ctx.fill(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)), with: .color(tint))
     }
 
     /// The character: a kind-specific silhouette, breathing, with a face.
@@ -368,13 +422,8 @@ struct BrainView: View {
                     .buttonStyle(.arcaPress)
                 }
             }
-            if engine.edges.count > 0 {
-                Text(L("연결 \(engine.edges.count)개", "\(engine.edges.count) links"))
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(.leading, 4)
-            }
         }
+        .fixedSize()
     }
 
     private var weaveControls: some View {
