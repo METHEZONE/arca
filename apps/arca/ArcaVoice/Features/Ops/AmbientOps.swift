@@ -25,6 +25,8 @@ final class AmbientOps {
     private(set) var isHarvesting = false
     private(set) var lastHarvestAt: Date?
     private(set) var lastError: String?
+    /// The last send failure per proposal, for the card to say why.
+    var failureReasons: [UUID: String] = [:]
 
     @ObservationIgnored private var accountByToolkit: [String: String] = [:]
     @ObservationIgnored private var didRecoverStaleSends = false
@@ -451,9 +453,14 @@ final class AmbientOps {
         try? context.save()
         do {
             if proposal.sourceRaw == "gmail" {
-                guard let sender = ComposioEmailSender.fromArcaConfig() else {
+                // The same identity and Gmail account the inbox was read
+                // with — reading worked on the phone while sending went out
+                // under a different (or no) account and failed.
+                guard let key = composioKey, let user = composioUser,
+                      let gmail = await account(for: "gmail") else {
                     throw ProposalError.gmailNotConnected
                 }
+                let sender = ComposioEmailSender(apiKey: key, userId: user, connectedAccountId: gmail)
                 let html = EmailActionDraft(to: proposal.channel,
                                             subject: proposal.subject ?? "(제목 없음)",
                                             body: proposal.draft).htmlBody
@@ -494,6 +501,12 @@ final class AmbientOps {
         } catch {
             proposal.stateRaw = "failed"
             lastError = UserFacingError.message(for: error)
+            failureReasons[proposal.uid] = lastError
+            // Why sends fail, from the field — the card only said "failed".
+            Analytics.content("proposal_send_failed", [
+                "id": proposal.uid.uuidString, "source": proposal.sourceRaw,
+                "error": String(describing: error).prefix(500).description,
+            ])
         }
         try? context.save()
     }

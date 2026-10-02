@@ -18,12 +18,29 @@ struct ChatTabView: View {
             VStack(spacing: 0) {
                 conversationRail
                 messages
+                    // Swipe the thread down (or tap it) to put the keyboard
+                    // away — with it up there was no way back to the tabs.
+                    .scrollDismissesKeyboard(.interactively)
+                    .simultaneousGesture(TapGesture().onEnded { inputFocused = false })
                 if voice.isListening {
                     listeningBar
                 }
                 inputBar
             }
             .background(ArcaTheme.spiritNight.ignoresSafeArea())
+            // Swipe in from the left edge = back, like every other iOS screen:
+            // the keyboard goes away and you land on the home.
+            .overlay(alignment: .leading) {
+                Color.clear
+                    .frame(width: 22)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 16).onEnded { value in
+                        guard value.translation.width > 70,
+                              abs(value.translation.height) < value.translation.width else { return }
+                        inputFocused = false
+                        AppServices.shared.pendingRoute = "home"
+                    })
+            }
             .navigationTitle(L("채팅", "Chat"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

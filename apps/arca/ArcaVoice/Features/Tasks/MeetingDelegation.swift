@@ -94,6 +94,18 @@ extension MeetingDelegation {
     /// meeting and runs it through the real summary → plan path, so the
     /// "대신 처리할까요?" loop can be exercised on a Simulator with no mic.
     static func seedIfRequested(context: ModelContext) {
+        // `-arcaSeedMemories`: a full brain (140 facts sharing keywords), to
+        // see the 메모리 screen at the size real users reach.
+        if ProcessInfo.processInfo.arguments.contains("-arcaSeedMemories") {
+            let topics = ["ARCA", "투자", "회의", "디자인", "베타", "운동", "커피", "채용", "계약", "마케팅"]
+            let kinds = ["user", "preference", "project", "fact"]
+            for i in 0..<140 {
+                let a = topics[i % topics.count], b = topics[(i * 7 + 3) % topics.count]
+                context.insert(MemoryFact(text: "\(a)와 \(b) 관련 기억 \(i)", kind: kinds[i % kinds.count],
+                                          source: i.isMultiple(of: 3) ? "meeting" : "chat"))
+            }
+            try? context.save()
+        }
         guard ProcessInfo.processInfo.arguments.contains("-arcaSeedMeeting"),
               let summarizer = EngineFactory.summarizer() else { return }
         let owner = UserDefaults.standard.string(forKey: "ownerName") ?? "나"

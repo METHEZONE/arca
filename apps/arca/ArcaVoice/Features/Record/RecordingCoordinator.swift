@@ -182,6 +182,7 @@ final class RecordingCoordinator {
             }
             // "auto" tries the user's languages side by side for the first
             // stretch and keeps the one it actually hears.
+            TranscriptionPrefs.forgetDetected()
             let transcriber = AutoLanguageTranscriber(
                 candidates: TranscriptionPrefs.liveCandidates, make: make,
                 decided: { locale in

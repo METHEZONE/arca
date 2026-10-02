@@ -139,7 +139,8 @@ struct ReplyApprovalRow: View {
                     .foregroundStyle(.secondary)
             }
             if proposal.stateRaw == "failed" {
-                Text(L("Couldn't send — tap Yes to try again.", ko: "보내지 못했어요. '네'를 누르면 다시 보내요."))
+                Text(AmbientOps.shared.failureReasons[proposal.uid]
+                     ?? L("Couldn't send — tap Yes to try again.", ko: "보내지 못했어요. '네'를 누르면 다시 보내요."))
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.orange)
             }

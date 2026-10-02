@@ -119,10 +119,6 @@ private struct ThoughtCloud: View {
     @State private var pulse = false
 
     private var trimmed: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var tail: String {
-        let lines = trimmed.split(separator: "\n").map(String.init)
-        return lines.suffix(4).joined(separator: "\n")
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -143,8 +139,11 @@ private struct ThoughtCloud: View {
             }
             .buttonStyle(.plain)
 
-            if live || expanded {
-                Text(live && !expanded ? tail : trimmed)
+            // The model thinks in English and out loud; streaming that into
+            // a Korean chat read as ARCA talking to itself. The pulse says
+            // it's thinking; the text is there only if you open it after.
+            if expanded && !live {
+                Text(trimmed)
                     .font(.system(.caption, design: .rounded))
                     .italic()
                     .foregroundStyle(.white.opacity(live ? 0.62 : 0.72))
