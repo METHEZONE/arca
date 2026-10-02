@@ -389,7 +389,12 @@ final class RecordingCoordinator {
             // that insert failed, so fall back to creating one now instead of
             // dropping the recording on the floor.
             let record: RecordingSession
-            if let existing = liveRecord {
+            let dir = directoryName
+            if let existing = liveRecord
+                ?? (try? modelContext.fetch(FetchDescriptor<RecordingSession>(
+                    predicate: #Predicate { $0.directoryName == dir })))?.first {
+                // A failed save at start still left the row in the context;
+                // making a second one is how two rows came to share a folder.
                 record = existing
             } else {
                 record = RecordingSession(

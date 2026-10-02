@@ -138,7 +138,7 @@ struct FocusWindowChart: View {
     var highlightHour: Int?
 
     private var byHour: [Int: FocusWindow] {
-        Dictionary(uniqueKeysWithValues: windows.map { ($0.hour, $0) })
+        Dictionary(windows.map { ($0.hour, $0) }) { first, _ in first }
     }
 
     var body: some View {

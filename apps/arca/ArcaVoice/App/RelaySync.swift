@@ -109,7 +109,12 @@ final class RelaySync {
         for entry in listing { remoteShaByName[entry.name] = entry.sha }
 
         let locals = (try? context.fetch(FetchDescriptor<RecordingSession>())) ?? []
-        var localByUID = Dictionary(uniqueKeysWithValues: locals.map { ($0.directoryName, $0) })
+        // Two rows can share a directory (a Watch file delivered twice, a
+        // start-time save that failed); `uniqueKeysWithValues` trapped on that
+        // and crashed every launch. Keep the row with more in it.
+        var localByUID = Dictionary(locals.map { ($0.directoryName, $0) }) { a, b in
+            (a.segments.count, a.updatedAt) >= (b.segments.count, b.updatedAt) ? a : b
+        }
 
         // Pull: new/changed remote sessions.
         for entry in listing where pulledShas[entry.name] != entry.sha {
@@ -244,7 +249,7 @@ final class RelaySync {
     /// is further along; ties go to the newest update) and returns the union.
     private func merge(_ wires: [TaskWire], into context: ModelContext) -> [TaskWire] {
         let locals = (try? context.fetch(FetchDescriptor<TodoTask>())) ?? []
-        var byUID = Dictionary(uniqueKeysWithValues: locals.map { ($0.uid, $0) })
+        var byUID = Dictionary(locals.map { ($0.uid, $0) }) { first, _ in first }
         for wire in wires {
             if let local = byUID[wire.uid] {
                 let localRank = TodoTask.rank(of: local.state)
